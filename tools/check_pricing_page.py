@@ -50,8 +50,22 @@ den anden side — dom 4 dømmer varen der mangler på listen, dom 6 dømmer lis
 der mangler i sidernes krom. Dom 6 læser de **byggede** footere, fordi footeren
 ikke findes i `site/`: den bliver skrevet af `apply_shell` undervejs.
 
+Dom 7 er svaret på den anden fejl i samme slags: dom 2 dømmer at *filen*
+findes, men målt 6/10 var alle købsruter bleven **ankere**, altså den eneste
+måde at få læseren fra prislisten **hen til den vares egen knap** uden at sælge
+direkte på siden (dom 3). Et `id` der bliver omdøbt på destinationssiden
+efterlader ellers en række, der ser troværdig ud og sender læseren *oven for*
+den knap han lige har bedt om.
+
+Dom 8 dømmer det dom 2 og dom 7 ikke kan se: **sproget**. Målt 6/10 havde
+`/da/pricing` to rækker med `https://cleancopy.tools/#price` og én med
+`https://deskuptime.com/#pro` — altså engelske købssider midt i den betaling en
+dansk læser var ved at vælge, og begge domme var grønne, fordi ruterne pegede på
+en side der fandtes, på et anker der fandtes. Dom 8 læser derfor den **byggede**
+destinationssides egen `<html lang>`, altså ikke en navnekonvention i ruten.
+
     python3 tools/check_pricing_page.py             # dom
-    python3 tools/check_pricing_page.py --self-test # 10 mutationer
+    python3 tools/check_pricing_page.py --self-test # mutationer
 """
 from __future__ import annotations
 
@@ -209,6 +223,65 @@ def dom7_anker(rel: str, nøgle: str, rute: str, dist_rod: Path,
     return []
 
 
+def dom8_sprog(rel: str, nøgle: str, rute: str, lang: str, dist_rod: Path,
+               pris_fil: Path) -> list[str]:
+    """Dom 8: en række skal sende læseren til en side på **samme sprog**.
+
+    Baggrund (målt 6/10): dom 2 dømmer at filen findes og dom 7 at ankeret
+    findes — og begge var grønne, fordi de tre rækker der peger på et andet
+    domæne gjorde præcis det de bad om. `/da/pricing` sendte to rækker til
+    `https://cleancopy.tools/#price` og én til `https://deskuptime.com/#pro`,
+    altså **engelske** købssider midt i den betaling en dansk læser var ved at
+    vælge. Sproget i ruten er ikke noget porten kan gætte: `/da/…` er en
+    navnekonvention, ikke en egenskab ved siden.
+
+    Derfor læses **den byggede sides egen `<html lang>`** — samme detektion dom 6
+    bruger til at finde ud af hvilken prisliste en footer skal pege på, og den
+    er målt på alle byggede sider. Kildeformen `/da/ruten` er stadig nyttig, men
+    den er **inputtet**, ikke dommen: mutationerne nedenfor sætter den danske
+    rute til den engelske side, og kun dom 8 kan se forskellen.
+
+    Skriver den resolutionstesten fra dom 7 igen frem for at genbruge den: dom 7
+    *finder* filen og *dommer ankeret*, og dens fund skal blive ved at hedde det
+    de siger. En fælles hjælper ville skrive dens fund to steder, og de to domme
+    ville så fejle hinanden i stedet for hver for sig."""
+    del_anker, _, _ = rute.partition("#")
+    if not del_anker:
+        # `href="#x"` er et anker på prislisten selv — den ligger i sit eget sprog.
+        return []
+
+    dele = urlsplit(del_anker)
+    if dele.netloc:
+        rod = dist_rod / DOMÆNE_DIST.get(dele.netloc.lower(), dele.netloc.lower())
+        rute = dele.path or "/"
+    else:
+        rod = dist_rod / "mahope.tools"
+        rute = del_anker
+
+    fil = find_fil(rute, rod)
+    if fil is None:
+        # Dom 2 (lokale ruter) og dom 7 (ankere) dømmer den manglende side. Her
+        # ville en ekstra fund bare sige det samme to gange med et andet ord.
+        return []
+
+    tekst = fil.read_text(encoding="utf-8", errors="ignore")
+    m = re.search(r'<html[^>]*\blang="([a-zA-Z-]+)"', tekst[:600])
+    rel_fil = fil.relative_to(dist_rod).as_posix() if fil.is_relative_to(dist_rod) \
+        else fil.name
+    if not m:
+        return [f"{rel}: {nøgle} peger på {rel_fil}, og dom 8 kan ikke læse "
+                f"sidens sprog — der står ingen `lang` i de første 600 tegn, "
+                f"så dommen kan hverken sige at rækken er rigtig eller forkert"]
+    if m.group(1).lower() != lang:
+        return [f"{rel}: {nøgle} er en række på den {'danske' if lang == 'da' else 'engelske'} "
+                f"prisliste, men den peger på {rel_fil}, der er "
+                f"`lang=\"{m.group(1)}\"`. Læseren lander midt i betalingen på "
+                f"den anden sprogs købsside. Sæt `pricing_link` på den rute der "
+                f"ligger i {lang}, eller lad feltet være en streng for de varer "
+                f"hvor `/da/` foran ruten er nok"]
+    return []
+
+
 def dom(cat: dict, dist: Path, site: Path | None = None) -> list[str]:
     """Alle fund. Tom liste = grøn.
 
@@ -288,6 +361,8 @@ def dom(cat: dict, dist: Path, site: Path | None = None) -> list[str]:
                 continue
             fund.extend(dom7_anker(rel, nøgle_m.group(1), rute_m.group(1),
                                    dist_rod, pris_fil))
+            fund.extend(dom8_sprog(rel, nøgle_m.group(1), rute_m.group(1),
+                                   lang, dist_rod, pris_fil))
 
     # Dom 4: et produkt der er på vej frem, men ikke står på listen.
     på_liste = {nøgle for nøgle, _ in pricing_page.produkter(cat, "en")}
@@ -556,6 +631,55 @@ def self_test() -> int:
          any("dist/da/index.html" in f and "den anden sprogs udgave" in f
              for f in fund),
          "; ".join(fund[:1]))
+
+    # Dom 8: den danske række skal pege på en dansk købsside. Det var hele
+    # fejlen dom 2 og dom 7 ikke så: de tre rækker der krydser et domæne
+    # gjorde præcis det portene bad om — de pegede på en side der fandtes, og
+    # på et anker der fandtes. Mutationen sætter `da`-ruten til den **engelske**
+    # side, altså præcis den fejl der lå i `main` 6/10.
+    #
+    # Den sker som en **katalog**-mutation og ikke som en fil-ændring, fordi dom
+    # 1 ellers ville være rød af sig selv og dække dommen — samme grund som
+    # dom 2's mutationer. Sådan rammer den præcis sin egen dom.
+    kat_eng = json.loads(json.dumps(cat))
+    kat_eng["products"]["clean-copy-pro"]["pricing_link"]["da"] = \
+        kat_eng["products"]["clean-copy-pro"]["pricing_link"]["en"]
+    fund = med_filer([], kat_eng)
+    tjek("dansk række på engelsk købsside er rød",
+         any("clean-copy-pro" in f and "anden sprogs købsside" in f
+             for f in fund), "; ".join(fund[:1]))
+
+    # Samme dom, en rute der **ikke** krydser et domæne. Den skal være absolut,
+    # fordi `købs_rute` selv sætter `/da` foran en relativ rute — en relativ
+    # mutation kan altså ikke slå dommen ihjel, og det er netop sådan en
+    # håndskrivet `https://mahope.tools/…` i katalogen ser ud. Den rigtige fejl
+    # på de otte mahope.tools-rækker var aldrig mulig, fordi `/da/ruten` er
+    # afledt af den engelske rute; det er kun et **andet domæne** der kan glemme
+    # det, og det er derfor dom 8 har brug for krydsdomænetabellen.
+    kat_lok = json.loads(json.dumps(cat))
+    kat_lok["products"]["eucomply-pro"]["pricing_link"] = \
+        "https://mahope.tools/compliance-report#buy"
+    fund = med_filer([], kat_lok)
+    tjek("dansk række på lokal engelsk rute er rød",
+         any("eucomply-pro" in f and "anden sprogs købsside" in f for f in fund),
+         "; ".join(fund[:1]))
+
+    # Og en mutation der fjerner **ankeret** på den danske købsside: dom 8 skal
+    # ikke tie på den, fordi ankeret mangler — dom 7 ejer den fejl. Ellers ville
+    # dom 8 og dom 7 begge rødme, og rettelsen ville se ud som at man kan vælge
+    # mellem dem.
+    fund = med_filer([("dist/cleancopy.tools/da/index.html",
+                       ('id="priser"', 'id="priser-v2"'))])
+    tjek("dom 8 tier om et manglende anker",
+         not any("cleancopy" in f and "lang=" in f for f in fund),
+         "; ".join(fund[:1]))
+
+    # Polaritet: med katalogens egne `da`-ruter er dom 8 grøn. Uden denne test
+    # kunne dommen være en streng der altid er rød, og de tre mutationer ovenfor
+    # intet bevare.
+    fund = med_filer([])
+    tjek("korrekt sprog i købsruten er grønt",
+         not any("lang=" in f for f in fund), "; ".join(fund[:1]))
 
     for linje in fejl:
         print(f"  FEJL  {linje}")

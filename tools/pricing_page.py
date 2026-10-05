@@ -37,6 +37,12 @@ af repoet: `check_pro_card.py` og `check_pro_table.py` er begge bygget på «én
 købsvej pr. produkt», og planen 2/10 afviste livstidsprisen som prislink af
 præcis den grund.
 
+Den købsside skal også ligge i **læserens** sprog. Relativt går det af sig selv
+(`/da/ruten`), men et krydsdomæne kan bygget ikke oversætte, så katalogen har en
+rute pr. sprog for de to varer der sælges på henholdsvis cleancopy.tools og
+deskuptime.com. Dom 8 i `check_pricing_page.py` dømmer resultatet på den **byggede**
+sides eget `<html lang>`, så det er ikke sproget i ruten der afgør.
+
     python3 tools/pricing_page.py             # vis produkterne og deres ruter
     python3 tools/pricing_page.py --apply     # byg siden (idempotent)
     python3 tools/pricing_page.py --check     # dom, exit 1 ved afvigelse
@@ -321,11 +327,24 @@ def note_tekst(nøgle: str, produkt: dict, lang: str) -> str:
 def købs_rute(produkt: dict, lang: str) -> str:
     """Ruten til produktets købsside i det sprog, siden er skrevet på.
 
-    Katalogen kender kun den engelske rute, og det er nok: målt 2/10 i
-    dist-sitemap findes den danske som præcis samme rute med `/da/` foran.
-    Derfor skrives den danske rute her **én** gang frem for seks gange i
-    katalogen — seks næsten ens felter er seks steder at glemme en."""
-    rute = produkt.get("pricing_link") or ""
+    Katalogens `pricing_link` er enten **én** rute, eller **én pr. sprog**
+    (`{"en": …, "da": …}`) for de varer der sælges på et **andet domæne**.
+    Den anden form er ikke kosmetik: målt 6/10 i det byggede site havde
+    `/da/pricing` to rækker med `https://cleancopy.tools/#price` og én med
+    `https://deskuptime.com/#pro`, altså tre rækker der sendte en dansk læser
+    ud i engelsk midt i den betaling han var ved at vælge. Relativt
+    (`/compliance-report#buy`) kan bygget selv finde den danske som `/da/ruten`,
+    så det sker her **én** gang frem for seks gange i katalogen.
+
+    Mangler `da`-formen, falder ruten tilbage på den engelske — **ikke** til en
+    tom streng. En tom `href` ville være en stille død knap; den engelske rute
+    er i det mindste et link, og dom 8 i `check_pricing_page.py` gør den rød med
+    varens navn, så manglen rettes i katalogen hvor den hører hjemme."""
+    link = produkt.get("pricing_link") or ""
+    if isinstance(link, dict):
+        rute = link.get(lang) or link.get("en") or ""
+    else:
+        rute = link
     if lang != "da" or rute.startswith(("http://", "https://", "/da/")):
         return rute
     return f"/da{rute}"

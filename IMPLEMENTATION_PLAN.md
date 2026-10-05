@@ -1,20 +1,21 @@
 # STATUS
-- **`/pricing` sender nu læseren hen til den enkelte købsknap, ikke til en side
-  hvor han skal lede.** 6/10: alle 12 `pc-buy`-rækker pegede på **hele**
-  købssider — 6 af dem på `/paid-templates`, der sælger **syv** varer i et
-  gitter. Nu har hver række et `#anker` på den vares egen knap. Ny **dom 7** i
-  `check_pricing_page` dømmer at ankeret findes i den **byggede** side, også
-  krydsdomænerne. Se feature-kø 15.
-- **Dom 7 fandt en rigtig fejl min egen rettelse ville have lavet:** den danske
-  prisliste sendte til `/da/compliance-report#pricingSection`, men den side
-  hedder `#pris`. Løst med et sprognøytrest `#buy` på begge sprog, så ÉN
-  `pricing_link` betjener begge — hvilket er hele pointen med dom 7.
-- **CI-kørslen for `8a62f9e6` lå i kø** da denne iteration startede (14 min i
-  `queued`). `37367449163` står som `failure`, men `gate: cancelled` og
-  `deploy: skipped` — GitHub afbrød den, ingen test var rød. Lokal gate er grøn
-  på 177 steps.
-- **Næste:** ❓ `ceo/den-prisliste-koer-pa-engelsk`. `PR-TJEK 6/10`: **0** åbne
-  PR'er. `BRANCH-TJEK` ikke kørt (uge-tjek).
+- **`/da/pricing` sender ikke længere en dansk læser ud i engelsk.** 6/10: tre
+  af de tolv rækker pegede på **engelske** købssider midt i den betaling han var
+  ved at vælge — to til `cleancopy.tools/#price` og én til `deskuptime.com/#pro`,
+  fordi bygget kan oversætte en *relativ* rute (`/da/ruten`) men ikke et
+  **krydsdomæne**. Katalogens `pricing_link` kan nu være `{"en": …, "da": …}`
+  for de to varer. Ny **dom 8** i `check_pricing_page` dømmer på den **byggede**
+  sides egen `<html lang>`, ikke på en navnekonvention i ruten. Se feature-kø 16.
+- **Målt, at dom 8 ikke er dekoration:** med den gamle `købs_rute` (kun `en`)
+  kommer de tre engelske rækker tilbage, og **dom 2 + dom 7 giver 0 fund** på
+  dem — de pegede jo på en side der fandtes, med et anker der fandtes. Dom 8 giver
+  **3 fund** med varens navn og den byggede side. Selftest **20/20**, og de to
+  nye røde tilfælde er målte røde med dom 8 afkoblet (18/20).
+- **CI:** de to kørsel før `d73052b9` står som `failure`, men `gate: cancelled`
+  og `deploy: skipped` — GitHub afbrød dem, ingen test var rød. Lokal gate er
+  grøn på 177 steps; de fire mission-gates er kørt enkeltvis og grønne.
+- **Næste:** de åbne ❓. `PR-TJEK 6/10`: **0** åbne PR'er. `BRANCH-TJEK` ikke
+  kørt (uge-tjek).
 
 
 
@@ -39,20 +40,33 @@ Ingen. Alle tre er lukket 6/10:
 
 ## Verificér deploy
 
-`VERIFICÉR DEPLOY: hver «Where to buy»-række på /pricing skal pege på den
-vare, der sælger ceo/pricing-stripe-ankere 6/10 23:5x` — hent `mahope.tools/pricing`
-og `mahope.tools/da/pricing` og kræv på **indhold**: **12** `pc-buy`-ankere pr.
-sprog, **0** uden `#anker` (undtagen Donationen til `/support`), **7** af dem med
-`/paid-templates#eucomply-…` (én pr. dokument), og **0** med den gamle rute
-`href="/paid-templates"`. Derefter hent hvert mål og kræv at ankeret findes som
-et `id`: `mahope.tools/paid-templates` skal have **7** `id="eucomply-…"`
+`VERIFICÉR DEPLOY: hver danske række på /da/pricing skal pege på en dansk
+købsside, så ingen læser lander i engelsk midt i betalingen — hent
+mahope.tools/da/pricing og kræv på indhold: 2 href="https://cleancopy.tools/da/#priser", 1
+href="https://deskuptime.com/da/#pro", 0 href="https://cleancopy.tools/#price", 0
+href="https://deskuptime.com/#pro", og de øvrige 10 stadig relative /da/-ruter. Derefter
+hent hvert mål og kræv at ankeret findes: cleancopy.tools/da/ har 1 id="priser",
+deskuptime.com/da/ har 1 id="pro", og begge sider har <html lang="da">. Samme krav på
+mahope.tools/pricing: de 12 rækker skal være uændrede på engelsk ceo/den-prisliste-koer-pa-engelsk 6/10 14:1x`
+— *(HTTP 200 beviser intet: den gamle kode svarer 200 på præcis de tre rækker
+dom 8 nu dømmer.)*
+
+`DEPLOY OK 6/10 14:0x` for `ceo/pricing-stripe-ankere` og `ceo/one-buy-button-tools` —
+målt på **indhold** med 15 `curl`, ikke på HTTP 200. Live `/pricing` og
+`/da/pricing` har hver **12** `pc-buy`, **1** uden `#anker` (donationen til
+`/support`) og **0** med den gamle rute `href="/paid-templates"`. Alle **7**
+dokumentankere findes som `id` på live `/paid-templates`
 (`eucomply-dpa`, `eucomply-nis2-clauses`, `eucomply-nda-clauses`,
 `eucomply-eaa-statement`, `eucomply-report-kit`, `eucomply-template-bundle`,
-`eu-compliance-ebook-bundle`), `cleancopy.tools/` **1** `id="price"`,
-`deskuptime.com/` **1** `id="pro"`, `mahope.tools/compliance-report` **1**
-`id="buy"` (og samme på `/da/compliance-report`), `mahope.tools/page-profile`
-**1** `id="pp-buy-live"`. *(HTTP 200 beviser intet her — en `/paid-templates` der
-svarer 200 uden kort-id'r ville se identisk ud.)*
+`eu-compliance-ebook-bundle`), og på `/da/paid-templates` er de danske. Live
+`cleancopy.tools/` har 1 `id="price"`, `cleancopy.tools/da/` 1 `id="priser"`,
+`deskuptime.com/` 1 `id="pro"`, `deskuptime.com/da/` 1 `id="pro"`,
+`/compliance-report` og `/da/compliance-report` hver 1 `id="buy"`,
+`/page-profile` og `/da/page-profile` hver 1 `id="pp-buy-live"` — hver side
+også med sit eget `<html lang>`. Live `deskuptime.com/tools/` har **1**
+`buy.stripe.com/7sY9AS9eX3Iu418fJ5bMQ01` og **1** `Payment through Stripe`.
+*(De to danske krydsdomæneankere var ikke i den gamle notes krav; de er målt her,
+fordi dom 8s rettelse peger på dem.)*
 
 - **VERIFICÉR DEPLOY:** https://mahope.tools/api/url-inspect?url=https://example.com skal returnere 200 med finalUrl (efter næste batch deploy)
 
@@ -62,14 +76,6 @@ på HTTP 200: live `/api/url-inspect?url=https://example.com` svarer **200** med
 → **400** på `/api/header-check` og `/api/url-inspect`, `[::ffff:127.0.0.1]` →
 **400**, og `169.254.169.254` → **400**. *(HTTP 200 alene ville ikke have
 beviset noget — endpointet svarede 200 med en tom krop før rettelsen.)*
-
-`VERIFICÉR DEPLOY: deskuptime.com/tools/ skal have præcis én synlig købsknap
-til deskuptime-pros betalingslink, og beroligelsen «Payment through Stripe»
-skal stå til ceo/one-buy-button-tools 6/10 20:4x` — hent
-`https://deskuptime.com/tools/` og kræv **1** forekomst af
-`buy.stripe.com/7sY9AS9eX3Iu418fJ5bMQ01` og **1** `Payment through Stripe`.
-Live har **2** knapper nu, så det er deploy-vinduet der afgør.
-
 
 `DEPLOY OK 6/10 22:0x` for `ceo/pro-pastand` — målt på **indhold** med tre
 `curl`. Live `cleancopy.tools/` siger «Custom cleanup rules are in the browser
@@ -448,6 +454,23 @@ side; tallene er ikke vores egen trafik. Alt det der er leveret (1–11) står i
    («Check a site now» → `#check`) ligger i folden ved begge bredder. Folden
    var altså ikke årsagen; 7 besøgende kan heller ikke dømme en forside.
 
+17. **En guide-artikel har ingen vej til prislisten.** Hvem: læseren der lander
+    på en `/blog/`-artikel om CLI'en, udvidelsen eller Obsidian. Tal: hvor mange
+    af dem der betaler. Accept: hver artikel der nævner et produkt har ét link
+    til dets egen købsside. Datagrund: målt 6/10 — `html-to-markdown-cli` og
+    `html-til-markdown-cli` har hver **1** Stripe-link og **0** `/pricing`,
+    selv om de er blandt de tre største indgange på cleancopy.tools (2 og 2
+    besøgende). *(Et **link**, ikke en ny købsknap: dom 3 i
+    `check_pricing_page` og den ene-knap-regel i `check_stripe_ctas` gælder
+    stadig.)*
+
+18. **DeskUptime har otte ruter ingen læser nogensinde ser.** Hvem: alle nye.
+    Tal: hvor mange af dem kommer i betragtning. Accept: hver bygget rute under
+    `/tools/` har mindst ét link fra forsiden eller navigationen. Datagrund:
+    målt 6/10 — 7 besøgende, **alle** på `/`, og `tools/` har ingen indgang.
+    *(Dommen skal kræve **indgangen**, ikke at ruten findes — at siden svarer
+    200 er allerede målet.)*
+
 9. ~~**`/scan` tager kun 1 URL.**~~ **Leveret 5/10** — se arkivet.
 
 10. ~~**`/scan` mangler et eksempel-resultat at dele.**~~ **LUKKET 6/10.** Leveret
@@ -506,13 +529,23 @@ side; tallene er ikke vores egen trafik. Alt det der er leveret (1–11) står i
       dom 3 (siden sælger ikke direkte) er urørt, og der er stadig præcis én
       købsknap pr. side.
 
-16. **Den danske prisliste sender læseren til engelske købssider.** Hvem: en
-    dansk læser på `/da/pricing`. Tal: hvor mange betalinger der kommer fra
-    dansk trafik. Accept: `da`-rækkerne for `clean-copy-pro` og
-    `deskuptime-pro` peger på danske sider, og dom 7 dømmer dem. Datagrund:
-    målt 6/10 i det byggede site — `/da/pricing` har **2** rækker med
-    `https://cleancopy.tools/#price` og **1** med `https://deskuptime.com/#pro`,
-    selv om footeren i samme side er dansk (`https://cleancopy.tools/da/`).
-    Bygget lokaliserer altså domænelink, men ikke en **absolut** `pricing_link`.
-    Kræver et `pricing_link` pr. sprog i katalogen. *(Fundet under opgave 15,
-    ikke rettet dér — det er et sprogkrav i katalogen, ikke et anker.)*
+16. ~~**Den danske prisliste sender læseren til engelske købssider.**~~
+      **LEVERET 6/10**, `ceo/den-prisliste-koer-pa-engelsk`.** Målt 6/10 i det
+      byggede site: `/da/pricing` havde **2** rækker med
+      `https://cleancopy.tools/#price` og **1** med
+      `https://deskuptime.com/#pro` — altså tre af tolv rækker der sendte en
+      dansk læser ud i engelsk. Datagrund: `/da/ruten` er afledt af den
+      engelske rute, så **kun et krydsdomæne** kan glemme sproget; de otte
+      mahope.tools-rækker var aldrig i fare. Rettelse: katalogens
+      `pricing_link` kan være `{"en": …, "da": …}`, brugt for de to varer der
+      sælges på et andet domæne. Nu: 2 `https://cleancopy.tools/da/#priser` og 1
+      `https://deskuptime.com/da/#pro` — begge ankre målt på de **live** danske
+      sider, som har eget `<html lang="da">`. Ny **dom 8** dømmer det på den
+      byggede sides `lang` (ikke på rutens navn), og **tier** når filen mangler
+      eller ankeret er væk, så den duplikerer hverken dom 2 eller dom 7.
+      Selftest **16/16 → 20/20**: de to nye røde tilfælde er målte røde med dom 8
+      afkoblet (18/20), og en *relativ* rute kan bevidst ikke slå dommen ihjel
+      (`købs_rute` sætter `/da` selv) — så mutationen for den lokale fejl er en
+      håndskrevet absolut `https://mahope.tools/…`. Fuld gate **GRØN — 177
+      steps**; `stripe-worker` 474/474, `seo_check` 316 sider 0 fund,
+      `check_inline_js` 1318 blokke 0 problemer.

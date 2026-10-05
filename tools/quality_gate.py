@@ -1823,30 +1823,36 @@ STEPS: tuple[Step, ...] = (
     Step(
         id="pricing-page",
         argv=("python3", "tools/check_pricing_page.py"),
-        # Dom 7 læser de sider `pricing_link` **peger på**, så de er inputs:
+        # Dom 7 og dom 8 læser de sider `pricing_link` **peger på** — de
+        # dømmer ankeret og sidens `lang` i den byggede fil — så de er inputs:
         # uden dem springer porten over en commit der fjerner et `id` på
-        # `/paid-templates` eller retter `#buy` på compliance-siden.
+        # `/paid-templates`, retter `#buy` på compliance-siden eller gør en
+        # dansk købsside engelsk.
         inputs=("tools/check_pricing_page.py", "tools/pricing_page.py",
                 "tools/stripe_catalog.json", "site/pricing.html",
                 "site/da/pricing.html", "site/paid-templates.html",
                 "site/da/paid-templates.html", "site/clean-copy.html",
-                "site/compliance-report.html", "site/da/compliance-report.html",
-                "site/page-profile.html", "site/da/page-profile.html",
-                "site/deskuptime/index.html"),
+                "site/da/clean-copy.html", "site/compliance-report.html",
+                "site/da/compliance-report.html", "site/page-profile.html",
+                "site/da/page-profile.html", "site/deskuptime/index.html",
+                "site/da/deskuptime/index.html"),
     ),
     Step(
         id="pricing-page-selftest",
         argv=("python3", "tools/check_pricing_page.py", "--self-test"),
-        # Dom 7 læser de sider `pricing_link` **peger på**, så de er inputs:
+        # Dom 7 og dom 8 læser de sider `pricing_link` **peger på** — de
+        # dømmer ankeret og sidens `lang` i den byggede fil — så de er inputs:
         # uden dem springer porten over en commit der fjerner et `id` på
-        # `/paid-templates` eller retter `#buy` på compliance-siden.
+        # `/paid-templates`, retter `#buy` på compliance-siden eller gør en
+        # dansk købsside engelsk.
         inputs=("tools/check_pricing_page.py", "tools/pricing_page.py",
                 "tools/stripe_catalog.json", "site/pricing.html",
                 "site/da/pricing.html", "site/paid-templates.html",
                 "site/da/paid-templates.html", "site/clean-copy.html",
-                "site/compliance-report.html", "site/da/compliance-report.html",
-                "site/page-profile.html", "site/da/page-profile.html",
-                "site/deskuptime/index.html"),
+                "site/da/clean-copy.html", "site/compliance-report.html",
+                "site/da/compliance-report.html", "site/page-profile.html",
+                "site/da/page-profile.html", "site/deskuptime/index.html",
+                "site/da/deskuptime/index.html"),
     ),
     # Belæget i katalogens `where` (2/10). Dom 6 og dom 4 i `check_pro_table`
     # dømmer **hvad** der står i tabellen mod katalogen. Men hver funktion

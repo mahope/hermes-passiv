@@ -89,7 +89,10 @@
         "en": "Batch conversion is web-tool only. Custom cleanup rules are in the browser extension and the Obsidian plugin — the CLI and the VS Code plugin have none",
         "da": "Batch-konvertering findes kun i webværktøjet. Egne rense regler er i browserudvidelsen og Obsidian-pluginet — CLI-værktøjet og VS Code-pluginet har ingen"
       },
-      "pricing_link": "https://cleancopy.tools/#price"
+      "pricing_link": {
+        "en": "https://cleancopy.tools/#price",
+        "da": "https://cleancopy.tools/da/#priser"
+      }
     },
     "deskuptime-pro": {
       "name": "DeskUptime Pro",
@@ -237,7 +240,10 @@
         "en": "Alerts are desktop notifications and webhooks — no SMS, email or phone",
         "da": "Alarmer er skrivebordsnotifikationer og webhooks — ingen SMS, mail eller telefon"
       },
-      "pricing_link": "https://deskuptime.com/#pro"
+      "pricing_link": {
+        "en": "https://deskuptime.com/#pro",
+        "da": "https://deskuptime.com/da/#pro"
+      }
     },
     "transmute-desktop": {
       "name": "Transmute Desktop",
