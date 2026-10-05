@@ -112,10 +112,22 @@ RE_RATE_LIMIT_CALL = re.compile(r"rateLimitIp\(\s*request,\s*env,\s*'([^']+)'")
 RE_DISPATCH_INLINE = re.compile(r"if \(path === '([^']+)'\) return (\w+)\(")
 RE_DISPATCH_BLOCK = re.compile(r"if \(path === '([^']+)'\) \{\s*return (\w+)\(")
 
-# En funktions krop i `_worker.js`: fra `async function name(` til den næste
+# En funktions krop i `_worker.js`: fra `function name(` til den næste
 # topniveau-funktion. Præcis nok til at finde hvilken handler der kalder
 # `rateLimitIp` med et givent scope.
-RE_FUNCTION = re.compile(r"^async function (\w+)\(", re.M)
+#
+# `async` er **valgfrit her**, og det er ikke en kosmetisk detalje. Rutedispatchen
+# ligger i `export default { fetch: guard(async (request, env, ctx) => { … }) }`,
+# altså i en anonym pil-funktion som `RE_FUNCTION` ikke kan se. Uden
+# `function guard(` som grænsefalder `handleClientError` (linje 309) hele
+# dispatchen op til `handleDownload` (652) i sin krop — og så læser `RE_KALD` de
+# halvtreds handler-navne derinde som *kald*. Målt 6/10 før rettelsen:
+# `/api/client-error` blev dømt som hentende, fordi `handleUrlInspect` står i
+# dispatchen, ikke fordi `handleClientError` henter noget.
+RE_FUNCTION = re.compile(r"^(?:async\s+)?function\s+(\w+)\s*\(", re.M)
+# En signaturlinje må **aldrig** ligge i en krop. Det er definitionen på at
+# grænsen er forkert, og selftesten dømmer det navnefrit (tilfælde 5d).
+RE_SIGNATUR = re.compile(r"^(?:async\s+)?function\s+\w+\s*\(", re.M)
 # Et kald på en navngiven topniveau-funktion, som `naaet()` bruger til at følge
 # en rute ned gennem de hjælpefunktioner den kalder. Uden `[A-Za-z0-9_$]` bag
 # `\\w` ville `foo(` også matche `someObj.foo(`, som ikke er en lokal funktion.
@@ -290,12 +302,31 @@ def worker_text() -> str:
 
 
 def function_bodies(text: str) -> dict[str, str]:
-    """Kortlæg `async function navn(` → krop, frem til næste topniveau-funk."""
-    starts = [(m.group(1), m.end()) for m in RE_FUNCTION.finditer(text)]
+    """Kortlæg `function navn(` → krop, frem til næste topniveau-funktion.
+
+    Kroppen **begynder ved sin egen `{`** og **slutter ved næste funktions
+    `start()`** — ikke ved næste funktions `end()`.
+
+    Slutter man ved `end()`, så afsluttes kroppen lige efter næste funktions
+    åbne parentes, altså midt i dens signatur. Den krop indeholder da linjen
+    `async function handleBugbottleDemo(`, og `RE_KALD` matcher den som et *kald*.
+    Det er målt, ikke gættet: før rettelsen læste `naaet()` den næste signatur som
+    en hjælpefunktion og fulgte den, så `/api/clean-copy` arvede `fetch` og
+    `?url=` fra `handleCheckout` → `handleBugbottleDemo` → `handleUrlInspect`,
+    skønt `handleCleanCopyAPI`'s egen krop hverken har `fetch(` eller
+    `searchParams.get('url')`. Følgen var **12** hentende ruter i stedet for 5 —
+    og porten ville have gjort `clean-copy-api.html` rød for at lyve om, hvor
+    hentningen sker, hvis siden havde sagt sandheden.
+
+    Målt efter rettelsen: **5** hentende ruter, stabilt for `dybde` 1, 2, 3, 5
+    og 10, og **0** kroppe med en signatur i sig.
+    """
+    starts = [(m.group(1), m.start()) for m in RE_FUNCTION.finditer(text)]
     bodies: dict[str, str] = {}
     for index, (name, begin) in enumerate(starts):
         end = starts[index + 1][1] if index + 1 < len(starts) else len(text)
-        bodies[name] = text[begin:end]
+        opening = text.index("{", begin)
+        bodies[name] = text[opening:end]
     return bodies
 
 
@@ -880,6 +911,33 @@ def self_test() -> int:
                     f"uden fetch i handleScanProxy er {relative} stadig rød — "
                     f"porten dømmer altså andet end hentningen"
                 )
+    # 5d. Grænsen mellem to funktioners kroppe. Navnefrit og målt: en krop må
+    #     aldrig indeholde en *anden* funktions signatur. Før rettelsen sluttede
+    #     hver krop ved næste funktions `end()`, så kroppen indeholdt netop den
+    #     linje, og `RE_KALD` læste den som et kald — hvilket gjorde 7 af 12
+    #     «hentende» ruter hentende på papiret uden at hente noget.
+    kroppe = function_bodies(worker_text())
+    for navn, krop in sorted(kroppe.items()):
+        rest = RE_SIGNATUR.search(krop)
+        if rest:
+            failures.append(
+                f"{navn}: kroppen slutter inde i næste funktions signatur "
+                f"({rest.group(0).strip()!r}) — `function_bodies` afgrænser ved "
+                f"næste `start()`, ikke ved næste `end()`"
+            )
+    # 5e. Rutedispatchen må ikke ligge i en *handlers* krop. Den ligger i
+    #     `guard(async (request, …) => { … })`, som er anonym, så uden `guard`
+    #     som grænsefalder falder den i den handler der ligger først i filen, og
+    #     så læses alle handler-navne som kalder hinanden.
+    dispatch = dict(RE_DISPATCH_INLINE.findall(worker_text()))
+    dispatch.update(RE_DISPATCH_BLOCK.findall(worker_text()))
+    for path, handler in sorted(dispatch.items()):
+        krop = kroppe.get(handler, "")
+        if RE_DISPATCH_INLINE.search(krop) or RE_DISPATCH_BLOCK.search(krop):
+            failures.append(
+                f"{handler} (ruten {path}): kroppen indeholder hele "
+                f"rutedispatchen — den skal kun ligge i `guard(…)`"
+            )
 
     print(f"self-test: {len(failures)} fejl — {len(ærlige)} ærlige sider, "
           f"{len(rene)} rene klient-sider, {len(kun)} sider der kun kalder /scan-proxy, "

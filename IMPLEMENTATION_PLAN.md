@@ -13,6 +13,14 @@
 - **Fire scanner-fejl lukket 5.–6/10** (alle målt, detaljer i arkivet): 500 på
   `?url=https://`, `ReferenceError: analyseDoc` på begge sprog, `stats.html`s
   forældede nøglenavn, og en manglende lås på «Scan now». Gate: **173 steps**.
+- **`check_storage_claims` dømte 7 ruter som hentende, som ikke henter, 6/10.**
+  `function_bodies` afgrænsede hver krop ved næste funktions `end()`, altså
+  midt i dens signatur, så `RE_KALD` læste signaturlinjen som et kald og
+  `naaet()` fulgte den. Målt: **12** «hentende» ruter mod **5** efter
+  rettelsen, stabilt for `dybde` 1/2/3/5/10. Uden fixen ville porten have
+  gjort `clean-copy-api.html` rød for at lyve om hvor hentningen sker, hvis
+  siden havde sagt sandheden — den tager HTML'en i kroppen og laver den om i
+  CPU. To nye selftest-tilfælde (5d, 5e) dømmer nu selve grænsen.
 - **Næste:** opgave 29 — de otte øvrige sider har samme krybningsløgnest.
 
 ## Verificér deploy
@@ -203,6 +211,22 @@ HTTP 200 blev ikke brugt som bevis.
     rettet her, 16 er tilbage. Bemærk at `/compliance-site-check` **fri** rute
     faktisk følger links til de juridiske sider — det er den crawler, Pro ikke
     er.)*
+30. ~~**Porten kunne tvinge en sand side til at lyve.**~~ **LUKKET 6/10.**
+    Review-fund 29/9 (MIDDEL). `tools/check_storage_claims.py` læste *næste
+    funktions signatur* som et kald, så 7 af 12 «hentende» ruter aldrig
+    hentede noget. Hvorfor det betød noget: `check_fetch_claim` ville have dømt
+    `clean-copy-api.html` for en **sand** afvisning. Rettelse: kroppen slutter
+    nu ved næste `start()` og begynder ved sin egen `{`, og `RE_FUNCTION`
+    tager `async` som valgfrit så `function guard(` bliver en grænse — ellers
+    faldt hele rutedispatchen i `handleClientError`s krop. Accept:
+    `fetching_routes()` giver **5** ruter (`/scan-proxy`,
+    `/api/header-check`, `/api/profile`, `/api/url-inspect`,
+    `/api/compliance-scan`), stabilt for `dybde` 1/2/3/5/10, og selvtestens
+    **5d/5e** er røde på den gamle kode (**58** fejl hhv. **1** fund) mod **0**
+    på den nye. `storing_routes` er uændret på **9**, porten **GRØN** med 0
+    fund, `--self-test` **0 fejl**. Fuld gate: **GRØN — 173 steps**. *Ingen
+    deploy-note:* kun `tools/` er rørt, ingen fil i `site/` eller `dist/`, så
+    intet på sitet ændrer sig.
 
 
 ## ❓ Til Mads
