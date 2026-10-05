@@ -11,11 +11,26 @@
 - **`site/stats.html` læste et nøglenavn ruten ikke har** (`waitlist` mod
   `waitlist_lifetime`), så «Raw JSON» viste **0** af ventelistens tal uden en
   fejl. Porten dømmer nu **2** konsumenter-kontroller i `site/`.
-- **Næste:** opgaver 27–28 nederst — «Scan now» har ingen lås (et dobbeltklik
-  brænder **10** kvoteslots), og «fem er samme tal som `/api/compliance-scan`
-  tager» er usandt (den tager **12**).
+- **«Scan now» har nu en lås, 6/10.** Et dobbeltklik brænder **10**
+  kvoteslots (én pr. side × fem sider), og `revealResult` skrev det andet
+  resultat oven i det første — læseren så ét svar og ingen fejl. Målt:
+  **532/532** i `scan-clients` (var 518) med to nye mutationer, og
+  `scan-share` **119/119** — den faldt først, fordi sandkassens knap-stub
+  mangler `querySelector`, så opslaget på knappen lå **null-sikkert**.
+- **Næste:** opgave 28 nederst — «fem er samme tal som `/api/compliance-scan`
+  tager» er usandt (den tager **12**), og Pro-tabellen på `/scan` siger endnu
+  «the page you paste», selv om værktøjet læser fem.
 
 ## Verificér deploy
+
+`VERIFICÉR DEPLOY: /scan laaser knappen under et kald 6/10 02:1x
+ceo/scan-dobbeltklink-laas` — måles på **indhold**, ikke bare 200: live
+`https://mahope.tools/scan` skal have `let scanILuft = null;`, `async function
+scanKør(raw){` **og** `if(scanILuft) return scanILuft;`, og knappen skal være
+`<button type="submit" class="btn-primary">` (uændret) — låsen skal altså være
+JS, ikke et nyt element. Live `/scan-da` skal have `Scanner …` i låseteksten og
+`Scan nu` i den oprindelige. Målingen kræver en browser: et `curl` kan se
+`scanILuft` og `knap.disabled = true`, men ikke at kaldet kun går én gang.
 
 `VERIFICÉR DEPLOY: scan-proxy svarer 400 paa tegnsfejl 6/10 01:5x
 ceo/scan-proxy-ugyldig-linje` — måles på **indhold og status**, ikke bare 200:
@@ -156,10 +171,15 @@ HTTP 200 blev ikke brugt som bevis.
     **474/474** mod **462/474** (12 fejl, alle med `-> 500 {}`) på den gamle kode.
     Rettelsen: tom nøgle identificeres på sin egen rå tekst i stedet for at
     være en adgangsbetingelse, og `sider[0]?.error` kan ikke kaste mere.
-27. **Punkt 3 på «Scan now»:** knappen har ingen lås, og et dobbeltklik brænder
-    **ti** kvoteslots (`rateLimitIp` tæller én pr. side). Accept: knappen
-    `disabled` mens et kald er i luften, og en mutation i
-    `tests/scan-clients.test.mjs` der gør det rødt.
+27. ~~**Punkt 3 på «Scan now»:** knappen har ingen lås, og et dobbeltklik
+    brænder **ti** kvoteslots~~ **LUKKET 6/10.** `scan()` blev en lås omkring
+    `scanKør()`: et kald i luft får **samme** løfte tilbage, og knappen er
+    `disabled` med teksten «Scanning…» / «Scanner …» mens den venter. Målt i
+    `tests/scan-clients.test.mjs`: et dobbeltklik på submit giver **1** kald mod
+    **2** på mutationen hvor låsen er fjernet — og den mutationen læser den
+    rigtige fil, ikke en kopi. Knappen findes gennem `#scanForm`, fordi
+    `scan-share`'s sandkasse kun har `querySelector: () => null` på *dokumentet*
+    (den faldt rød på første kørsel).
 28. **«Fem er samme tal som `/api/compliance-scan` tager» er usandt** — den tager
    12 (`CSC_MAX_PAGES = 12`, summen pr. kald). Accept: kommentaren i
    `_worker.js:681` og pro-kortet på `/scan` siger 5 mod 12.

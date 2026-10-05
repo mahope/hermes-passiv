@@ -525,7 +525,27 @@ function splitUrls(raw){
   });
   return settes;
 }
+// Ét kald ad gangen. `rateLimitIp` tæller **én** kvoteslot pr. side, så et
+// dobbeltklik på «Scan now» med fem URL'er brænder ti af de 60 timer i timen —
+// og `revealResult` skriver det andet resultat oven i det første, så læseren
+// ser ét svar og ingen fejl. Derfor låses knappen, og et kald der allerede er
+// i luft får det samme løfte tilbage i stedet for at sende et nyt.
+let scanILuft = null;
 async function scan(raw){
+  if(scanILuft) return scanILuft;
+  // Knappen findes gennem formularen, ikke gennem hele dokumentet: så slår
+  // `getElementById` aldrig fejl, hvis `#scanForm` ikke findes.
+  const form = document.getElementById('scanForm');
+  const knap = form && form.querySelector ? form.querySelector('button') : null;
+  const tekst = knap ? knap.textContent : null;
+  if(knap){ knap.disabled = true; knap.textContent = 'Scanning…'; }
+  scanILuft = scanKør(raw).finally(function(){
+    scanILuft = null;
+    if(knap){ knap.disabled = false; knap.textContent = tekst; }
+  });
+  return scanILuft;
+}
+async function scanKør(raw){
   const urls=splitUrls(raw);
   const out = document.getElementById('result');
   // Ingen `scan-failed` her: et tomt felt og for mange URL'er er **klientens**

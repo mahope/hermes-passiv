@@ -219,11 +219,22 @@ function loadPage(path, fetchImpl, opts = {}) {
     const v = /\bvalue="([^"]*)"/.exec(m[0]);
     if (v) seeds[m[1]] = v[1];
   }
+  // `opts.memoQSelector` giver hvert stub-element **samme** svar på samme
+  // `querySelector`, som en rigtig DOM gør. Uden det får hvert kald en ny stub,
+  // så en dom på «knappen er låst» ville læse en anden knap end den siden
+  // låste — altså grøn på en side der ikke låser noget. Kun `/scan` har brug
+  // for det, og kun fordi dens submit-handler låser knappen.
+  const memoQSelector = (e) => {
+    e._qs = {};
+    e.querySelector = (sel) => (e._qs[sel] = e._qs[sel] || el());
+    return e;
+  };
   // `opts.canvas` giver hver stub et læse-canvas. Kun `/text-on-image-checker`
   // har brug for det; de andre sider kalder aldrig `getContext`.
   const make = (id) => {
     const n = el();
     if (id in seeds) n.value = seeds[id];
+    if (opts.memoQSelector) memoQSelector(n);
     if (opts.canvas) (opts.levendeBilleder ? withLevendeCanvas(n) : withCanvas(n));
     return n;
   };
@@ -2404,6 +2415,80 @@ for (const [path, lang] of [['site/scan.html', 'EN'], ['site/scan-da.html', 'DA'
   ok(`scan ${lang}: mutationen (uden esc) er fanget`,
     gammel !== egen && /<img/i.test(await scanFejlHtml(path, gammel)),
     'mutationen gav ikke den gamle kode, så dommen kan ikke se forskellen');
+}
+
+// --------------------------------------------------------------------------
+// Ét kald ad gangen. «Scan now» koster nu fem sider pr. tryk, og `rateLimitIp`
+// tæller **én** slot pr. side — så et dobbeltklik brænder ti af de 60 timer i
+// timen. `revealResult` skriver det andet resultat oven i det første, så
+// læseren så ét svar og ingen fejl, hvilket er værre end at se fejlen.
+//
+// Dommen måler **antallet kald til `/scan-proxy`**, ikke antallet gange
+// `scan()` blev kaldt: en lås der bare returnerer tidligt uden at tælle
+// noget ville være grøn på «knappen låses», men den brænder stadig kvote.
+// Svaret kommer først efter en tick, fordi et dobbeltklik i virkeligheden er
+// to kald der ligger samtidig — ellers ville den anden submit nå at køre
+// efter den første var færdig, og dommen ville være grøn på koden uden lås.
+// --------------------------------------------------------------------------
+async function dobbeltklikPaaScan(path, source, knapTekst) {
+  const kald = [];
+  const svar = { ok: true, url: 'https://example.com', html: '<html lang="en"><head><title>Example</title></head><body><h1>Example</h1></body></html>' };
+  const fetchImpl = async (u) => {
+    kald.push(String(u));
+    await sleep(30);
+    return { ok: true, status: 200, json: async () => svar };
+  };
+  const { sandbox, nodes } = loadPage(path, fetchImpl,
+    { match: /scan-proxy/, preload: ['site/scan-share-core.js'], memoQSelector: true, ...(source ? { source } : {}) });
+  // Formularens knap er den eneste vej en læser har. Sandkassen læser ikke
+  // knappens tekst fra HTML'en, så den sættes her — ellers ville «får sin
+  // egen tekst tilbage» være grøn på en knap der aldrig havde haft en.
+  const knap = sandbox.document.getElementById('scanForm').querySelector('button');
+  knap.textContent = knapTekst;
+  sandbox.document.getElementById('url').value = 'https://example.com/\nhttps://example.com/kontakt';
+  sandbox.document.getElementById('scanForm').fire('submit');
+  await sleep(10);                 // midt i kaldet: knappen skal være låst
+  const laast = knap.disabled === true;
+  const undervejsTekst = (knap.textContent || '').trim();
+  const undervejs = kald.length;
+  sandbox.document.getElementById('scanForm').fire('submit');   // samme finger igen
+  await sleep(90);
+  return {
+    kald: kald.filter((u) => u.includes('/scan-proxy')).length,
+    undervejs, laast, undervejsTekst,
+    tekst: (knap.textContent || '').trim(),
+    resultat: (nodes.get('result') || {}).innerHTML || '',
+  };
+}
+
+for (const [path, lang, knapTekst, undervejsTekst] of [
+  ['site/scan.html', 'EN', 'Scan now', 'Scanning…'],
+  ['site/scan-da.html', 'DA', 'Scan nu', 'Scanner …'],
+]) {
+  const r = await dobbeltklikPaaScan(path, null, knapTekst);
+  ok(`scan ${lang}: et dobbeltklik sender ét kald, ikke to`,
+    r.kald === 1, `kald=${r.kald} (forventet 1); undervejs=${r.undervejs}`);
+  ok(`scan ${lang}: den anden trykning sker mens det første svar er i luft`,
+    r.undervejs === 1, `undervejs=${r.undervejs} (forventet 1)`);
+  ok(`scan ${lang}: knappen er låst mens kaldet er i luft`, r.laast);
+  ok(`scan ${lang}: den låste knap siger at den arbejder`,
+    r.undervejsTekst === undervejsTekst, `fandt: «${r.undervejsTekst}»`);
+  ok(`scan ${lang}: knappen får sin egen tekst tilbage`, r.tekst === knapTekst,
+    `fandt: «${r.tekst}»`);
+  ok(`scan ${lang}: resultatet er en færdig scorecard, ikke «Scanning …»`,
+    r.resultat.includes('class="scorecard"'), `fandt: ${(r.resultat.match(/Scanning[^<]{0,30}/) || ['(tomt)'])[0]}`);
+
+  // Polaritet: mutationen fjerner præcis låsen i den rigtige fil — ikke en
+  // håndskrevet kopi af den gamle side. Uden den ville dommen være grøn på
+  // en side hvor låsen aldrig har været. Kun antallet kald er målingen her:
+  // to sideløbende kald sætter begge knappens tekst, så hvilken der gendanner
+  // den sidst er en rækkefølge-egenskab ved et kald der alligevel er en fejl.
+  const egen = readFileSync(join(root, path), 'utf8');
+  const gammel = egen.replace(/if\(scanILuft\) return scanILuft;/, '');
+  const m = gammel !== egen ? await dobbeltklikPaaScan(path, gammel, knapTekst) : null;
+  ok(`scan ${lang}: mutationen (uden lås) er fanget`,
+    !!m && m.kald === 2,
+    `mutationen gav ikke den gamle kode, så dommen kan ikke se forskellen: ${m ? `kald=${m.kald}` : 'ingen kode'}`);
 }
 
 // --------------------------------------------------------------------------
