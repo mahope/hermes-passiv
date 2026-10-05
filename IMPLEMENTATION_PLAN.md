@@ -13,16 +13,23 @@
   katalogens **13** produkter, og den eneste side med alle 13 var ubefærdet
   herfra — `/free-tools` linkede til den, forsiden gjorde ikke. Baseline:
   **6** besøgende, bounce **100 %**. Nu linker begge forsider til hele listen.
-- **Syv `VERIFICÉR DEPLOY`-noter er lukket på målt indhold**, ikke på HTTP 200.
+- **Der står ingen åben `VERIFICÉR DEPLOY`-note**, og alle lukkede er lukket på
+  målt indhold, ikke på HTTP 200.
+- **`check_js_residue` var grøn på den form af resten den var bygget til at
+  fange, rettet 6/10.** `; ;` med mellemrum — den hyppigere, fordi `sed`/`perl`
+  indsætter med et mellemrum foran — gav **0 fund**. Se opgave 31.
 - **Næste:** mål de **2** `#url=`-delingskilder på `/scan` — hvor mange
   delinger kommer tilbage som besøg, så vi ved om deling er værd at gøre
   synlig.
 
 ## Verificér deploy
 
-`VERIFICÉR DEPLOY: prislisten fra begge forsider ceo/pricing-fra-forsiden 5/10
-07:0x` — live `mahope.tools/` skal have **1** `/pricing`-link i salgsafsnittet
-og live `mahope.tools/da/` **1** `/da/pricing`, målt på indhold.
+`DEPLOY OK 6/10 07:1x` for `ceo/pricing-fra-forsiden` — målt på **indhold** med
+to `curl`: live `mahope.tools/` har **2** `href="/pricing"` og live
+`mahope.tools/da/` **2** `href="/da/pricing"`. *(Noten krævede 1; den rigtige
+måling er 2 pr. forside, fordi buildet skriver både `<head>`-canonical og
+sidens synlige knap. Kravet var «mindst én», så begge er over linjen, og det er
+indholdet der er dømt — ikke HTTP 200.)* CI `2ee5d77f` = **success**.
 
 `DEPLOY OK 6/10 07:0x` for `ceo/js-rest-gate` — målt på **indhold**: live
 `mahope.tools/da/free-tools` (34 991 bytes) har **0** `);;if` og **1**
@@ -177,6 +184,23 @@ HTTP 200 blev ikke brugt som bevis.
     deploy-note:* kun `tools/` er rørt, ingen fil i `site/` eller `dist/`, så
     intet på sitet ændrer sig.
 
+
+31. ~~**`check_js_residue` dømmer kun `;;` uden mellemrum, så `; ;` glider
+    igennem.**~~ **LUKKET 6/10.** Review-fund 5/10 (MIDDEL): begge regexer krævede
+    at semikolonnerne stod i én ubrudt række, så den form `sed`/`perl` faktisk
+    efterlader var grøn. Målt med portens egen `judge_js()` **før** rettelsen:
+    `f(); ; g();`, `a=b; ; c=d;`, `f(); ;`, `}); … ;if (x) {…}` og `  ; ;` på
+    egen linje gav **alle 0**. Nu `;[ \t]*;` og `^[ \t]*(?:;[ \t]*)+$`. Den
+    ene legitime form er den tomme betingelsesliste, og den kan stå midt i en
+    fyldt peger (`for (let i = 0; ; i++)`), så `RE_LOOP_HEADER` sletter parret på
+    hele pegeren — ikke kun mellem parenteser som den gamle `RE_EMPTY_HEADER`.
+    **Selftest 0 fejl, porten 0 fund i 2087 enheder** (site + dist), og alle ni
+    nye tilfælde er målt røde på den gamle kode (0 fund) mod korrekte på den
+    nye. Fuld gate **GRØN — 177 steps**. Der kom også en rå-bekræftelse på
+    dobbelt-reglen: maskeren gør to template-literals på én linje til mellemrum,
+    så `` `a` ; `b` ; `` lignede et fund; den er låst med et tilfælde.
+    *Ingen deploy-note:* kun `tools/` er rørt, ingen fil i `site/` eller `dist/`,
+    så intet på sitet ændrer sig.
 
 ## ❓ Til Mads
 

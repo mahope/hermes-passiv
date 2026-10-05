@@ -15,12 +15,17 @@ grøn. Den eneste måde at se den på er at læse linjen.
 Denne port dommer derfor **hele** JS-overfladen på de to rester, der er gyldige
 syntaks og alligevel altid en fejl:
 
-1. `;;` i kode (to tomme sætninger i træk). `for(;;)` er det eneste sted, hvor
-   det er mening, og er undtaget — det er en tom betingelsesliste, ikke en
-   rester.
+1. `;;` i kode (to tomme sætninger i træk) — også med mellemrum imellem,
+   `; ;`. Mellemrum er den **hyppigere** form, ikke den sjældnere: `sed` og
+   `perl` indsætter typisk med et mellemrum foran, så kun `;;` uden mellemrum
+   ville have dømt den sjældnere variant og ladt den hyppigere stå.
 2. En linje der **kun** består af `;` og mellemrum. Det er den anden halvdel
    af den samme fejl: en indsættelse der efterlod den afsluttende `;` på sin
    egen linje.
+
+**Den ene legitime form er den tomme betingelsesliste i en løkkepeger** —
+`for(;;)`, `while ( ; ; )` og `for (let i = 0; ; i++)`. Den slettes fra
+dømningen før den tæller, så de tre ikke bliver fund.
 
 **Rester i strenge er data, ikke kode.** `site/clean-copy-bookmarklet.js` er én
 minificeret `javascript:`-streng på én linje, og den indeholder med vilje
@@ -54,10 +59,23 @@ RE_SCRIPT = re.compile(r"<script(?![^>]*\bsrc=)[^>]*>(.*?)</script>", re.S | re.
 RE_LD_JSON = re.compile(r"application/ld\+json", re.I)
 RE_IMPORTMAP = re.compile(r"""<script[^>]*type=["']importmap["']""", re.I)
 
-# `for(;;)` og `while(;;)`: to semikoloner er her * meningen, ikke en rester.
-RE_EMPTY_HEADER = re.compile(r"\(\s*;;\s*\)")
-RE_DOUBLE_SEMI = re.compile(r";;")
-RE_SEMI_ONLY_LINE = re.compile(r"^[ \t]*;+[ \t]*$")
+# To semikolonner med valgfrit mellemrum imellem. Ren `;;` er et
+# specialtilfælde, så én regel dømmer begge former — ellers glider den
+# hyppigere (`; ;`) lige igennem, fordi `sed`/`perl` indsætter med et
+# mellemrum foran.
+RE_DOUBLE_SEMI = re.compile(r";[ \t]*;")
+RE_SEMI_ONLY_LINE = re.compile(r"^[ \t]*(?:;[ \t]*)+$")
+
+# `for ( … )` og `while ( … )`. Den tomme betingelsesliste er den eneste grund
+# til at to semikolonner står med vilje, og den kan stå midt i en fyldt peger:
+# `for (let i = 0; ; i++)`. Derfor slettes parret på hele pegeren og ikke kun
+# når det står mellem to parenteser.
+RE_LOOP_HEADER = re.compile(r"\b(?:for|while)\s*\(")
+# Her er linjeskift også mellemrum: en tom betingelsesliste må stå på sin egen
+# linje (`for (let i = 0;\n;\ni++)`), ellers ville selve den linje blive dømt
+# som en rest af den anden slags — altså en sand fund, men en der forsvinder
+# lige så snart `for`-pegeren er smukt formateret.
+RE_EMPTY_CONDITION = re.compile(r";[ \t\r\n]*;")
 
 # `/` er regex-literal, ikke division, når det forrige tegn ikke kan slutte et
 # udtryk. Listen er den samme som enhver minimal JS-scanner bruger; den skal
@@ -214,15 +232,52 @@ def mask_js(src: str) -> str:
     return "".join(out)
 
 
+def blank_empty_conditions(masked: str) -> str:
+    """Slet de tomme betingelseslister i `for ( … )` / `while ( … )`.
+
+    Det er den eneste grund til at to semikolonner står med vilje. Den kan stå
+    midt i en fyldt peger — `for (let i = 0; ; i++)` — så en regel der kun
+    kigger på `for(;;)` ville gøre porten rød på gyldig kode, og en rød port
+    man frøs slås fra.
+
+    Klammebalanceringen er sikker her, fordi den løber på den **maskerede**
+    tekst: streng- og kommentarindhold er allerede mellemrum, så en `(` i en
+    streng kan ikke forskyde dybden. Positionerne bevares, så et fund stadig kan
+    slås op på den rigtige linje.
+    """
+    out = list(masked)
+    n = len(masked)
+    for m in RE_LOOP_HEADER.finditer(masked):
+        i = m.end() - 1  # positionen af `(` i `for (`
+        depth = 0
+        j = i
+        while j < n:
+            if out[j] == "(":
+                depth += 1
+            elif out[j] == ")":
+                depth -= 1
+                if depth == 0:
+                    break
+            j += 1
+        header = "".join(out[i:j + 1])
+        for mm in RE_EMPTY_CONDITION.finditer(header):
+            for k in range(mm.start(), mm.end()):
+                out[i + k] = " "
+    return "".join(out)
+
+
 def judge_js(label: str, code: str, line_offset: int = 0) -> list[str]:
     """Fund i én kodeenhed. `label` er `fil:linje` for kundefejl."""
-    masked = mask_js(code)
-    masked = RE_EMPTY_HEADER.sub(
-        lambda m: " " * len(m.group(0)), masked)
+    masked = blank_empty_conditions(mask_js(code))
     found: list[str] = []
     for m in RE_DOUBLE_SEMI.finditer(masked):
+        # Samme rå-bekræftelse som nedenfor: maskeren kan selv skabe et
+        # par, fordi den gør indholdet i to strenge på samme linje til
+        # mellemrum.
+        if not RE_DOUBLE_SEMI.match(code, m.start(), m.end()):
+            continue
         found.append(f"{label}:{line_offset + masked[:m.start()].count(chr(10)) + 1}"
-                     f"  dobbelt `;;` (tom sætning)")
+                     f"  to semikolonner i træk (tom sætning)")
     # Maskeringen lokalerer, den rå tekst bekræfter. Uden bekræftelsen dømmer
     # porten en flerlinjes template-literal, der *slutter* med `;`: maskingen
     # gør hele strengens indhold til mellemrum, så den afsluttende linje ender
@@ -235,7 +290,7 @@ def judge_js(label: str, code: str, line_offset: int = 0) -> list[str]:
         raw = raw_lines[idx - 1] if idx - 1 < len(raw_lines) else ""
         if RE_SEMI_ONLY_LINE.match(line) and RE_SEMI_ONLY_LINE.match(raw):
             found.append(f"{label}:{line_offset + idx}"
-                         f"  linje der kun er `;`")
+                         f"  linje der kun er semikoloner")
     return found
 
 
@@ -304,12 +359,44 @@ def self_test() -> int:
     eq("tom linje er ikke en rest", judge_js("t", "f();\n\ng();\n"), 0)
     eq("for(;;) er mening", judge_js("t", "for (;;) { break; }\n"), 0)
     eq("while(;;) er mening", judge_js("t", "while (;;) { break; }\n"), 0)
+    # Mellemrum i den tomme betingelsesliste er stadig mening, også når pegeren
+    # ellers er fyldt. Uden disse to går den nye brede regel rød på gyldig kode,
+    # og det er den fejl der lå bag fundet.
+    eq("for ( ; ; ) er mening", judge_js("t", "for ( ; ; ) { break; }\n"), 0)
+    eq("tom betingelse i fyldt peger",
+       judge_js("t", "for (let i = 0; ; i++) { f(); }\n"), 0)
+    eq("tom betingelse paa egen linje",
+       judge_js("t", "for (let i = 0;\n;\ni++) { f(); }\n"), 0)
     eq("streng er data", judge_js("t", 'const s = "a;;b";\n'), 0)
     eq("template er data", judge_js("t", "const s = `a;;b`;\n"), 0)
     eq("regex-literal er data", judge_js("t", "const r = /a;;b/;\n"), 0)
     eq("linjekommentar er data", judge_js("t", "f(); // ;;\n"), 0)
     eq("blokkommentar er data", judge_js("t", "f(); /* ;;\n;; */\ng();\n"), 0)
     eq("division er ikke regex", judge_js("t", "const r = a / b;;\n"), 1)
+    # Regression fra review-fundet 5/10 (MIDDEL): porten dømmer kun `;;`
+    # **uden** mellemrum, så den hyppigere form `; ;` — den `sed`/`perl`
+    # faktisk efterlader — glider lige igennem. Fire rækker målt med portens
+    # egen `judge_js()`; de lå alle på 0 fund, de skal have 1.
+    eq("rest med mellemrum mellem semikolonner",
+       judge_js("t", "f(); ; g();\n"), 1)
+    eq("rest med mellemrum i assign",
+       judge_js("t", "a=b; ; c=d;\n"), 1)
+    eq("slutning med mellemrum", judge_js("t", "f(); ;\n"), 1)
+    # Præcis den form `b2d9cb33` efterlod i `.wrangler/cache/cf.json`.
+    eq("rest fra sed med et mellemrum foran",
+       judge_js("t", "});                    ;if (x) { f(); }\n"), 1)
+    # Og den anden halvdel af fejlen: en linje der kun er semikolonner. Den
+    # gamle regel krævede at *alle* semikolonnerne stod i én ubrudt række, så
+    # `; ;` på en linje alene var grøn.
+    # Begge regler rammer samme linje, og det er portens egen, kendte
+    # dobbeltoptælling — samme som `;;` alene i `MUTATION` nedenfor.
+    eq("semikolonlinje med mellemrum", judge_js("t", "  ; ;\n"), 2)
+    eq("semikolonlinje med tre og mellemrum", judge_js("t", " ; ; ;\n"), 2)
+    # Maskeringen må ikke selv skabe et fund: to template-literals på én linje
+    # bliver til mellemrum, så parret mellem dem ligner `; ;`. Den rå
+    # bekræftelse i `judge_js` er det der dømmer det fra.
+    eq("to strenge paa en linje er kode",
+       judge_js("t", "`a` ; `b` ;\n"), 0)
     # Regression fra portens egen udvikling: en template-literal med en
     # template-literal indeni (`${ … }`) fik maskeren til at tro den yderste
     # streng var åben ved EOF. Uden denne linje er fejlen usynlig igen.
