@@ -356,6 +356,27 @@ STEPS: tuple[Step, ...] = (
         inputs=("tools/check_inline_js.py", "site/**", "build_sites.py",
                 "tools/pagepass.py"),
     ),
+    # Opgave 25: `;;` er en *tom sætning* i JavaScript, så `node --check`,
+    # `tsc`, bygget og `check_inline_js` er alle grønne på den. Målt 6/10 med
+    # `git log -S`: `97ef0b68` efterlod `…/;;` på linje 119 i
+    # `site/_worker.js`. Porten dømmer hele JS-overfladen — `.js`-filer og
+    # inline `<script>` i både `site/` og `dist/` — og maskerer strenge og
+    # kommentarer først, så `};` i `clean-copy-bookmarklet.js` ikke tælles.
+    #
+    # Første kørsel fandt én rigtig rester i `site/da/free-tools.html:353`
+    # (`?$/);;if(!m)return;`), som porten rettede i samme commit.
+    Step(
+        id="js-residue",
+        argv=("python3", "tools/check_js_residue.py"),
+        inputs=("tools/check_js_residue.py", "site/**", "build_sites.py",
+                "tools/pagepass.py", "tools/brand.py"),
+        needs_dist=True,
+    ),
+    Step(
+        id="js-residue-selftest",
+        argv=("python3", "tools/check_js_residue.py", "--self-test"),
+        inputs=("tools/check_js_residue.py", "site/**"),
+    ),
     Step(
         id="private-content",
         argv=("python3", "tools/check_private_content.py"),

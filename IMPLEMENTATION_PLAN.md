@@ -21,9 +21,16 @@
   verb **i pro-kortet** plus den positive sætning om serverlæsningen.
   Målt begge veje: **532/534** med løgnest genindsat, **534/534** med teksten.
 - **Seks `VERIFICÉR DEPLOY`-noter er verificeret og lukket, 6/10** (se nedenfor).
-- **Næste:** opgave 25 — `$1`-grebet efter en regex-indsættelse fanger ikke `;;`.
+- **Næste:** feature-kø 10 — `/scan` mangler et eksempel-resultat at dele uden
+  en kørsel. Deploy-noten for `ceo/js-rest-gate` skal måles på indhold.
 
 ## Verificér deploy
+
+`VERIFICÉR DEPLOY: gaten dømmer `;;` og rettet `/da/free-tools` 6/10 06:0x
+ceo/js-rest-gate` — måles på **indhold**: live `mahope.tools/da/free-tools` skal
+være fri for `?$/);;if(!m)return;` og have `?$/);if(!m)return;` (klik-
+målingen skal stadig virke: et klik på `/da/paid-templates` skal sende et
+`/api/track`-kald). HTTP 200 beviser intet for denne note.
 
 `VERIFICÉR DEPLOY: pro-kortene fortæller hvad /api/report gør 6/10 03:5x
 ceo/pro-kort-uden-krybning` — måles på **indhold**, ikke bare 200. Live
@@ -97,15 +104,23 @@ HTTP 200 blev ikke brugt som bevis.
     `git cherry main <gren>` være læst, og dens rørte filer sammenlignet fil-for-fil
     med `main`. En `+` er ikke nok, fordi patch-id skjuler at main er ældre.
 
-25. **Punkt 13 i ren kultur dømmer kun `$1`, ikke `;;`.** Hvorfor: fundet 6/10 var
-   et dobbelt `;;` i `site/_worker.js:119`, rester fra en scriptet indsættelse —
-   og `;;` er *gyldig* JavaScript (en tom sætning), så ingen tsc, build eller
-   port kan se den. Den er rettet, men grebet `git diff | grep -nE '^\+.*\$[0-9]'`
-   fanger kun `$1`, `$2`, `$0`. Accept: et script (eller en port) der dømmer
-   tilføjede JS-linjer for `;;` og `^\+\s*;` kører efter hver regex-indsættelse.
-   *(Målt: `;;` var på linje 119 alene, `git log -S` peger på `97ef0b68`; ingen
-   port dækker `site/_worker.js` — `grep -rn "_worker.js" .github/workflows/*.yml
-   tools/quality_gate.py | grep -i lint` er tom.)*
+25. ~~**Punkt 13 i ren kultur dømmer kun `$1`, ikke `;;`.**~~ **LUKKET 6/10.**
+    Hvorfor: fundet 6/10 var et dobbelt `;;` i `site/_worker.js:119`, rester fra
+    en scriptet indsættelse — og `;;` er *gyldig* JavaScript (en tom sætning),
+    så hverken `node --check`, tsc, bygget eller `check_inline_js` kan se den.
+    Ny port `tools/check_js_residue.py` dømmer hele JS-overfladen (`.js` +
+    inline `<script>`, `site/` **og** `dist/`) for `;;` og for linjer der kun er
+    `;`, med `for(;;)` undtaget. Den **maskerer strenge og kommentarer først**,
+    fordi `site/clean-copy-bookmarklet.js` er én minificeret `javascript:`-streng
+    med `});;var` som data — uden masking var porten rød på første kørsel.
+    To steps i gaten (`js-residue`, `js-residue-selftest`), **175 steps grønne**.
+    Første kørsel fandt én rigtig rester i `site/da/free-tools.html:353`
+    (`?$/);;if(!m)return;`), rettet i samme commit. Selftest **0 fejl**, og den
+    er målt rød på den gamle kode: med `_worker.js` plus mutationen er den
+    **4 fund** mod **0** på den uændrede fil. Maskeringen er testet mod de to
+    fejl den selv havde: en `/* … */` der lukker på samme linje slugt resten af
+    workeren som kommentar, og en template-literal med `${ … }` indeni som lod
+    maskeren tro den yderste streng stod åben ved EOF.
 
 
 26. ~~**`/scan-proxy` kan svare 500 på `?url=https://`.**~~ **LUKKET 6/10.**
