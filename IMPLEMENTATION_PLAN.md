@@ -15,38 +15,48 @@
   **dom 5** læser katalogen for `eucomply-pro`, låst til samme måling
   (`kald == 1`), så en ægte flersidet `handleReport` slår den fra. Selftest
   **12/12**.
+- **Tre fund rettet i dom 5's egen begrundelse, 6/10** (review `mahope-tools`).
+  Optællingen «16 kort på 9 sider, dom 4 så to af dem» holdt ikke på
+  `787488ae`'s egen baseline: målt med portens `RE_KRYB` over
+  `pro_table_pages[].pro_features[].labels` er der **14** kryb-påstande på **7**
+  sider, alle i katalogen — og dom 4 så **nul** af dem, ikke to, fordi de to
+  `/scan`-sider den læste var allerede rettet i `4515d348`. Beviset er at
+  porten var GRØN på `716d1e9b`. Samme måling rettede «otteogtyve blokke» til
+  **21** ved `:257` (katalogens `pro_table_pages` har 21, `site/` har 21 filer
+  med `pro-table:start`), og en scriptet indsættelse havde flyttet halvdelen af
+  docstringen ind i 5 tegns indrykning — nu tilbage på kolonne 0.
+  Dom + selftest **grønne**, ingen kode ændret.
 - **`tests/scan-clients.test.mjs` krævede den løgnest, 6/10.** Dom 4 i testen
   ville have «crawls the whole site — the same check on every page it finds»
   stå i kortet — altså holdt testen løgnen i live. Dømmer nu intet krybende
   verb **i pro-kortet** plus den positive sætning om serverlæsningen.
   Målt begge veje: **532/534** med løgnest genindsat, **534/534** med teksten.
-- **Seks `VERIFICÉR DEPLOY`-noter er verificeret og lukket, 6/10** (se nedenfor).
-- **Næste:** feature-kø 10 — `/scan` mangler et eksempel-resultat at dele uden
-  en kørsel. Deploy-noten for `ceo/js-rest-gate` skal måles på indhold.
+- **Syv `VERIFICÉR DEPLOY`-noter er verificeret og lukket** (se nedenfor):
+  de to fra dette felt målt på indhold 6/10 07:0x.
+- **Næste:** CEO-kø 0 — `/api/url-inspect` er helt nede (`handleUrlInspect`
+  mangler `env`, så `rateLimitIp(request, env, …)` kaster → 500 på hvert kald).
+  Derefter feature-kø 10 — `/scan` mangler et eksempel-resultat at dele uden
+  en kørsel.
 
 ## Verificér deploy
 
-`VERIFICÉR DEPLOY: gaten dømmer `;;` og rettet `/da/free-tools` 6/10 06:0x
-ceo/js-rest-gate` — måles på **indhold**: live `mahope.tools/da/free-tools` skal
-være fri for `?$/);;if(!m)return;` og have `?$/);if(!m)return;` (klik-
-målingen skal stadig virke: et klik på `/da/paid-templates` skal sende et
-`/api/track`-kald). HTTP 200 beviser intet for denne note.
+`DEPLOY OK 6/10 07:0x` for `ceo/js-rest-gate` — målt på **indhold**: live
+`mahope.tools/da/free-tools` (34 991 bytes) har **0** `);;if` og **1**
+`?$/);if(!m)return;`, altså dobbelt-semicolon-resteren er væk og klik-
+målingen er intakt. Kildekaldet er stadig der: **1** `api/track` og **3**
+`da/paid-templates`. CI `8bcd5e18` = **success**. HTTP 200 blev ikke brugt
+som bevis.
 
-`VERIFICÉR DEPLOY: pro-kortene fortæller hvad /api/report gør 6/10 03:5x
-ceo/pro-kort-uden-krybning` — måles på **indhold**, ikke bare 200. Live
-`https://mahope.tools/compliance-site-check`, `/da/compliance-site-check`,
-`/cookie-check`, `/cookie-check-da`, `/contrast-checker`, `/contrast-checker-da`,
-`/security-headers-check`, `/text-on-image-checker` og
-`/text-on-image-checker-da` skal **alle** være fri for `crawls the whole site` og
-`gennemgår hele sitet`, og hver skal have sin egen sætning: «reads the page you
-name from the server» på compliance-site-check begge sprog, «reads the response
-headers as well — HSTS and CSP» på cookie-check begge sprog, «reads the page
+`DEPLOY OK 6/10 07:0x` for `ceo/pro-kort-uden-krybning` — målt på **indhold**
+på alle nitten ruter med `curl`. De ni pro-sider har **0** `crawls the whole
+site` og **0** `gennemgår hele sitet`, og hver har sin egen sætning fundet 1–2
+gange: «reads the page you name from the server» på compliance-site-check begge
+sprog, «response headers as well» på cookie-check begge sprog, «reads the page
 from the server too» på contrast- og text-on-image begge sprog, «reads the page
-source as well … which no response header shows» på security-headers-check. Live
-`/books`, de fire bogsider, `/compliance-ai` og `/da/compliance-ai` skal være fri
-for «crawls the site» / «crawls it». Live `/scan` og `/scan-da` skal stadig have
-den **ægte** desktop-påstand «whole-site crawl up to 200 pages» / «crawl hele
-sitet op til 200 sider» — den er et andet program med sin egen krybning.
+source as well» på security-headers-check. `/books`, `/compliance-ai`,
+`/da/compliance-ai` og to bogsider: **0** «crawls the site»/«crawls it». Live
+`/scan` har stadig **1** «whole-site crawl up to 200 pages» — den ægte
+desktop-påstand er ikke ved et fejl gået. HTTP 200 blev ikke brugt som bevis.
 
 `DEPLOY OK 4/10 23:3x` for `ceo/scan-form-i-folden` — målt på indhold med to `curl`:
 live `/scan` har `<form id="scanForm" class="scanbox">` **inde i**

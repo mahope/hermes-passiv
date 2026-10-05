@@ -67,35 +67,44 @@ to steder og skal være ens:
      rød på en sand påstand, og så ville den blive slået fra.
 
 Målt på den kode, porten skal dømme — altså `origin/main` **før** denne
-     commit: **6 fund**. Ikke to af dem tilfældige: kommentaren siger «samme tal»
-     mellem to ruter, hvis tal er 5 og 12, og den peger på **intet** af dem; og
-     pro-kortet på begge sprog lover «crawls the whole site» / «gennemgår hele
-     sitet» om den rute, `handleReport` henter **én** side fra. De to sidste fund
-     er den egentlige læring: de ville være fundet, **fordi de er usande** — ikke
-     fordi en tekstform var forældet.
+commit: **6 fund**. Ikke to af dem tilfældige: kommentaren siger «samme tal»
+mellem to ruter, hvis tal er 5 og 12, og den peger på **intet** af dem; og
+pro-kortet på begge sprog lover «crawls the whole site» / «gennemgår hele
+sitet» om den rute, `handleReport` henter **én** side fra. De to sidste fund
+er den egentlige læring: de ville være fundet, **fordi de er usande** — ikke
+fordi en tekstform var forældet.
 
 **Dom 5 (6/10) — samme dom over *alle* kortene, ikke kun de to.** Dom 4 læste
-     `proCard()` på `/scan` og `/scan-da`, fordi det var de to sider med et
-     håndskrevet kort. Målt på den færdige fil: «It crawls the whole site» /
-     «Den gennemgår hele sitet» stod i **16** kort på **9** sider — dom 4 så to
-     af dem. De anden syv lå i `tools/stripe_catalog.json`, som er den fælles
-     sandhed for alle **21** pro-blokke (`pro_table.py` tegner dem derfra), så
-     dommen læser nu katalogen i stedet for filerne. Rettet på alle ni sider, og
-     hver fik **sin egen** ærlige sætning, fordi de frie værktøjer ikke er ens:
-     `/scan` og `contrast-checker` læser slet ingen side i browseren, så Pro
-     læser den fra serveren; `cookie-check` læser kilden, så Pro læser også
-     svarheaderne; `security-headers-check` læser kun headerne, så Pro læser
-     kilden; `compliance-site-check` følger de juridiske links, så Pro gør
-     **ikke** mere sider — den læser dybere.
+`proCard()` på `/scan` og `/scan-da`, fordi det var de to sider med et
+håndskrevet kort. Målt på **denne commits egen baseline `716d1e9b`**, med
+portens egen `RE_KRYB` over katalogens `pro_features[].labels`: «It crawls the
+whole site» / «Den gennemgår hele sitet» stod i **14** kryb-påstande på **7**
+sider, og de lå **alle sammen** i `tools/stripe_catalog.json` — den fælles
+sandhed for alle **21** pro-blokke (`pro_table.py` tegner dem derfra).
 
-     Dom 5 er låst til samme måling som dom 4 (`kald == 1`), så en *ægte*
-     flersidet `handleReport` slår begge fra. Det er selvtest 12: med to
-     `cscFetch`-kald og den gamle løgnest i katalogen er porten grøn. Ellers
-     ville porten gøre det umuligt at bygge den rigtige krybning — og så bliver
-     den slået fra i stedet for at lyve.
+Dom 4 så **nul** af de fjorten, ikke to. Ikke fordi den var delvist beskyttende,
+men fordi de to `/scan`-sider den læste var **allerede rettet** i `4515d348`
+fra blokken før, så dens håndskrevede kort bar ikke længere løgnen. Beviset er
+at porten var **GRØN** på `716d1e9b`. Det er den stærkere og mere præcise
+sandhed: dom 4 var *helt* ude af stand til at se de fjorten.
 
-     python3 tools/check_scan_page_claims.py             # dom
-     python3 tools/check_scan_page_claims.py --self-test # 12 mutationer
+Dom 5 læser derfor katalogen i stedet for filerne. Rettet på alle ni sider i
+opgavens fulde omfang (de 7 katalog-sider + de 2 `/scan`-sider), og hver fik
+**sin egen** ærlige sætning, fordi de frie værktøjer ikke er ens:
+`/scan` og `contrast-checker` læser slet ingen side i browseren, så Pro
+læser den fra serveren; `cookie-check` læser kilden, så Pro læser også
+svarheaderne; `security-headers-check` læser kun headerne, så Pro læser
+kilden; `compliance-site-check` følger de juridiske links, så Pro gør
+**ikke** mere sider — den læser dybere.
+
+Dom 5 er låst til samme måling som dom 4 (`kald == 1`), så en *ægte*
+flersidet `handleReport` slår begge fra. Det er selvtest 12: med to
+`cscFetch`-kald og den gamle løgnest i katalogen er porten grøn. Ellers
+ville porten gøre det umuligt at bygge den rigtige krybning — og så bliver
+den slået fra i stedet for at lyve.
+
+    python3 tools/check_scan_page_claims.py             # dom
+    python3 tools/check_scan_page_claims.py --self-test # 12 mutationer
 """
 from __future__ import annotations
 
@@ -252,10 +261,10 @@ def dom(worker: str = None, scan_en: str = None, scan_da: str = None,
 
     # Dom 5 — **hver** pro-række for `eucomply-pro` i katalogen skal sige det
     # samme. Dom 4 dømmer de to `/scan`-siders håndskrevede `proCard()`, og det
-    # var nok, fordi de var de eneste kort der løj. Målt 6/10: «It crawls the
-    # whole site» stod i **16** kort på **9** sider, og dom 4 så kun to af dem.
-    # Katalogen er den fælles sandhed — `pro_table.py` tegner alle otteogtyve
-    # blokke fra den, så dommen skal læse den, ikke filerne.
+    # var nok, fordi de var de eneste kort der løj. Målt 6/10 på `716d1e9b`:
+    # «It crawls the whole site» stod i **14** kryb-påstande på **7** sider, og
+    # dom 4 så **nul** af dem. Katalogen er den fælles sandhed — `pro_table.py`
+    # tegner alle **21** blokke fra den, så dommen skal læse den, ikke filerne.
     #
     # Kun produkter hvis betalte rute er `handleReport`. `page-profile-pro`
     # (`/api/profile`) er en anden rute med sit eget argument, og dens kort er
