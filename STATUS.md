@@ -5,7 +5,7 @@
 > ligger i `IMPLEMENTATION_PLAN.md`. Denne fil opdateres, når der sker noget
 > der ændrer et *faktum* (et udgivet produkt, en live-adresse, et tal).
 
-**Sidst opdateret:** 25. september 2026
+**Sidst opdateret:** 5. oktober 2026
 
 ## Hvad der er live
 
@@ -18,6 +18,9 @@
 
 Udgivelse sker ved push til `main` gennem GitHub Actions
 (`.github/workflows/deploy-sites.yml`). Der er ingen manuel upload.
+
+* URL-inspektør-endepunktet returnerer nu korrekte svar og er beskyttet mod SSRF.
+* Thanks.siden skelner nu korrekt mellem 202 (betaling ikke bekræftet) og andre statusser.
 
 ## Betaling
 
