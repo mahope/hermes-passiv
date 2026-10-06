@@ -1,16 +1,26 @@
 # STATUS
 - **CI:** `main` er **grøn** (deploy-sites, push 6/10 18:50). `PR-TJEK 6/10`:
   **0** åbne PR'er.
-- **Målegrund: `TRACKING DØD` (målt 6/10).** `/api/health` viser **20** besøg og
-  **55** downloads i 2 dage og **2** events server-side, mens `/api/results` og
-  `/api/conversion` er **0** for 28 dage. Besøgende kommer altså, men deres
-  events lander ikke — så **alle baselines fra de to lister er ubekreftede**,
-  også `contrast-measured` (feature-kø A). Værktøjet sagde «ubekreftet» i stedet,
-  fordi det læste `recentVisits` på topniveau af `/api/health` i stedet for under
-  `stats`; rettet i denne iteration (`ceo/tracking-status-dom`), se feature-kø B.
-- **Næste:** find hvor `/api/track` mister hændelsen (browser → worker), så
-  baselines igen kan måles. Det er **før** flere features, fordi ellers måler vi
-  alt mod nul der intet betyder.
+- **Sporingen er ikke død — dommen var det (målt 6/10 20:00).** Jeg skrev en
+  rigtig begivenhed til `/api/track` fra min egen maskine: `contrast-measured`
+  på `/text-on-image-checker` med korrekt `Origin` og `Referer`. Den lå i
+  `/api/results` som `runs: 1` efter **33 sekunder** (KV-listninger er
+  asynkrone), og `/api/health` steg `recentEvents 2 → 6` fordi mine egne
+  poster tæller med. **Skrivevejen virker.**
+- **Hvor dommen galt gik hen:** `/api/health` og `/api/results` læser **samme**
+  `p:v3:…:event:…`-nøgler, så et `recentEvents > 0` *beviser* at events lander.
+  Værktøjet skrev alligevel «TRACKING DØD» i samme sætning som det citerede
+  `recentEvents: 2` — de to tal modsagde hinanden, fordi de har forskellige
+  navnelister (`/api/results` tæller kun `RESULT_EVENTS`; `cta-*` og
+  `store-click` er bevidst holdt ude). Rettet i denne iteration, se feature-kø B.
+- **Baselines er dermed reelle igen.** Den ærlige baseline for
+  `contrast-measured` på `/text-on-image-checker` er **0 rigtige** — de 3
+  `runs` i `/api/results` i dag er **mine egne probe-poster** (2 synlige efter
+  33 s + 1 i et senere kald), ikke en bruger. Jeg tæller dem ikke som
+  efterspørgsel, og det er dem der gjorde at `/api/results` så levende ud.
+- **Næste:** `/api/results` og `/api/conversion` kan igen bruges som baseline,
+  så de næste to opgaver kan prioriteres på **hvad brugerne gør** frem for på
+  nul. `/api/stats` (beløb og licenser) er stadig 401 og kræver `STATS_TOKEN`.
 
 ## Åbne review-fund
 
@@ -211,10 +221,40 @@ B. ~~**Vi kan ikke skelne «ingen besøgende» fra «tracking død».** Hvem: os
      ét købsklik → virker), mutationen (gammel kode) kan hverken køre
      selftesten eller nå dommen, og seltesten er nu **step 91** i den
      dokumenterede gate (180 steps).
-     **Hvad det betyder for resten af planen:** alle baselines fra
+     **Hvad det betyder for resten af planen:** ~~alle baselines fra
      `/api/results` og `/api/conversion` — også `contrast-measured` — er
-     ubekreftede, indtil `/api/track` er fundet. Baseline 0 kan derfor ikke
-     bruges som bevis på at intet sker.
+     ubekreftede~~ **FORÆLDET 6/10 20:00, se næste linje.**~~
+     ~~**LEVERET 6/10 igen**, `ceo/sporing-dom-er-modstraaende`.** Den anden
+     iteration på værktøjet fandt at dommen modsagde sig selv, og det blev målt
+     mod live i sted for antaget. **Skrivevejen virker:** min egen
+     `contrast-measured` på `/text-on-image-checker` lå i `/api/results` som
+     `runs: 1` efter **33 s**, og `recentEvents` gik `2 → 6` da mine egne
+     poster tæller med. Rodårsagen er at `/api/health` (`recentEvents`) og
+     `/api/results` har **forskellige navnelister** på de **samme** nøgler:
+     `/api/results` tæller kun `RESULT_EVENTS`, og `cta-*`/`store-click` er
+     bevidst holdt ude, så «2 events» og «0 resultater» kan være sandt samme
+     dag. Dommen læste derfor et tal som beviser sporingen virker som bevis for
+     at den er død. Nu: `recentEvents > 0` → **«SPORING VIRKER — nul betyder
+     ingen brugere fik et resultat»**, og «TRACKING DØD» kræver nu visits `> 0`
+     **og** events `= 0`, som er den eneste tilstand hvor den er sand. Dommen
+     citerer også den målte 33-s KV-lag, fordi et nul lagt lige efter en
+     udrulning ellers læses som død sporing.
+     **Dertil en fejl der gjorde porten tom:** `main()` returnerede `1` ved
+     fejl, men `__main__` kaldte `main()` uden `sys.exit` — så
+     `tracking-status-selftest` i gaten exitede **0** også når selftesten skrev
+     FAIL. Porten har været grøn uanset hvad den så. Rettet til husets
+     konvention (`sys.exit(main())`, som `check_storage_claims` og de andre
+     bruger) og målt: mutationen giver **exit 1**.
+     Selftest **3/3 → 4/4**, og den nye case er målt **rød på den gamle kode**
+     på to måder: `if recent_events > 0` slået fra → FAIL med uventet
+     «TRACKING DØD», og selftesten får et `forbidden`-sæt så et forkert svar
+     tæller som fejl selv om den forventede sætning står i teksten. Fuld gate
+     **GRØN**.
+     **Hvad det betyder for resten af planen:** baselines fra `/api/results` og
+     `/api/conversion` er **bekræftede** igen. Den ærlige værdi for
+     `contrast-measured` er **0 rigtige kørsler** — de `runs: 3` der lå i
+     `/api/results` da jeg målte var mine **egne** probe-poster, som jeg ikke
+     tæller som efterspørgsel.
 
 
 C. ~~**En Pro-holder der kommer fra scanneren skal finde PDF'en selv.**~~

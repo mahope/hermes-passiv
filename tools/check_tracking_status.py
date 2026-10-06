@@ -5,8 +5,14 @@ This tool helps distinguish between "ingen besøgende" (no visitors) and
 "tracking død" (tracking broken) by comparing windowed data from
 /api/results and /api/conversion with recent visitor data from /api/health.
 
+The decisive number is `recentEvents`: /api/health and /api/results read the
+same `p:v3:…:event:…` keys, so a non-zero `recentEvents` *proves* the client
+write path works. Before 6/10 the tool said "TRACKING DØD" while quoting a
+non-zero `recentEvents` in the same sentence.
+
 Usage:
     python3 tools/check_tracking_status.py
+    python3 tools/check_tracking_status.py --self-test
     python3 tools/check_tracking_status.py --help
 """
 
@@ -81,15 +87,58 @@ def check_tracking_status():
     scans_lifetime = int(stats.get("scans_lifetime") or 0)
     waitlist_lifetime = int(stats.get("waitlist_lifetime") or 0)
 
+    # Målt 6/10: en hændelse skrevet med `fetch` til `/api/track` var synlig i
+    # `/api/health` **33 sekunder** senere. KV-listninger er asynkrone, så et
+    # nul lagt lige efter en udrulning er et nul *endnu* — ikke et dødt spor.
+    LAG_NOTE = (
+        "Note: Cloudflare KV listings are asynchronous. Measured 6/10: a fresh\n"
+        "/api/track write became visible 33 seconds later, so a zero read right\n"
+        "after a deploy is not evidence of a dead pipeline."
+    )
+
+    # `recentEvents` og `/api/results` læser **samme nøgler**. `handleTrack`
+    # skriver dem gennem ét kald (`recordTraffic(…, 'event', …)`), og både
+    # `/api/health` og `/api/results` summerer `p:v3:…:event:…`. Så et
+    # `recentEvents > 0` **beviser** at skrivevejen virker — det er præcis den
+    # vej `/api/results` læser fra.
+    #
+    # De to tal kan alligevel være forskellige, fordi de har forskellige
+    # navnelister: `/api/results` tæller kun `RESULT_EVENTS`, mens
+    # `recentEvents` tæller *alle* events. `cta-*` og `store-click` er
+    # bevidst holdt ude af `RESULT_EVENTS` (de er klik og ikke resultater), så
+    # «2 events» og «0 resultater» kan være sandt på samme dag.
+    #
+    # Det var her dommen var forkert 6/10: værktøjet skrev «TRACKING DØD» i samme
+    # sætning som det citerede `recentEvents: 2`. Begge tal kom fra samme
+    # skrivevej, så det modsagde sig selv og fik alle baselines i planen markeret
+    # «ubekreftede» — fordi besøgende ikke *havde* brugt et værktøj, ikke fordi
+    # sporingen var død.
+    if recent_events > 0:
+        return (
+            "SPORING VIRKER — nul betyder ingen brugere fik et resultat\n"
+            f"Reason: /api/health counts {recent_events} events server-side in the "
+            f"last 2 days,\n"
+            "written by the same /api/track path /api/results reads, so events land.\n"
+            "/api/results is 0 because it only counts RESULT_EVENTS (finished runs);\n"
+            "clicks and other events are deliberately excluded from that list.\n"
+            f"/api/health also shows {recent_visits} visits and {recent_downloads} "
+            f"downloads in 2 days.\n"
+            f"A 0 baseline from these two lists is therefore REAL, not unconfirmed.\n"
+            f"{LAG_NOTE}"
+        )
+
+    # Først her er sporingen faktisk død: sidevisninger lander, og *intet* event
+    # gør det over to dage. Så mangler hele klientenoten, og de to lister er
+    # ubekreftede.
     if recent_visits > 0:
         return (
-            "TRACKING DØD (the client-side counters are broken, not the traffic)\n"
+            "TRACKING DØD (client-side events do not land, the traffic is fine)\n"
             f"Reason: /api/health shows {recent_visits} visits and {recent_downloads} "
             f"downloads in the last 2 days,\n"
-            f"and /api/health already counts {recent_events} recent events server-side,\n"
-            "but /api/results and /api/conversion are both zero for 7 days.\n"
-            "Visitors arrive, so a zero in those two lists means their events never\n"
-            "landed. Every baseline taken from them is unconfirmed until this is fixed."
+            "but zero events server-side — and /api/results and /api/conversion are\n"
+            "both zero for 7 days. Pageviews land and no event does, so the client\n"
+            "listener is not firing. Every baseline from them is unconfirmed.\n"
+            f"{LAG_NOTE}"
         )
 
     # No recent visits detected, but we can't be certain there are no visitors at all
@@ -116,7 +165,7 @@ def main():
     parser.add_argument(
         "--self-test",
         action="store_true",
-        help="run the two verdicts against fixed /api responses",
+        help="run all four verdicts against fixed /api responses",
     )
     args = parser.parse_args()
 
@@ -124,6 +173,7 @@ def main():
         return self_test()
     result = check_tracking_status()
     print(result)
+    return 0
 
 
 def _verdict(results, conversion, health):
@@ -147,20 +197,31 @@ ZERO_CONVERSION = {"totals": {"buy_clicks": 0, "pro_card_clicks": 0, "visitor_da
 
 
 def self_test():
-    """Both verdicts, on the shapes /api actually returns.
+    """All four verdicts, on the shapes /api actually returns.
 
-    The red case is the one measured live 6/10: 20 visits in two days and two
-    zero windows. Before the fix it printed "No recent visits detected" while
-    quoting 20, and never reached the broken verdict at all.
+    The red cases are the ones measured live 6/10. Case 1 is the exact payload
+    from the live site that day: 20 visits, 55 downloads, 2 events, both windows
+    zero. Before this fix it printed "TRACKING DØD" while quoting `recentEvents:
+    2` — a number written by the same code path `/api/results` reads from, so it
+    contradicted itself. Case 2 keeps the true dead shape (pageviews land, not a
+    single event does), which is the only state that may say "død".
     """
     cases = [
         (
-            "besøgende, nul tællere -> tracking død",
+            "events land, nul resultater -> sporing virker",
             ZERO_RESULTS,
             ZERO_CONVERSION,
             {"stats": {"recentVisits": 20, "recentDownloads": 55,
                        "recentEvents": 2, "scans_lifetime": 53, "waitlist_lifetime": 0}},
-            ("TRACKING DØD", "20 visits"),
+            ("SPORING VIRKER", "2 events", "REAL, not unconfirmed"),
+        ),
+        (
+            "besøgende, nul events -> tracking død",
+            ZERO_RESULTS,
+            ZERO_CONVERSION,
+            {"stats": {"recentVisits": 20, "recentDownloads": 55,
+                       "recentEvents": 0, "scans_lifetime": 53, "waitlist_lifetime": 0}},
+            ("TRACKING DØD", "20 visits", "unconfirmed"),
         ),
         (
             "ingen besøgende -> ubekreftet",
@@ -181,10 +242,15 @@ def self_test():
     failed = 0
     for name, results, conversion, health, expected in cases:
         got = _verdict(results, conversion, health)
+        # En dom skal være *præcis*: «TRACKING DØD» må ikke stå i en udgave der
+        # kun skal sige at sporingen virker, og omvendt. Så tæller et forkeret
+        # svar også som fejl selv om den forventede sætning er med.
+        forbidden = ("TRACKING DØD",) if not any("TRACKING DØD" in e for e in expected) else ()
         missing = [part for part in expected if part not in got]
-        if missing:
+        present = [part for part in forbidden if part in got]
+        if missing or present:
             failed += 1
-            print(f"FAIL {name}: mangler {missing}\n{got}")
+            print(f"FAIL {name}: mangler {missing}, uventet {present}\n{got}")
         else:
             print(f"OK   {name}")
     print(f"check_tracking_status --self-test: {len(cases) - failed}/{len(cases)}")
@@ -192,4 +258,8 @@ def self_test():
 
 
 if __name__ == "__main__":
-    main()
+    # Uden `sys.exit` blev returværdien kasseret, så `--self-test` altid exitede 0
+    # — også når den skrev FAIL. Porten `tracking-status-selftest` i
+    # `tools/quality_gate.py` var dermed grøn uanset hvad selftesten fandt.
+    # Resten af `tools/` bruger samme mønster, så det er husets konvention.
+    sys.exit(main())
