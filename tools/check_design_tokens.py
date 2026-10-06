@@ -2,8 +2,9 @@
 """Gate for at én side kun har ét designsystem, opgave 17 i `IMPLEMENTATION_PLAN.md`.
 
 DeskUptime er det eneste domæne, der publicerer sider fra to forskellige
-designsystemer. De tre værktøjssider under `/tools/`, `/bulk-url-checker/`
-og `/security-headers-checker/` kommer fra `../auditedwp` og indlæser deres egen
+designsystemer. `/tools/` er skrevet her i repoet og bruger kun skallen, men de
+to sider under `/bulk-url-checker/` og `/security-headers-checker/` kommer fra
+`../auditedwp` og indlæser deres egen
 `/assets/site.css` — et komplet skeln med sit eget farvepalet (en grøn) og sin
 egen skrifttype (Inter). Deres eget `<style>`-blok og deres eget `site.js`
 tegner resultater med de klassenavne, kun den fil kender, så filen *skal* rejse

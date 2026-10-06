@@ -398,10 +398,14 @@ def undtagelsesgrund(row: dict) -> str:
 
     Fire former, alle målt (opgave 12, 30/9):
 
-    - **Ruten har ingen fil i `site/`.** `/bulk-url-checker`,
-      `/security-headers-checker` og `/tools` står i inventaret og serveres
+    - **Ruten har ingen fil i `site/`.** `/bulk-url-checker` og
+      `/security-headers-checker` står i inventaret og serveres
       som 404. De har ingen købsknap at miste, så at kræve en vej på dem ville
-      kræve at oprette en side, porten ikke kan måle værdien af.
+      kræve at oprette en side, porten ikke kan måle værdien af. **`/tools` stod
+      her også 6/10 og er gået ud igen**: den lå med `../auditedwp`s forside og
+      blev nu kilde her med egen betalt vej, så den dømmes som enhver anden side.
+      Beviset er at den ikke står i listen ovenfor mere — den udelades altså
+      ikke af en navneliste, men fordi `row["file"]` nu er sand.
     - **Domænet udgives ikke.** `/bugbottle-demo` ligger på `bugbottle.dev`,
       som ikke står i deploy-matricen. Det er et ❓ (en beslutning Mads skal
       tage), ikke en mangel, og dom 4/7 i artikelporten har samme regel.
@@ -1222,7 +1226,7 @@ def _self_test() -> int:
                 if not judged(r)}
     check("de undtagne ruter er dem, porten kan begrunde",
           set(undtagne) == {"/bulk-url-checker", "/security-headers-checker",
-                            "/tools", "/bugbottle-demo", "/privacy", "/terms",
+                            "/bugbottle-demo", "/privacy", "/terms",
                             "/support", "/da/support", "/site-icons",
                             "/cookie-consent-banner-demo"},
           f"{sorted(undtagne)}")

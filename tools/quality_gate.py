@@ -892,6 +892,26 @@ STEPS: tuple[Step, ...] = (
         inputs=("tools/check_front_door.py", "tools/check_article_paid_path.py",
                 "build_sites.py", "site/**"),
     ),
+    # At en nav-rute kaldet «Tools»/«Værktøjer» faktisk fører til værktøjerne.
+    # Målt 6/10, og det er derfor porten findes: navet på deskuptime.com pegede
+    # på `../auditedwp`s egen forside, som linkede **nul** af de to værktøjer
+    # domænet udgiver. Sletningen af begge `href` gav `GRØN — 177 steps` — hele
+    # gaten, fordi ingen port spørger om en indeksside peger på det den er indeks
+    # over. Målt begge veje: mutationen giver 2 fund med navn, den rigtige side 0.
+    Step(
+        id="tool-hub",
+        argv=("python3", "tools/check_tool_hub.py"),
+        inputs=("tools/check_tool_hub.py", "build_sites.py", "site/**"),
+    ),
+    # Selftesten er ikke valgfri: portens egen navnefindning fejlede først på
+    # «Værktøjer» (pythons `\b` er ASCII, så `\bværkt` er falsk på dansk), og
+    # dens ruteord læste den afsluttende skråstreg som det tomme segment. Begge
+    # fejl gjorde porten grøn uden at dømme noget.
+    Step(
+        id="tool-hub-selftest",
+        argv=("python3", "tools/check_tool_hub.py", "--self-test"),
+        inputs=("tools/check_tool_hub.py", "build_sites.py", "site/**"),
+    ),
     # At forsidens tjek tager den indtastede adresse med til værktøjet. Målt
     # 2/10: tolv sider læser `#url=` og seks platform-guides linker til
     # `/scan#url=…`, men **ingen side producerede den** — den der tjekkede sit

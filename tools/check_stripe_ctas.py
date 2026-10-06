@@ -2671,7 +2671,11 @@ def check_built_offer_pages(catalog: dict, dist_root: Path | None = None) -> lis
 
     - `deskuptime.com/tools/` bygges fra sibling-repoet `../auditedwp`
       (`build_sites.py:102`). Det er vores egen nav-side "Tools", den har egen
-      canonical, den står i sitemap, og den har to synlige købsknapper.
+      canonical, den står i sitemap, og den har to synlige købsknapper. **Rettet
+      5/10:** auditedwp's forside ligger ikke længere der. Siden er nu en kilde
+      her, `site/deskuptime/tools/index.html`, med én købsknap — så den er en
+      helt almindelig `offers`-indgang, og det eneste eksempel på en side der
+      kommer udefra er `bugbottle.dev`s, som ikke udgives.
     - `cleancopy.tools/clean-copy` og `/da/clean-copy` er byte-identiske
       kopier af forsiden, som `index_from` udgiver ved siden af den.
 
@@ -4869,10 +4873,13 @@ def self_test() -> int:
     # fyre, så den ville være et bevis der så ud som et bevis.
 
     # `built_offers`: en købsside der bygges et andet sted fra end dette repo
-    # (`deskuptime.com/tools/` kommer fra `../auditedwp`) lå uden for alle
-    # krav, så porten var grøn med 13 dokumenterede købssider mens det
+    # (dengang `deskuptime.com/tools/`, som kom fra `../auditedwp`) lå uden for
+    # alle krav, så porten var grøn med 13 dokumenterede købssider mens det
     # byggede site havde 16 der kunne tage penge. Scenarierne er et syntetisk
-    # `dist/`, så selftesten ikke skriver i det rigtige build.
+    # `dist/`, så selftesten ikke skriver i det rigtige build. **Syntetikken er
+    # bevaret** efter at `/tools/` blev en rigtig kilde her 5/10: listen skal
+    # kunne dømme en side der *engang* kunne komme udefra, ellers er
+    # `check_built_offer_pages` grøn fordi dens regel aldrig er prøvet af.
     with tempfile.TemporaryDirectory() as tmp:
         fake = Path(tmp) / "dist"
         (fake / "deskuptime.com" / "tools").mkdir(parents=True)
@@ -4883,8 +4890,8 @@ def self_test() -> int:
             '<html><head><link rel="canonical" href="https://deskuptime.com/tools/"></head>'
             f'<body><p>Tools.</p><a href="{clean_copy_link}">Buy</a>'
             f'<a href="{clean_copy_link}">Get Pro</a></body></html>', encoding="utf-8")
-        # Den syntetiske side har to købsknapper, som den rigtige `/tools/` har
-        # (målt 27/9), så indgangen skal erklære det og sige hvorfor.
+        # Den syntetiske side har to købsknapper, så indgangen skal erklære
+        # det og sige hvorfor en side må have mere end én.
         built_ok = {"domain": "deskuptime.com", "route": "/tools/",
                     "product": "clean-copy-pro", "source": "syntetisk",
                     "ctas": 2, "ctas_note": "søskenderepo, må ikke røres"}

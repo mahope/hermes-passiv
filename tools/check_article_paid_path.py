@@ -136,6 +136,7 @@ har brug for. Den behøver ikke selv at finde de mest linkede artikler.
 from __future__ import annotations
 
 import argparse
+import importlib
 import json
 import re
 import sys
@@ -812,11 +813,64 @@ def page_rows(root: Path = SITE, catalog: dict | None = None,
 
 
 def _page_file(root: Path, route: str) -> Path | None:
-    """Filen bag en rute. `index.html` er mappens rute — samme som `route_of`."""
+    """Filen bag en rute. `index.html` er mappens rute — samme som `route_of`.
+
+    Gætten på to stier var en hjemlavet læsning, og den var målt forkeret
+    5/10: `deskuptime.com` har `remap = {"deskuptime/": ""}`, så dens kilder
+    ligger under `site/deskuptime/`, ikke under `site/`. Den udgave af
+    `/tools/` der lå i `site/deskuptime/tools/index.html` blev derfor rapporteret
+    som «findes ikke i site/ — de serveres som 404», altså som en rute der
+    ikke findes, mens den både blev publiceret og lå i sitemap.
+
+    Ruten slås derfor op i **byggets eget filudvalg** — samme læser som
+    `check_built_css.source_map()` bruger, og samme som den vil finde
+    `index_from`-dubletterne ved deres sande kilde. Gættet står tilbage som
+    reserve, så porten stadig virker i et checkout hvor `build_sites.py` ikke
+    kan importeres.
+    """
     for cand in (root / f"{route.lstrip('/')}.html",
                  root / route.lstrip("/") / "index.html"):
         if cand.is_file():
             return cand
+    return _build_source(route)
+
+
+def _build_source(route: str) -> Path | None:
+    """Kildefilen for en publiceret rute, fra `build_sites`' eget filudvalg.
+
+    Samme fejlform som over: en undtagelsesflås, der læser *buildet* i stedet
+    for at tro på en liste. `import build_sites` kan fejle i et delvis
+    checkout, så fejlen sluges — en kilde der ikke findes, giver `None` og
+    dommen springer ruten over, hvilket er det ærlige udfald.
+    """
+    if str(ROOT) not in sys.path:
+        sys.path.insert(0, str(ROOT))
+    try:
+        build = importlib.import_module("build_sites")
+    except Exception:
+        return None
+    try:
+        sites = {d: build.Site(d, c) for d, c in build.SITES.items()}
+        build.select_files(sites)
+    except Exception:
+        return None
+    for domain, site in sites.items():
+        for _key, (src, dest) in site.files.items():
+            # Begge skrivetransformer stæder: `route_domain_map()` giver
+            # `/tools` fordi den renser inventaret, mens bygget skriver
+            # `/tools/`. Porten skal kunne finde siden hvad enten dommen
+            # kommer herfra eller fra råt inventar.
+            if build.canonical_url(dest).rstrip("/") != route.rstrip("/"):
+                continue
+            # Kun en kilde i *dette* repo tæller som kildefil. `auditedwp`'s
+            # sider ligger uden for `site/`, så de er stadig de 404-ruter
+            # porten siger de er — med den undtagelse at de to af dem netop
+            # serveres, så det er en anden fejl end den, de her dækker.
+            try:
+                src.resolve().relative_to(ROOT / "site")
+            except ValueError:
+                continue
+            return src
     return None
 
 

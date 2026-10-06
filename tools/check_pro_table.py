@@ -74,7 +74,18 @@ PRODUKTSIDE = 8
 # `/url-inspector` havde **ingen** tabel, kun «See what Pro adds before you
 # buy» og et link til `/page-profile`; den læser nu `page-profile-pro`-posten,
 # så de to sider heller ikke kan svare forskelligt.
-VÆRKTØJSSIDE = 13
+#
+# Den fjortende er `/tools` på deskuptime.com, målt 5/10: navens «Tools»/
+# «Værktøjer» pegede på `../auditedwp`s egen forside, som linkede nul af de to
+# værktøjer der ligger på domænet. Den nye side sælger Pro, så den har **egne**
+# `free_features`/`pro_features` — tabellen er skrevet om de tre tjek, ikke om
+# hele produktet. Men den skal stadig *navngive* hvert enkelt label fra
+# `deskuptime-pro`s produktsideliste, ellers er den grøn fordi porten ikke kan se
+# den: målt 6/10 rødde `check_stripe_ctas` på den første version fordi den
+# nævnte hverken 'interval' eller de tre gratis-funktioner. Derfor er de to
+# lister nu i overensstemmelse — den side lover præcis de fem Pro-labels, og
+# brødteksten siger det samme om ubegrænsede sites og 30-sekunders polling.
+VÆRKTØJSSIDE = 14
 
 
 def _scripts(rel: str) -> set[str]:

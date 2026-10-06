@@ -550,7 +550,9 @@ def load_offer_inventory() -> dict | None:
     canonical, i sitemap) lå uden for inventaret, og et købsklik der blev
     talt som `other_clicks` — altså som om den slags købsside ikke fandtes.
     Uden denne linje er `other_clicks` ikke bare støj: den skjuler de
-    købssider, der sælger mest, som *mangler*.
+    købssider, der sælger mest, som *mangler*. **Listen er tom siden 5/10**,
+    fordi `/tools/` nu er en kilde her; linjen står, fordi en side igen kan
+    komme udefra.
     """
     try:
         catalog = json.loads(OFFER_CATALOG.read_text(encoding="utf-8"))

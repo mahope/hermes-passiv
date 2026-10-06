@@ -117,11 +117,15 @@ def sold_on_built(key: str, product: dict, dist: Path, site: Path) -> list[str]:
     kun `site/`, men `deskuptime.com/tools/` bygges fra `../auditedwp` og
     indeholder to købsknapper. Porten kunne derfor ikke se den ene reelle
     Pro-side for DeskUptime, og rapporten under-rettede hvilke sider der sælger.
+    **Rettet 5/10:** `/tools/` er nu `site/deskuptime/tools/index.html`, så
+    `sold_on` ser den. De to andre auditedwp-sider har ingen købsknap, så listen
+    er tom i dag — men funktionen står, fordi en side fra et sibling-repo igen
+    kan sælge, og det er præcis den fejlform den blev skrevet for.
 
     Her læses det **byggede** site, men kun de ruter der **ikke** findes i
     `site/`: en bygget kopi af en kilde vi allerede har listet op ville bare
     være dobbelt sådan. Sådan forsvinder hver side der stammer fra et
-    sibling-repo (`deskuptime.com/tools/`) uden at listen bliver ulæselig.
+    sibling-repo uden at listen bliver ulæselig.
     """
     link = product.get("payment_link") or ""
     pid = link.rstrip("/").split("/")[-1]

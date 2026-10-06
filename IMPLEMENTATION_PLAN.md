@@ -1,34 +1,23 @@
 # STATUS
-- **Guideartiklerne har nu én købsvej til Clean Copy Pro.** 7/10: 17 artikler på
-  cleancopy.tools (8 EN + 9 DA) har en linje med link til produktets egen
-  købssektion, lige før bog-CTA'en. Feature-kø 17's acceptkriterium var dog
-  allerede **43/46** opfyldt målt på det byggede site — de 17 var dem der
-  nævner Clean Copy Pro **uden** nogen købsvej. Se feature-kø 17.
-- **CI:** seneste kørsel på `main` (`f81cf612`) er **success**. Lokal gate
-  grøn på **177 steps**; de fire mission-gates kørt enkeltvis og grønne.
+- **Nav-ruten «Tools» på deskuptime.com førte ingen steder hen.** 6/10: den pegede
+  på `../auditedwp`s egen forside, som linkede nul af de to værktøjer domænet
+  udgiver, havde egen canonical ved siden af forsiden og kaldte den betalte
+  desktop-app «free». Ruten er nu en rigtig kilde med de tre tjek, Pro-tabellen og
+  én købsknap. Ny port `check_tool_hub` dømmer det fremover og fandt en ægte
+  mangel mere: `/accessibility-statement-generator` lå uden indgang fra
+  `/free-tools`. Se feature-kø 18.
+- **CI:** seneste kørsel på `main` er **success**. Lokal gate grøn på
+  **179 steps**; de fire mission-gates kørt enkeltvis og grønne (build 0 brudte,
+  seo 316 sider 0 fund, stripe-worker 474/474, inline-js 0).
 - **Næste:** de åbne ❓. `PR-TJEK 6/10`: **0** åbne PR'er. `BRANCH-TJEK` ikke
-  kørt (uge-tjek).
+  kørt (uge-tjek). Planen er skåret fra 39 til 18 KB: lukkede opgaver og
+  DEPLOY-OK-historik ligger i `docs/plan-arkiv.md`.
 
 
 
 ## Åbne review-fund
 
-Ingen. Alle tre er lukket 6/10:
-
-1. ~~**MIDDEL — Clean Copy-sidens `pro_limit` modsiger Obsidian-pluginens egen
-   kode.**~~ **LUKKET 6/10.** Katalogteksten siger nu kun hvad der er målt:
-   batch findes i webværktøjet, egne regler i browserudvidelsen **og**
-   Obsidian-pluginet, og CLI/VS Code har ingen. `manifest.json` lovede «batch
-   cleaning», som `batchConvert` ikke gør i pluginet — rettet, og Obsidian er
-   bumpet til **1.0.11** fordi et arkiv med en ny beskrivelse under gammelt
-   nummer er det samme som gammel kode til en kunde. Bloggen på begge sprog
-   fortæller hvad 1.0.11 er.
-2. ~~**MIDDEL — dom 4c blev rød på en korrekt `--apply` med `&`.~~ **LUKKET
-   6/10.** Dommen sammenligner nu på `html.unescape`, altså det læseren ser.
-   Selftest 28→30: en korrekt tegnet `pro_limit` med `&` er grøn, og en der
-   siger noget andet er stadig rød — målt begge veje mod den gamle kode.
-3. ~~**LAV — `krav 4` i `check_frontpage_pricing`.**~~ **LUKKET 6/10**,
-   se opgave 34.
+Ingen. Alle tre lukket 6/10 — teksten står i `docs/plan-arkiv.md`.
 
 ## Verificér deploy
 
@@ -54,104 +43,16 @@ mahope.tools/pricing: de 12 rækker skal være uændrede på engelsk ceo/den-pri
 — *(HTTP 200 beviser intet: den gamle kode svarer 200 på præcis de tre rækker
 dom 8 nu dømmer.)*
 
-`DEPLOY OK 6/10 14:0x` for `ceo/pricing-stripe-ankere` og `ceo/one-buy-button-tools` —
-målt på **indhold** med 15 `curl`, ikke på HTTP 200. Live `/pricing` og
-`/da/pricing` har hver **12** `pc-buy`, **1** uden `#anker` (donationen til
-`/support`) og **0** med den gamle rute `href="/paid-templates"`. Alle **7**
-dokumentankere findes som `id` på live `/paid-templates`
-(`eucomply-dpa`, `eucomply-nis2-clauses`, `eucomply-nda-clauses`,
-`eucomply-eaa-statement`, `eucomply-report-kit`, `eucomply-template-bundle`,
-`eu-compliance-ebook-bundle`), og på `/da/paid-templates` er de danske. Live
-`cleancopy.tools/` har 1 `id="price"`, `cleancopy.tools/da/` 1 `id="priser"`,
-`deskuptime.com/` 1 `id="pro"`, `deskuptime.com/da/` 1 `id="pro"`,
-`/compliance-report` og `/da/compliance-report` hver 1 `id="buy"`,
-`/page-profile` og `/da/page-profile` hver 1 `id="pp-buy-live"` — hver side
-også med sit eget `<html lang>`. Live `deskuptime.com/tools/` har **1**
-`buy.stripe.com/7sY9AS9eX3Iu418fJ5bMQ01` og **1** `Payment through Stripe`.
-*(De to danske krydsdomæneankere var ikke i den gamle notes krav; de er målt her,
-fordi dom 8s rettelse peger på dem.)*
-
-- **VERIFICÉR DEPLOY:** https://mahope.tools/api/url-inspect?url=https://example.com skal returnere 200 med finalUrl (efter næste batch deploy)
-
-`DEPLOY OK 6/10 20:2x` for `ceo/url-inspect-rettet` — målt på **indhold**, ikke
-på HTTP 200: live `/api/url-inspect?url=https://example.com` svarer **200** med
-`finalUrl: "https://example.com"` i kroppen. SSRF er målt begge veje: `127.0.0.1`
-→ **400** på `/api/header-check` og `/api/url-inspect`, `[::ffff:127.0.0.1]` →
-**400**, og `169.254.169.254` → **400**. *(HTTP 200 alene ville ikke have
-beviset noget — endpointet svarede 200 med en tom krop før rettelsen.)*
-
-`DEPLOY OK 6/10 22:0x` for `ceo/pro-pastand` — målt på **indhold** med tre
-`curl`. Live `cleancopy.tools/` siger «Custom cleanup rules are in the browser
-extension and the Obsidian plugin — the CLI and the VS Code plugin have
-none», og live `cleancopy.tools/clean-copy-tool` har den samme linje i sit
-`pro-limit`. Downloadlinket ligger på **`mahope.tools/downloads`**, der er den
-ene rute der har arkiverne: **2** forekomster af
-`clean-copy-obsidian-v1.0.11.zip`. *(Noten krævede `cleancopy.tools/downloads`
-— den har **0** `.zip`-links. Samme 404-rute-fejl som opgave 35, og det er
-derfor den er lukket her.)*
-
-`DEPLOY OK 6/10 12:1x` for `ceo/pro-graense` — målt på **indhold** med fire
-`curl`. Noten krævede live `mahope.tools/clean-copy`, og den ruten er **404**:
-Clean Copy ligger på `cleancopy.tools` (`build_sites.py:95` — `site/clean-copy.
-html` er cleancopy.tools' forside, `index_only`). Korrigeret rute: live
-`cleancopy.tools/clean-copy`, `/clean-copy-tool` og `/da/clean-copy` har hver
-**1** `class="pro-note pro-limit"` og **0** `No mobile app`. *(At noten pegede
-på en 404-rute er en fejl i noten, ikke et deploy-problem — HTTP 200 blev ikke
-brugt som bevis.)* **Indholdet på den grænselinje er dog en usand påstand:**
-se review-fund 1.
-
-`DEPLOY OK 6/10 08:5x` for `ceo/folsaetning-om-priser` — målt på **renderet
-indhold** med to `curl`: live `mahope.tools/` og `mahope.tools/da/` har
-hver **1** `Not listed above:` / `Ikke listet ovenfor:`. *(Noten krævede også
-**0** `Clean Copy Pro, DeskUptime Pro` i `#products`, og den fandt **1** på den
-engelske forside — men kun fordi målingen greb en **HTML-kommentar** i kilden
-der forklarer rettelsen. Kommentaren er ikke læsbar tekst; det er den nye
-sætning der dømmes. Den danske forside har **0**.)*
-
-`DEPLOY OK 6/10 07:1x` for `ceo/pricing-fra-forsiden` — målt på **indhold** med
-to `curl`: live `mahope.tools/` har **2** `href="/pricing"` og live
-`mahope.tools/da/` **2** `href="/da/pricing"`. *(Noten krævede 1; den rigtige
-måling er 2 pr. forside, fordi buildet skriver både `<head>`-canonical og
-sidens synlige knap. Kravet var «mindst én», så begge er over linjen, og det er
-indholdet der er dømt — ikke HTTP 200.)* CI `2ee5d77f` = **success**.
-
-`DEPLOY OK 6/10 07:0x` for `ceo/js-rest-gate` — målt på **indhold**: live
-`mahope.tools/da/free-tools` (34 991 bytes) har **0** `);;if` og **1**
-`?$/);if(!m)return;`, altså dobbelt-semicolon-resteren er væk og klik-
-målingen er intakt. Kildekaldet er stadig der: **1** `api/track` og **3**
-`da/paid-templates`. CI `8bcd5e18` = **success**. HTTP 200 blev ikke brugt
-som bevis.
-
-`DEPLOY OK 6/10 07:0x` for `ceo/pro-kort-uden-krybning` — målt på **indhold**
-på alle nitten ruter med `curl`. De ni pro-sider har **0** `crawls the whole
-site` og **0** `gennemgår hele sitet`, og hver har sin egen sætning fundet 1–2
-gange: «reads the page you name from the server» på compliance-site-check begge
-sprog, «response headers as well» på cookie-check begge sprog, «reads the page
-from the server too» på contrast- og text-on-image begge sprog, «reads the page
-source as well» på security-headers-check. `/books`, `/compliance-ai`,
-`/da/compliance-ai` og to bogsider: **0** «crawls the site»/«crawls it». Live
-`/scan` har stadig **1** «whole-site crawl up to 200 pages» — den ægte
-desktop-påstand er ikke ved et fejl gået. HTTP 200 blev ikke brugt som bevis.
-
-`DEPLOY OK 4/10 23:3x` for `ceo/scan-form-i-folden` — målt på indhold med to `curl`:
-live `/scan` har `<form id="scanForm" class="scanbox">` **inde i**
-`<header class="hero">` (9956–11032, altså **1** form og **0** i `<main>`),
-knappen er `<button type="submit" class="btn-primary">`, siden har **0**
-`background` i `.scanbox button`, `#result` er **1** gang og **uden for** heroen,
-og alle **3** skrivninger kalder `revealResult(out);`.
-
-`DEPLOY OK 4/10 23:3x` for `ceo/verdict-i-folden` — målt på indhold: live
-`/text-on-image-checker` har præcis **1** `id="verdict"` **før** `ti-canvas-wrap`
-og før `#result`, og dens statiske tekst er «Measured on the example image.»
-`.hero p.tagline` er under 120 tegn. *(Tallet «PASS 4,07:1» er JS-beregnet og kan
-ikke læses med curl — det var et forkert kriterium i noten.)*
-
-`DEPLOY OK 4/10 23:3x` for `ceo/resultat-koerende-taeller` og
-`ceo/tokenfri-konvertering` — målt på indhold: live `/api/results?days=7` har
-`served_scans_lifetime`, `note` med «NOT a count for this window» og
-`totals {runs: 0, visitor_days: 0}`; live `/api/conversion?days=7` svarer
-`status ok` med `totals {buy_clicks: 1, visitor_days: 1, pro_card_clicks: 0}`.
-HTTP 200 blev ikke brugt som bevis.
+`VERIFICÉR DEPLOY: deskuptime.com/tools/ skal være den nye side og ikke auditedwps
+forside — hent den og kræv på **indhold**: «Three checks you can run right now»
+findes, **0** «Download for macOS» (den gamle side kaldte den betalte app «free»),
+**1** `href="/bulk-url-checker/"`, **1** `href="/security-headers-checker/"`,
+**1** `buy.stripe.com/7sY9AS9eX3Iu418fJ5bMQ01`, canonical `deskuptime.com/tools/`,
+og at den stadig står i `sitemap.xml`. Tjek desuden at de tre ankre den bruger
+findes på forsiden: `id="check"`, `id="compare"`, `id="install"` — alle tre må
+give **1** på live `deskuptime.com/`. Sidst: `mahope.tools/free-tools/` skal
+linke `/accessibility-statement-generator` **1** gang (den lå publiceret uden
+indgang). ceo/tools-side-med-de-tre-tjek 6/10 03:4x`
 
 ## Åbne opgaver
 
@@ -189,186 +90,6 @@ HTTP 200 blev ikke brugt som bevis.
     `git cherry main <gren>` være læst, og dens rørte filer sammenlignet fil-for-fil
     med `main`. En `+` er ikke nok, fordi patch-id skjuler at main er ældre.
 
-25. ~~**Punkt 13 i ren kultur dømmer kun `$1`, ikke `;;`.**~~ **LUKKET 6/10.**
-    Hvorfor: fundet 6/10 var et dobbelt `;;` i `site/_worker.js:119`, rester fra
-    en scriptet indsættelse — og `;;` er *gyldig* JavaScript (en tom sætning),
-    så hverken `node --check`, tsc, bygget eller `check_inline_js` kan se den.
-    Ny port `tools/check_js_residue.py` dømmer hele JS-overfladen (`.js` +
-    inline `<script>`, `site/` **og** `dist/`) for `;;` og for linjer der kun er
-    `;`, med `for(;;)` undtaget. Den **maskerer strenge og kommentarer først**,
-    fordi `site/clean-copy-bookmarklet.js` er én minificeret `javascript:`-streng
-    med `});;var` som data — uden masking var porten rød på første kørsel.
-    To steps i gaten (`js-residue`, `js-residue-selftest`), **175 steps grønne**.
-    Første kørsel fandt én rigtig rester i `site/da/free-tools.html:353`
-    (`?$/);;if(!m)return;`), rettet i samme commit. Selftest **0 fejl**, og den
-    er målt rød på den gamle kode: med `_worker.js` plus mutationen er den
-    **4 fund** mod **0** på den uændrede fil. Maskeringen er testet mod de to
-    fejl den selv havde: en `/* … */` der lukker på samme linje slugt resten af
-    workeren som kommentar, og en template-literal med `${ … }` indeni som lod
-    maskeren tro den yderste streng stod åben ved EOF.
-
-
-26. ~~**`/scan-proxy` kan svare 500 på `?url=https://`.**~~ **LUKKET 6/10.**
-    Hvorfor: dedup'en i `handleScanProxy` droppede stille enhver linje hvis
-    `cscNormalizeUrl` gav tom streng (`https://`, `http://`, `///`, `//` …), så
-    `sider` blev tom og `sider[0].error` var en `TypeError` på en åben rute.
-    Accept: `?url=https://` svarer **400** med hele linjen; to linjer hvor den
-    ene er ugyldig svarer 400 med *den* linje; en test der kalder handleren
-    direkte. **Målt:** 5 tegnsfejl (`https://`, `http://`, `///`, `//`,
-    `https:///`) svarer alle 400 med hele linjen i `error`; en tegnsfejl ved
-    siden af en gyldig side er 400 med *den* linje; to skrivelser af samme side
-    er stadig én side; ingen fejl er tom eller `undefined`. `stripe-worker`
-    **474/474** mod **462/474** (12 fejl, alle med `-> 500 {}`) på den gamle kode.
-    Rettelsen: tom nøgle identificeres på sin egen rå tekst i stedet for at
-    være en adgangsbetingelse, og `sider[0]?.error` kan ikke kaste mere.
-27. ~~**Punkt 3 på «Scan now»:** knappen har ingen lås, og et dobbeltklik
-    brænder **ti** kvoteslots~~ **LUKKET 6/10.** `scan()` blev en lås omkring
-    `scanKør()`: et kald i luft får **samme** løfte tilbage, og knappen er
-    `disabled` med teksten «Scanning…» / «Scanner …» mens den venter. Målt i
-    `tests/scan-clients.test.mjs`: et dobbeltklik på submit giver **1** kald mod
-    **2** på mutationen hvor låsen er fjernet — og den mutationen læser den
-    rigtige fil, ikke en kopi. Knappen findes gennem `#scanForm`, fordi
-    `scan-share`'s sandkasse kun har `querySelector: () => null` på *dokumentet*
-    (den faldt rød på første kørsel).
-28. ~~**«Fem er samme tal som `/api/compliance-scan` tager» er usandt.**~~
-    **LUKKET 6/10.** Den tager `CSC_MAX_PAGES = 12` pr. kald. Kommentaren
-    peger nu på begge tal, og pro-kortet på `/scan` + `/scan-da` siger sandheden
-    om den rute licensen låser. Målt: `check_scan_page_claims` **6 fund** på
-    `63b65842` (hele vejen fra kommentar til pro-kort) mod **GRØN** nu, og
-    `--self-test` **9/9**. Se opgave 29 for den større del.
-29. ~~**«It crawls the whole site» står i 16 pro-kort på 8 sider, og er usandt.**~~
-     **LUKKET 6/10.** Målt: `handleReport` kalder `cscFetch` **én** gang, så
-     den læser én side og ser dens svarheadere. Alle **16** kort + **11**
-     prosa-steder på **9** sider rettet, hver med sin egen ærlige sætning —
-     målt pr. side hvilken kilde det frie værktøj læser. Ny **dom 5** i
-     `check_scan_page_claims` dømmer katalogen for `eucomply-pro`, låst til
-     målingen `kald == 1`; selftest **12/12** (mutation 10/11 genindsætter
-     løgnest på sider dom 4 aldrig så, mutation 12 beviser at porten **tie**,
-     når `handleReport` faktisk henter to sider). `scan-clients.test.mjs`
-     krævede den løgnest — nu **534/534**, målt rød (**532/534**) med løgnest
-     genindsat. `pro_table.py --apply` kørt på 9 sider, `check_pro_table` +
-     `check_catalog_where` grønne, katalogens 27 `where`-citater peger på den
-     nye tekst. Fuld gate: **GRØN — 173 steps**. *Bemærk: `url-inspector`s
-     «across a whole site» gælder Page Profile Pro, en anden rute i et privat
-     repo, så den er ikke dømt her.*
-30. ~~**Porten kunne tvinge en sand side til at lyve.**~~ **LUKKET 6/10.**
-    Review-fund 29/9 (MIDDEL). `tools/check_storage_claims.py` læste *næste
-    funktions signatur* som et kald, så 7 af 12 «hentende» ruter aldrig
-    hentede noget. Hvorfor det betød noget: `check_fetch_claim` ville have dømt
-    `clean-copy-api.html` for en **sand** afvisning. Rettelse: kroppen slutter
-    nu ved næste `start()` og begynder ved sin egen `{`, og `RE_FUNCTION`
-    tager `async` som valgfrit så `function guard(` bliver en grænse — ellers
-    faldt hele rutedispatchen i `handleClientError`s krop. Accept:
-    `fetching_routes()` giver **5** ruter (`/scan-proxy`,
-    `/api/header-check`, `/api/profile`, `/api/url-inspect`,
-    `/api/compliance-scan`), stabilt for `dybde` 1/2/3/5/10, og selvtestens
-    **5d/5e** er røde på den gamle kode (**58** fejl hhv. **1** fund) mod **0**
-    på den nye. `storing_routes` er uændret på **9**, porten **GRØN** med 0
-    fund, `--self-test` **0 fejl**. Fuld gate: **GRØN — 173 steps**. *Ingen
-    deploy-note:* kun `tools/` er rørt, ingen fil i `site/` eller `dist/`, så
-    intet på sitet ændrer sig.
-
-
-31. ~~**`check_js_residue` dømmer kun `;;` uden mellemrum, så `; ;` glider
-    igennem.**~~ **LUKKET 6/10.** Review-fund 5/10 (MIDDEL): begge regexer krævede
-    at semikolonnerne stod i én ubrudt række, så den form `sed`/`perl` faktisk
-    efterlader var grøn. Målt med portens egen `judge_js()` **før** rettelsen:
-    `f(); ; g();`, `a=b; ; c=d;`, `f(); ;`, `}); … ;if (x) {…}` og `  ; ;` på
-    egen linje gav **alle 0**. Nu `;[ \t]*;` og `^[ \t]*(?:;[ \t]*)+$`. Den
-    ene legitime form er den tomme betingelsesliste, og den kan stå midt i en
-    fyldt peger (`for (let i = 0; ; i++)`), så `RE_LOOP_HEADER` sletter parret på
-    hele pegeren — ikke kun mellem parenteser som den gamle `RE_EMPTY_HEADER`.
-**Selftest 0 fejl, porten 0 fund i 2087 enheder** (site + dist), og syv af
-     de ti nye selftest-tilfælde er målt røde på den gamle kode (0 fund) mod
-     korrekte på den nye; de tre øvrige er nye vagter, fordi den gamle regel
-     slet ikke kendte `; ;`-formen. *(Et review-fund sagde «ni» — tallet er
-     syv, og det er rettet her, så det ikke bliver brugt som grundlag for at
-     droppe en port.)* Fuld gate **GRØN — 177 steps**. Der kom også en
-     rå-bekræftelse på dobbelt-reglen: maskeren gør to template-literals på én
-     linje til mellemrum, så `` `a` ; `b` ; `` lignede et fund; den er låst med
-     et tilfælde. *Ingen deploy-note:* kun `tools/` er rørt, ingen fil i
-     `site/` eller `dist/`, så intet på sitet ændrer sig.
-
-32. ~~**Rettelsen i opgave 31 slettende de linjeskifter den matchede over.**~~
-     **LUKKET 6/10.** Review-fund 6/10 (MIDDEL): `RE_EMPTY_CONDITION` er
-     `;[ \t\r\n]*;`, så den matcher *også på tværs af et linjeskift*, og
-     `out[i + k] = " "` skrev `" "` over hvert tegn i matchen —
-     **linjeskiftene inklusive**. Den maskerede tekst fik derfor færre linjer
-     end den rå, og `judge_js` tæller linjer i den maskerede tekst *og* slår
-     den rå linje op på samme indeks, så både tal og opslag kom ud af trit.
-     Docblocken sagde «positionerne bevares, så et fund stadig kan slås op på
-     den rigtige linje» — længden blev bevaret, **linjetallet ikke**.
-     *Målt* med portens egen `judge_js()` på samme input, `2ee5d77f` mod
-     `887d1c0f`: `for (let i = 0;\n;\ni++) {}\n;\n` gav **2 fund** (linje 2 +
-     4) på den gamle kode og **0** på den nye. Linje 3 (`;` alene) er den
-     **legitime** tomme betingelsesliste, linje 4 (`;` alene) er en **ægte
-     rest** efter pegeren — altså tabte den nye kode den sande. Og et fund på
-     rå linje 9 blev rapporteret på linje 7. Rettelse: `if out[i + k] not in
-     "\r\n"`. *Efter rettelsen* (målt i samme måling): **1 fund på linje 4**,
-     og den anden række **linje 9**. Den falske positive på den legitime
-     `;`-linje kommer ikke tilbage, fordi semikolonerne selv stadig blandes
-     ud, så den maskerede linje er `   `. Selftest **0 fejl** mod **3 fejl**
-     på den gamle kode — to nye rækker plus en ny `paa_linje`-kontrol der
-     dømmer linjetallet, fordi det er læsbarheden og ikke en bivirkning.
-     Porten **0 fund i 2087 enheder**, og kørt på de **35 egne `.js`-filer**
-     uden for portens dækning (den dækker `site/` og `dist/`): **0 fund**, så
-     den bredere regel har ikke lavet falske positive i `desktop/`- eller
-     extension-overfladen. Fuld gate **GRØN — 177 steps**. *Ingen
-     deploy-note:* kun `tools/` er rørt.
-
-33. ~~**Ingen produktside siger hvad Pro *ikke* gør.**~~ **LEVERET 6/10,
-      `ceo/pro-graense`.** Katalogens `pro_limit` for fire produkter tegnes som
-      sin egen linje under tabellen på **21** sider, begge sprog. Ny **dom 4c** i
-      `check_pro_table` dømmer tre ting (katalog har `pro_limit` på hvert sprog,
-      teksten står i blokken, den står på grænselinjen), selftest **28/28** da, **30/30**
-      tre mutationer i selve generatoren. To usande påstande blev rettet i
-      kilden, og selftesten fandt en svækket port undervejs: dom 4 læste hele
-      blokken, så grænsens egen tekst blev regnet som bevis på at en funktion
-      stod i tabellen — den læser nu kun `<tbody>`-rækkerne. Se arkivet for de
-      **25** `where`-intervaller, der rykket ét linjenummer.
-34. ~~**`krav 4` så hverken `Page Profile` eller EUComply-bundlen rigtigt.**~~
-      **LUKKET 6/10**, `ceo/frontpage-navn-normalisering`. Review-fund LAV:
-      `katalognavne()` krævede et rent substring, så porten var blind for varer
-      der skrives som sit slug i listerne over henvisningen
-      (`<a href="/page-profile">`) — altså netop den fjerde af fire — og en
-      sætning der nævner `EUComply Complete Template Bundle` blev regnet som
-      også at nævne `EUComply`, som *ikke* står i listerne. Rettelse: begge
-      sider normaliseres (bindestreg/hvidrum → ét, casefold) og der kræves en
-      ordgrænse på begge sider, og de navne henvisningen nævner findes i **ét**
-      alternativ med **længste match først**. Målt på den gamle kode: «Not listed
-      above: Page Profile, …» → **fund: []** (skal være rød) og «… the EUComply
-      Complete Template Bundle and Transmute Desktop.» → **1 fund** (falsk
-      positiv); på den nye **RØD** / **GRØN**. Selftest **10/10** med to nye
-      mutationer, der dømmer begge retninger. Fuld gate **GRØN — 177 steps**.
-      *Ingen deploy-note:* kun `tools/` er rørt.
-35. ~~**`UNMANAGED_DOMAINS` har en 404-rute i en verificeret note.**~~
-      **LUKKET 6/10.** Der var to af slagsen, og begge er dømt og rettet:
-      `ceo/pro-graense` krævede `mahope.tools/clean-copy` (**404** — Clean Copy
-      er `cleancopy.tools`), og `ceo/pro-pastand` krævede
-      `cleancopy.tools/downloads` (**0** `.zip`-links — arkiverne ligger på
-      `mahope.tools/downloads`). Begge nævner nu den rute der findes, målt med
-      `curl`. *Accept-kravet står ved magt:* en `VERIFICÉR`-note skal måles på
-      en rute der svarer 200 **og** har den påstand den kræver.
-
-36. ~~**CI var rød på `main` i to steps.**~~ **LUKKET 6/10.**
-    `stripe-worker-ur`: `clock_jump.mjs` hopper én time pr. kald, og hver
-    trafiksektion laver **11** kald, så de hopper **11** timer — og lander de hen
-    over et døgnskifte, ser `isoDaysAgo(0)` og workerens `window[0]` to
-    datoer, så `by_day`-dommen dømmer et vindue der aldrig blev sået. Rødt i
-    CI-run `37340718217` 5/10 kl. 16:25 på `pr. dag: 2 i dag 0 og 1 to dage
-    tilbage`. Samme mønster som `stopTimeUr2` længere nede i filen: tælleren
-    skal måles, ikke klokken, så uret pinnes nu i begge sektioner med hver sin
-    timebøtte (så kvoten på 30/time ikke deles). Målt: gammel kode med base
-    16:00Z → **473/474** med CI's exacte by_day; ny kode med samme base →
-    **474/474**; ny kode grøn i **alle 24** timebaser, gammel rød i 2 af 8
-    målte. `weekly-history`: `check_shared_visits_namespace.py` sender med vilje
-    3 sidevisninger på `/namespace-probe` (det står i portens egen docstring), så
-    regel 5 dømte `reports/weekly/2026-41.json` for at tælle vores egen trafik.
-    Undtagelsen er en **proveniens**, ikke en navneliste: ruten skal være en
-    modul-konstant på kolonne 0 i en `tools/*.py`; portens egen fil er
-    udelukket. Selftest **27/27**, mutation (kræver blot en bogstavelig streng i
-    `tools/`) → **12 fejl**. Fuld gate **GRØN — 177 steps**. *Ingen
-    deploy-note:* kun `tests/` og `tools/` er rørt.
 
 ## ❓ Til Mads
 
@@ -482,13 +203,23 @@ side; tallene er ikke vores egen trafik. Alt det der er leveret (1–11) står i
     nævner produktet kun i en **JSON-LD-FAQ** og en kort om licensetrafikken —
     de sælger intet, så en købslinje dér ville være kulisse.
 
-18. **DeskUptime har otte ruter ingen læser nogensinde ser.** Hvem: alle nye.
-    Tal: hvor mange af dem kommer i betragtning. Accept: hver bygget rute under
-    `/tools/` har mindst ét link fra forsiden eller navigationen. Datagrund:
-    målt 6/10 — 7 besøgende, **alle** på `/`, og `tools/` har ingen indgang.
-    *(Dommen skal kræve **indgangen**, ikke at ruten findes — at siden svarer
-    200 er allerede målet.)*
-
+18. ~~**DeskUptime har otte ruter ingen læser nogensinde ser.**~~ **LEVERET
+    6/10**, `ceo/tools-side-med-de-tre-tjek`.** Datagrund holdt kun delvist: der
+    er **to** værktøjsruter på domænet, ikke otte — de øvrige auditedwp-sider
+    udgives ikke. De **havde nul indgang**: navets «Tools»/«Værktøjer» pegede på
+    `../auditedwp`s egen forside, som linkede **0** af de to, havde egen canonical
+    ved siden af forsiden og kaldte den betalte app «free». Ruten er nu
+    `site/deskuptime/tools/index.html` med de tre tjek, gratis/Pro-tabellen fra
+    katalogen og **én** købsknap, så `one_buy_button`-efterbehandlingen er væk
+    (den var en post-processor, fordi kilden lå i et sibling-repo).
+    Ny port `tools/check_tool_hub.py` finder hub-ruten i nav-konfigurationen og
+    kræver at den linker hvert publiceret værktøj **i sit eget sprog**; målt
+    mutation (linket omdøbt) → **RØD** med navnet på den manglende rute. Den
+    fandt straks en **ægte** mangel: `/accessibility-statement-generator` lå
+    publiceret uden nogen indgang fra `/free-tools` — rettet med et kort i samme
+    stil som naboerne. Selftest **20/20**. Rettelsen af `_page_file` i
+    `check_article_paid_path` (den gættede stien og så `deskuptime.com`s `remap`
+    forude) lå i samme diff. Fuld gate **GRØN — 179 steps**.
 9. ~~**`/scan` tager kun 1 URL.**~~ **Leveret 5/10** — se arkivet.
 
 10. ~~**`/scan` mangler et eksempel-resultat at dele.**~~ **LUKKET 6/10.** Leveret

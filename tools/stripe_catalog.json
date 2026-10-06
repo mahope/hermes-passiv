@@ -798,6 +798,20 @@
       ]
     },
     {
+      "path": "site/deskuptime/tools/index.html",
+      "domain": "deskuptime.com",
+      "route": "/tools/",
+      "product": "deskuptime-pro",
+      "prices": [
+        "$0",
+        "$19"
+      ],
+      "prices_note": "Prisen står tre steder og de skal være ens: `$19 once` i Pro-søjlen i tabellen (linje 102), «19 USD once, 3 machines» i knappens ankertekst, og «One licence covers 3 machines» i noten under tabellen. `$0` er den frie søjles `pro-price` — den er synlig, fordi de tre værktøjer er gratis, så den er ikke en antagelse om hvad kunden ville betale.",
+      "requires_text": [
+        "Buy DeskUptime Pro — 19 USD once, 3 machines"
+      ]
+    },
+    {
       "path": "site/blog/desktop-website-monitor-cli.html",
       "domain": "mahope.tools",
       "route": "/blog/desktop-website-monitor-cli",
@@ -1716,16 +1730,7 @@
       ]
     }
   ],
-  "built_offers": [
-    {
-      "domain": "deskuptime.com",
-      "route": "/tools/",
-      "product": "deskuptime-pro",
-      "source": "../auditedwp/index.html — bygges ind i dist af build_sites.py:102, så kilden ligger i et sibling-repo og ikke her",
-      "ctas": 1,
-      "why": "Selvstændig Pro-side i vores egen nav ('Tools'/'Værktøjer') med egen canonical, i sitemap. Målt 27/9 som den eneste publicerede købsside porten ikke kendte: den er grøn med 13 dokumenterede købssider, mens det byggede site har 16. Den havde **to** synlige købsknapper med samme betalingslink — én i helten ved prisen, én længere nede efter featurelisten — så én købshensigt blev talt to gange i `recentBuyClicks`. Kilden er ../auditedwp, som jeg ikke må ændre, så `build_sites.py` reducerer den i `one_buy_button` under bygget: helten knappen bevares, den lavere forsvinder sammen med sin tomme `<p>`, og beroligelsen om Stripe og licensnøglen bliver stående."
-    }
-  ],
+  "built_offers": [],
   "redirects": [
     {
       "domain": "cleancopy.tools",
@@ -1848,6 +1853,90 @@
       "lang": "da",
       "why": "samme sammenligning på dansk",
       "anchor": "compare"
+    },
+    {
+      "path": "site/deskuptime/tools/index.html",
+      "product": "deskuptime-pro",
+      "lang": "en",
+      "why": "Navens «Tools» peger her, så denne side er det første en læser ser når de vil et værktøj. Målt 5/10: den rute lå med `../auditedwp`s egen forside, som linkede **0** af de to værktøjer der faktisk ligger på domænet. Nu er den her, og siden sælger Pro — så den skal kunne vise hvad gratis og Pro hver giver, ligesom `/` gør.",
+      "kind": "tool",
+      "anchor": "compare",
+      "free_features": [
+        {
+          "id": "one-off-checks",
+          "where": "site/deskuptime/tools/index.html:56-62 «One site, right now» — kortet på /#check, som læser én adresse pr. kald og svarer med status, redirects, certifikat og de otte headers",
+          "labels": {
+            "en": [
+              "One-off checks — status, redirects, the live certificate and the eight security headers"
+            ]
+          }
+        },
+        {
+          "id": "ssl-content-checks",
+          "where": "site/deskuptime/tools/index.html:57-60 «the live TLS certificate with the days left on it» — SSL-udløb er i det frie svar; content hashen sker i watch-mode, som også er frit",
+          "labels": {
+            "en": [
+              "SSL and content checks — SSL expiry on every check, content hashing in watch mode"
+            ]
+          }
+        },
+        {
+          "id": "ten-sites",
+          "where": "site/deskuptime/tools/index.html:66-74 «up to ten URLs, one per line» — /bulk-url-checker tager dem i én passage",
+          "labels": {
+            "en": [
+              "Up to 10 URLs in one pass — status, response time, redirects and SSL expiry"
+            ]
+          }
+        },
+        {
+          "id": "headers-grade",
+          "where": "site/deskuptime/tools/index.html:77-83 «A–F grade» — /security-headers-checker karakteren kommer af de samme otte headers",
+          "labels": {
+            "en": [
+              "A–F grade on the security headers, with every header value to paste in"
+            ]
+          }
+        },
+        {
+          "id": "json-output",
+          "where": "site/deskuptime/tools/index.html:139 «--json   # machine-readable» — CLI'en kan JSON uden nøgle, og GitHub Action'en gør det samme i et job",
+          "labels": {
+            "en": [
+              "JSON output from every check, plus a GitHub Action that puts a status table in the job summary"
+            ]
+          }
+        }
+      ],
+      "pro_features": [
+        {
+          "id": "desktop-alerts",
+          "where": "site/deskuptime/tools/index.html:123-125 «webhook alerts and a client-ready report» — desktop-app'en er den betalte del",
+          "labels": {
+            "en": [
+              "Desktop app that runs in the background, with notifications and webhook alerts"
+            ]
+          }
+        },
+        {
+          "id": "unlimited-sites-interval",
+          "where": "site/deskuptime/tools/index.html:124 «unlimited sites, polling as often as every 30 seconds» — FREE.urlLimit 3 -> PRO Infinity og PRO.minIntervalSeconds 30",
+          "labels": {
+            "en": [
+              "Unlimited sites, polling as often as every 30 seconds"
+            ]
+          }
+        },
+        {
+          "id": "client-report",
+          "where": "site/deskuptime/tools/index.html:125 «a client-ready report you can hand a client»",
+          "labels": {
+            "en": [
+              "A client-ready report in Markdown and JSON you can send to a client"
+            ]
+          }
+        }
+      ]
     },
     {
       "path": "site/page-profile.html",

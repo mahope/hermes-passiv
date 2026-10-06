@@ -1,6 +1,6 @@
 {
- "note": "Værktøjssider MÅLT til at have ingen betalt vej i egen tekst: ingen buy.stripe.com-link og intet link til en side i stripe_catalog.json. Forsiderne er chrome, artiklerne hører til check_article_paid_path.py, og en side der er chrome ifølge byggen eller som erklærer name=\"x-no-paid-path\" med en grund, er målt men ikke dømt — alle med begrundelse i check_tool_paid_path.py's udskrift. Listen er en ratchet: den må kun krympe, og --write skriver den fra målingen. **Tom betyder at alle 94 dømte værktøjssider nu har en betalt vej** — ikke at porten ingenting kan se; en ny blind side giver en rød NY BLIND VÆRKTØJSSIDE. 0 linjer nået 30/9.",
+ "note": "Værktøjssider MÅLT til at have ingen betalt vej i egen tekst: ingen buy.stripe.com-link og intet link til en side i stripe_catalog.json. Forsiderne er chrome, artiklerne hører til check_article_paid_path.py, og en side der er chrome ifølge byggen eller som erklærer name=\"x-no-paid-path\" med en grund, er målt men ikke dømt — alle med begrundelse i check_tool_paid_path.py's udskrift. Listen er en ratchet: den må kun krympe, og --write skriver den fra målingen. **Tom betyder at alle dømte værktøjssider nu har en betalt vej** (tallet stod her som 94 og var dermed allerede gammelt, da 6/10 føjede `/tools` til de 96) — ikke at porten ingenting kan se; en ny blind side giver en rød NY BLIND VÆRKTØJSSIDE. 0 linjer nået 30/9.",
  "source": "python3 tools/check_tool_paid_path.py --write --force",
- "measured": "2026-10-04",
+ "measured": "2026-10-05",
  "blind": []
 }

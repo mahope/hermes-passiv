@@ -115,8 +115,15 @@ SITES: dict[str, dict] = {
         },
         "include": ["deskuptime/**", "da/deskuptime/**"],
         "remap": {"deskuptime/": "", "da/deskuptime/": "da/"},
+        # `../auditedwp/site/deskuptime/index.html` ligger **ikke** længere på
+        # `/tools/`. Det var auditedwp's egen forside, som blev lagt der, og den
+        # gjorde tre ting galt på én rute som vores egen nav kalder «Tools»:
+        # den linkede nul af de to værktøjer der faktisk ligger på domænet, den
+        # havde sin egen canonical ved siden af `/` (to sider om samme
+        # produkt), og dens knap «Download for macOS & Windows (free)» pegede
+        # på forsiden — appen er den betalte del, 19 USD. Se
+        # `site/deskuptime/tools/index.html`, som nu ligger der i stedet.
         "extra": [
-            (AUDITEDWP_DESKUPTIME / "index.html", "deskuptime/tools/index.html", "tools/index.html"),
             (AUDITEDWP_DESKUPTIME / "bulk-url-checker" / "index.html",
              "deskuptime/bulk-url-checker/index.html", "bulk-url-checker/index.html"),
             (AUDITEDWP_DESKUPTIME / "security-headers-checker" / "index.html",
@@ -124,12 +131,6 @@ SITES: dict[str, dict] = {
             (AUDITEDWP_ASSETS / "site.css", "assets/site.css", "assets/site.css"),
             (AUDITEDWP_ASSETS / "site.js", "assets/site.js", "assets/site.js"),
         ],
-        # Se `one_buy_button`. Kilden er ../auditedwp og må ikke ændres her;
-        # udgaven er min, så bygget efterbehandler siden. Nøglen er
-        # deskuptime-pros betalingslink fra Stripe-kontrakten.
-        "one_buy_button": {
-            "tools/index.html": "https://buy.stripe.com/7sY9AS9eX3Iu418fJ5bMQ01",
-        },
     },
     "bugbottle.dev": {
         "project": "bugbottle-dev",
@@ -499,46 +500,12 @@ def strip_duplicate_pageviews(text: str) -> str:
     return MALFORMED_TRACKING_SCRIPT_RE.sub("", text)
 
 
-# Én købsknap pr. side. Kilden til `deskuptime.com/tools/` ligger i
-# `../auditedwp`, som jeg ikke må ændre, og den har to synlige knapper med
-# samme betalingslink: én i helten ved prisen og én længere nede efter
-# featurelisten. Konsekvensen er målt, ikke antaget: `track.js` tæller hvert
-# klik på et Stripe-link, så én købshensigt på den side tælles **to** gange i
-# `recentBuyClicks` — altså forvriderer den det tal, vi prioriterer efter.
-# Kilden kan ikke rettes her, men *udgaven* er min, så bygget reducerer den.
-#
-# Førsteknappen bevares, altså den i helten ved prisen. Den anden forsvinder
-# sammen med den `<p>` den lå alene i, så der ikke bliver en tom
-# `<p style="margin-top:20px">` stående. Beroligelsen «Payment through
-# Stripe. License key on screen and by email» ligger i sin *egen* `<p>` og
-# bliver derfor stående — det er den samme sætning der sværer for et køb.
-#
-# Hvis der ikke findes mindst to knapper, er det en fejl og ikke en no-op: så
-# har kilden ændret sig, og en stille success ville lade `built_offers` fortsat
-# erklære det gamle tal uden at nogen opdager det.
-
-
-def one_buy_button(text: str, payment_link: str, dest: str) -> str:
-    # Klammerne er valgfri, og det er hele pointen: en knap der stod **alene**
-    # i sin `<p>` tager den med. Men kun når der stod *intet andet* —
-    # `Want it? <a>Buy</a> now` matcher ikke klammerne, fordi der ikke er
-    # whitespace lige efter `<p>` eller lige før `</p>`, så den `<p>` bliver
-    # stående med sin tekst.
-    pattern = (r"(?:<p\b[^>]*>\s*)?"
-               r"<a\b[^>]*href=[\"']" + re.escape(payment_link) + r"[\"'][^>]*>.*?</a\s*>"
-               r"(?:\s*</p>)?")
-    found = list(re.finditer(pattern, text, re.I | re.S))
-    if len(found) < 2:
-        raise ValueError(
-            f"{dest}: forventede mindst 2 købsknapper til {payment_link}, fandt "
-            f"{len(found)}. Kilden er ../auditedwp og er ændret — så reglen skal "
-            f"fjernes fra manifestet, ikke slås fra ved at tie.")
-    # Alt mellem knapperne og efter den sidste bliver bevaret; kun fundene fra
-    # den anden knap og frem forsvinder.
-    out = [text[:found[0].start()], found[0].group(0)]
-    out += [text[found[i - 1].end():found[i].start()] for i in range(1, len(found))]
-    out.append(text[found[-1].end():])
-    return "".join(out)
+# `one_buy_button` lå her, fordi `deskuptime.com/tools/` kom fra
+# `../auditedwp` med to synlige knapper til samme betalingslink. Siden er nu
+# en rigtig kilde her (`site/deskuptime/tools/index.html`) med **én** knap, så
+# der er intet mere at reducere, og funktionen er væk. `check_stripe_ctas`
+# dømmer nu den rigtige udgave som en helt almindelig `offers`-indgang — en
+# efterbehandler kunne have skjult en knap, porten ikke kan se.
 
 
 # A reference inside a code example is not a link. `site/blog/open-graph-checker.html`
@@ -1526,8 +1493,6 @@ def write_site(site: Site, local: dict, global_idx: dict, kv_id: str, pairs: dic
         text = rewrite_text(site, text, is_html, local, global_idx)
         if is_html:
             text = strip_duplicate_pageviews(text)
-        if is_html and (site.cfg.get("one_buy_button") or {}).get(dest):
-            text = one_buy_button(text, site.cfg["one_buy_button"][dest], dest)
         out.write_text(text, encoding="utf-8", errors="surrogateescape")
 
     idx_cfg = site.cfg.get("index_from")
