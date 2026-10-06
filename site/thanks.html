@@ -384,8 +384,14 @@
                got202 = true;
                return again(T.confirming, 2500, true);
              }
-             // 429 før 5xx, og uden for `again()`: se LIMITED_OUT.
-             if (x.code === 429) return fail((x.d && x.d.error ? x.d.error : T.tooMany) + LIMITED_OUT);
+// 429 før 5xx, og uden for `again()`: se LIMITED_OUT.
+              // Hvis vi har set 202 (betaling ikke bekræftet endnu), skal 429 ikke
+              // sige "your payment went through" — det er en løgn. Vi viser
+              // PENDING_OUT ("betalingen er ikke bekræftet endnu") i stedet.
+              if (x.code === 429) {
+                var msg = (x.d && x.d.error ? x.d.error : T.tooMany);
+                return fail(msg + (got202 ? PENDING_OUT : LIMITED_OUT));
+              }
              if (x.code >= 500) return again(T.trouble, 4000, got202);
              fail(x.d.error || T.notFound);
            })
