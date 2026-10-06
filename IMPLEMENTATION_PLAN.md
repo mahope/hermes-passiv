@@ -6,8 +6,9 @@
   fordi den havde sin egen regel. Alle er åbne med CORS `*`, og `developers.html`
   uddeler curl-linjer til to af dem. Nu **én** regel (`parseTargetUrl`) i alle
   seks; `//vært` og mellemrum er det samme input, et fremmed skema er afvist.
-- **Målt:** 28 nye assertions, **24 røde på den gamle kode** (490/514) og alle
-  grønne på den nye (**514/514**). De 24 var de to ruters bare vært (400), deres
+- **Målt:** 25 nye assertions, **22 røde på den gamle kode** (489/511) og alle
+  grønne på den nye (**511/514** før denne iteration; nu 515 med
+  `contrast-measured`). De 24 var de to ruters bare vært (400), deres
   14 private værter (afvist som *ugyldig URL* i stedet for som `cannot be
   checked/profiled` — altså et værnt der holdt af en fejl forklaring), deres
   `//`-form og `ftp:`, `compliance-scan` med `HTTPS://` (502, fordi den gamle
@@ -21,7 +22,7 @@
   gav **262/262 HTTP 200** med indhold. `/api/license/validate` svarer 404 på en
   ukendt nøgle og 400 på en ugyldig — begge med den tekst siden siger.
 - **CI:** seneste kørsel på `main` er **success**. `PR-TJEK 6/10`: **0** åbne
-  PR'er. **Næste:** feature-kø A–D. Målt 6/10 er `/api/results` og
+  PR'er. **Næste:** feature-kø B–D. Målt 6/10 er `/api/results` og
   `/api/conversion` begge **0** for 7 dage, mens `served_scans_lifetime` er 51 —
   så vi ved ikke endnu om det er «ingen besøgende» eller «tracking død».
 
@@ -97,7 +98,16 @@ nye: `header-check` og `profile` med `?url=169.254.169.254` → begge **400** me
 «cannot be checked» hhv. «cannot be profiled» i `error` — ikke «Invalid URL»,
 for det er præcis den gamle kode, der afviste private værter som ugyldige
 URL'er. `/api/compliance-scan` med `?url=HTTPS://example.com` (versal-skema) →
-**200**. ceo/et-url-regel-pa-alle-ruter 6/10 05:1x`
+**200**. ceo/et-url-regel-pa-alle-ruter 6/10 05:1x` — **DEPLOY OK 6/10:**
+alle fire svarer 200 med henholdsvis `inspectUrl`, `finalUrl`, `final_url` +
+«Example Domain» og `scanned_url` = `https://example.com/`, og de to nye ruter
+svarer 400 med «cannot be checked»/«cannot be profiled» på `169.254.169.254`.
+*(Notens krav om `headers.x-content-type-options` på **example.com** kan ikke
+opfyldes: den side sender den header ikke, hverken direkte eller gennem os.
+Dømt på to af vores egne domæner i stedet, hvor den er der: `cleancopy.tools`
+og `deskuptime.com` giver begge `x-content-type-options: nosniff` og
+`x-frame-options: DENY` gennem `/api/header-check`, altså læser de nye ruter
+faktisk headere. Notens pointe var «ikke grøn ved at afvise alt», og det holder.)*
 
 ## Åbne opgaver
 
@@ -230,14 +240,37 @@ side; tallene er ikke vores egen trafik. Alt det der er leveret (1–11) står i
     `compliance-scan` med `HTTPS://` gik fra 502 til 200, fordi den gamle regel var
     `raw.startsWith('http')`. Fuld gate **GRØN — 179 steps**.
 
-A. **Den mest besøgte guide giver ingen vej til sit eget værktøj.** Hvem: den
-   SEO-læser der lander på `/blog/text-on-image-contrast-check` — **9 af de 23**
-   menneskelige besøgende på mahope.tools i 28 dage, alle med 100 % bounce.
-   Tal: hvor mange af dem bruger værktøjet. Accept: læseren kan køre tjekket på
-   sit eget billede **inde i artiklen**, og vejen sender ét målbart event.
-   Datagrund: `/text-on-image-checker` fik **2** besøgende mod artiklens 9, så den
-   læser der er kommet længst ender på det værktøj der løser hans problem.
-   Baseline: 2.
+A. ~~**Den mest besøgte guide giver ingen vej til sit eget værktøj.**~~
+   **LEVERET 6/10**, `ceo/contrast-guide-eget-vaerktoj`.** Datagrunden holdt
+   kun halvt: værktøjet lå **allerede inde i artiklen**, så det der manglede
+   var ikke indgangen. To huller lå i stedet.
+   **(1) Resultatet var ikke målt.** Kernen skrev et tal, men **ingen sted**
+   kaldte `trackEvent`, så `/api/results` viste præcis nul for værktøjet — vi
+   kunne se at 9 mennesker læste artiklen og ikke se om *én* kørte et tjek. Nu
+   `contrast-measured`, sendt fra kernen selv så alle fire sider dækkes, og kun
+   når læseren har valgt **sin egen** baggrund: `demoBillede` er præcis den
+   betingelse demo-noten forsvinder på, så kernens egen eksempelbillede tæller
+   ikke — ellers ville hver sidevisning være et «gennemført tjek». Én gang pr.
+   side, ikke pr. træk (`updateResult()` kaldes fra hvert `mousemove`).
+   **`contrast-measured` står i `RESULT_EVENTS`**, så den tæller i
+   `/api/results` pr. rute — og forskellen på artiklen og værktøjssiden er så
+   netop det tal der kan afgøre hvad de to er værd. Baseline: **0**.
+   **(2) Rettelsen kunne ikke bruges.** Artiklen siger at en slør er den
+   hurtigste løsning, kernen regner den mindste dækning der virker, og «Fix
+   it» lægger den på canvas — så bruteren stod med «42 % mørkt lag» og skulle
+   selv regne `rgba(0,0,0,0.42)` ud. Nu får han den linje, i sit eget sprog og
+   med en knap der kopierer den; ved et slør er der **to** linjer, fordi
+   `applyFix()` sætter både farve og lag. CSS'en dannes af kernens *egne* tal
+   (`fix.hex`, `fix.scrim`, `fix.alpha`) og læses tilbage af knappen *ud fra
+   `<code>`*, så den der kopieres er den der står på skærmen. Målt: farven i
+   linjen består det tjek den er skrevet til — sat i feltet og målt igen af
+   kernen selv. Slør-grenen dømt mod `suggestFix([sort],[hvid],3)`, hvor det er
+   den **hvide** slør der vinder med mindst dækning, så forventningen bygges
+   af målingen og ikke af en hardkodet farve. Mutation: kernen fra før
+   rettelsen sender 0 begivenheder og skriver 0 CSS-linjer. Fuld gate **GRØN**;
+   `stripe-worker` **515/515** (den nye streng i resultatlisten er selv en
+   port), `scan-clients` 565/565, `seo_check` 316 sider 0 fund,
+   `check_inline_js` 0.
 
 B. **Vi kan ikke skelne «ingen besøgende» fra «tracking død».** Hvem: os, i
    hver morgenrapport. Tal: prioriteringen. Accept: ét kommando-kald skriver de

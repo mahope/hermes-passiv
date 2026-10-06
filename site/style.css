@@ -698,6 +698,21 @@ select.ti-input { max-width: 180px; }
    styrke, kun mindre. Ingen baggrund — en farvet bane her ville ligne en
    fejl-tilstand, og her er intet galt. */
 .ti-demo { font-size: .9rem; color: var(--color-text); font-weight: 600; }
+/* Den CSS-linje der hører til kernens egen rettelse (6/10). Den er et svar på
+   målingen, ikke en knap i rækken af dem, så den bærer `.ti-hex`s formsprog —
+   samme kant, samme overflade, samme 44 px højde — fordi den skal læses som
+   «det her er det du tager med» og ikke som endnu en handling at vælge imellem.
+   Blok (`display:block`) og ikke pille, fordi den kan være to linjer: ved et
+   slør er tekstfarve og lag begge nødvendige, og en pille der bryder midt i en
+   CSS-linje er ubrugelig på en telefon. `white-space:pre-wrap` er ikke pynt —
+   uden det forsvinder linjeskiftet i markup'en, og læseren får to linjer der
+   ikke kan læses som CSS. */
+.ti-css { display: block; margin-top: 8px; }
+.ti-css-label { display: block; margin-bottom: 4px; font-size: .82rem; color: var(--color-text-muted); }
+.ti-css-copy { display: block; width: 100%; min-height: 44px; padding: 8px 12px; border: 1px solid var(--color-border); border-radius: 8px; background: var(--color-surface-2); color: var(--color-text); text-align: left; cursor: pointer; }
+.ti-css-copy:hover { border-color: var(--color-accent); }
+.ti-css-copy:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
+.ti-css-copy code { font-family: var(--mono); font-size: .85rem; white-space: pre-wrap; }
 
 /* Vælgeren af hvilken af to tekstblokke et klik på billedet flytter. Den er
    trykket ind, når den er den aktive — samme mønster som `.ti-hex` ovenfor,

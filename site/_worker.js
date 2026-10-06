@@ -71,12 +71,14 @@ const RESULTS_KEY_LIMIT = 2000;
 // de aldrig begge fyrer for samme kørsel), `finish` er NIS2-vurderingerne, og
 // `generate`/`generate-da` er de tre generatorer (DPA, privatliv, ro-pas).
 // `compliance-report` og `report-dl` er rapporten fra compliance-værktøjerne.
+// `contrast-measured` er kontrastmålingen på læserens *eget* billede eller
+// gradient (6/10) — altså ikke kernens demo, der udløser den betingelse.
 // Bevidst **ikke** med: `buy-click` (det er et forsøg, ikke et resultat, og salget
 // står i Stripe), `scan`/`scan-failed` (et forsøg), `cta-*` (et klik på en
 // knap), `ai-unavailable` (en hjælpe, der ikke virker).
 const RESULT_EVENTS = Object.freeze([
   'scan-findings', 'scan-clean', 'finish', 'generate', 'generate-da',
-  'compliance-report', 'report-dl',
+  'compliance-report', 'report-dl', 'contrast-measured',
 ]);
 // En sti fra `normalizeTrackedPath()` er normaliseret, men den kommer fra en
 // `referer` header, som altid kan forfalskes. Derfor spejles emnerne ikke tilbage

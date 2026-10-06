@@ -324,6 +324,10 @@ function loadPage(path, fetchImpl, opts = {}) {
   };
   sandbox.window = sandbox;
   sandbox.globalThis = sandbox;
+  // Se forklaringen ved `st.begivenheder`: `trackEvent` skal findes **før**
+  // sidens egen kode kører, ellers dømmer en dom kernen på en ReferenceError.
+  st.begivenheder = [];
+  sandbox.trackEvent = (e) => { st.begivenheder.push(String(e)); };
   vm.createContext(sandbox);
   // `/net.js` står med `defer` i head, så browseren har kørt den længe før nogen
   // kan klikke. Sandkassen gør det samme — ellers ville de tre klienter der læser
@@ -2642,6 +2646,184 @@ for (const [path, lang, knapTekst, undervejsTekst] of [
   ok('mutationen (kernen uden finger-træk) er fanget',
     !(mutation.tegnet > 0 && mutation.x > 600),
     `mutationen flyttede stadig teksten til x=${mutation.x} — dommen kan ikke se forskellen`);
+}
+
+// --------------------------------------------------------------------------
+// 21. Værktøjet målte, rettede — og så stoppede det ved et procenttal.
+//
+// To fejl i træk på `/blog/text-on-image-contrast-check`, som er mahope.tools'
+// største indgangsside (9 af 23 menneskelige besøgende, 100 % bounce):
+//
+//  1. **Resultatet var ikke målt.** Kernen skrev et tal, men ingen sted kaldte
+//     `trackEvent`, og `contrast-measured` (eller hvad den hed) stod ikke i
+//     `RESULT_EVENTS` — så `/api/results` viste præcis nul. Vi kunne se at 9
+//     mennesker læste artiklen og ikke se, om *én* af dem kørte et tjek. Et tal
+//     om værktøjet uden et tal om hvor mange gange det blev brugt, er to
+//     påstande om hver sin ting, og bare den første var ærlig.
+//  2. **Rettelsen ikke kunne bruges.** Artiklen siger at den hurtigste løsning
+//     er «et halvgennemsigtigt lag bag teksten», kernen *regner* den mindste
+//     dækning der virker, og «Fix it» lægger den på canvas. Så stod bruteren
+//     med «42 % mørkt lag» og skulle selv regne ud at det er `rgba(0,0,0,0.42)`
+//     i sit eget stylesheet. Den sidste halvdel af opgaven — at få tallet *ind i
+//     sit projekt* — var ikke i værktøjet.
+//
+// Dommerne er falsifiable på den gamle kode:
+//
+//  A. Efter `mount()` med kernens **eget** demo-billede er der **0**
+//     begivenheder. Demoen er tegnet af kernen, ikke uploadet af nogen, så en
+//     måling af den er ikke en måling bruteren lavede — ellers tæller hver
+//     sidevisning som et gennemført tjek, og det er det tal der ikke må bruges.
+//  B. Når bruteren vælger sin egen baggrund, sender kernen **én**
+//     `contrast-measured` — og **kun én**, også når der måles igen bagefter.
+//     `updateResult()` kaldes fra hvert `mousemove` under et træk, så en kernne
+//     uden tælleren ville sende hundredvis for ét resultat.
+//  C. Resultatboksen indeholder den CSS der hører til rettelsen, og dens farve
+//     er præcis den farve «Fix it» skriver i farvefeltet — samme måling, to
+//     steder, så de kan ikke komme i strid.
+//  D. `cssFix()` danner rgba-linjen for et **slør** med præcis den dækning
+//     `suggestFix()` valgte for de samme endepunkter. Det er den linje der
+//     kun kan skrives rigtigt af at regne på kernens egen måling.
+//  E. Mutation: kernen fra før denne ændring skal være rød på alle tre.
+// --------------------------------------------------------------------------
+{
+  const KERNE = 'site/text-on-image-core.js';
+  // `p` er kernens id-præfiks: artiklerne har deres eget sæt felter, så de kan
+  // have et værktøj mere på samme side. Uden denne her ville dommen læse feltet
+  // på værktøjssiden og dømme artiklen på den — altså grøn på en side den ikke
+  // kørte.
+  const SIDER = [
+    { f: 'site/text-on-image-checker.html', sprog: 'EN', p: '', mount: /TiContrast\.mount/,
+      label: 'Paste this into your own CSS', fremmed: 'Sæt dette ind i din egen CSS' },
+    { f: 'site/text-on-image-checker-da.html', sprog: 'DA', p: '', mount: /TiContrast\.mount/,
+      label: 'Sæt dette ind i din egen CSS', fremmed: 'Paste this into your own CSS' },
+    { f: 'site/blog/text-on-image-contrast-check.html', sprog: 'EN artikel', p: 'art-', mount: /var PRO_CARD/,
+      label: 'Paste this into your own CSS', fremmed: 'Sæt dette ind i din egen CSS' },
+    { f: 'site/da/blog/tekst-paa-billede-kontrasttjek.html', sprog: 'DA artikel', p: 'art-', mount: /var PRO_CARD/,
+      label: 'Sæt dette ind i din egen CSS', fremmed: 'Paste this into your own CSS' },
+  ];
+  // Kør kernen i en tom kontekst, så dommen over *formlen* ikke afhænger af en
+  // browser — samme greb som sektion 16 gør for `suggestFix()`.
+  const kern = readFileSync(join(root, KERNE), 'utf8');
+  const tom = { module: undefined, exports: undefined, Uint8ClampedArray };
+  vm.createContext(tom);
+  vm.runInContext(kern, tom);
+  const Ti = tom.TiContrast;
+
+  // Dom D. Sløret. Endepunkterne er sort mod hvid, fordi det er det eneste
+  // billede hvor **ingen** enkelt tekstfarve kan bestå begge ender — så
+  // `suggestFix()` falder ned i slør-grenen, som er den linje der er sværest at
+  // skrive rigtigt (tre kanaler plus en dækning) og den der aldrig nåede
+  // læseren før.
+  const hvidSort = Ti.suggestFix([0, 0, 0], [255, 255, 255], 3, '#ffffff');
+  ok('dom D: sort mod hvid kan ikke passes med én tekstfarve (ellers dømmer dommen intet)',
+    hvidSort && hvidSort.kind === 'scrim',
+    JSON.stringify(hvidSort));
+  const cssSlør = Ti.cssFix(hvidSort);
+  const kanaler = Ti.hexToRgb(hvidSort.scrim);
+  const alfa = Math.round(hvidSort.alpha * 100) / 100;
+  // Forventningen er bygget af **kernens egen** måling, ikke af en antaget
+  // farve: på sort mod hvid er det den *hvide* slør der vinder med mindst
+  // dækning, så en port der hardkoder `rgba(0,0,0,…)` ville dømme den rigtige
+  // kode som forkert — eller, værre, ved at fejlen lignede en korrekt måling.
+  const forventet = 'color: ' + hvidSort.hex + ';\nbackground: rgba('
+    + kanaler.join(', ') + ', ' + alfa + ');';
+  ok('dom D: CSS-linjen for et slør er tekstfarve + rgba i kernens egne tal',
+    cssSlør === forventet, `fik ${JSON.stringify(cssSlør)} ville have ${JSON.stringify(forventet)}`);
+  // Samme streng skal kunne læses *tilbage* til den dækning kernen målte. Uden
+  // denne krydsprøve er dommen grøn fordi den genbygger sin egen formel.
+  const dækningI = /rgba\((\d+), (\d+), (\d+), ([0-9.]+)\)/.exec(cssSlør || '');
+  ok('dom D: rgba-linjen kan læses tilbage som den dækning der blev målt',
+    dækningI !== null && Number(dækningI[4]) === alfa
+    && Number(dækningI[1]) === kanaler[0],
+    cssSlør);
+  ok('dom D: en tekstfarve alene giver én linje, og intet giver ingen',
+    Ti.cssFix({ kind: 'color', hex: '#1a2b3c' }) === 'color: #1a2b3c;'
+    && Ti.cssFix({ kind: 'spot' }) === '' && Ti.cssFix(null) === '',
+    'cssFix svarer ikke på de tre tilfælde');
+
+  // Dom A–C på den kørende side, ikke på markup'en: `loadPage` kører sidens egen
+  // `mount()` med canvas-stubben, så «der står en måling» er noget kernen har
+  // gjort ved denne kørsel.
+  async function kør(side, kilder) {
+    const { nodes, st } = loadPage(side.f, responses([]).fetchImpl,
+      { match: side.mount, canvas: true, preload: [KERNE], kilder });
+    await sleep(20);
+    return { nodes, st };
+  }
+
+  for (const side of SIDER) {
+    // Dom A. Demoen er kernens egen: `mount()` maler den og måler den med det
+    // samme `updateAll()`, så en kernne der tæller her tæller hver sidevisning.
+    const demo = await kør(side);
+    ok(`dom A: ${side.sprog} tæller ikke kernens egen demo som et gennemført tjek`,
+      demo.st.begivenheder.length === 0,
+      `begivenheder=${JSON.stringify(demo.st.begivenheder)}`);
+
+    // Dom B. Bruteren vælger sin egen baggrund: her en gradient, hvilket er den
+    // vej `vaerlGradient()` nulstiller `demoBillede` på — præcis den betingelse
+    // demo-noten forsvinder på.
+    demo.nodes.get(side.p + 'bgmode').value = 'gradient';
+    demo.nodes.get(side.p + 'bgmode').fire('change');
+    await sleep(20);
+    ok(`dom B: ${side.sprog} sender én måling når læseren vælger sin baggrund`,
+      demo.st.begivenheder.length === 1 && demo.st.begivenheder[0] === 'contrast-measured',
+      `begivenheder=${JSON.stringify(demo.st.begivenheder)}`);
+
+    // Og igen: samme måles igen ved hvert farvevalg og hvert træk.
+    demo.nodes.get(side.p + 'fg').fire('input');
+    demo.nodes.get(side.p + 'gfrom').fire('input');
+    await sleep(20);
+    ok(`dom B: ${side.sprog} sender ikke én begivenhed pr. måling (men én pr. side)`,
+      demo.st.begivenheder.length === 1,
+      `begivenheder=${JSON.stringify(demo.st.begivenheder)}`);
+
+    // Dom C. Den CSS der står i resultatboksen, i læserens eget sprog og på
+    // **kernens** måling. Markup'en læses efter at gradienten er valgt, fordi
+    // først dér er der en rettelse at skrive — en bestående måling skal *ikke*
+    // have en CSS-linje, og det er samme betingelse i begge tilfælde.
+    const res = demo.nodes.get(side.p + 'result');
+    const efter = (res || {}).innerHTML || '';
+    const kode = /<code>(color: #[0-9a-f]{6};)<\/code>/.exec(efter);
+    ok(`dom C: ${side.sprog} viser den CSS-linje der hører til rettelsen`,
+      kode !== null,
+      `resultatet=${JSON.stringify(efter.slice(0, 200))}`);
+    ok(`dom C: ${side.sprog} etiketterer den med sidens egen sprog, ikke med den andens`,
+      efter.includes(side.label) && !efter.includes(side.fremmed),
+      `label=${JSON.stringify((/ti-css-label">([\s\S]*?)</.exec(efter) || [])[1])}`);
+    // Den stærkeste af de tre: farven i CSS'en *består* det tjek den er skrevet
+    // til. Den læses tilbage og sættes i farvefeltet — præcis hvad læseren gør
+    // efter at have kopieret den — og dommen beder så kernen om at måle igen.
+    // En CSS-linje der ikke løser problemet ville være det værste vi kan sende
+    // en designér: han indsætter den, og siden fejler stadig.
+    if (kode) {
+      demo.nodes.get(side.p + 'fg').value = kode[1].slice(7, 13);
+      demo.nodes.get(side.p + 'fg').fire('input');
+      await sleep(20);
+      ok(`dom C: ${side.sprog} farven i CSS'en består det tjek den er skrevet til`,
+        /ti-pass/.test(String((res || {}).className || '')),
+        `klasse=${(res || {}).className} farve=${kode[1]}`);
+    }
+  }
+
+  // Dom E. Mutationen: kernen fra før denne ændring. Den skal være rød på alle
+  // tre domme, ellers dømmer de grønt på en fejl de ikke kan se.
+  const FØR_CSS = '34bdbfa';
+  const gammelKjerne = execFileSync('git', ['show', `${FØR_CSS}:site/text-on-image-core.js`],
+    { cwd: root, encoding: 'utf8', maxBuffer: 1 << 26 });
+  ok('dom E: polaritetsreferencen er stadig kernen uden CSS-linjen',
+    !gammelKjerne.includes('cssFix'),
+    `mutationen læste ${FØR_CSS}, som ${gammelKjerne.includes('cssFix') ? 'allerede' : 'ikke'} har cssFix`);
+  const mutation = await kør(SIDER[0], { [KERNE]: gammelKjerne });
+  mutation.nodes.get('bgmode').value = 'gradient';
+  mutation.nodes.get('bgmode').fire('change');
+  await sleep(20);
+  ok('dom E: mutationen (kernen uden resultatbegivenhed) fanges',
+    mutation.st.begivenheder.length === 0,
+    `den gamle kode sendte ${JSON.stringify(mutation.st.begivenheder)}`);
+  const mutationMarkup = (mutation.nodes.get('result') || {}).innerHTML || '';
+  ok('dom E: mutationen (kernen uden CSS-linjen) fanges',
+    !mutationMarkup.includes('color: #'),
+    'den gamle kode skrev en CSS-linje');
 }
 
 console.log(`\nscan-clients: ${pass}/${pass + fail}`);

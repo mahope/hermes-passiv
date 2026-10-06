@@ -153,6 +153,34 @@
     return bedst;
   }
 
+  // Den CSS-linje der hører til den rettelse kernen netop har lavet — eller
+  // til den den *foreslår*, hvis læseren endnu ikke har trykket «Fix it».
+  //
+  // Hvorfor den overhovedet står her: hele værktøjet handler om at finde ud af
+  // hvor meget mørkere teksten skal være, og så *stopper* der. Læseren får et
+  // procenttal og en farve og skal så selv regne ud, at det svarer til
+  // `rgba(0, 0, 0, 0.42)` i sit eget stylesheet. Det er det afsnit hvor folk
+  // går i styrelsen — især på en telefon, hvor de skal ramme rigtige tal i en
+  // farvevælger. Tallene her kommer fra *samme* måling som sætningen over dem,
+  // så de kan ikke komme i strid med den.
+  //
+  // Begge tal er kernens egne: `hex` er den farve `applyFix()` skriver i
+  // farvefeltet, og `scrim`/`alpha` er præcis dem den lagde på canvas. Der
+  // kommer ingen værdi ind herfra der ikke allerede står et andet sted i
+  // kernen, så linjen kan ikke blive en påstand om en måling der ikke er
+  // foretaget.
+  function cssFix(f) {
+    if (!f || f.kind === 'spot') return '';
+    // Sløret og tekstfarven hører sammen: `applyFix()` sætter begge, så kun
+    // den ene ville være en halv løsning bruteren skulle finde resten af.
+    if (f.kind === 'scrim') {
+      var c = hexToRgb(f.scrim);
+      var a = Math.round(f.alpha * 100) / 100;
+      return 'color: ' + f.hex + ';\nbackground: rgba(' + c[0] + ', ' + c[1] + ', ' + c[2] + ', ' + a + ');';
+    }
+    return 'color: ' + f.hex + ';';
+  }
+
   function mount(opts) {
     var o = opts || {};
     var p = o.prefix || '';
@@ -214,6 +242,16 @@
     // som `scrim`/`lastFix`: en ny baggrund er et nyt spørgsmål, også for den
     // her oplysning.
     var demoBillede = true;
+    // Sandt når `renderBlock(0)` lige har skrevet et målt tal i samme kald, og
+    // nulstilles af `updateResult()` efter den har talt det. Det er sådan
+    // `updateResult()` kan se forskel på «der stod allerede et tal fra før» og
+    // «dette kald målte noget nyt» — uden det ville hver male-bevægelse se ud som
+    // sin egen måling.
+    var maaltNu = false;
+    // Sandt når læserens *ene* måling er blevet talt, så kernen sender
+    // `contrast-measured` pr. side og ikke pr. træk, pr. farvevalg og pr.
+    // skyder. Se `updateResult()`.
+    var maaltSendt = false;
     // Den sidste *opladede* fil, så bruteren kan gå tilbage til den efter at
     // have valgt en gradient. Uden denne ville skiftet være destruktivt: en
     // bruger der prøver en gradient og gider tilbage ville have mistet sit foto.
@@ -645,6 +683,30 @@
       return (s.fixed || '').replace('%s', f.hex);
     }
 
+    // CSS-linjen som et resultatfelt med sin egen knap, eller tom streng når
+    // der ikke er noget at vise. Ordene kommer fra siden (`s.*`), så en dansk
+    // læser ikke møder en engelsk etiket — samme regel som resten af kernen.
+    //
+    // Den er et `<code>` i en `<button>`, fordi den *gør* noget (kopierer) og
+    // fordi den skal kunne markeres med Ctrl+C i de browsere der nægter
+    // skriveadgang til udklipsholderen — samme to udveje som `.ti-hex` har, og
+    // derfor samme visuelle sprog, så læseren ikke møder et nyt billede for en
+    // ny slags knap.
+    //
+    // CSS'en læses bagefter af lytteren *ud fra `<code>`* og ikke ud fra et
+    // attribut. Den er to linjer med et linjeskift imellem, og et linjeskift i
+    // en attributværdi er noget der skal overleve både `innerHTML` og en
+    // `getAttribute` — altså to steder hvor en ny browser kan gøre noget andet
+    // end det vi skrev. I `<code>` er den bare tekst, og teksten er det samme
+    // som det læseren kopierer, så der kan ikke stå en anden.
+    function cssBox(f) {
+      var css = cssFix(f);
+      if (!css) return '';
+      return '<br><span class="ti-css">' + (s.cssLabel ? '<span class="ti-css-label">' + s.cssLabel + '</span>' : '')
+        + '<button type="button" class="ti-css-copy" title="'
+        + (s.copyCss || '') + '"><code>' + css + '</code></button></span>';
+    }
+
     // Én måling pr. blok, hver i sin egen boks. Blok 0 beholder alt det den
     // altid har haft (resultatboks, download, pro-kort, note); blok 2 får
     // sit eget resultat uden dem — to download-knapper og to pro-kort på én
@@ -665,6 +727,29 @@
       if (errEl) errEl.textContent = '';
       var n = blokAntal();
       for (var i = 0; i < n; i++) renderBlock(i);
+      // Én talt måling pr. side, og **kun** når målingen er læserens egen.
+      //
+      // `maaltNu` sættes af `renderBlock(0)` i samme kald der skrev tallet på
+      // skærmen, så «der står et tal» og «der blev målt» er én begivenhed og
+      // ikke to. `demoBillede` er kernens egen tilstand for «det her er mit
+      // eksempel, ikke din baggrund» — præcis den betingelse under hvilken
+      // demo-noten forsvinder fra resultatet. Uden den ville hver sidevisning
+      // tælle som et gennemført tjek, fordi værktøjet starter med et tegnet
+      // eksempel: så får `/api/results` et tal uden at nogen har ladet en eneste
+      // pixel undersøge, og det er præcis den slags tal der ikke må bruges til
+      // at prioritere.
+      //
+      // Én gang pr. side, ikke pr. træk: `updateResult()` kaldes fra hvert
+      // `mousemove` under trækket, så uden flaget ville en læser der flytter
+      // teksten sende hundredvis af begivenheder for *ét* resultat.
+      if (!demoBillede && maaltNu && !maaltSendt) {
+        maaltSendt = true;
+        // Samme formulering som `book-ai.js` og resten: `trackEvent` findes
+        // kun når `/track.js` er indlæst, og en besøgende med DNT eller GPC
+        // får no-op'en i stedet. Målingen må aldrig være det der fejler.
+        try { if (window.trackEvent) window.trackEvent('contrast-measured'); } catch (e) {}
+      }
+      maaltNu = false;
     }
 
     function renderBlock(i) {
@@ -701,7 +786,7 @@
       // ville være to påstande om én måling, og de ville blive forskellige
       // den første gang nogen trak i skyderen. `renderVerdict()` får derfor
       // præcis de fire ting den skriver, ikke `#result` og ikke siden.
-      if (!i) renderVerdict(sample, passAA, r);
+      if (!i) { renderVerdict(sample, passAA, r); maaltNu = true; }
       // Før → nu. Kappen ovenfor siger hvad tallet *er*; dette siger hvad det
       // *var*, målt med den samme `sampleContrast()`. Det er det tal en læser
       // skal kunne tage med: uden det er «PASS 3,04:1» en påstand uden
@@ -773,6 +858,18 @@
         // af den. Ordene er sidens egen tekst på to sprog, så de kan ikke være
         // et fastslået tal i porten.
         (minFix ? '<br><span class="ti-fixed" data-ti-moved="' + (minFix.rykket ? '1' : '0') + '">' + fixBeskrivelse(minFix) + '</span>' : '') +
+        // Den CSS der svarer til den rettelse der *er* lagt på billedet — eller
+        // til den der ligger klar i «Fix it», hvis læseren endnu ikke har
+        // trykket den. Den står lige under sætningen om rettelsen og *før* de
+        // tre knapper, fordi den er svaret: tallet er målingen, sætningen er
+        // hvad der skete, og dette er det bruteren skriver i sit eget projekt.
+        //
+        // Kun når kernen har en rettelse at vise. Den foreslås kun når der
+        // faktisk fejler, så et bestående billede ikke får en CSS-linje der
+        // løser et problem læseren ikke har. `minFix` har først prioritet, fordi
+        // det er den der er *tegnet* på canvas lige nu — en forslaglinje oveni
+        // den lagde ville være to påstande om samme billede.
+        cssBox(minFix || fix) +
         // Download, pro-kort og note ligger kun på blok 0. De handler om
         // *billedet* og om siden som helhed, ikke om den enkelte tekstblok, og
         // to download-knapper på én skærm er to valg uden opgave. Download er
@@ -827,6 +924,33 @@
         if (navigator.clipboard && navigator.clipboard.writeText) {
           navigator.clipboard.writeText(kode).then(function () {
             vis(s.copiedHex || 'Copied');
+            setTimeout(ryd, 1800);
+          }, function () {
+            markText(svin);
+            vis(s.copyManual || kode);
+          });
+          return;
+        }
+        markText(svin);
+        vis(s.copyManual || kode);
+      });
+      // Samme to udveje som farveknappen overfor, og af samme grund: et nægtet
+      // `clipboard`-løfte er et normalt udfald, så da markerer vi CSS'en i stedet
+      // for at sige at den blev kopieret. Den er læst *ud fra `<code>`* — den er
+      // samme streng som den læseren ser, så der kan ikke stå en anden i
+      // udklipsholderen end den der står på skærmen.
+      var cssBtn = res.querySelector('.ti-css-copy');
+      if (cssBtn) cssBtn.addEventListener('click', function () {
+        var svin = cssBtn.querySelector('code');
+        var kode = svin ? svin.textContent : '';
+        if (!kode) return;
+        var vis = function (tekst) {
+          if (cssBtn.isConnected && svin && svin.isConnected) svin.textContent = tekst;
+        };
+        var ryd = function () { vis(kode); };
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(kode).then(function () {
+            vis(s.copiedCss || s.copiedHex || 'Copied');
             setTimeout(ryd, 1800);
           }, function () {
             markText(svin);
@@ -1116,5 +1240,6 @@
   }
 
   global.TiContrast = { mount: mount, lum: lum, ratio: ratio, hexToRgb: hexToRgb,
-                      lumToChannel: lumToChannel, suggestFix: suggestFix };
+                      lumToChannel: lumToChannel, suggestFix: suggestFix,
+                      cssFix: cssFix };
 })(typeof globalThis !== 'undefined' ? globalThis : this);

@@ -8874,3 +8874,39 @@ kaldersstyret URL deler nu `parseTargetUrl()`. 25 nye assertions i
 `tests/stripe-worker.test.mjs`, 22 målt røde på den gamle kode (489/511) og
 511/511 på den nye. Adgangskontrol urørt: `targetIsPublic()` kaldes stadig pr.
 rute og pr. hop. Deploy-note med fire kald mod live står i planen.
+
+## 6/10 — `ceo/contrast-guide-eget-vaerktoj` (feature-kø A)
+
+Feature-kø A sagde at `/blog/text-on-image-contrast-check` (9 af 23 menneskelige
+besøgende, 100 % bounce) manglede en vej til sit eget værktøj. Målt viste at
+værktøjet lå **inde i artiklen** allerede — sektion 15 leverede det — så de to
+huller var andre:
+
+1. **Resultatet var umålt.** `text-on-image-core.js` kaldte aldrig `trackEvent`,
+   så `/api/results` viste 0 for værktøjet på alle fire sider. Ny streng
+   `contrast-measured` i `RESULT_EVENTS`, sendt fra kernen — så den dækker
+   `/text-on-image-checker`, `-da`, artiklen og den danske artikel med én
+   rettelse. Gated på `!demoBillede`: kernens egen demo (som `mount()` maler og
+   måler med det samme `updateAll()`) tæller ikke, ellers er hver sidevisning et
+   «gennemført tjek». Dæmpet til én pr. side, fordi `updateResult()` kaldes fra
+   hvert `mousemove` under træk.
+2. **Rettelsen var ubrugelig i praksis.** Artiklens egen tekst siger at en
+   halvgennemsigtig slør er den hurtigste løsning, kernen regner den mindste
+   dækning der virker, og «Fix it» lægger den på canvas — men bruteren fik kun
+   «42 % mørkt lag» og skulle selv skrive `rgba(0,0,0,0.42)`. Ny `cssFix()` giver
+   den ferie linje (to ved slør, da `applyFix()` sætter både farve og lag), og
+   `cssBox()` renderer den med en kopi-knap der falder tilbage til markering med
+   Ctrl+C, præcis som `.ti-hex` gør.
+
+Målt i `tests/scan-clients.test.mjs` sektion 21, alle fire sider kørt i
+sandkassen med canvas-stub: 0 begivenheder på demoen, 1 på læserens egen
+baggrund, 1 (ikke 2+) efter to yderligere målinger; CSS-farven læses tilbage,
+sættes i farvefeltet og består så tjekket den er skrevet til. Slør-grenen
+dømt mod `suggestFix([0,0,0],[255,255,255],3)` — hvor den **hvide** slør vinner
+med mindst dækning, så forventningen bygges af kernens måling. Mutation mod
+kernen fra `34bdbfa`: 0 begivenheder, 0 CSS-linjer.
+
+Gate: build grøn, `stripe-worker` 515/515, `scan-clients` 565/565, `seo_check`
+316 sider 0 fund, `check_inline_js` 1316 blokke 0.
+
+Baseline for den nye begivenhed: **0** målinger i `/api/results` før den 6/10.
