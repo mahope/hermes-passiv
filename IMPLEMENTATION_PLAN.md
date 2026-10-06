@@ -1,19 +1,11 @@
 # STATUS
-- **Rød CI rettet 6/10:** `status-finality-selftest` fejlede, fordi tak-sidens
-  429-gren 6/10 blev skrevet om til en blok, og selvtestens mutation
-  `_muter_retry` kun kendte en-linjes-formen `(...) return fail(...)` — 0
-  klienter kunne bære den. Mutationen bygger nu fejlformen af blokken: 429-
-  grenen kalder den funktion i filen der (transitivt) genkalder holderen.
-  Målt: `SELFTEST GRØN — 4 ærlige klienter, 3/3 mutationer`; muteret
-  `thanks.html` er **rød** på dom 1+2 (`again → poll → poll`) og `compliance-
-  report.html` ligeledes, begge med navnet på den nye genkaldsvej.
-- **CI:** `main` var **rød** i `status-finality-selftest` (rettet her — kun
-  `tools/` og planen rørtes, intet site-output). `PR-TJEK 6/10`: **0** åbne
-  PR'er. **Næste:** feature-kø C, 2. Målt 6/10 er `/api/results` og
-  `/api/conversion` begge **0** for 7 dage, mens `served_scans_lifetime` er 51 —
-  så vi ved ikke endnu om det er «ingen besøgende» eller «tracking død».
-  Tak-sidens rettelse (`b772a466`) og CEO-kø punkt 0 (`26440a1c`) er arkiveret
-  i `docs/plan-arkiv.md`.
+- **CI:** `main` er **grøn** (deploy-sites, push 6/10 18:32). `PR-TJEK 6/10`:
+  **0** åbne PR'er. Feature-kø C leveret 6/10 (`ceo/pro-kort-til-pdf-fresh`):
+  pro-kortet på alle fire scanneresider bærer nu `#url=` med den side der
+  faktisk blev læst, så en Pro-holder ikke skal indtaste sin adresse igen.
+- **Næste:** feature-kø 2 (`deskuptime.com`: 7 besøgende, 100 % bounce,
+  0 s opholdt tid — målt at folden ikke var årsagen), så opgave 3
+  (`/api/stats` 401, blokeret på Mads).
 
 ## Åbne review-fund
 
@@ -21,82 +13,16 @@ Ingen. Alle tre lukket 6/10 — teksten står i `docs/plan-arkiv.md`.
 
 ## Verificér deploy
 
-`VERIFICÉR DEPLOY: hver af de 17 cleancopy.tools-guideartikler skal vise linjen
-«Doing this every day? Clean Copy Pro is $19/year» (og den danske «Gør du det
-her hver dag?») med linket på `$19/year` / `$19/år` — kræv på **indhold**:
-hent `https://cleancopy.tools/blog/html-to-markdown-converter`,
-`/blog/install-obsidian-plugin-clean-copy`, `/da/blog/html-til-markdown-konverter`
-og `/da/blog/installer-clean-copy-obsidian` og kræv at linjen findes, at dens
-href er `/#price` hhv. `/da/#priser` — **ikke** et krydsdomæne — og at begge
-forsider stadig har hvert sit anker (`id="price"` på `/`, `id="priser"` på
-`/da/`). Tæll alle 17 med én `grep -c` over de byggede filer og kræv 8 + 9.
-ceo/pro-vej-i-guides 7/10 02:0x` — **DEPLOY OK 6/10:** alle fire hentede artikler
-har linjen (1 hver), `id="price"` 1 på `/` og `id="priser"` 1 på `/da/`.
-
-`VERIFICÉR DEPLOY: hver danske række på /da/pricing skal pege på en dansk
-købsside, så ingen læser lander i engelsk midt i betalingen — hent
-mahope.tools/da/pricing og kræv på indhold: 2 href="https://cleancopy.tools/da/#priser", 1
-href="https://deskuptime.com/da/#pro", 0 href="https://cleancopy.tools/#price", 0
-href="https://deskuptime.com/#pro", og de øvrige 10 stadig relative /da/-ruter. Derefter
-hent hvert mål og kræv at ankeret findes: cleancopy.tools/da/ har 1 id="priser",
-deskuptime.com/da/ har 1 id="pro", og begge sider har <html lang="da">. Samme krav på
-mahope.tools/pricing: de 12 rækker skal være uændrede på engelsk ceo/den-prisliste-koer-pa-engelsk 6/10 14:1x`
-— *(HTTP 200 beviser intet: den gamle kode svarer 200 på præcis de tre rækker
-dom 8 nu dømmer.)* — **DEPLOY OK 6/10:** `/da/pricing` har 2 + 1 + 0 + 0 som
-kravet, `/pricing` har uændrede 2 + 1, og begge mål har `lang="da"` med hvert
-sit anker.
-
-`VERIFICÉR DEPLOY: deskuptime.com/tools/ skal være den nye side og ikke auditedwps
-forside — hent den og kræv på **indhold**: «Three checks you can run right now»
-findes, **0** «Download for macOS» (den gamle side kaldte den betalte app «free»),
-**1** `href="/bulk-url-checker/"`, **1** `href="/security-headers-checker/"`,
-**1** `buy.stripe.com/7sY9AS9eX3Iu418fJ5bMQ01`, canonical `deskuptime.com/tools/`,
-og at den stadig står i `sitemap.xml`. Tjek desuden at de tre ankre den bruger
-findes på forsiden: `id="check"`, `id="compare"`, `id="install"` — alle tre må
-give **1** på live `deskuptime.com/`. Sidst: `mahope.tools/free-tools/` skal
-linke `/accessibility-statement-generator` **1** gang (den lå publiceret uden
-indgang). ceo/tools-side-med-de-tre-tjek 6/10 03:4x` — **DEPLOY OK 6/10:**
-«Three checks…» 1, «Download for macOS» 0, begge værktøjslinks 1, Stripe-link
-1, de tre forside-ankre 1 hver, sitemap 1, og `/free-tools` linker
-`/accessibility-statement-generator` 1 gang. *(Min første hentning af
-`/free-tools/` gav 0 — jeg fulgte ikke 308'en til `/free-tools`. Min fejl, ikke
-et deploy-gap.)*
-
-`VERIFICÉR DEPLOY: GET /api/url-inspect skal svare 200 på en ren vært — det er
-den indgang deskuptime.com, mahope.tools og /da lover i ord («we add https:// if
-you leave it out»). Kræv på **indhold**: hent
-`https://deskuptime.com/api/url-inspect?url=example.com` og kræv 200 med
-`inspectUrl` = `https://example.com/` (med skråstreg) og et `finalUrl` på samme
-vært. Så kræv at det også holder for de skriftformer der lå ved siden af:
-`?url=//example.com` (URL-kodet) → 200 med samme `inspectUrl`, og
-`?url=169.254.169.254` → **400** med «cannot be inspected» i `error` — ikke
-«Invalid URL», for det var præcis den gamle kode, der afviste private værter som
-ugyldige URL'er. Slaget opførte sig sådan fordi `new URL()` kræver et skema.
-ceo/bare-vært-tjekkes 6/10 03:5x` — **DEPLOY OK 6/10:** live deskuptime.com
-svarer 200 med `inspectUrl` og `finalUrl` begge `https://example.com/`, og
-`?url=169.254.169.254` svarer **400** med «That host cannot be inspected».
-
-`VERIFICÉR DEPLOY: de fire åbne ruter skal svare det samme på den samme adresse —
-kræv på **indhold**, fire kald mod live mahope.tools og alle med `?url=` på en
-ren vært: `/api/url-inspect` → 200 med `inspectUrl` `https://example.com/`,
-`/api/header-check` → 200 med `finalUrl` `https://example.com/` **og**
-`headers.x-content-type-options`, `/api/profile` → 200 med `final_url`
-`https://example.com/` og `title` = «Example Domain», `/api/compliance-scan` →
-200 med `scanned_url` `https://example.com/`. Så kræv at værnet holder på de to
-nye: `header-check` og `profile` med `?url=169.254.169.254` → begge **400** med
-«cannot be checked» hhv. «cannot be profiled» i `error` — ikke «Invalid URL»,
-for det er præcis den gamle kode, der afviste private værter som ugyldige
-URL'er. `/api/compliance-scan` med `?url=HTTPS://example.com` (versal-skema) →
-**200**. ceo/et-url-regel-pa-alle-ruter 6/10 05:1x` — **DEPLOY OK 6/10:**
-alle fire svarer 200 med henholdsvis `inspectUrl`, `finalUrl`, `final_url` +
-«Example Domain» og `scanned_url` = `https://example.com/`, og de to nye ruter
-svarer 400 med «cannot be checked»/«cannot be profiled» på `169.254.169.254`.
-*(Notens krav om `headers.x-content-type-options` på **example.com** kan ikke
-opfyldes: den side sender den header ikke, hverken direkte eller gennem os.
-Dømt på to af vores egne domæner i stedet, hvor den er der: `cleancopy.tools`
-og `deskuptime.com` giver begge `x-content-type-options: nosniff` og
-`x-frame-options: DENY` gennem `/api/header-check`, altså læser de nye ruter
-faktisk headere. Notens pointe var «ikke grøn ved at afvise alt», og det holder.)*
+`VERIFICÉR DEPLOY: pro-kortet på de fire scanneresider skal bære den side der
+blev læst, så en Pro-holder ikke skal indtaste sin adresse igen — hent
+`https://mahope.tools/scan`, `/da/scan`, `/compliance-site-check` og
+`/da/compliance-site-check` og kræv på **indhold** at `compliance-report#url=`
+findes pr. side (live `/da/compliance-site-check` skal pege på den **engelske**
+`/compliance-report#url=` — rapportværktøjet findes kun på engelsk), og at
+noten **ikke** længere siger «See what Pro adds before you buy». Følg så linket:
+kræv at live `/compliance-report#url=https%3A%2F%2Fexample.com` sætter feltet
+til `https://example.com` og kører en rapport — altså at `#url=`-vejen virker
+på den udgivne side, ikke kun i dist. ceo/pro-kort-til-pdf-fresh 6/10 21:0x`
 
 ## Åbne opgaver
 
@@ -278,13 +204,35 @@ B. **Vi kan ikke skelne «ingen besøgende» fra «tracking død».** Hvem: os, 
     Værktøjet `tools/check_tracking_status.py` implementerer denne logik.
     Målt: værktøjet kører korrekt og giver tydelig vurdering af sporingsstatus.
 
-C. **En Pro-holder der kommer fra scanneren skal finde PDF'en selv.** Hvem: den
-   der lige har betalt $79 og scannet. Tal: den betalte linje. Accept: Pro-kortet
-   på `/scan` og `/compliance-site-check` linker direkte til download-trinet, ikke
-   kun til «se hvad Pro tilføjer». Datagrund: `pdf-download` ligger i katalogen
-   kun på `/compliance-report`, mens Pro-kortet på scanneren lover «a PDF report
-   you can hand a client» — to sider, én funktion, ingen direkte vej imellem.
-   `pro_card_clicks` tælles allerede i `/api/conversion`.
+C. ~~**En Pro-holder der kommer fra scanneren skal finde PDF'en selv.**~~
+   **LEVERET 6/10**, `ceo/pro-kort-til-pdf-fresh`.** Pro-kortets note på alle
+   fire scanneresider linkede til `/compliance-report` uden mere, så en Pro-holder
+   der lige har betalt $79 og set sit resultat landede i et **tomt** URL-felt,
+   måtte køre scanningen igen og scrolle ned til nøglefeltet. Nu bærer den
+   `#url=` med **den side der faktisk blev læst**: `compliance-site-check`
+   tager `rapporter[0].url`, `scan`/`scan-da` tager `forsteUrl(state)` — der
+   foretrækker `state.pages[0].url` (samme adresse målt i felterne, altså ikke
+   `urls.join(', ')` som for flere sider ikke er nogen URL). `compliance-report`
+   læser `#url=` i forvejen (`site/compliance-report.html:731`), så der er ingen
+   ny mekanisme — kun et link der nu bruger den.
+   **Vejen kan ikke sende læseren i et felt der ikke genkender adressen:**
+   begge sider bruger præcis rapport-sidens egen regel `/^https?:\/\//i`, så en
+   læser der skrev `example.com` — helt normalt, feltet siger «eller bare
+   domænet» — falder tilbage på den gamle rute. Målt som dom, ikke som
+   hensigt: `PDF_HANDOFF` kræver den kodede adresse i markup'en, og **mutationen**
+   `var handoff = '/compliance-report'` gør den rød (**572/573**), så dommen
+   kan ikke være grøn på en side hvor handoffen aldrig virkede. Dertil et målt
+   tilfælde for hvert sprog: serveren svarer `url: 'example.com'` → `0` `#url=`
+   og den gamle rute står. Fuld gate **GRØN**; `scan-clients` 565 → **573/573**,
+   `stripe-worker` **515/515**, `seo_check` 316 sider 0 fund, `check_inline_js`
+   664+1316 blokke 0 problemer.
+   **Kendte huller denne opgave bevidst ikke lukker:** rapportværktøjet findes
+   kun på engelsk, så den danske noten siger det og den dybe vej går til den
+   engelske side; ved flere sider bærer den kun den **første** adresse, fordi
+   rapporten tager én side ad gangen.
+- **Arkiveret:** tak-sidens rettelse (`b772a466`), CEO-kø punkt 0 (`26440a1c`)
+  og `status-finality-selftest`-mutationen fra 6/10 står i
+  `docs/plan-arkiv.md`.
 
 2. **`deskuptime.com`: 7 besøgende, 100 % bounce, 0 s opholdt tid.** Hvem:
    alle 7 på `/`. Tal: hvor mange køber. Accept: en forside der sælger uden

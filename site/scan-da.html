@@ -353,7 +353,7 @@ function render(state,opts){
     '<input type="text" id="shareLink" readonly hidden aria-label="Link til dette resultat">'+
     '<p class="hint">Linket bærer fundene selv, så den der åbner det læser listen uden at køre en scanning selv. Der sendes intet om siden til os ved at åbne det.</p>'+
     '<p class="hint">Bemærk: automatiserede tjek fanger 30–40 % af tilgængelighedsproblemerne. Se vores <a href="/#products">EAA Compliance e-book</a> for hele den manuelle proces.</p>'+
-    proCard()+
+    proCard(forsteUrl(state))+
     '<p class="hint">Scanningen er gratis og kræver ingen konto. Hvis den sparede dig tid, holder en lille <a href="https://donate.stripe.com/7sYeVcbn50wieFM8gDbMQ0c" rel="nofollow noopener">donation</a> den i gang.</p>';
   revealResult(out);
   const box=document.getElementById('shareLink');
@@ -384,16 +384,36 @@ window.shareResult=shareResult;
 // `/compliance-site-check`, fordi de to er det samme tjek på hver sin måde:
 // dette læser den ene side brugeren indsatte, den anden følger links til de
 // juridiske sider. Forskellen står i overskriften.
-function proCard(){
+// `url` er den side læseren lige har læst. Den bruges **kun** til den dybe
+// vej til PDF-trinet: en Pro-holder skal ikke indtaste sin adresse igen for at
+// låse den rapport han netop har set. Mål 6/10 før rettelsen: pro-kortets note
+// linkede til `/da/compliance-report` uden mere, så han landede i et tomt felt,
+// kørte selv en scanning, og scrollede ned til nøglefeltet bagefter — tre
+// skridt, hvoraf ingen forklarede hvorfor de var nødvendige.
+function proCard(url){
+  // Samme regel som på den engelske: `#url=`-vejen virker kun for en adresse
+  // rapport-siden genkender (`/^https?:\/\//i`), så `example.com` uden scheme
+  // ellers gav præcis det tomme felt den dybe vej er lavet for at fjerne.
+  var dyb = /^https?:\/\//i.test(String(url||'')) ;
+  var handoff = dyb ? '/compliance-report#url=' + encodeURIComponent(url) : '/da/compliance-report';
   var html = '<div class="result-card pro-card">';
   html += '<h3 style="margin:0 0 4px;font-size:16px">Den læste de sider, du indsatte. Et website er alle sider.</h3>';
   html += '<!-- pro-table:start --> <div class="table-wrap"> <table class="compare pro-table"> <caption class="sr-only">Gratis og EUComply Pro, side mod side</caption> <thead> <tr><th scope="col"><span class="sr-only">Plan</span></th><th scope="col">Gratis</th><th scope="col">EUComply Pro</th></tr> </thead> <tbody> <tr><th scope="row">Hvad du får</th><td><ul><li>Tilgængelighedstjek på de sider du indsætter, op til fem ad gangen — alt-tekst, mærkater, overskrifter, kontrast</li><li>Sides titel, sprogattribut, viewport og h1 tjekket med</li></ul></td><td><ul><li>Den læser siden fra serveren også — svarheadere med, som et browsertjek ikke kan se</li><li>18 server-side GDPR-, cookie-, sikkerheds- og metatjek</li><li>Fundene som PDF-rapport, du kan give en kunde</li></ul></td></tr> <tr><th scope="row">Pris</th><td><span class="pro-price">$0</span><span class="pro-note">ingen licensnøgle nødvendig</span></td><td><span class="pro-price">$79/år pr. website</span></td></tr> </tbody> </table> </div> <p class="pro-note">$149 én gang pr. website — livstid, første 100 køb</p> <p class="pro-note pro-limit">Inkluderer ikke DPA, NIS2-klausler eller andre dokumenter — sælges separat</p> <!-- pro-table:end -->';
   html += '<a class="btn" style="display:inline-block;padding:12px 24px;margin-top:8px;text-decoration:none" href="https://buy.stripe.com/eVq00i4YH6UG69g0ObbMQ03" rel="nofollow noopener" onclick="window.trackEvent&&window.trackEvent(\'pro-card-click\')">Køb EUComply Pro — $79/år pr. website</a>';
-  html += '<p class="pro-card-note">Én licens pr. website. <a href="/da/compliance-report">Se hvad Pro tilføjer, før du køber</a>.</p>';
+  html += '<p class="pro-card-note">Én licens pr. website. <a href="' + handoff + '">Åbn PDF-rapporten for denne side</a> — nøglen låser downloaden dér. Rapportværktøjet er på engelsk.</p>';
   html += '</div>';
   return html;
 }
 window.proCard=proCard;
+// Den ene adresse `#url=`-vejen kan bære. Ved flere sider står de som
+// `urls.join(', ')` i `state.url`, og en liste er ingen URL — rapporten tager én
+// side ad gangen, så det er den første læseren læste. `pages[0].url` er den
+// samme adresse målt i felterne, så den bruges når den findes.
+function forsteUrl(state){
+  if(!state)return '';
+  if(state.pages&&state.pages.length&&state.pages[0]&&state.pages[0].url)return state.pages[0].url;
+  return String(state.url||'').split(',')[0].trim();
+}
 // `#result` ligger under folden, fordi et resultat er langt og ikke skal fylde
 // heroen. Men så lægger et klik i folden intet ud over det at blive trykket, og
 // det er værre end et felt længere nede: brugeren tror scanneren hang. Derfor
@@ -670,7 +690,7 @@ function visFlere(pages, urls){
     +'<input type="text" id="shareLink" readonly hidden aria-label="Link til dette resultat">'
     +'<p class="hint">Linket bærer de %d fund ovenfor, så den der åbner det læser listen uden at køre en scanning selv. Det bærer totalerne, ikke sideoversigten — der sendes intet om siderne til os ved at åbne det.</p>'.replace('%d',sider.length)
     +'<p class="hint">Denne scanning er gratis og kræver ingen konto. Har den sparet dig tid, holder en lille <a href="https://donate.stripe.com/7sYeVcbn50wieFM8gDbMQ0c" rel="nofollow noopener">donation</a> den i gang.</p>'
-    +proCard();
+    +proCard(forsteUrl(state));
   revealResult(out);
   if(window.trackEvent)window.trackEvent('scan-findings');
 }

@@ -2140,7 +2140,7 @@
       "free_features": [
         {
           "id": "a11y",
-          "where": "site/scan.html:434-508 — elleve add()-kald (IMG_ALT, FORM_LABEL, LINK_TEXT, BUTTON_TEXT, DUP_ID, TARGET_BLANK, HEADING_SKIP, IFRAME_TITLE, TABLE_HEADER, ARIA_HIDDEN_FOCUS, CONTRAST) læser den hentede sidekilde i browseren",
+          "where": "site/scan.html:456-514 — elleve add()-kald (IMG_ALT, FORM_LABEL, LINK_TEXT, BUTTON_TEXT, DUP_ID, TARGET_BLANK, HEADING_SKIP, IFRAME_TITLE, TABLE_HEADER, ARIA_HIDDEN_FOCUS, CONTRAST) læser den hentede sidekilde i browseren",
           "labels": {
             "en": [
               "The accessibility checks on the pages you paste, up to five at a time — alt text, labels, headings, contrast"
@@ -2149,7 +2149,7 @@
         },
         {
           "id": "basics",
-          "where": "site/scan.html:456-459 «DOC_TITLE», «HTML_LANG», «VIEWPORT» og «HEADING_H1» lægges direkte i fundlisten, ingen af dem kræver en nøgle",
+          "where": "site/scan.html:478-481 «DOC_TITLE», «HTML_LANG», «VIEWPORT» og «HEADING_H1» lægges direkte i fundlisten, ingen af dem kræver en nøgle",
           "labels": {
             "en": [
               "Page title, language attribute, viewport and h1 checked too"
@@ -2160,7 +2160,7 @@
       "pro_features": [
         {
           "id": "crawl",
-          "where": "site/scan.html:397 «It reads the page from the server too» — påstanden står i kortet; om den er sand afgør `tools/check_scan_page_claims.py`, der tæller `cscFetch(`-kaldene i `handleReport`",
+          "where": "site/scan.html:419 «It reads the page from the server too» — påstanden står i kortet; om den er sand afgør `tools/check_scan_page_claims.py`, der tæller `cscFetch(`-kaldene i `handleReport`",
           "labels": {
             "en": [
               "It reads the page from the server too — response headers included, which a browser check cannot see"
@@ -2172,7 +2172,7 @@
         },
         {
           "id": "server-checks",
-          "where": "site/scan.html:397 «18 server-side GDPR, cookie, security and metadata checks» — de 18 fund-typer kommer fra `reportProFindings(page.html, page.headers)` i `_worker.js`, som ogsa ser svarheaderne",
+          "where": "site/scan.html:419 «18 server-side GDPR, cookie, security and metadata checks» — de 18 fund-typer kommer fra `reportProFindings(page.html, page.headers)` i `_worker.js`, som ogsa ser svarheaderne",
           "labels": {
             "en": [
               "18 server-side GDPR, cookie, security and metadata checks"
@@ -2206,7 +2206,7 @@
       "free_features": [
         {
           "id": "a11y",
-          "where": "site/scan-da.html:427-501 — elleve add()-kald (IMG_ALT, FORM_LABEL, LINK_TEXT, BUTTON_TEXT, DUP_ID, TARGET_BLANK, HEADING_SKIP, IFRAME_TITLE, TABLE_HEADER, ARIA_HIDDEN_FOCUS, CONTRAST) læser den hentede sidekilde i browseren",
+          "where": "site/scan-da.html:447-481 — elleve add()-kald (IMG_ALT, FORM_LABEL, LINK_TEXT, BUTTON_TEXT, DUP_ID, TARGET_BLANK, HEADING_SKIP, IFRAME_TITLE, TABLE_HEADER, ARIA_HIDDEN_FOCUS, CONTRAST) læser den hentede sidekilde i browseren",
           "labels": {
             "da": [
               "Tilgængelighedstjek på de sider du indsætter, op til fem ad gangen — alt-tekst, mærkater, overskrifter, kontrast"
@@ -2215,7 +2215,7 @@
         },
         {
           "id": "basics",
-          "where": "site/scan-da.html:449-452 «DOC_TITLE», «HTML_LANG», «VIEWPORT» og «HEADING_H1» lægges direkte i fundlisten, ingen af dem kræver en nøgle",
+          "where": "site/scan-da.html:469-472 «DOC_TITLE», «HTML_LANG», «VIEWPORT» og «HEADING_H1» lægges direkte i fundlisten, ingen af dem kræver en nøgle",
           "labels": {
             "da": [
               "Sides titel, sprogattribut, viewport og h1 tjekket med"
@@ -2226,7 +2226,7 @@
       "pro_features": [
         {
           "id": "crawl",
-          "where": "site/scan-da.html:390 «Den læser siden fra serveren også» — påstanden står i kortet; om den er sand afgør `tools/check_scan_page_claims.py`, der tæller `cscFetch(`-kaldene i `handleReport`",
+          "where": "site/scan-da.html:401 «Den læser siden fra serveren også» — påstanden står i kortet; om den er sand afgør `tools/check_scan_page_claims.py`, der tæller `cscFetch(`-kaldene i `handleReport`",
           "labels": {
             "en": [
               "It reads the page from the server too — response headers included, which a browser check cannot see"
@@ -2238,7 +2238,7 @@
         },
         {
           "id": "server-checks",
-          "where": "site/scan-da.html:390 «18 server-side GDPR-, cookie-, sikkerheds- og metatjek» — de 18 fund-typer kommer fra `reportProFindings(page.html, page.headers)` i `_worker.js`, som ogsa ser svarheaderne",
+          "where": "site/scan-da.html:401 «18 server-side GDPR-, cookie-, sikkerheds- og metatjek» — de 18 fund-typer kommer fra `reportProFindings(page.html, page.headers)` i `_worker.js`, som ogsa ser svarheaderne",
           "labels": {
             "en": [
               "18 server-side GDPR, cookie, security and metadata checks"
@@ -2272,7 +2272,7 @@
       "free_features": [
         {
           "id": "nine-checks",
-          "where": "site/compliance-site-check.html:518-523 «About each check» lister præcis de ni tjek der kom tilbage i data.checks, og :299 fetchScan('/api/compliance-scan') er det ene kald hele rapporten kommer fra",
+          "where": "site/compliance-site-check.html:530-535 «About each check» lister præcis de ni tjek der kom tilbage i data.checks, og :302 fetchScan('/api/compliance-scan') er det ene kald hele rapporten kommer fra",
           "labels": {
             "en": [
               "The 9 compliance checks on the page you submit"
@@ -2281,7 +2281,7 @@
         },
         {
           "id": "legal-links",
-          "where": "site/compliance-site-check.html:338-341 data.pages_read skriver de sider kaldet læste, og :431-434 viser dem i rapporten — det er de juridiske sider, siden selv peger på",
+          "where": "site/compliance-site-check.html:339-343 data.pages_read skriver de sider kaldet læste, og :439-442 viser dem i rapporten — det er de juridiske sider, siden selv peger på",
           "labels": {
             "en": [
               "The privacy, terms and imprint pages it links to"
@@ -2290,7 +2290,7 @@
         },
         {
           "id": "score-grade",
-          "where": "site/compliance-site-check.html:463-472 scoren og karakteren skrives i DOM'en uden licens",
+          "where": "site/compliance-site-check.html:471-480 scoren og karakteren skrives i DOM'en uden licens",
           "labels": {
             "en": [
               "A score and a grade for every site you paste"
@@ -2347,7 +2347,7 @@
       "free_features": [
         {
           "id": "nine-checks",
-          "where": "site/da/compliance-site-check.html:516-521 «Om hvert tjek» lister præcis de ni tjek der kom tilbage i data.checks, og :298 fetchScan('/api/compliance-scan') er det ene kald hele rapporten kommer fra",
+          "where": "site/da/compliance-site-check.html:528-533 «Om hvert tjek» lister præcis de ni tjek der kom tilbage i data.checks, og :301 fetchScan('/api/compliance-scan') er det ene kald hele rapporten kommer fra",
           "labels": {
             "da": [
               "De 9 compliance-tjek på den side du indsætter"
@@ -2356,7 +2356,7 @@
         },
         {
           "id": "legal-links",
-          "where": "site/da/compliance-site-check.html:337-340 data.pages_read skriver de sider kaldet læste, og :430-433 viser dem i rapporten — det er de juridiske sider, siden selv peger på",
+          "where": "site/da/compliance-site-check.html:338-342 data.pages_read skriver de sider kaldet læste, og :438-441 viser dem i rapporten — det er de juridiske sider, siden selv peger på",
           "labels": {
             "da": [
               "De privatlivs-, vilkår- og imprint-sider, siden peger på"
@@ -2365,7 +2365,7 @@
         },
         {
           "id": "score-grade",
-          "where": "site/da/compliance-site-check.html:462-471 scoren og karakteren skrives i DOM'en uden licens",
+          "where": "site/da/compliance-site-check.html:470-479 scoren og karakteren skrives i DOM'en uden licens",
           "labels": {
             "da": [
               "En score og en karakter for hvert website du indsætter"

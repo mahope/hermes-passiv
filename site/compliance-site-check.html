@@ -381,8 +381,18 @@ function scan() {
   // den får antallet: «this checked one page» var ikke længere hele sandheden,
   // da feltet tog fem URL'er — og en løfte-boks der kun passer for den ene
   // udgave, er den fejl hele opgaven handler om.
-  function proCard(antal) {
+  // `url` er den første side rapporten dækker. Den bruges kun til den dybe vej
+  // til PDF-trinet: en Pro-holder skal ikke indtaste sin adresse igen for at
+  // låse den rapport han netop har set. Mål 6/10 før rettelsen: noten linkede
+  // til `/compliance-report` uden mere, så han landede i et tomt felt, kørte
+  // selv en scanning og scrollede ned til nøglefeltet bagefter.
+  function proCard(antal, url) {
     var flere = antal > 1;
+    // `#url=`-vejen virker kun for en adresse rapport-siden genkender, og den
+    // bruger præcis denne test. `example.com` uden scheme ville give præcis
+    // det tomme felt den dybe vej er lavet for at fjerne.
+    var dyb = /^https?:\/\//i.test(String(url || ''));
+    var handoff = dyb ? '/compliance-report#url=' + encodeURIComponent(url) : '/compliance-report';
     var html = '<div class="result-card pro-card">';
     html += '<h3 style="margin:0 0 4px;font-size:16px">' + (flere
       ? 'It found the legal pages and stopped. A site is every page.'
@@ -393,7 +403,7 @@ function scan() {
     // siger begge dele uden at siden skal holde dem i live.
     html += '<!-- pro-table:start --> <div class="table-wrap"> <table class="compare pro-table"> <caption class="sr-only">Free and EUComply Pro, side by side</caption> <thead> <tr><th scope="col"><span class="sr-only">Plan</span></th><th scope="col">Free</th><th scope="col">EUComply Pro</th></tr> </thead> <tbody> <tr><th scope="row">What you get</th><td><ul><li>The 9 compliance checks on the page you submit</li><li>The privacy, terms and imprint pages it links to</li><li>A score and a grade for every site you paste</li></ul></td><td><ul><li>It reads the page you name from the server — consent signals, privacy link and metadata, not just whether a legal page exists</li><li>18 server-side GDPR, cookie, security and metadata checks</li><li>The findings as a PDF report you can hand a client</li></ul></td></tr> <tr><th scope="row">Price</th><td><span class="pro-price">$0</span><span class="pro-note">no licence key needed</span></td><td><span class="pro-price">$79/year per website</span></td></tr> </tbody> </table> </div> <p class="pro-note">$149 once per website — lifetime, first 100 purchases</p> <p class="pro-note pro-limit">Does not include DPA, NIS2 clauses, or other documents — sold separately</p> <!-- pro-table:end -->';
     html += '<a class="btn" style="display:inline-block;padding:12px 24px;margin-top:8px;text-decoration:none" href="https://buy.stripe.com/eVq00i4YH6UG69g0ObbMQ03" rel="nofollow noopener">Buy EUComply Pro — $79/year per website</a>';
-    html += '<p class="pro-card-note">One website per licence. <a href="/compliance-report">See what Pro adds before you buy</a>.</p>';
+    html += '<p class="pro-card-note">One website per licence. <a href="' + handoff + '">Open the PDF report for this page</a> — your key unlocks the download there.</p>';
     html += '</div>';
     return html;
   }
@@ -531,7 +541,7 @@ function renderResults(rapporter, fejl) {
   // besøgeren står: lige efter sit eget resultat. Uden den var det eneste
   // økonomiske opfordring efter et resultat en donation på 10 kr., selv om
   // det er en bureauopgave der mangler — og det er den der koster 79 USD.
-  html += proCard(rapporter.length);
+  html += proCard(rapporter.length, rapporter[0] && rapporter[0].url);
 
   html += '<p style="font-size:13px;color:var(--color-text-muted);margin:16px 0 0">This scan is free and needs no account. If it saved you time, a small <a href="https://donate.stripe.com/7sYeVcbn50wieFM8gDbMQ0c" rel="nofollow noopener">donation</a> keeps it running.</p>';
 

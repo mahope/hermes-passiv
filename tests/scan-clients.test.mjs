@@ -445,6 +445,14 @@ const PAGES = [
   ['site/da/compliance-site-check.html', 'DA'],
 ];
 
+// Dybt link til PDF-trinet på de fire scanneresider. Før 6/10 pegede pro-kortets
+// note bare på `/compliance-report` (`/da/compliance-report` på dansk), så en
+// Pro-holder der lige har betalt $79 og set sit resultat landede i et **tomt**
+// felt, måtte køre scanningen igen og scrollede ned til nøglefeltet bagefter.
+// Dommen kræver derfor at `#url=` er kodet med **den side der faktisk blev læst**
+// — en note uden koden er præcis den gamle fejl. Mutation: sektion 11.
+const PDF_HANDOFF = /href="\/compliance-report#url=https%3A%2F%2Fexample\.com"/;
+
 // --------------------------------------------------------------------------
 // 2. Det gamle svar skal stadig virke, og det skal gøre det på ét kald.
 // --------------------------------------------------------------------------
@@ -1207,8 +1215,8 @@ function mutated(path, from, to) {
   };
 
   for (const [path, label, reportHref] of [
-    ['site/compliance-site-check.html', 'EN', /href="\/compliance-report"/],
-    ['site/da/compliance-site-check.html', 'DA', /href="\/da\/compliance-report"/],
+    ['site/compliance-site-check.html', 'EN', PDF_HANDOFF],
+    ['site/da/compliance-site-check.html', 'DA', PDF_HANDOFF],
   ]) {
     const { fetchImpl } = responses([OK_SCAN]);
     const { sandbox, nodes } = loadPage(path, fetchImpl);
@@ -1224,6 +1232,46 @@ function mutated(path, from, to) {
     const src = readFileSync(join(root, path), 'utf8');
     ok(`${label}: købslinket står ikke i den statiske HTML — kun i resultatstien`,
       !outsideScripts(src).includes(pro.payment_link));
+
+    // Mutation på **PDF-vejen alene**: samme side, men `#url=`-koden er væk, så
+    // noten peger på `/compliance-report` som før 6/10. Uden den mutation er
+    // dommen grøn på en side hvor handoffen aldrig virkede — den gamle kode fra
+    // `da3999e` kan ikke bruges, fordi den pro-kort slet ikke havde.
+    const mutation = src.replace(
+      /^.*var handoff = dyb \? '\/compliance-report#url=' \+ encodeURIComponent\(url\).*$/m,
+      "    var handoff = '/compliance-report';");
+    ok(`${label}: mutationsankeret for PDF-vejen findes`,
+      mutation !== src, 'sideformen ændrede sig — mutationen ville køre på uændret kode');
+    {
+      const { fetchImpl: mutFetch } = responses([OK_SCAN]);
+      const mut = loadPage(path, mutFetch, { source: mutation });
+      mut.nodes.get('urlInput').value = 'example.com';
+      await mut.sandbox.scan();
+      await sleep(30);
+      const mutHtml = (mut.nodes.get('results') || {}).innerHTML || '';
+      ok(`${label}: mutation: uden #url= er den dybe PDF-vej rød`,
+        !PDF_HANDOFF.test(mutHtml) && mutHtml.includes('href="/compliance-report"'),
+        'dommen kan altså blive rød');
+    }
+
+    // Den dybe vej må **kun** bære en adresse rapport-siden genkender. Den
+    // bruger `/^https?:\/\//i` på sit fragment, så en værdi uden scheme
+    // (`example.com`, som er helt normalt at skrive) blev afvist stille, og
+    // læseren landede i præcis det tomme felt handoffen fjerner. Dommen her
+    // tvinger serverens svar til at være **uden** scheme — det er det eneste
+    // input, der adskiller de to veje — og kræver den gamle rute.
+    {
+      const rå = { status: 200, body: { ...OK_SCAN.body, url: 'example.com' } };
+      const { fetchImpl: råFetch } = responses([rå]);
+      const r = loadPage(path, råFetch);
+      r.nodes.get('urlInput').value = 'example.com';
+      await r.sandbox.scan();
+      await sleep(30);
+      const råHtml = (r.nodes.get('results') || {}).innerHTML || '';
+      ok(`${label}: en adresse uden scheme falder til den gamle rute, ikke til et tomt felt`,
+        !/#url=/.test(råHtml) && /href="\/((?:da\/)?compliance-report)"/.test(råHtml),
+        'håndværket ville sende læseren til en rapport der aldrig genereres');
+    }
 
     // Mutation: den kode fra før rettelsen skal være rød på dommen.
     const old = execFileSync('git', ['show', `da3999e:${path}`], { cwd: root, maxBuffer: 1 << 26 }).toString('utf8');
@@ -1403,7 +1451,7 @@ function mutated(path, from, to) {
       // får en minimal `DOMParser`, fordi siden selv parserer det hentede HTML
       // og derefter skriver hele resultat-markuppen i én `innerHTML`.
       path: 'site/scan.html', label: 'scan EN', product: 'eucomply-pro',
-      report: /href="\/compliance-report"/, form: 'script',
+      report: PDF_HANDOFF, form: 'script',
       async kør() {
         const { fetchImpl } = responses([OK_SCAN_PROXY]);
         const { sandbox, nodes } = loadPage('site/scan.html', fetchImpl,
@@ -1416,7 +1464,7 @@ function mutated(path, from, to) {
     },
     {
       path: 'site/scan-da.html', label: 'scan DA', product: 'eucomply-pro',
-      report: /href="\/da\/compliance-report"/, form: 'script',
+      report: PDF_HANDOFF, form: 'script',
       async kør() {
         const { fetchImpl } = responses([OK_SCAN_PROXY]);
         const { sandbox, nodes } = loadPage('site/scan-da.html', fetchImpl,
@@ -1448,6 +1496,25 @@ function mutated(path, from, to) {
       new RegExp(pro.name.split(' ')[0]).test(markup), pro.name);
     ok(`${t.label}: boksen linker videre til produktsiden med gratis-vs-Pro-tabellen`,
       t.report.test(markup), String(t.report));
+    // Samme hul som på `/compliance-site-check`: scanneren får sin adresse fra
+    // serverens `url`, og den kan komme uden scheme (`example.com` er helt
+    // normalt at skrive). Rapport-siden genkender kun `/^https?:\/\//i`, så
+    // `#url=` med en sådan værdi ville give præcis det tomme felt handoffen
+    // er lavet for at fjerne. Målt mutation: `var dyb = !!url` på begge
+    // scannerens sider gør dommen rød, fordi hverken EN eller DA scanner før
+    // denne rettelse havde noget `forsteUrl`-krav — de tog bare `state.url`.
+    if (t.path === 'site/scan.html' || t.path === 'site/scan-da.html') {
+      const { fetchImpl: råFetch } = responses([
+        { status: 200, body: { ...OK_SCAN_PROXY.body, url: 'example.com' } }]);
+      const r = loadPage(t.path, råFetch,
+        { match: /scan-proxy/, preload: ['site/scan-share-core.js'] });
+      await r.sandbox.scan('example.com');
+      await sleep(30);
+      const råMarkup = (r.nodes.get('result') || {}).innerHTML || '';
+      ok(`${t.label}: en adresse uden scheme falder til den gamle rute, ikke til et tomt felt`,
+        !/#url=/.test(råMarkup) && /href="\/((?:da\/)?compliance-report)"/.test(råMarkup),
+        'håndværket ville sende læseren til en rapport der aldrig genereres');
+    }
     if (havdeDonation) {
       ok(`${t.label}: donationslinjen overlevede den nye boks`, /donate\.stripe\.com/.test(donation));
     }

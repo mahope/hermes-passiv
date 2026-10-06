@@ -8942,3 +8942,42 @@ Baseline for den nye begivenhed: **0** målinger i `/api/results` før den 6/10.
   429 endelig, AI-retries ved 502 begrænset, og thanks.html skelner 202
   korrekt.** Målt 6/10 på live: endpointet svarer korrekt på alle tests.
   Commit `26440a1c`.
+
+## Feature-kø C — Pro-kortet på scanneren skal finde PDF'en selv (6/10)
+
+**Gren:** `ceo/pro-kort-til-pdf-fresh`
+
+Pro-kortets note på `/scan`, `/da/scan`, `/compliance-site-check` og
+`/da/compliance-site-check` linkede til `/compliance-report` uden mere. En
+Pro-holder der lige har betalt $79 og set sit resultat landede derfor i et
+**tomt** URL-felt, måtte køre scanningen igen og scrolle ned til nøglefeltet —
+tre skridt, hvoraf ingen forklarede hvorfor de var nødvendige.
+
+Noten bærer nu `#url=` med den side der faktisk blev læst:
+
+- `compliance-site-check` (EN/DA): `rapporter[0].url`
+- `scan` / `scan-da`: `forsteUrl(state)`, der foretrækker `state.pages[0].url`
+  (samme adresse målt i felterne) og ellers tager første element i
+  `state.url` — for flere sider står de der som `urls.join(', ')`, og en liste
+  er ingen URL, så rapporten får den side læseren læste først.
+
+`site/compliance-report.html:731` læste `#url=` i forvejen, så der er ingen ny
+mekanisme — kun et link der nu bruger den. Den bruger præcis rapport-sidens egen
+regel `/^https?:\/\//i`; ellers falder den tilbage på den gamle rute, fordi
+`generateReport` ellers ville modtage en adresse den ikke genkender.
+
+**Målt:** dommen `PDF_HANDOFF` kræver den kodede adresse i markup'en på alle
+fire sider. Mutationen `var handoff = '/compliance-report'` gør den **rød**
+(572/573), så dommen kan ikke være grøn på en side hvor handoffen aldrig
+virkede. Dertil et målt tilfælde pr. sprog: serveren svarer
+`url: 'example.com'` → 0 `#url=` og den gamle rute står. Fuld gate **GRØN**;
+`scan-clients` 565 → **573/573**, `stripe-worker` **515/515**, `seo_check`
+316 sider 0 fund, `check_inline_js` 0 problemer. Katalogens `where`-henvisninger
+i `tools/stripe_catalog.json` er opdateret til de nye linjenumre.
+
+**Kendte huller:** rapportværktøjet findes kun på engelsk, så den danske noten
+siger det og den dybe vej går til den engelske side. Ved flere sider bærer den
+kun den første adresse, fordi rapporten tager én side ad gangen.
+
+**Baseline:** `pro_card_clicks` i `/api/conversion` (tælles kun ved købsknappen,
+som var uændret her — denne opgave rører noten, ikke knappen).
