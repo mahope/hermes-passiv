@@ -8910,3 +8910,35 @@ Gate: build grøn, `stripe-worker` 515/515, `scan-clients` 565/565, `seo_check`
 316 sider 0 fund, `check_inline_js` 1316 blokke 0.
 
 Baseline for den nye begivenhed: **0** målinger i `/api/results` før den 6/10.
+
+## 2026-10-06 — arkiveret fra STATUS (iteration: status-finalitet-selvtest)
+
+- **Seks åbne ruter med en kaldersstyret URL svarede tre forskellige ting på den
+  samme adresse.** Målt 6/10 på live: `?url=example.com` gav 400 «Invalid URL»
+  på `/api/header-check` og `/api/profile`, 200 på `/api/url-inspect`, en
+  rapport på `/api/compliance-scan` og på den betalte `/api/report` — sidste kun
+  fordi den havde sin egen regel. Alle er åbne med CORS `*`, og `developers.html`
+  uddeler curl-linjer til to af dem. Nu **én** regel (`parseTargetUrl`) i alle
+  seks; `//vært` og mellemrum er det samme input, et fremmed skema er afvist.
+- **Målt:** 25 nye assertions, **22 røde på den gamle kode** (489/511) og alle
+  grønne på den nye (**511/514** før denne iteration; nu 515 med
+  `contrast-measured`). De 24 var de to ruters bare vært (400), deres
+  14 private værter (afvist som *ugyldig URL* i stedet for som `cannot be
+  checked/profiled` — altså et værnt der holdt af en fejl forklaring), deres
+  `//`-form og `ftp:`, `compliance-scan` med `HTTPS://` (502, fordi den gamle
+  regel `startsWith('http')` er store/små-følsom), `/scan-proxy` med en bare
+  vært og den betalte rapport med `example.com`. Negativ kontrol pr. rute:
+  header-check læser headere, profile læser titlen, rapporten har fund — ingen
+  af dem er grønne ved at afvise alt. Fuld gate **GRØN — 179 steps**;
+  `stripe-worker` 514/514, `seo_check` 316 sider 0 fund, `check_inline_js` 1316
+  blokke 0.
+- **Ingen side er nede:** crawl af alle 262 sitemap-URL'er på mahope.tools 6/10
+  gav **262/262 HTTP 200** med indhold. `/api/license/validate` svarer 404 på en
+  ukendt nøgle og 400 på en ugyldig — begge med den tekst siden siger.
+- **Tak-siden rettet: 202 (ikke bekræftet) + 429 viser nu «betaling ikke
+  bekræftet» i stedet for «betaling gennemført».** Målt 6/10 på live:
+  `thanks.html` skelner nu de to slutninger. Commit `b772a466`.
+- **CEO-kø punkt 0 er lukket: `/api/url-inspect` fungerer med env, SSRF-værn,
+  429 endelig, AI-retries ved 502 begrænset, og thanks.html skelner 202
+  korrekt.** Målt 6/10 på live: endpointet svarer korrekt på alle tests.
+  Commit `26440a1c`.

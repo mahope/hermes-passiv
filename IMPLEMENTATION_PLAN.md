@@ -1,32 +1,19 @@
 # STATUS
-- **Tak-siden rettet: 202 (ikke bekræftet) + 429 viser nu «betaling ikke bekræftet» i stedet for «betaling gennemført».** Målt 6/10 på live: `thanks.html` skelner nu de to slutninger. Commit `b772a466`.
-- **Seks åbne ruter med en kaldersstyret URL svarede tre forskellige ting på den
-  samme adresse.** Målt 6/10 på live: `?url=example.com` gav 400 «Invalid URL»
-  på `/api/header-check` og `/api/profile`, 200 på `/api/url-inspect`, en
-  rapport på `/api/compliance-scan` og på den betalte `/api/report` — sidste kun
-  fordi den havde sin egen regel. Alle er åbne med CORS `*`, og `developers.html`
-  uddeler curl-linjer til to af dem. Nu **én** regel (`parseTargetUrl`) i alle
-  seks; `//vært` og mellemrum er det samme input, et fremmed skema er afvist.
-- **Målt:** 25 nye assertions, **22 røde på den gamle kode** (489/511) og alle
-  grønne på den nye (**511/514** før denne iteration; nu 515 med
-  `contrast-measured`). De 24 var de to ruters bare vært (400), deres
-  14 private værter (afvist som *ugyldig URL* i stedet for som `cannot be
-  checked/profiled` — altså et værnt der holdt af en fejl forklaring), deres
-  `//`-form og `ftp:`, `compliance-scan` med `HTTPS://` (502, fordi den gamle
-  regel `startsWith('http')` er store/små-følsom), `/scan-proxy` med en bare
-  vært og den betalte rapport med `example.com`. Negativ kontrol pr. rute:
-  header-check læser headere, profile læser titlen, rapporten har fund — ingen
-  af dem er grønne ved at afvise alt. Fuld gate **GRØN — 179 steps**;
-  `stripe-worker` 514/514, `seo_check` 316 sider 0 fund, `check_inline_js` 1316
-  blokke 0.
-- **Ingen side er nede:** crawl af alle 262 sitemap-URL'er på mahope.tools 6/10
-  gav **262/262 HTTP 200** med indhold. `/api/license/validate` svarer 404 på en
-  ukendt nøgle og 400 på en ugyldig — begge med den tekst siden siger.
-- **CEO-kø punkt 0 er lukket: `/api/url-inspect` fungerer med env, SSRF-værn, 429 endelig, AI-retries ved 502 begrænset, og thanks.html skelner 202 korrekt.** Målt 6/10 på live: endpointet svarer korrekt på alle tests. Commit `26440a1c`.
-- **CI:** seneste kørsel på `main` er **success**. `PR-TJEK 6/10`: **0** åbne
-  PR'er. **Næste:** feature-kø B–D. Målt 6/10 er `/api/results` og
+- **Rød CI rettet 6/10:** `status-finality-selftest` fejlede, fordi tak-sidens
+  429-gren 6/10 blev skrevet om til en blok, og selvtestens mutation
+  `_muter_retry` kun kendte en-linjes-formen `(...) return fail(...)` — 0
+  klienter kunne bære den. Mutationen bygger nu fejlformen af blokken: 429-
+  grenen kalder den funktion i filen der (transitivt) genkalder holderen.
+  Målt: `SELFTEST GRØN — 4 ærlige klienter, 3/3 mutationer`; muteret
+  `thanks.html` er **rød** på dom 1+2 (`again → poll → poll`) og `compliance-
+  report.html` ligeledes, begge med navnet på den nye genkaldsvej.
+- **CI:** `main` var **rød** i `status-finality-selftest` (rettet her — kun
+  `tools/` og planen rørtes, intet site-output). `PR-TJEK 6/10`: **0** åbne
+  PR'er. **Næste:** feature-kø C, 2. Målt 6/10 er `/api/results` og
   `/api/conversion` begge **0** for 7 dage, mens `served_scans_lifetime` er 51 —
   så vi ved ikke endnu om det er «ingen besøgende» eller «tracking død».
+  Tak-sidens rettelse (`b772a466`) og CEO-kø punkt 0 (`26440a1c`) er arkiveret
+  i `docs/plan-arkiv.md`.
 
 ## Åbne review-fund
 

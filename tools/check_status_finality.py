@@ -48,7 +48,7 @@ serven, ikke klienten, og de skal ikke dømmes på klientens regler. Kommentarer
 er fjernet før der læses, så `book-ai.js`'s henvisning til `net.js` ikke læses
 som en kodevej. Målt 1/10 på korpus: **3** klienter (`thanks.html`,
 `compliance-report.html`, `net.js`), **2** servere (`_worker.js`,
-`worker-bugbottle-demo.js`). De 4 mutationer i `MUTATIONER` er alle fundet i
+`worker-bugbottle-demo.js`). De 3 mutationer i `mutationer` er alle fundet i
 koden.
 
 **Det porten ikke kan se.** Den læser statisk kode og kan ikke vide om en
@@ -470,7 +470,7 @@ def self_test() -> int:
     Mutationerne bygges af klientens egen blok med portens egne mønstre, og hver
     køres gennem **hele porten** — ikke kun `check_client` — så den mutation der
     tilføjer en ny klient bliver fanget af opdagelsen. Målt 1/10 på korpus:
-    3 ærlige klienter, 4 mutationer — alle fanget.
+    3 ærlige klienter, 3 mutationer — alle fanget.
     """
     sources = client_sources()
     clients = {rel: src for rel, src in sources.items()
@@ -564,9 +564,31 @@ def _muter_retry(source: str) -> str | None:
         # én forbigående gren. `fail(` bliver til `again(`, som er det kalde-
         # navn denne gren ringer på i originalen.
         ny = re.sub(r"\(([^)]*)\)\s*return\s+fail\(", r"(\1 || x.code >= 500) return again(", linje, count=1)
-        if ny == linje:
+        if ny != linje:
+            return source[:line_start] + ny + source[line_end:]
+        # Tak-sidens rettelse 6/10 skrev 429-grenen om fra en-linjes
+        # `(...) return fail(...)` til en blok, og dermed findes formen
+        # ovenfor ikke længere i nogen klient. Fejlformen er den samme —
+        # grenen genkalder — så byg den af blokken: lad grenen kalde den
+        # funktion i filen der (transitivt) genkalder holderen.
+        helper = _retry_helper(source, holder[0])
+        if helper:
+            return source.replace(
+                body, "{ return " + helper + "('Trying again', 4000, false); }", 1)
+    return None
+
+
+def _retry_helper(source: str, holder: str) -> str | None:
+    """Navnet på en funktion i filen der (transitivt) genkalder `holder`.
+
+    Det er præcis den egenskab dom 1 dømmer, så et kald til den funktion i
+    429-grenen *er* fejlformen — uanset hvad hjælperen hedder.
+    """
+    for name, _begin, fn_body in _function_ranges(source):
+        if name == holder:
             continue
-        return source[:line_start] + ny + source[line_end:]
+        if reaches_function(fn_body, holder, source):
+            return name
     return None
 
 
