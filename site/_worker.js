@@ -4285,13 +4285,26 @@ async function handleUrlInspect(request, url, env) {
     return new Response(JSON.stringify({ error: 'Too many URL inspections this hour. Try again later.' }), { status: 429, headers: corsHeaders });
   }
 
-  const targetUrlParam = url.searchParams.get('url');
-  if (!targetUrlParam) {
+  const rawTargetParam = url.searchParams.get('url');
+  if (!rawTargetParam) {
     return new Response(JSON.stringify({ error: 'Missing ?url= parameter' }), { status: 400, headers: corsHeaders });
   }
+  // Målte 6/10 på live: `?url=example.com` svarede 400 «Invalid URL», fordi
+  // `new URL()` kræver et skema. Formularen på deskuptime.com, mahope.tools og
+  // mahope.tools/da siger «we add https:// if you leave it out» — men den
+  // normalisering lå kun i one-off-check.js, så løftet holdt kun med JS, og
+  // formen er `method="get" action="/api/url-inspect"`, så den skal virke
+  // uden. Ruten er også åben for enhver klient (CORS `*`), så den skal svare på
+  // det samme input som den side der sender det. /api/compliance-site-check
+  // gør det samme med `raw.startsWith('http') ? raw : 'https://' + raw`; her
+  // trimmes der også, så `//example.com` fra et udklip er det samme input.
+  const targetUrlParam = /^[a-z][a-z0-9+.-]*:\/\//i.test(rawTargetParam.trim())
+    ? rawTargetParam.trim()
+    : 'https://' + rawTargetParam.trim().replace(/^\/+/, '');
   let target;
   try {
     target = new URL(targetUrlParam);
+    if (!['http:', 'https:'].includes(target.protocol)) throw new Error('bad protocol');
   } catch (_) {
     return new Response(JSON.stringify({ error: 'Invalid URL' }), { status: 400, headers: corsHeaders });
   }
@@ -4304,7 +4317,11 @@ async function handleUrlInspect(request, url, env) {
   }
 
   const redirects = [];
-  let currentUrl = targetUrlParam;
+  // Kæden starter på den *parsede* adresse, ikke på rå-strengen: `URL` har nu
+  // normaliseret `example.com` til `https://example.com/`, og hvis vi hentede
+  // rå-strengen igen ville svaret og det vi rapporterer pege på to forskellige
+  // ting for det samme kald. Hop-værnet nedenfor dømmer `current` for hvert hop.
+  let currentUrl = target.href;
   let finalResponse = null;
   const MAX_HOPS = 15;
 
@@ -4392,7 +4409,10 @@ async function handleUrlInspect(request, url, env) {
   }
 
   const result = {
-    inspectUrl: targetUrlParam,
+    // Den adresse vi faktisk undersøgte — `target.href`, altså den parsede og
+    // normaliserede. Rå-strengen ville stå her for et kald på `example.com`, så
+    // et svar og det det svarer om ikke ville være det samme.
+    inspectUrl: target.href,
     finalUrl: finalResponse.url,
     totalRedirects: redirects.length,
     redirectChain: redirects,

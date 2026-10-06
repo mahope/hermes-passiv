@@ -1109,6 +1109,56 @@ ok('header-check afviser et redirect ind i en privat vært',
   r.status === 400 && /private network/i.test((await r.json().catch(() => ({}))).error || ''), r.status);
 ok('ingen af hop-hængene blev hentet', privFetches === privBefore, `${privFetches - privBefore} ude-fetch`);
 
+// ── Den skjulte indgangs på forsiden af tre domæner døde på det, den lovede ──
+// Målt 6/10 på live deskuptime.com: `GET /api/url-inspect?url=example.com`
+// svarer 400 `{"error":"Invalid URL"}`. Formularen på deskuptime.com,
+// mahope.tools og mahope.tools/da siger bogstaveligt «we add https:// if you
+// leave it out» — men den normalisering lå kun i one-off-check.js, så den løfte
+// holdt kun når JS indlæste. Formen er `method="get" action="/api/url-inspect"`
+// og skal virke uden JS, og API'et er åbent for enhver klient (CORS `*`), så det
+// skal svare på det samme input som den side der sender det. Forskellen lå også
+// i samme arbejdsområde: /api/compliance-site-check gør `raw.startsWith('http')
+// ? raw : 'https://' + raw` — to ruter på samme flade, to svar på samme URL.
+// Fire ting dømmes: 1) en bare vært er et gyldigt mål, 2) svaret fortæller
+// hvilken URL der faktisk blev undersøgt, 3) `//example.com` og mellemrum er
+// det samme input, 4) væernet holder — en bare vært må ikke blive en ny
+// SSRF-vej, fordi vi nu selv sætter skemaet på.
+r = await call('/api/url-inspect?url=' + encodeURIComponent('inspect.example'), ip(9));
+const bareBody = await r.json().catch(() => ({}));
+ok('url-inspect svarer på en bare vært, som de tre forsiders formular lover',
+  r.status === 200, r.status + ' ' + JSON.stringify(bareBody).slice(0, 120));
+ok('en bare vært undersøges med https:// foran, og svaret siger hvilken',
+  bareBody.inspectUrl === 'https://inspect.example/' && bareBody.finalUrl === 'https://inspect.example/',
+  JSON.stringify({ i: bareBody.inspectUrl, f: bareBody.finalUrl }));
+// Negativ kontrol: porten må ikke være grøn bare fordi den svarer 200 på alt.
+// Det samme kald skal stadig læse headere, ellers har vi gjort den til en
+// tydningstjeneste der intet tjekker.
+ok('den bare vært læser også headere — den er ikke bare et parse-godkend',
+  Array.isArray(bareBody.securityHeadersChecked) && bareBody.securityHeadersChecked.length === 8,
+  JSON.stringify(bareBody.securityHeadersChecked));
+// Samme input med mellemrum og `//` er den samme adresse. Uden dette svarer
+// ruten på ` //inspect.example` med Invalid URL igen — altså ville løftet
+// stadig være falsk for en læser der kopierer en URL med et mellemrum.
+r = await call('/api/url-inspect?url=' + encodeURIComponent('  //inspect.example/  '), ip(9));
+const looseBody = await r.json().catch(() => ({}));
+ok('mellemrum og // foran er det samme input som den bare vært',
+  r.status === 200 && looseBody.inspectUrl === 'https://inspect.example/',
+  r.status + ' ' + JSON.stringify(looseBody).slice(0, 120));
+// Værnet skal overleve at vi sætter skemaet på selv. Ellers er rettelsen en
+// SSRF-regression: `localhost` ville blive `https://localhost` og løbe forbi
+// `new URL()`-fejlen, så det er kun targetIsPublic der holder den nu — og det er
+// netop den port der skal afvise. Samme liste som ovenfor, altså ingen ny kode.
+for (const [target, why] of PRIVATE_TARGETS) {
+  const bare = target.replace(/^https?:\/\//, '');
+  r = await call('/api/url-inspect?url=' + encodeURIComponent(bare), ip(9));
+  ok(`url-inspect afviser ${why} også uden skema foran`, r.status === 400 && /cannot be inspected/i.test((await r.json().catch(() => ({}))).error || ''), `${bare} -> ${r.status}`);
+}
+// Et skema vi ikke gennemgår, skal stadig være et afvist skema — vi må ikke gøre
+// `ftp://x` til `https://ftp://x`.
+r = await call('/api/url-inspect?url=' + encodeURIComponent('ftp://inspect.example/'), ip(9));
+ok('et fremmed skema afvises stadig som ugyldig URL',
+  r.status === 400 && /invalid url/i.test((await r.json().catch(() => ({}))).error || ''), r.status);
+
 // En offentlig redirect skal stadig virke — ellers er porten grøn fordi den
 // afviser alt, hvilket er den anden fejlretning.
 r = await call('/api/url-inspect?url=' + encodeURIComponent('https://inspect.example/hop-ok'), ip(6));

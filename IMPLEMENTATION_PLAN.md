@@ -1,17 +1,29 @@
 # STATUS
-- **Nav-ruten «Tools» på deskuptime.com førte ingen steder hen.** 6/10: den pegede
-  på `../auditedwp`s egen forside, som linkede nul af de to værktøjer domænet
-  udgiver, havde egen canonical ved siden af forsiden og kaldte den betalte
-  desktop-app «free». Ruten er nu en rigtig kilde med de tre tjek, Pro-tabellen og
-  én købsknap. Ny port `check_tool_hub` dømmer det fremover og fandt en ægte
-  mangel mere: `/accessibility-statement-generator` lå uden indgang fra
-  `/free-tools`. Se feature-kø 18.
-- **CI:** seneste kørsel på `main` er **success**. Lokal gate grøn på
-  **179 steps**; de fire mission-gates kørt enkeltvis og grønne (build 0 brudte,
-  seo 316 sider 0 fund, stripe-worker 474/474, inline-js 0).
-- **Næste:** de åbne ❓. `PR-TJEK 6/10`: **0** åbne PR'er. `BRANCH-TJEK` ikke
-  kørt (uge-tjek). Planen er skåret fra 39 til 18 KB: lukkede opgaver og
-  DEPLOY-OK-historik ligger i `docs/plan-arkiv.md`.
+- **Den indgang tre domæner sælger på, døde på det den lovede.** 6/10 målt på
+  live `deskuptime.com`: `GET /api/url-inspect?url=example.com` svarer **400
+  «Invalid URL»**. Formularen på deskuptime.com, mahope.tools og /da siger
+  bogstaveligt «we add `https://` if you leave it out», men normaliseringen lå
+  kun i `one-off-check.js` — så løftet holdt kun når JS indlæste, mens formen er
+  `method="get"` og skal virke uden. Ruten er åben for enhver klient (CORS `*`),
+  og `/api/compliance-site-check` gjorde allerede det samme med to linjer, så tre
+  ruter på samme flade svarede på samme URL på tre måder. Nu normaliserer
+  workeren (trim + `//`), protokol-checken er der stadig, kæden starter på den
+  parsede adresse, og `inspectUrl` er den vi faktisk undersøgte.
+- **Målt først:** 9 forskellige input gennem workeren (ren, `//`, `EXAMPLE.COM`,
+  `example.com:8080` → 200 med samme `finalUrl`; `ftp:`, `javascript:`, `not a
+  url` → 400). 12 nye assertions, målt røde på den gamle kode (**475/486**) og
+  grønne på den nye (**486/486**). Fire mutationer hver for sig røde:
+  normaliseringen væk → 11 fund, protokol-checken væk → 1, kæden på rå-strengen
+  → 3, `inspectUrl` på rå-strengen → 1. SSRF-listen er **genbrugt** (ingen ny
+  kode), så de 7 private værter dømmes også i den blotte form — de var fejl i
+  *gamle* rækkefølge, fordi `127.0.0.1:8787` blev afvist som ugyldig URL
+  *før* `targetIsPublic` nåede at dømme det. Fuld gate **GRØN — 179 steps**;
+  `stripe-worker` 486/486, `seo_check` 316 sider 0 fund, `check_inline_js` 0.
+- **CI:** seneste kørsel på `main` er **success**. `PR-TJEK 6/10`: **0** åbne
+  PR'er. `BRANCH-TJEK` ikke kørt (uge-tjek).
+- **Næste:** de åbne ❓. `/api/header-check` og `/api/profile` har samme
+  skæve (ren vært → 400 målt live 6/10), men ingen af deres sider lover at skemaet
+  sættes på, så de er ikke brud på et løfte. Se feature-kø 19.
 
 
 
@@ -30,7 +42,8 @@ og `/da/blog/installer-clean-copy-obsidian` og kræv at linjen findes, at dens
 href er `/#price` hhv. `/da/#priser` — **ikke** et krydsdomæne — og at begge
 forsider stadig har hvert sit anker (`id="price"` på `/`, `id="priser"` på
 `/da/`). Tæll alle 17 med én `grep -c` over de byggede filer og kræv 8 + 9.
-ceo/pro-vej-i-guides 7/10 02:0x`
+ceo/pro-vej-i-guides 7/10 02:0x` — **DEPLOY OK 6/10:** alle fire hentede artikler
+har linjen (1 hver), `id="price"` 1 på `/` og `id="priser"` 1 på `/da/`.
 
 `VERIFICÉR DEPLOY: hver danske række på /da/pricing skal pege på en dansk
 købsside, så ingen læser lander i engelsk midt i betalingen — hent
@@ -41,7 +54,9 @@ hent hvert mål og kræv at ankeret findes: cleancopy.tools/da/ har 1 id="priser
 deskuptime.com/da/ har 1 id="pro", og begge sider har <html lang="da">. Samme krav på
 mahope.tools/pricing: de 12 rækker skal være uændrede på engelsk ceo/den-prisliste-koer-pa-engelsk 6/10 14:1x`
 — *(HTTP 200 beviser intet: den gamle kode svarer 200 på præcis de tre rækker
-dom 8 nu dømmer.)*
+dom 8 nu dømmer.)* — **DEPLOY OK 6/10:** `/da/pricing` har 2 + 1 + 0 + 0 som
+kravet, `/pricing` har uændrede 2 + 1, og begge mål har `lang="da"` med hvert
+sit anker.
 
 `VERIFICÉR DEPLOY: deskuptime.com/tools/ skal være den nye side og ikke auditedwps
 forside — hent den og kræv på **indhold**: «Three checks you can run right now»
@@ -52,7 +67,24 @@ og at den stadig står i `sitemap.xml`. Tjek desuden at de tre ankre den bruger
 findes på forsiden: `id="check"`, `id="compare"`, `id="install"` — alle tre må
 give **1** på live `deskuptime.com/`. Sidst: `mahope.tools/free-tools/` skal
 linke `/accessibility-statement-generator` **1** gang (den lå publiceret uden
-indgang). ceo/tools-side-med-de-tre-tjek 6/10 03:4x`
+indgang). ceo/tools-side-med-de-tre-tjek 6/10 03:4x` — **DEPLOY OK 6/10:**
+«Three checks…» 1, «Download for macOS» 0, begge værktøjslinks 1, Stripe-link
+1, de tre forside-ankre 1 hver, sitemap 1, og `/free-tools` linker
+`/accessibility-statement-generator` 1 gang. *(Min første hentning af
+`/free-tools/` gav 0 — jeg fulgte ikke 308'en til `/free-tools`. Min fejl, ikke
+et deploy-gap.)*
+
+`VERIFICÉR DEPLOY: GET /api/url-inspect skal svare 200 på en ren vært — det er
+den indgang deskuptime.com, mahope.tools og /da lover i ord («we add https:// if
+you leave it out»). Kræv på **indhold**: hent
+`https://deskuptime.com/api/url-inspect?url=example.com` og kræv 200 med
+`inspectUrl` = `https://example.com/` (med skråstreg) og et `finalUrl` på samme
+vært. Så kræv at det også holder for de skriftformer der lå ved siden af:
+`?url=//example.com` (URL-kodet) → 200 med samme `inspectUrl`, og
+`?url=169.254.169.254` → **400** med «cannot be inspected» i `error` — ikke
+«Invalid URL», for det var præcis den gamle kode, der afviste private værter som
+ugyldige URL'er. Slaget opførte sig sådan fordi `new URL()` kræver et skema.
+ceo/bare-vært-tjekkes 6/10 03:5x`
 
 ## Åbne opgaver
 
@@ -169,6 +201,18 @@ Prioriteret efter hvor tæt den er på penge. Baseline er målt på den **bygged
 side; tallene er ikke vores egen trafik. Alt det der er leveret (1–11) står i
 `docs/plan-arkiv.md`.
 
+19. **To åbne API'er svarer stadig 400 på det, deres egne sider skriver.** Hvem:
+    enhver der kalder `mahope.tools/api/header-check` eller `/api/profile` — 6/10
+    målt **live** til 400 «Invalid URL — must start with http:// or https://» på
+    `url=example.com`. Tal: ikke køb direkte, men troværdighed på den åbne
+    flade, `developers.html` dokumenterer begge med curl-linjer. Accept: samme
+    normalisering som i `/api/url-inspect` på alle tre ruter, så ét kald på
+    `example.com` giver ét svar. Datagrund: de to sider der bruger dem
+    normaliserer i JS, så bruden er usynlig i browseren — præcis derfor er
+    ingen opdaget den. **Ingen løftetekst på de to sider, så det er ikke et
+    brud på et løfte**; det er inkonsistensen på API-fladen. Ikke gjort i samme
+    iteration som rettelsen ovenfor: to ruter i én diff er to fejl at rulle til
+bage, og `/api/url-inspect` var den der lå på tre domæners forside.
 2. **`deskuptime.com`: 7 besøgende, 100 % bounce, 0 s opholdt tid.** Hvem:
    alle 7 på `/`. Tal: hvor mange køber. Accept: en forside der sælger uden
    at kræve scroll. Datagrund: **0 s** er ikke en lang læsning, det er en
