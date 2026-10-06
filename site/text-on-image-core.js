@@ -1109,6 +1109,60 @@
     function updateAll() { updateResult(); draw(); }
 
     $('file').addEventListener('change', function (e) { loadFile(e.target.files[0]); });
+
+    // **Et skærmbillede skal kunne komme ind uden først at gemmes som fil.**
+    // Et hero-billede ligger ofte i udklipsholderen eller på skrivebordet, og
+    // filvælgeren var den eneste vej ind. Både drop på lærredet og Ctrl+V/⌘V
+    // kalder præcis samme `loadFile()`, så målingen er den samme uanset hvordan
+    // billedet kom ind — ingen ny målevej, kun en ny indgang.
+    // Drop rammer lærredet, som fylder hele rammen. Markeringen sættes på
+    // rammen (`parentNode`) når den findes, så den stiplede kant lyser op.
+    var dropZone = cv.parentNode || cv;
+    function harFiler(dt) {
+      if (!dt || !dt.types) return false;
+      for (var i = 0; i < dt.types.length; i++) if (dt.types[i] === 'Files') return true;
+      return false;
+    }
+    function visDrop(paa) {
+      if (dropZone.classList) {
+        if (paa) dropZone.classList.add('ti-dragover');
+        else dropZone.classList.remove('ti-dragover');
+      }
+    }
+    cv.addEventListener('dragover', function (e) {
+      if (!harFiler(e.dataTransfer)) return;
+      e.preventDefault();
+      if (e.dataTransfer) e.dataTransfer.dropEffect = 'copy';
+      visDrop(true);
+    });
+    cv.addEventListener('dragleave', function () { visDrop(false); });
+    cv.addEventListener('drop', function (e) {
+      var dt = e.dataTransfer;
+      if (!dt) return;
+      visDrop(false);
+      // Et slip på lærredet opsluges altid, så et link eller en tekstbid der
+      // rammer ved siden af ikke sender læseren væk fra siden.
+      e.preventDefault();
+      var f = dt.files && dt.files[0];
+      if (f) loadFile(f);
+    });
+    // Indsæt virker på hele siden, fordi udklipsholderen ikke har noget med
+    // lærredet at gøre. Kun når der faktisk ligger et billede i den: tekst i et
+    // felt skal fortsat kunne indsættes normalt.
+    if (global.document && global.document.addEventListener) {
+      global.document.addEventListener('paste', function (e) {
+        var items = e.clipboardData && e.clipboardData.items;
+        if (!items) return;
+        for (var i = 0; i < items.length; i++) {
+          if (items[i].kind === 'file' && /^image\//.test(items[i].type)) {
+            var f = items[i].getAsFile();
+            if (f) { loadFile(f); if (e.preventDefault) e.preventDefault(); }
+            return;
+          }
+        }
+      });
+    }
+
     $('text').addEventListener('input', updateAll);
     // Egen farvevalg = bruterens beslutning. Kernels rettelse gælder kun
     // indtil da, så en beskrivelse af den skal ikke blive stående under et tal

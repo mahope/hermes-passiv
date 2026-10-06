@@ -2057,6 +2057,55 @@ function mutated(path, from, to) {
 }
 
 // --------------------------------------------------------------------------
+// 17. Billedet skulle først gemmes som fil for at kunne tjekkes.
+//     `/blog/text-on-image-contrast-check` er mahope.tools' største indgang
+//     (9 besøgende), og et hero-billede ligger ofte i udklipsholderen eller på
+//     skrivebordet. Filvælgeren var den eneste vej ind, så den mest naturlige
+//     handling — at trække billedet ind på lærredet eller indsætte det — gjorde
+//     ingenting. Nu kalder drop og Ctrl+V præcis samme `loadFile()`, altså
+//     samme måling uanset hvordan billedet kom ind.
+//
+//     Dommen er falsifiable på den gamle kode: lytteren findes ikke, så et drop
+//     ville ikke blive målt, og `_ls.drop` er `undefined`.
+// --------------------------------------------------------------------------
+{
+  const KERNE = 'site/text-on-image-core.js';
+  const SIDER = [
+    { side: 'site/text-on-image-checker.html', cv: 'cv', sprog: 'EN' },
+    { side: 'site/text-on-image-checker-da.html', cv: 'cv', sprog: 'DA' },
+    { side: 'site/blog/text-on-image-contrast-check.html', cv: 'art-cv', sprog: 'EN' },
+    { side: 'site/da/blog/tekst-paa-billede-kontrasttjek.html', cv: 'art-cv', sprog: 'DA' },
+  ];
+  for (const t of SIDER) {
+    const { nodes, st } = loadPage(t.side, responses([OK_SCAN]).fetchImpl,
+      { match: /TiContrast\.mount/, canvas: true, levendeBilleder: true, preload: [KERNE] });
+    await sleep(20);
+    const cv = nodes.get(t.cv);
+    ok(`${t.sprog} (${t.side}): lærredet har en drop-lytter`,
+      cv && cv._ls && Array.isArray(cv._ls.drop) && cv._ls.drop.length > 0,
+      'intet drop på lærredet');
+    if (!cv || !cv._ls || !Array.isArray(cv._ls.drop) || !cv._ls.drop.length) continue;
+    // Markeringen tændes på dragover og slukkes igen på drop.
+    cv.fire('dragover', { dataTransfer: { types: ['Files'], files: [] }, preventDefault() {} });
+    ok(`${t.sprog} (${t.side}): dragover markerer lærredet`,
+      cv.classList.contains('ti-dragover'), 'ingen markering under et træk');
+    const foer = st.draws || 0;
+    let kastede = null;
+    try {
+      cv.fire('drop', { dataTransfer: { types: ['Files'], files: [{ type: 'image/png' }] }, preventDefault() {} });
+    } catch (e) { kastede = e; }
+    ok(`${t.sprog} (${t.side}): et dropped billede bliver målt`,
+      !kastede && (st.draws || 0) > foer, kastede ? String(kastede) : `draws ${foer} → ${st.draws}`);
+    ok(`${t.sprog} (${t.side}): markeringen slukkes efter drop`,
+      !cv.classList.contains('ti-dragover'), 'markeringen blev hængende');
+    // Den synlige vej ind skal stå i teksten på siden.
+    const src = readFileSync(join(root, t.side), 'utf8');
+    ok(`${t.sprog} (${t.side}): teksten fortæller at man kan slippe eller indsætte`,
+      /(drop an image|slip en billedfil)/i.test(src), 'ingen synlig vejledning');
+  }
+}
+
+// --------------------------------------------------------------------------
 // 16. Værktøjet sagde «try a darker colour» og lod læseren regne det ud.
 //     Samme trafikgrund som sektion 15: `/blog/text-on-image-contrast-check` er
 //     mahope.tools' største indgangsside (8 af 18 besøgende, 100 % bounce), og

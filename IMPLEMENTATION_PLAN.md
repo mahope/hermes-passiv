@@ -21,6 +21,9 @@
 - **Næste:** `/api/results` og `/api/conversion` kan igen bruges som baseline,
   så de næste to opgaver kan prioriteres på **hvad brugerne gør** frem for på
   nul. `/api/stats` (beløb og licenser) er stadig 401 og kræver `STATS_TOKEN`.
+- **6/10:** kontrastværktøjet tager nu imod et billede der trækkes ind på
+  lærredet eller indsættes med Ctrl+V/⌘V — den mest naturlige vej ind for et
+  hero-billede. Se feature-kø 20.
 
 ## Åbne review-fund
 
@@ -28,7 +31,9 @@ Ingen. Alle tre lukket 6/10 — teksten står i `docs/plan-arkiv.md`.
 
 ## Verificér deploy
 
-Ingen åbne noter. `pro-kortet på de fire scanneresider` er **DEPLOY OK 6/10**:
+- **VERIFICÉR DEPLOY:** billede-drop-og-indsæt i kontrastværktøjet
+  `ceo/billede-drop-og-indsaet` 6/10 (se feature-kø 20).
+- `pro-kortet på de fire scanneresider` er **DEPLOY OK 6/10**:
 alle fire sider bærer `compliance-report#url=` i den udgivne markup
 (`/scan`, `/scan-da`, `/compliance-site-check`, `/da/compliance-site-check` —
 den danske scan-rute hedder `/scan-da`, **ikke** `/da/scan`, som den gamle note
@@ -150,6 +155,18 @@ er væk på alle fire, og `#url=`-vejen er fulgt i Chromium mod live: feltet bli
 Prioriteret efter hvor tæt den er på penge. Baseline er målt på den **byggede**
 side; tallene er ikke vores egen trafik. Alt det der er leveret (1–11) står i
 `docs/plan-arkiv.md`.
+
+20. ~~**Et hero-billede skulle først gemmes som fil for at kunne tjekkes.**~~
+    **LEVERET 6/10**, `ceo/billede-drop-og-indsaet`.** Filvælgeren var den
+    eneste vej ind i kontrastværktøjet, så den mest naturlige handling — at
+    trække skærmbilledet ind på lærredet eller indsætte det med Ctrl+V/⌘V —
+    gjorde ingenting. Nu kalder drop og indsæt præcis samme `loadFile()` som
+    filvælgeren, så målingen er den samme uanset vejen ind; markeringen under et
+    træk bruger husets egen accent. Datagrund: `/blog/text-on-image-contrast-check`
+    er mahope.tools' største indgang (9 besøgende) og `/text-on-image-checker`
+    den mest brugte værktøjsside. Dommen i `scan-clients` måler at et dropped
+    billede bliver målt på alle fire sider (EN/DA værktøj + artikel) og er målt
+    **rød på den gamle kode** (573/577 → 593/593). Fuld gate **GRØN — 180 steps**.
 
 19. ~~**To åbne API'er svarer stadig 400 på det, deres egne sider skriver.**~~
     **LEVERET 6/10**, `ceo/et-url-regel-pa-alle-ruter`.** Ikke to ruter: seks.
