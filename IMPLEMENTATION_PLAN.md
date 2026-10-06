@@ -22,6 +22,7 @@
 - **Ingen side er nede:** crawl af alle 262 sitemap-URL'er på mahope.tools 6/10
   gav **262/262 HTTP 200** med indhold. `/api/license/validate` svarer 404 på en
   ukendt nøgle og 400 på en ugyldig — begge med den tekst siden siger.
+- **CEO-kø punkt 0 er lukket: `/api/url-inspect` fungerer med env, SSRF-værn, 429 endelig, AI-retries ved 502 begrænset, og thanks.html skelner 202 korrekt.** Målt 6/10 på live: endpointet svarer korrekt på alle tests. Commit `26440a1c`.
 - **CI:** seneste kørsel på `main` er **success**. `PR-TJEK 6/10`: **0** åbne
   PR'er. **Næste:** feature-kø B–D. Målt 6/10 er `/api/results` og
   `/api/conversion` begge **0** for 7 dage, mens `served_scans_lifetime` er 51 —
