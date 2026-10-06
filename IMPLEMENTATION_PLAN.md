@@ -1,4 +1,5 @@
 # STATUS
+- **Tak-siden rettet: 202 (ikke bekræftet) + 429 viser nu «betaling ikke bekræftet» i stedet for «betaling gennemført».** Målt 6/10 på live: `thanks.html` skelner nu de to slutninger. Commit `b772a466`.
 - **Seks åbne ruter med en kaldersstyret URL svarede tre forskellige ting på den
   samme adresse.** Målt 6/10 på live: `?url=example.com` gav 400 «Invalid URL»
   på `/api/header-check` og `/api/profile`, 200 på `/api/url-inspect`, en
