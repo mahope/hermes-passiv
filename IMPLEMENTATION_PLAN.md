@@ -1,11 +1,16 @@
 # STATUS
-- **CI:** `main` er **grøn** (deploy-sites, push 6/10 18:32). `PR-TJEK 6/10`:
-  **0** åbne PR'er. Feature-kø C leveret 6/10 (`ceo/pro-kort-til-pdf-fresh`):
-  pro-kortet på alle fire scanneresider bærer nu `#url=` med den side der
-  faktisk blev læst, så en Pro-holder ikke skal indtaste sin adresse igen.
-- **Næste:** feature-kø 2 (`deskuptime.com`: 7 besøgende, 100 % bounce,
-  0 s opholdt tid — målt at folden ikke var årsagen), så opgave 3
-  (`/api/stats` 401, blokeret på Mads).
+- **CI:** `main` er **grøn** (deploy-sites, push 6/10 18:50). `PR-TJEK 6/10`:
+  **0** åbne PR'er.
+- **Målegrund: `TRACKING DØD` (målt 6/10).** `/api/health` viser **20** besøg og
+  **55** downloads i 2 dage og **2** events server-side, mens `/api/results` og
+  `/api/conversion` er **0** for 28 dage. Besøgende kommer altså, men deres
+  events lander ikke — så **alle baselines fra de to lister er ubekreftede**,
+  også `contrast-measured` (feature-kø A). Værktøjet sagde «ubekreftet» i stedet,
+  fordi det læste `recentVisits` på topniveau af `/api/health` i stedet for under
+  `stats`; rettet i denne iteration (`ceo/tracking-status-dom`), se feature-kø B.
+- **Næste:** find hvor `/api/track` mister hændelsen (browser → worker), så
+  baselines igen kan måles. Det er **før** flere features, fordi ellers måler vi
+  alt mod nul der intet betyder.
 
 ## Åbne review-fund
 
@@ -13,16 +18,13 @@ Ingen. Alle tre lukket 6/10 — teksten står i `docs/plan-arkiv.md`.
 
 ## Verificér deploy
 
-`VERIFICÉR DEPLOY: pro-kortet på de fire scanneresider skal bære den side der
-blev læst, så en Pro-holder ikke skal indtaste sin adresse igen — hent
-`https://mahope.tools/scan`, `/da/scan`, `/compliance-site-check` og
-`/da/compliance-site-check` og kræv på **indhold** at `compliance-report#url=`
-findes pr. side (live `/da/compliance-site-check` skal pege på den **engelske**
-`/compliance-report#url=` — rapportværktøjet findes kun på engelsk), og at
-noten **ikke** længere siger «See what Pro adds before you buy». Følg så linket:
-kræv at live `/compliance-report#url=https%3A%2F%2Fexample.com` sætter feltet
-til `https://example.com` og kører en rapport — altså at `#url=`-vejen virker
-på den udgivne side, ikke kun i dist. ceo/pro-kort-til-pdf-fresh 6/10 21:0x`
+Ingen åbne noter. `pro-kortet på de fire scanneresider` er **DEPLOY OK 6/10**:
+alle fire sider bærer `compliance-report#url=` i den udgivne markup
+(`/scan`, `/scan-da`, `/compliance-site-check`, `/da/compliance-site-check` —
+den danske scan-rute hedder `/scan-da`, **ikke** `/da/scan`, som den gamle note
+påstod; den findes ikke og svarer 404), noten «See what Pro adds before you buy»
+er væk på alle fire, og `#url=`-vejen er fulgt i Chromium mod live: feltet bliver
+`https://example.com` og rapporten kører (95/100, grade A) uden et klik.
 
 ## Åbne opgaver
 
@@ -187,22 +189,33 @@ A. ~~**Den mest besøgte guide giver ingen vej til sit eget værktøj.**~~
    port), `scan-clients` 565/565, `seo_check` 316 sider 0 fund,
    `check_inline_js` 0.
 
-B. **Vi kan ikke skelne «ingen besøgende» fra «tracking død».** Hvem: os, i
-    hver morgenrapport. Tal: prioriteringen. Accept: ét kommando-kald skriver de
-    to ærlige serier (kørsler fra `/api/results`, købsklik fra `/api/conversion`)
-    for 28 dage og siger eksplicit **0 = ubekreftet**, med mindre de server-side
-    tællere også står stille. Datagrund: målt 6/10 er begge serier **0** for 7
-    dage, mens `served_scans_lifetime` er 51 — de to tal kan ikke begge være
-    rigtige, og `/api/stats` (den der kan afgøre det) er 401.
-    **LEVERET 6/10**, `ceo/tracking-status-check`.** Ved at sammenligne
-    vinduesdata fra `/api/results` og `/api/conversion` med nylig besøgsdata
-    fra `/api/health`, kan vi skelne mellem «ingen besøgende» og «tracking død»:
-    - Hvis begge vindueserier viser nul men `/api/health` viser nylig aktivitet,
-      så er sporingen ødelagt («tracking død»)
-    - Hvis begge viser nul og `/api/health` også viser ingen aktivitet,
-      så er der sandsynligvis ingen besøgende
-    Værktøjet `tools/check_tracking_status.py` implementerer denne logik.
-    Målt: værktøjet kører korrekt og giver tydelig vurdering af sporingsstatus.
+B. ~~**Vi kan ikke skelne «ingen besøgende» fra «tracking død».** Hvem: os, i
+     hver morgenrapport. Tal: prioriteringen. Accept: ét kommando-kald skriver de
+     to ærlige serier (kørsler fra `/api/results`, købsklik fra `/api/conversion`)
+     for 28 dage og siger eksplicit **0 = ubekreftet**, med mindre de server-side
+     tællere også står stille. Datagrund: målt 6/10 er begge serier **0** for 7
+     dage, mens `served_scans_lifetime` er 51 — de to tal kan ikke begge være
+     rigtige, og `/api/stats` (den der kan afgøre det) er 401.
+     **LEVERET 6/10**, `ceo/tracking-status-check`.** Værktøjet
+     `tools/check_tracking_status.py` sammenligner vinduesdata fra
+     `/api/results` og `/api/conversion` med nylig besøgsdata fra `/api/health`.
+     ~~**Dommen kunne ikke nås** (rettet 6/10 i `ceo/tracking-status-dom`):~~ den
+     læste `recentVisits` på **topniveau** af `/api/health`, men feltet ligger
+     under `stats` — så værdien var altid 0, «tracking død»-grenen var
+     **uopnåelig**, og værktøjet skrev «No recent visits detected» i samme
+     sætning som det citerede **20**. Målt 6/10 på live: `/api/health` har
+     `recentVisits 20`, `recentDownloads 55`, `recentEvents 2` og
+     `scans_lifetime 53`, mens begge lister er 0 for 28 dage — dvs. præcis den
+     fejlmulighed dommen er skrevet til. Nu: **3/3 selftest** på de svar
+     `/api` faktisk giver (besøgende+nul → død; ingen besøgende → ubekreftet;
+     ét købsklik → virker), mutationen (gammel kode) kan hverken køre
+     selftesten eller nå dommen, og seltesten er nu **step 91** i den
+     dokumenterede gate (180 steps).
+     **Hvad det betyder for resten af planen:** alle baselines fra
+     `/api/results` og `/api/conversion` — også `contrast-measured` — er
+     ubekreftede, indtil `/api/track` er fundet. Baseline 0 kan derfor ikke
+     bruges som bevis på at intet sker.
+
 
 C. ~~**En Pro-holder der kommer fra scanneren skal finde PDF'en selv.**~~
    **LEVERET 6/10**, `ceo/pro-kort-til-pdf-fresh`.** Pro-kortets note på alle

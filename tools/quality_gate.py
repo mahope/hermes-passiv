@@ -589,6 +589,15 @@ STEPS: tuple[Step, ...] = (
         argv=("python3", "tools/check_storage_claims.py", "--self-test"),
         inputs=("tools/check_storage_claims.py", "site/_worker.js", "site/**"),
     ),
+    # `/api/health` lægger `recentVisits` under `stats`, så værktøjet fra 6/10
+    # læste den på topniveau og nåede aldrig «tracking død»-dommen — den kunne
+    # ikke sige det den var bygget til. Selftesten dømmer alle tre domme på de
+    # svar `/api` faktisk giver, så den fejlform kan ikke komme tilbage.
+    Step(
+        id="tracking-status-selftest",
+        argv=("python3", "tools/check_tracking_status.py", "--self-test"),
+        inputs=("tools/check_tracking_status.py",),
+    ),
     # Løfter i FAQ-*generatorer* (30/9). `storage-claims` dømmer publicerede
     # sider ved at læse deres egne `fetch`-kald, og siger selv i docstringen at
     # en side som *beskriver* et værktøj uden at kalde det ikke kan dømmes.
