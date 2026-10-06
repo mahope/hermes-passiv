@@ -8866,3 +8866,11 @@ også med sit eget `<html lang>`. Live `deskuptime.com/tools/` har **1**
 `buy.stripe.com/7sY9AS9eX3Iu418fJ5bMQ01` og **1** `Payment through Stripe`.
 *(De to danske krydsdomæneankere var ikke i den gamle notes krav; de er målt her,
 fordi dom 8s rettelse peger på dem.)*
+
+## Arkiv-notat
+
+6/10 `ceo/et-url-regel-pa-alle-ruter` (se feature-kø 19): de fire ruter med en
+kaldersstyret URL deler nu `parseTargetUrl()`. 25 nye assertions i
+`tests/stripe-worker.test.mjs`, 22 målt røde på den gamle kode (489/511) og
+511/511 på den nye. Adgangskontrol urørt: `targetIsPublic()` kaldes stadig pr.
+rute og pr. hop. Deploy-note med fire kald mod live står i planen.

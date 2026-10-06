@@ -1170,6 +1170,97 @@ const hOk = await r.json().catch(() => ({}));
 ok('header-check følger en offentlig redirect og melder den',
   r.status === 200 && hOk.redirected === true && hOk.finalUrl === 'https://headers.example/final', r.status + ' ' + JSON.stringify(hOk).slice(0, 120));
 
+// ── Ét kald på én adresse skal give ét svar, uanset hvilken rute der kaldes ──
+// Målt 6/10 på live mahope.tools: `?url=example.com` var 400 «Invalid URL» på
+// /api/header-check og /api/profile, 200 på /api/url-inspect og en fuld rapport
+// på /api/compliance-scan — fire ruter, to normaliseringer, tre svar på samme
+// streng. Alle fire er åbne med CORS `*`, og `developers.html` uddeler curl-linjer
+// til de to af dem, så det er et dokumenteret API og ikke en side. Dommen er
+// derfor den brede: samme vært ind i fire ruter, samme status og samme adresse ud.
+// Negativ kontrol på hver rute: svaret skal stadig indeholde det ruten er til for
+// (headere læst, titel læst, rapport læst), ellers er porten grøn fordi den
+// afviser alt — den anden fejlretning.
+const sammeVært = [];
+for (const [rute, adresse, mål] of [
+  ['/api/url-inspect', 'headers.example', (b) => b.inspectUrl],
+  ['/api/header-check', 'headers.example', (b) => b.finalUrl],
+  ['/api/profile', 'headers.example', (b) => b.final_url],
+]) {
+  r = await call(rute + '?url=' + encodeURIComponent(adresse), ip(31));
+  const krop = await r.json().catch(() => ({}));
+  sammeVært.push([rute, r.status, mål(krop)]);
+  ok(`${rute} svarer på en bare vært, som de andre tre ruter gør`,
+    r.status === 200 && mål(krop) === 'https://headers.example/',
+    `${r.status} ${mål(krop)} ${JSON.stringify(krop).slice(0, 100)}`);
+}
+r = await call('/api/compliance-scan?url=' + encodeURIComponent('HTTPS://scan.example'), ip(35));
+const upper = await r.json().catch(() => ({}));
+sammeVært.push(['/api/compliance-scan', r.status, upper.scanned_url]);
+ok('compliance-scan læser et skema der er skrevet med versaler, som de andre gør',
+  r.status === 200 && upper.scanned_url === 'https://scan.example/',
+  `${r.status} ${upper.scanned_url}`);
+ok('alle fire ruter svarer 200 på den samme vært — ét input, ét svar',
+  sammeVært.length === 4 && sammeVært.every(([, status]) => status === 200),
+  JSON.stringify(sammeVært));
+
+// De to sidste ruter med en kaldersstyret URL, så «én regel» er målt på alle
+// seks. Især på den betalte: en 400 på `example.com` i /api/report er en kunde
+// der har betalt $79 og ikke får sin rapport, fordi han skrev vært i stedet for
+// adresse — mens den gratis scanner på samme streng svarer.
+r = await call('/scan-proxy?url=' + encodeURIComponent('scan.example'), ip(31));
+const spBare = await r.json().catch(() => ({}));
+ok('scan-proxy læser en bare vært, som de fem andre ruter gør',
+  r.status === 200 && spBare.ok === true, `${r.status} ${JSON.stringify(spBare).slice(0, 100)}`);
+r = await rep({ license_key: euKey, device_id: 'pro-dev', url: 'scan.example' });
+const repBare = await r.json().catch(() => ({}));
+ok('den betalte rapport læser en bare vært — betalt er ikke det samme som strengere',
+  r.status === 200 && repBare.ok === true && (repBare.findings || []).length > 0,
+  `${r.status} ${JSON.stringify(repBare).slice(0, 100)}`);
+r = await rep({ license_key: euKey, device_id: 'pro-dev', url: 'ftp://scan.example/' });
+ok('den betalte rapport afviser et fremmed skema stadig som ugyldig URL',
+  r.status === 400 && /invalid url/i.test((await r.json().catch(() => ({}))).error || ''), r.status);
+
+// Samme input med mellemrum og `//` foran, som på url-inspect: det er den
+// form en læser får fra et udklip, og den må ikke være en 400 på tre ruter.
+for (const rute of ['/api/header-check', '/api/profile']) {
+  r = await call(rute + '?url=' + encodeURIComponent('  //headers.example/  '), ip(31));
+  const krop = await r.json().catch(() => ({}));
+  const læst = rute === '/api/header-check' ? krop.finalUrl : krop.final_url;
+  ok(`${rute} læser ' //vært/ ' som det samme mål som den bare vært`,
+    r.status === 200 && læst === 'https://headers.example/', `${r.status} ${JSON.stringify(krop).slice(0, 100)}`);
+}
+// Negativ kontrol: de to ruter skal stadig gøre deres eget arbejde, så et 200
+// med en tom krop ikke kan stå for «den læste siden».
+r = await call('/api/header-check?url=' + encodeURIComponent('headers.example'), ip(31));
+const hBare = await r.json().catch(() => ({}));
+ok('header-check læser også headere på den bare vært, ikke bare et parse-godkend',
+  hBare.status === 200 && hBare.headers && hBare.headers['x-content-type-options'] === 'nosniff',
+  JSON.stringify(hBare.headers || {}).slice(0, 120));
+r = await call('/api/profile?url=' + encodeURIComponent('headers.example'), ip(31));
+const pBare = await r.json().catch(() => ({}));
+ok('profile læser også titlen på den bare vært, ikke bare et parse-godkend',
+  pBare.status === 200 && pBare.title === 'H' && pBare.score > 0,
+  `${pBare.status} title=${JSON.stringify(pBare.title)} score=${pBare.score}`);
+// Værnet skal overleve at vi sætter skemaet på selv — ellers er rettelsen en
+// SSRF-regression på to ruter til. Samme liste som øverst, altså ingen ny kode:
+// `localhost` ville blive `https://localhost` og løbe forbi `new URL()`-fejlen.
+for (const [rute, forbudt] of [['/api/header-check', /cannot be checked/i], ['/api/profile', /cannot be profiled/i]]) {
+  for (const [target, why] of PRIVATE_TARGETS) {
+    const bare = target.replace(/^https?:\/\//, '');
+    r = await call(rute + '?url=' + encodeURIComponent(bare), ip(31));
+    ok(`${rute} afviser ${why} også uden skema foran`,
+      r.status === 400 && forbudt.test((await r.json().catch(() => ({}))).error || ''), `${bare} -> ${r.status}`);
+  }
+}
+// Og et fremmed skema skal stadig være et afvist skema på de to nye ruter — vi må
+// ikke gøre `ftp://x` til `https://ftp://x`, som `startsWith('http')`-reglen
+// gjorde for compliance-scan.
+for (const rute of ['/api/header-check', '/api/profile']) {
+  r = await call(rute + '?url=' + encodeURIComponent('ftp://headers.example/'), ip(31));
+  ok(`${rute} afviser et fremmed skema stadig som ugyldig URL`,
+    r.status === 400 && /invalid url/i.test((await r.json().catch(() => ({}))).error || ''), r.status);
+}
+
 // Timegrænsen skal stadig virke på den nye rute — den var den linje der faldt.
 for (let i = 0; i < 80; i++) await call('/api/url-inspect?url=' + encodeURIComponent('https://inspect.example/'), ip(7));
 r = await call('/api/url-inspect?url=' + encodeURIComponent('https://inspect.example/'), ip(7));

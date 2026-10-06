@@ -1,31 +1,29 @@
 # STATUS
-- **Den indgang tre domæner sælger på, døde på det den lovede.** 6/10 målt på
-  live `deskuptime.com`: `GET /api/url-inspect?url=example.com` svarer **400
-  «Invalid URL»**. Formularen på deskuptime.com, mahope.tools og /da siger
-  bogstaveligt «we add `https://` if you leave it out», men normaliseringen lå
-  kun i `one-off-check.js` — så løftet holdt kun når JS indlæste, mens formen er
-  `method="get"` og skal virke uden. Ruten er åben for enhver klient (CORS `*`),
-  og `/api/compliance-site-check` gjorde allerede det samme med to linjer, så tre
-  ruter på samme flade svarede på samme URL på tre måder. Nu normaliserer
-  workeren (trim + `//`), protokol-checken er der stadig, kæden starter på den
-  parsede adresse, og `inspectUrl` er den vi faktisk undersøgte.
-- **Målt først:** 9 forskellige input gennem workeren (ren, `//`, `EXAMPLE.COM`,
-  `example.com:8080` → 200 med samme `finalUrl`; `ftp:`, `javascript:`, `not a
-  url` → 400). 12 nye assertions, målt røde på den gamle kode (**475/486**) og
-  grønne på den nye (**486/486**). Fire mutationer hver for sig røde:
-  normaliseringen væk → 11 fund, protokol-checken væk → 1, kæden på rå-strengen
-  → 3, `inspectUrl` på rå-strengen → 1. SSRF-listen er **genbrugt** (ingen ny
-  kode), så de 7 private værter dømmes også i den blotte form — de var fejl i
-  *gamle* rækkefølge, fordi `127.0.0.1:8787` blev afvist som ugyldig URL
-  *før* `targetIsPublic` nåede at dømme det. Fuld gate **GRØN — 179 steps**;
-  `stripe-worker` 486/486, `seo_check` 316 sider 0 fund, `check_inline_js` 0.
+- **Seks åbne ruter med en kaldersstyret URL svarede tre forskellige ting på den
+  samme adresse.** Målt 6/10 på live: `?url=example.com` gav 400 «Invalid URL»
+  på `/api/header-check` og `/api/profile`, 200 på `/api/url-inspect`, en
+  rapport på `/api/compliance-scan` og på den betalte `/api/report` — sidste kun
+  fordi den havde sin egen regel. Alle er åbne med CORS `*`, og `developers.html`
+  uddeler curl-linjer til to af dem. Nu **én** regel (`parseTargetUrl`) i alle
+  seks; `//vært` og mellemrum er det samme input, et fremmed skema er afvist.
+- **Målt:** 28 nye assertions, **24 røde på den gamle kode** (490/514) og alle
+  grønne på den nye (**514/514**). De 24 var de to ruters bare vært (400), deres
+  14 private værter (afvist som *ugyldig URL* i stedet for som `cannot be
+  checked/profiled` — altså et værnt der holdt af en fejl forklaring), deres
+  `//`-form og `ftp:`, `compliance-scan` med `HTTPS://` (502, fordi den gamle
+  regel `startsWith('http')` er store/små-følsom), `/scan-proxy` med en bare
+  vært og den betalte rapport med `example.com`. Negativ kontrol pr. rute:
+  header-check læser headere, profile læser titlen, rapporten har fund — ingen
+  af dem er grønne ved at afvise alt. Fuld gate **GRØN — 179 steps**;
+  `stripe-worker` 514/514, `seo_check` 316 sider 0 fund, `check_inline_js` 1316
+  blokke 0.
+- **Ingen side er nede:** crawl af alle 262 sitemap-URL'er på mahope.tools 6/10
+  gav **262/262 HTTP 200** med indhold. `/api/license/validate` svarer 404 på en
+  ukendt nøgle og 400 på en ugyldig — begge med den tekst siden siger.
 - **CI:** seneste kørsel på `main` er **success**. `PR-TJEK 6/10`: **0** åbne
-  PR'er. `BRANCH-TJEK` ikke kørt (uge-tjek).
-- **Næste:** de åbne ❓. `/api/header-check` og `/api/profile` har samme
-  skæve (ren vært → 400 målt live 6/10), men ingen af deres sider lover at skemaet
-  sættes på, så de er ikke brud på et løfte. Se feature-kø 19.
-
-
+  PR'er. **Næste:** feature-kø A–D. Målt 6/10 er `/api/results` og
+  `/api/conversion` begge **0** for 7 dage, mens `served_scans_lifetime` er 51 —
+  så vi ved ikke endnu om det er «ingen besøgende» eller «tracking død».
 
 ## Åbne review-fund
 
@@ -84,7 +82,22 @@ vært. Så kræv at det også holder for de skriftformer der lå ved siden af:
 `?url=169.254.169.254` → **400** med «cannot be inspected» i `error` — ikke
 «Invalid URL», for det var præcis den gamle kode, der afviste private værter som
 ugyldige URL'er. Slaget opførte sig sådan fordi `new URL()` kræver et skema.
-ceo/bare-vært-tjekkes 6/10 03:5x`
+ceo/bare-vært-tjekkes 6/10 03:5x` — **DEPLOY OK 6/10:** live deskuptime.com
+svarer 200 med `inspectUrl` og `finalUrl` begge `https://example.com/`, og
+`?url=169.254.169.254` svarer **400** med «That host cannot be inspected».
+
+`VERIFICÉR DEPLOY: de fire åbne ruter skal svare det samme på den samme adresse —
+kræv på **indhold**, fire kald mod live mahope.tools og alle med `?url=` på en
+ren vært: `/api/url-inspect` → 200 med `inspectUrl` `https://example.com/`,
+`/api/header-check` → 200 med `finalUrl` `https://example.com/` **og**
+`headers.x-content-type-options`, `/api/profile` → 200 med `final_url`
+`https://example.com/` og `title` = «Example Domain», `/api/compliance-scan` →
+200 med `scanned_url` `https://example.com/`. Så kræv at værnet holder på de to
+nye: `header-check` og `profile` med `?url=169.254.169.254` → begge **400** med
+«cannot be checked» hhv. «cannot be profiled» i `error` — ikke «Invalid URL»,
+for det er præcis den gamle kode, der afviste private værter som ugyldige
+URL'er. `/api/compliance-scan` med `?url=HTTPS://example.com` (versal-skema) →
+**200**. ceo/et-url-regel-pa-alle-ruter 6/10 05:1x`
 
 ## Åbne opgaver
 
@@ -201,18 +214,47 @@ Prioriteret efter hvor tæt den er på penge. Baseline er målt på den **bygged
 side; tallene er ikke vores egen trafik. Alt det der er leveret (1–11) står i
 `docs/plan-arkiv.md`.
 
-19. **To åbne API'er svarer stadig 400 på det, deres egne sider skriver.** Hvem:
-    enhver der kalder `mahope.tools/api/header-check` eller `/api/profile` — 6/10
-    målt **live** til 400 «Invalid URL — must start with http:// or https://» på
-    `url=example.com`. Tal: ikke køb direkte, men troværdighed på den åbne
-    flade, `developers.html` dokumenterer begge med curl-linjer. Accept: samme
-    normalisering som i `/api/url-inspect` på alle tre ruter, så ét kald på
-    `example.com` giver ét svar. Datagrund: de to sider der bruger dem
-    normaliserer i JS, så bruden er usynlig i browseren — præcis derfor er
-    ingen opdaget den. **Ingen løftetekst på de to sider, så det er ikke et
-    brud på et løfte**; det er inkonsistensen på API-fladen. Ikke gjort i samme
-    iteration som rettelsen ovenfor: to ruter i én diff er to fejl at rulle til
-bage, og `/api/url-inspect` var den der lå på tre domæners forside.
+19. ~~**To åbne API'er svarer stadig 400 på det, deres egne sider skriver.**~~
+    **LEVERET 6/10**, `ceo/et-url-regel-pa-alle-ruter`.** Ikke to ruter: seks.
+    `/api/compliance-scan`, `/scan-proxy` og den betalte `/api/report` havde hver
+    deres egen regel, så det var seks ruter på fladen og tre normaliseringer —
+    målt **live** 6/10 før rettelsen. Nu én regel, `parseTargetUrl()`, som alle
+    seks bruger, også den betalte (den lå bag nøgle, så den skulle ikke være
+    strengere end den gratis). Rettelsen
+    flyttede **ingen** adgangskontrol: `targetIsPublic()` kaldes stadig pr. rute
+    og pr. redirect-hop, så en parse-hjælper kan ikke blive en ny SSRF-vej — de 7
+    private værter er dømt på den bare form i porten, på begge nye ruter med hver
+    sin tekst. Målt: 25 nye assertions, **22 røde på den gamle kode** (489/511) og
+    **511/511** på den nye, inkl. negativ kontrol pr. rute (headere læst, titel
+    læst) og dommen «alle fire ruter svarer 200 på den samme vært».
+    `compliance-scan` med `HTTPS://` gik fra 502 til 200, fordi den gamle regel var
+    `raw.startsWith('http')`. Fuld gate **GRØN — 179 steps**.
+
+A. **Den mest besøgte guide giver ingen vej til sit eget værktøj.** Hvem: den
+   SEO-læser der lander på `/blog/text-on-image-contrast-check` — **9 af de 23**
+   menneskelige besøgende på mahope.tools i 28 dage, alle med 100 % bounce.
+   Tal: hvor mange af dem bruger værktøjet. Accept: læseren kan køre tjekket på
+   sit eget billede **inde i artiklen**, og vejen sender ét målbart event.
+   Datagrund: `/text-on-image-checker` fik **2** besøgende mod artiklens 9, så den
+   læser der er kommet længst ender på det værktøj der løser hans problem.
+   Baseline: 2.
+
+B. **Vi kan ikke skelne «ingen besøgende» fra «tracking død».** Hvem: os, i
+   hver morgenrapport. Tal: prioriteringen. Accept: ét kommando-kald skriver de
+   to ærlige serier (kørsler fra `/api/results`, købsklik fra `/api/conversion`)
+   for 28 dage og siger eksplicit **0 = ubekreftet**, med mindre de server-side
+   tællere også står stille. Datagrund: målt 6/10 er begge serier **0** for 7
+   dage, mens `served_scans_lifetime` er 51 — de to tal kan ikke begge være
+   rigtige, og `/api/stats` (den der kan afgøre det) er 401.
+
+C. **En Pro-holder der kommer fra scanneren skal finde PDF'en selv.** Hvem: den
+   der lige har betalt $79 og scannet. Tal: den betalte linje. Accept: Pro-kortet
+   på `/scan` og `/compliance-site-check` linker direkte til download-trinet, ikke
+   kun til «se hvad Pro tilføjer». Datagrund: `pdf-download` ligger i katalogen
+   kun på `/compliance-report`, mens Pro-kortet på scanneren lover «a PDF report
+   you can hand a client» — to sider, én funktion, ingen direkte vej imellem.
+   `pro_card_clicks` tælles allerede i `/api/conversion`.
+
 2. **`deskuptime.com`: 7 besøgende, 100 % bounce, 0 s opholdt tid.** Hvem:
    alle 7 på `/`. Tal: hvor mange køber. Accept: en forside der sælger uden
    at kræve scroll. Datagrund: **0 s** er ikke en lang læsning, det er en

@@ -782,13 +782,10 @@ async function handleScanProxy(request, url, env) {
   // stille skuffelse for den tredje. Samme regel som `/api/compliance-scan`.
   const targetUrls = [];
   for (const raw of settes) {
-    let parsed;
-    try {
-      parsed = new URL(raw);
-      if (!['http:', 'https:'].includes(parsed.protocol)) throw new Error('Invalid protocol');
-    } catch {
+    const parsed = parseTargetUrl(raw);
+    if (!parsed) {
       return new Response(
-        JSON.stringify({ ok: false, error: 'Invalid URL — must start with http:// or https:// (' + raw + ')' }),
+        JSON.stringify({ ok: false, error: 'Invalid URL — pass a full http:// or https:// address, or just the domain. (' + raw + ')' }),
         { status: 400, headers }
       );
     }
@@ -941,12 +938,13 @@ async function handleProfile(request, url, env) {
     return new Response(JSON.stringify({ ok: false, error: 'Missing ?url= parameter' }), { status: 400, headers });
   }
 
-  let targetUrl;
-  try {
-    targetUrl = new URL(targetUrlParam);
-    if (!['http:', 'https:'].includes(targetUrl.protocol)) throw new Error('bad protocol');
-  } catch {
-    return new Response(JSON.stringify({ ok: false, error: 'Invalid URL — must start with http:// or https://' }), { status: 400, headers });
+  // Samme regel som på de tre andre ruter med en kaldersstyret URL. Denne rute
+  // svarede 400 «Invalid URL» på `?url=example.com` (målt live 6/10), mens
+  // /api/url-inspect svarede 200 på samme streng. Svaret fortæller både `url` og
+  // `final_url`, og begge skal være den adresse der faktisk blev læst.
+  const targetUrl = parseTargetUrl(targetUrlParam);
+  if (!targetUrl) {
+    return new Response(JSON.stringify({ ok: false, error: 'Invalid URL — pass a full http:// or https:// address, or just the domain.' }), { status: 400, headers });
   }
   // never profile ourselves — infinite loop risk
   if (/(^|\.)hermes-passiv\.pages\.dev$/.test(targetUrl.hostname)) {
@@ -1825,6 +1823,34 @@ function targetIsPublic(target) {
   return true;
 }
 
+// One rule for every caller-chosen URL on the open surface, so one address gets
+// one answer whichever route is called. Measured 6/10 on live: `?url=example.com`
+// was a 400 «Invalid URL» on /api/url-inspect, /api/header-check and
+// /api/profile, while /api/compliance-scan returned a report for the same string
+// and the paid /api/report had a third rule of its own — six routes, three
+// spellings of the same normalisation. All six are open to
+// any client (CORS `*`), so `developers.html` handing out curl lines is not a
+// reason to answer differently from the form on the front page.
+//
+// `ftp:` still fails and `//example.com` is the same input as `example.com`,
+// exactly as on /api/url-inspect. Deliberately NOT doing the private-address
+// check here: that stays with targetIsPublic() at each route, so nothing can
+// reach a hop by accident of parsing order. Returns null when the input is not
+// an http(s) URL, and the caller keeps its own 400 wording.
+function parseTargetUrl(raw) {
+  const trimmed = String(raw ?? '').trim();
+  if (!trimmed) return null;
+  const absolute = /^[a-z][a-z0-9+.-]*:\/\//i.test(trimmed) ? trimmed : 'https://' + trimmed.replace(/^\/+/, '');
+  let parsed;
+  try {
+    parsed = new URL(absolute);
+    if (!['http:', 'https:'].includes(parsed.protocol)) return null;
+  } catch (_) {
+    return null;
+  }
+  return parsed;
+}
+
 // Shared by the dotted-quad branch and the IPv4-mapped-IPv6 branch, so a range
 // only has to be added once or the two spellings of the same host disagree.
 function ipv4IsPublic(host) {
@@ -1988,11 +2014,15 @@ async function handleReport(request, env) {
     return new Response(JSON.stringify({ ok: false, error: 'A valid EUComply Pro license is required for the full report.' }), { status: 402, headers: corsHeaders });
   }
 
-  let target;
-  try {
-    target = new URL(/^https?:\/\//i.test(rawUrl) ? rawUrl : 'https://' + rawUrl);
-  } catch {
-    return new Response(JSON.stringify({ ok: false, error: 'Invalid URL.' }), { status: 400, headers: corsHeaders });
+  // Samme regel som på de fem andre ruter med en kaldersstyret URL. Den betalte
+  // rute må ikke være den strengeste på egen hånd: den er låst bag en nøgle, så
+  // en bureau der sender `example.com` i stedet for `https://example.com` får
+  // i dag en 400 på sin egen betalte rapport, mens den gratis scanner på samme
+  // adresse svarer. Værnet nedenfor er urørt — kun hvad vi *må* gå til er det
+  // samme overalt.
+  const target = parseTargetUrl(rawUrl);
+  if (!target) {
+    return new Response(JSON.stringify({ ok: false, error: 'Invalid URL — pass a full http:// or https:// address, or just the domain.' }), { status: 400, headers: corsHeaders });
   }
   if (!targetIsPublic(target)) {
     return new Response(JSON.stringify({ ok: false, error: 'That host cannot be scanned.' }), { status: 400, headers: corsHeaders });
@@ -2918,15 +2948,15 @@ async function handleHeaderCheck(request, url, env) {
     );
   }
 
-  let targetUrl;
-  try {
-    targetUrl = new URL(targetUrlParam);
-    if (!['http:', 'https:'].includes(targetUrl.protocol)) {
-      throw new Error('Invalid protocol');
-    }
-  } catch {
+  // Samme regel som på de tre andre ruter med en kaldersstyret URL. Målt 6/10 på
+  // live: `?url=example.com` var en 400 her, mens /api/url-inspect svarede 200 på
+  // den samme streng — og ruten er åben med CORS `*`, så `developers.html` kan
+  // ikke anbefale `curl "?url=example.com"` uden at den virker. Svaret skal også
+  // fortælle hvilken adresse der blev læst, så det er den parsede.
+  const targetUrl = parseTargetUrl(targetUrlParam);
+  if (!targetUrl) {
     return new Response(
-      JSON.stringify({ ok: false, error: 'Invalid URL — must start with http:// or https://' }),
+      JSON.stringify({ ok: false, error: 'Invalid URL — pass a full http:// or https:// address, or just the domain.' }),
       { status: 400, headers }
     );
   }
@@ -3973,11 +4003,8 @@ async function handleComplianceScan(request, url, env) {
   // stille skuffelse for den tredje.
   const targetUrls = [];
   for (const raw of settes) {
-    let parsed;
-    try {
-      parsed = new URL(raw.startsWith('http') ? raw : 'https://' + raw);
-      if (!['http:', 'https:'].includes(parsed.protocol)) throw new Error('bad protocol');
-    } catch {
+    const parsed = parseTargetUrl(raw);
+    if (!parsed) {
       return new Response(JSON.stringify({ ok: false, error: 'Invalid URL: ' + raw }),
         { status: 400, headers: corsHeaders });
     }
@@ -4295,17 +4322,11 @@ async function handleUrlInspect(request, url, env) {
   // normalisering lå kun i one-off-check.js, så løftet holdt kun med JS, og
   // formen er `method="get" action="/api/url-inspect"`, så den skal virke
   // uden. Ruten er også åben for enhver klient (CORS `*`), så den skal svare på
-  // det samme input som den side der sender det. /api/compliance-site-check
-  // gør det samme med `raw.startsWith('http') ? raw : 'https://' + raw`; her
-  // trimmes der også, så `//example.com` fra et udklip er det samme input.
-  const targetUrlParam = /^[a-z][a-z0-9+.-]*:\/\//i.test(rawTargetParam.trim())
-    ? rawTargetParam.trim()
-    : 'https://' + rawTargetParam.trim().replace(/^\/+/, '');
-  let target;
-  try {
-    target = new URL(targetUrlParam);
-    if (!['http:', 'https:'].includes(target.protocol)) throw new Error('bad protocol');
-  } catch (_) {
+  // det samme input som den side der sender det. Reglen ligger nu i
+  // parseTargetUrl(), som de tre andre ruter med en kaldersstyret URL også
+  // bruger, så to ruter på samme flade ikke kan svare forskelligt igen.
+  const target = parseTargetUrl(rawTargetParam);
+  if (!target) {
     return new Response(JSON.stringify({ error: 'Invalid URL' }), { status: 400, headers: corsHeaders });
   }
   // The route is open (no license) and fetches a caller-chosen URL, so it needs
