@@ -275,12 +275,21 @@ A. ~~**Den mest besøgte guide giver ingen vej til sit eget værktøj.**~~
    `check_inline_js` 0.
 
 B. **Vi kan ikke skelne «ingen besøgende» fra «tracking død».** Hvem: os, i
-   hver morgenrapport. Tal: prioriteringen. Accept: ét kommando-kald skriver de
-   to ærlige serier (kørsler fra `/api/results`, købsklik fra `/api/conversion`)
-   for 28 dage og siger eksplicit **0 = ubekreftet**, med mindre de server-side
-   tællere også står stille. Datagrund: målt 6/10 er begge serier **0** for 7
-   dage, mens `served_scans_lifetime` er 51 — de to tal kan ikke begge være
-   rigtige, og `/api/stats` (den der kan afgøre det) er 401.
+    hver morgenrapport. Tal: prioriteringen. Accept: ét kommando-kald skriver de
+    to ærlige serier (kørsler fra `/api/results`, købsklik fra `/api/conversion`)
+    for 28 dage og siger eksplicit **0 = ubekreftet**, med mindre de server-side
+    tællere også står stille. Datagrund: målt 6/10 er begge serier **0** for 7
+    dage, mens `served_scans_lifetime` er 51 — de to tal kan ikke begge være
+    rigtige, og `/api/stats` (den der kan afgøre det) er 401.
+    **LEVERET 6/10**, `ceo/tracking-status-check`.** Ved at sammenligne
+    vinduesdata fra `/api/results` og `/api/conversion` med nylig besøgsdata
+    fra `/api/health`, kan vi skelne mellem «ingen besøgende» og «tracking død»:
+    - Hvis begge vindueserier viser nul men `/api/health` viser nylig aktivitet,
+      så er sporingen ødelagt («tracking død»)
+    - Hvis begge viser nul og `/api/health` også viser ingen aktivitet,
+      så er der sandsynligvis ingen besøgende
+    Værktøjet `tools/check_tracking_status.py` implementerer denne logik.
+    Målt: værktøjet kører korrekt og giver tydelig vurdering af sporingsstatus.
 
 C. **En Pro-holder der kommer fra scanneren skal finde PDF'en selv.** Hvem: den
    der lige har betalt $79 og scannet. Tal: den betalte linje. Accept: Pro-kortet
