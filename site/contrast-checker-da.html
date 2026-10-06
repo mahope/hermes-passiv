@@ -27,7 +27,7 @@
   .cc-swatch-input { display:flex; gap:8px; align-items:center; }
   .cc-swatch-input input[type=color] { width:52px; height:44px; border:1px solid var(--color-border); border-radius:8px; background:none; padding:2px; cursor:pointer; }
   .cc-swatch-input input[type=text] { width:110px; padding:10px 12px; border:1px solid var(--color-border); border-radius:8px; background:var(--color-surface-2); color:var(--color-text); font-family:ui-monospace,monospace; font-size:.95rem; }
-  .cc-swap { padding:10px 14px; border-radius:8px; border:1px solid var(--color-border); background:var(--color-surface-2); color:var(--color-text); cursor:pointer; font-size:.9rem; }
+  .cc-swap { min-height:44px; padding:10px 14px; border-radius:8px; border:1px solid var(--color-border); background:var(--color-surface-2); color:var(--color-text); cursor:pointer; font-size:.9rem; }
   .cc-swap:hover { border-color:var(--color-accent); }
   .cc-ratio { font-size:2.4rem; font-weight:700; margin:22px 0 4px; font-variant-numeric:tabular-nums; }
   .cc-verdict { font-weight:600; margin-bottom:16px; }
@@ -39,6 +39,12 @@
   .cc-preview .large { font-size:1.5rem; font-weight:700; }
   .cc-note { margin-top:18px; font-size:.88rem; color:var(--color-text-muted); }
   .cc-error { color:var(--color-red); font-size:.9rem; margin-top:10px; min-height:1.2em; }
+  .cc-fix { margin-top:14px; padding:14px 16px; border:1px solid var(--color-border); border-radius:var(--radius); background:var(--color-surface-2); }
+  .cc-fix-lead { margin:0 0 10px; font-size:.92rem; }
+  .cc-fix-row { display:flex; flex-wrap:wrap; gap:10px; align-items:center; }
+  .cc-fix-use { display:inline-flex; align-items:center; gap:8px; min-height:44px; padding:9px 12px; border-radius:8px; border:1px solid var(--color-border); background:var(--color-surface); color:var(--color-text); cursor:pointer; font-family:ui-monospace,monospace; font-size:.95rem; }
+  .cc-fix-use:hover { border-color:var(--color-accent); }
+  .cc-fix-sw { width:20px; height:20px; border-radius:4px; border:1px solid var(--color-border); display:inline-block; }
   @media (max-width:520px){ .cc-ratio { font-size:1.9rem; } }
 </style>
   <meta property="og:image" content="https://hermes-passiv.pages.dev/cover.jpg">
@@ -86,6 +92,14 @@
 
   <p class="cc-ratio" id="ratio-out">—</p>
   <p class="cc-verdict" id="verdict-out" aria-live="polite"></p>
+
+  <div id="cc-fix" class="cc-fix" hidden>
+    <p class="cc-fix-lead" id="cc-fix-lead">Nærmeste tekstfarve der består AA (4,5:1):</p>
+    <div class="cc-fix-row">
+      <button type="button" class="cc-fix-use" id="cc-fix-use" title="Brug denne farve"><span class="cc-fix-sw" id="cc-fix-sw"></span><code id="cc-fix-hex"></code></button>
+      <button type="button" class="cc-swap" id="cc-fix-copy">Kopiér farven</button>
+    </div>
+  </div>
 
   <table class="cc-table">
     <caption style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden">WCAG-krav til kontrast efter tekststørrelse</caption>
@@ -206,6 +220,64 @@
     if (l1 < l2) { var t = l1; l1 = l2; l2 = t; }
     return (l1 + 0.05) / (l2 + 0.05);
   }
+  // Farven der ligger tættest på den valgte og stadig består, med samme kulør
+  // og mætning. WCAG-luminansen vokser monotont med HSL-lysheten for en fast
+  // kulør/mætning, så grænsen findes med en binærsøgning — og svaret tjekkes
+  // bagefter med `ratio()`, fordi en formel er en påstand og målingen er dommen.
+  // Retningen følger hvilken side af baggrunden teksten står på: er teksten
+  // lysere end baggrunden, skal den blive lysere; er den mørkere, mørkere.
+  function rgbToHsl(rgb) {
+    var r = rgb[0] / 255, g = rgb[1] / 255, b = rgb[2] / 255;
+    var max = Math.max(r, g, b), min = Math.min(r, g, b);
+    var l = (max + min) / 2, h = 0, sat = 0;
+    if (max !== min) {
+      var d = max - min;
+      sat = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+      if (max === r) h = (g - b) / d + (g < b ? 6 : 0);
+      else if (max === g) h = (b - r) / d + 2;
+      else h = (r - g) / d + 4;
+      h /= 6;
+    }
+    return [h, sat, l];
+  }
+  function hslToRgb(h, sat, l) {
+    function hue(p, q, t) {
+      if (t < 0) t += 1;
+      if (t > 1) t -= 1;
+      if (t < 1 / 6) return p + (q - p) * 6 * t;
+      if (t < 1 / 2) return q;
+      if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
+      return p;
+    }
+    var r, g, b;
+    if (sat === 0) { r = g = b = l; }
+    else {
+      var q = l < 0.5 ? l * (1 + sat) : l + sat - l * sat;
+      var p = 2 * l - q;
+      r = hue(p, q, h + 1 / 3); g = hue(p, q, h); b = hue(p, q, h - 1 / 3);
+    }
+    return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
+  }
+  function nearestPassing(fg, bg, need) {
+    var hsl = rgbToHsl(fg);
+    var lysere = luminance(fg) >= luminance(bg);
+    // Den yderste ende skal kunne bestå, ellers findes der ingen farve med
+    // denne kulør og mætning — så svarer vi med sort eller hvid, som altid
+    // gør for AA (4,5:1 er under det maksimale af sort/hvid mod enhver farve).
+    var yderst = hslToRgb(hsl[0], hsl[1], lysere ? 1 : 0);
+    if (ratio(yderst, bg) < need) {
+      return ratio([0, 0, 0], bg) >= ratio([255, 255, 255], bg) ? [0, 0, 0] : [255, 255, 255];
+    }
+    var lo = lysere ? hsl[2] : 0, hi = lysere ? 1 : hsl[2], mid;
+    for (var i = 0; i < 40; i++) {
+      mid = (lo + hi) / 2;
+      var ok = ratio(hslToRgb(hsl[0], hsl[1], mid), bg) >= need;
+      if (lysere) { if (ok) hi = mid; else lo = mid; }
+      else { if (ok) lo = mid; else hi = mid; }
+    }
+    var ud = hslToRgb(hsl[0], hsl[1], lysere ? hi : lo);
+    return ratio(ud, bg) >= need ? ud : (lysere ? [255, 255, 255] : [0, 0, 0]);
+  }
   function mark(id, pass, label) {
     var el = $(id);
     el.textContent = label;
@@ -245,6 +317,20 @@
     else if (r >= 3) { v.textContent = 'Begrænset — består kun for stor tekst og UI-komponenter.'; v.className = 'cc-verdict fail'; }
     else             { v.textContent = 'Dumpet i WCAG — ikke nok kontrast selv til stor tekst.'; v.className = 'cc-verdict fail'; }
 
+    // Rettelsen: farven tættest på den valgte der stadig består AA for
+    // almindelig tekst. Vises kun når parret faktisk fejler — på et par der
+    // består ville den være en knap uden opgave.
+    var fixEl = $('cc-fix');
+    if (r < 4.5) {
+      var forslag = toHex(nearestPassing(fg, bg, 4.5));
+      $('cc-fix-sw').style.background = forslag;
+      $('cc-fix-hex').textContent = forslag;
+      $('cc-fix-use').setAttribute('data-hex', forslag);
+      fixEl.hidden = false;
+    } else {
+      fixEl.hidden = true;
+    }
+
     var pv = $('preview');
     pv.style.background = toHex(bg);
     pv.style.color = toHex(fg);
@@ -263,6 +349,26 @@
   $('swap-btn').addEventListener('click', function () {
     var t = fgText.value; fgText.value = bgText.value; bgText.value = t;
     update();
+  });
+  // Rettelsen er et forslag, ikke et indgreb: den rører først teksten når
+  // læseren trykker, og den lægger sig i det samme farvefelt som resten, så
+  // hele siden måler igen af sig selv.
+  $('cc-fix-use').addEventListener('click', function () {
+    var h = this.getAttribute('data-hex');
+    if (!h) return;
+    fgText.value = h;
+    update();
+  });
+  $('cc-fix-copy').addEventListener('click', function () {
+    var h = $('cc-fix-use').getAttribute('data-hex');
+    if (!h) return;
+    var btn = this;
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(h).then(function () {
+        btn.textContent = 'Kopieret';
+        setTimeout(function () { btn.textContent = 'Kopiér farven'; }, 1800);
+      }, function () {});
+    }
   });
   update();
 })();

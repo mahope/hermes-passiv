@@ -21,9 +21,11 @@
 - **Næste:** `/api/results` og `/api/conversion` kan igen bruges som baseline,
   så de næste to opgaver kan prioriteres på **hvad brugerne gør** frem for på
   nul. `/api/stats` (beløb og licenser) er stadig 401 og kræver `STATS_TOKEN`.
-- **6/10:** kontrastværktøjet tager nu imod et billede der trækkes ind på
-  lærredet eller indsættes med Ctrl+V/⌘V — den mest naturlige vej ind for et
-  hero-billede. Se feature-kø 20.
+- **6/10:** kontrastværktøjet (`/contrast-checker` EN+DA) foreslår nu den
+  nærmeste tekstfarve der består AA for almindelig tekst — med samme kulør og
+  mætning — og kan kopieres i ét klik. Se feature-kø 21. Baseline:
+  `/contrast-checker` er ikke blandt Plausibles top-sider (0–1 besøgende/28
+  dage), så effekten måles på siden selv, ikke på besøg.
 
 ## Åbne review-fund
 
@@ -31,6 +33,11 @@ Ingen. Alle tre lukket 6/10 — teksten står i `docs/plan-arkiv.md`.
 
 ## Verificér deploy
 
+- **VERIFICÉR DEPLOY:** farveforslaget i kontrastværktøjet
+  `ceo/kontrast-fix-farve` 6/10 (se feature-kø 21). Kræver live
+  `https://mahope.tools/contrast-checker`: `#cc-fix-use` findes, og ved
+  `#ffd700` på `#ffffff` (1,40:1) viser den `#8b7500`, hvis ratio mod hvid er
+  ≥ 4,5:1. Samme på `/contrast-checker-da`.
 - **VERIFICÉR DEPLOY:** billede-drop-og-indsæt i kontrastværktøjet
   `ceo/billede-drop-og-indsaet` 6/10 (se feature-kø 20).
 - `pro-kortet på de fire scanneresider` er **DEPLOY OK 6/10**:
@@ -155,6 +162,17 @@ er væk på alle fire, og `#url=`-vejen er fulgt i Chromium mod live: feltet bli
 Prioriteret efter hvor tæt den er på penge. Baseline er målt på den **byggede**
 side; tallene er ikke vores egen trafik. Alt det der er leveret (1–11) står i
 `docs/plan-arkiv.md`.
+
+21. ~~**Kontrastværktøjet sagde hvad der fejlede, men ikke hvad man skulle gøre.**~~
+    **LEVERET 6/10**, `ceo/kontrast-fix-farve`.** FAQ'en sagde allerede «skift
+    til mørk tekst» — men læseren skulle selv finde farven. Nu vises den
+    nærmeste tekstfarve der består AA (4,5:1) når parret fejler, med samme
+    kulør og mætning, i ét klik og med kopi. WCAG-luminansen vokser monotont
+    med HSL-lysheten for en fast kulør, så grænsen findes med binærsøgning og
+    tjekkes bagefter med `ratio()`. Målt: 52 fejlende farvepar giver alle en
+    farve med ratio ≥ 4,5:1 og bevaret kulør; mutation (funktionen fjernet) har
+    ingen knap. Fuld gate **GRØN — 180 steps**; `catalog-where` krævede de to
+    pro_features-linjenumre flyttet med indsættelsen.
 
 20. ~~**Et hero-billede skulle først gemmes som fil for at kunne tjekkes.**~~
     **LEVERET 6/10**, `ceo/billede-drop-og-indsaet`.** Filvælgeren var den

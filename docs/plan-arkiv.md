@@ -8981,3 +8981,33 @@ kun den første adresse, fordi rapporten tager én side ad gangen.
 
 **Baseline:** `pro_card_clicks` i `/api/conversion` (tælles kun ved købsknappen,
 som var uændret her — denne opgave rører noten, ikke knappen).
+
+## kontrast-fix-farve (6/10, ceo/kontrast-fix-farve)
+
+- `ITERATION_ID`: `kontrast-fix-farve-2026-10-06`
+- `STATE`: **Kontrastværktøjet sagde hvad der fejlede, men ikke hvad man skulle
+  gøre.** FAQ'en på både `/contrast-checker` og `-da` sagde allerede «skift til
+  mørk tekst», men læseren skulle selv finde farven. Nu vises den nærmeste
+  tekstfarve der består AA for almindelig tekst (4,5:1) når parret fejler — med
+  samme kulør og mætning — i ét klik og med en kopi-knap.
+  - **Matematikken er målt, ikke antaget.** WCAG-luminansen vokser monotont med
+    HSL-lysheten for en fast kulør/mætning, så grænsen findes med en
+    binærsøgning; svaret tjekkes bagefter med `ratio()`. Målt i Node mod sidens
+    **egen** kode: 52 fejlende farvepar (10 baggrunde × 8 forgrunde) giver alle
+    en farve med ratio ≥ 4,5:1, og kuløren er bevaret (kun de to næsten-grå
+    farver flytter hue med < 0,02, hvor hue er uden betydning). Retningen følger
+    hvilken side af baggrunden teksten står på, så den valgte farve er den der
+    flytter mindst.
+  - **Mutation:** er `nearestPassing` ikke der, findes `#cc-fix-use` ikke og
+    blokken vises aldrig — der er ingen farve at trykke på.
+  - **Katalogen:** de to `pro_features`-henvisninger i `tools/stripe_catalog.json`
+    (`contrast-checker.html` og `-da`) er flyttet med indsættelsen, ellers dømte
+    `catalog-where` de citerede sætninger borte.
+  - **Målt i Chromium** mod den byggede side ved 390 og 1280 px: blokken vises
+    ved `#ffd700` på `#ffffff` (1,40:1) og foreslår `#8b7500`; ingen vandret
+    overflow. `min-height:44px` sat på `.cc-swap`, så både forslag- og
+    kopi-knappen er en finger-værdig trykflade (det gælder også den gamle
+    Swap-knap).
+  - **Fuld gate GRØN — 180 steps.**
+- `Baseline`: `/contrast-checker` er ikke blandt Plausibles top-sider (0–1
+  besøgende/28 dage), så effekten måles på siden selv, ikke på besøg.
