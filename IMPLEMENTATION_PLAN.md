@@ -1,19 +1,11 @@
 # STATUS
-- **`/da/pricing` sender ikke længere en dansk læser ud i engelsk.** 6/10: tre
-  af de tolv rækker pegede på **engelske** købssider midt i den betaling han var
-  ved at vælge — to til `cleancopy.tools/#price` og én til `deskuptime.com/#pro`,
-  fordi bygget kan oversætte en *relativ* rute (`/da/ruten`) men ikke et
-  **krydsdomæne**. Katalogens `pricing_link` kan nu være `{"en": …, "da": …}`
-  for de to varer. Ny **dom 8** i `check_pricing_page` dømmer på den **byggede**
-  sides egen `<html lang>`, ikke på en navnekonvention i ruten. Se feature-kø 16.
-- **Målt, at dom 8 ikke er dekoration:** med den gamle `købs_rute` (kun `en`)
-  kommer de tre engelske rækker tilbage, og **dom 2 + dom 7 giver 0 fund** på
-  dem — de pegede jo på en side der fandtes, med et anker der fandtes. Dom 8 giver
-  **3 fund** med varens navn og den byggede side. Selftest **20/20**, og de to
-  nye røde tilfælde er målte røde med dom 8 afkoblet (18/20).
-- **CI:** de to kørsel før `d73052b9` står som `failure`, men `gate: cancelled`
-  og `deploy: skipped` — GitHub afbrød dem, ingen test var rød. Lokal gate er
-  grøn på 177 steps; de fire mission-gates er kørt enkeltvis og grønne.
+- **Guideartiklerne har nu én købsvej til Clean Copy Pro.** 7/10: 17 artikler på
+  cleancopy.tools (8 EN + 9 DA) har en linje med link til produktets egen
+  købssektion, lige før bog-CTA'en. Feature-kø 17's acceptkriterium var dog
+  allerede **43/46** opfyldt målt på det byggede site — de 17 var dem der
+  nævner Clean Copy Pro **uden** nogen købsvej. Se feature-kø 17.
+- **CI:** seneste kørsel på `main` (`f81cf612`) er **success**. Lokal gate
+  grøn på **177 steps**; de fire mission-gates kørt enkeltvis og grønne.
 - **Næste:** de åbne ❓. `PR-TJEK 6/10`: **0** åbne PR'er. `BRANCH-TJEK` ikke
   kørt (uge-tjek).
 
@@ -39,6 +31,17 @@ Ingen. Alle tre er lukket 6/10:
    se opgave 34.
 
 ## Verificér deploy
+
+`VERIFICÉR DEPLOY: hver af de 17 cleancopy.tools-guideartikler skal vise linjen
+«Doing this every day? Clean Copy Pro is $19/year» (og den danske «Gør du det
+her hver dag?») med linket på `$19/year` / `$19/år` — kræv på **indhold**:
+hent `https://cleancopy.tools/blog/html-to-markdown-converter`,
+`/blog/install-obsidian-plugin-clean-copy`, `/da/blog/html-til-markdown-konverter`
+og `/da/blog/installer-clean-copy-obsidian` og kræv at linjen findes, at dens
+href er `/#price` hhv. `/da/#priser` — **ikke** et krydsdomæne — og at begge
+forsider stadig har hvert sit anker (`id="price"` på `/`, `id="priser"` på
+`/da/`). Tæll alle 17 med én `grep -c` over de byggede filer og kræv 8 + 9.
+ceo/pro-vej-i-guides 7/10 02:0x`
 
 `VERIFICÉR DEPLOY: hver danske række på /da/pricing skal pege på en dansk
 købsside, så ingen læser lander i engelsk midt i betalingen — hent
@@ -454,15 +457,30 @@ side; tallene er ikke vores egen trafik. Alt det der er leveret (1–11) står i
    («Check a site now» → `#check`) ligger i folden ved begge bredder. Folden
    var altså ikke årsagen; 7 besøgende kan heller ikke dømme en forside.
 
-17. **En guide-artikel har ingen vej til prislisten.** Hvem: læseren der lander
-    på en `/blog/`-artikel om CLI'en, udvidelsen eller Obsidian. Tal: hvor mange
-    af dem der betaler. Accept: hver artikel der nævner et produkt har ét link
-    til dets egen købsside. Datagrund: målt 6/10 — `html-to-markdown-cli` og
-    `html-til-markdown-cli` har hver **1** Stripe-link og **0** `/pricing`,
-    selv om de er blandt de tre største indgange på cleancopy.tools (2 og 2
-    besøgende). *(Et **link**, ikke en ny købsknap: dom 3 i
-    `check_pricing_page` og den ene-knap-regel i `check_stripe_ctas` gælder
-    stadig.)*
+17. ~~**En guide-artikel har ingen vej til prislisten.**~~ **LEVERET 7/10**,
+      `ceo/pro-vej-i-guides`.** 17 artikler (8 EN + 9 DA) på cleancopy.tools har
+      nu én linje med link til Clean Copy Pro's egen købssektion, lige før
+      bog-CTA'en. **Baseline målt på det byggede site først:** af de 46
+      blogartikler der nævner et katalogprodukt i **brødteksten** (nav, header og
+      footer strippet) havde **43** allerede en købsvej — feature-kø'ens
+      acceptkriterium var altså 43/46 opfyldt, ikke 0/17. De 17 valgte er dem
+      der **nævner Clean Copy Pro uden nogen købsvej**. Rettelse af to fejl i
+      den ucommitterede diff: inline `style="margin:24px 0 0;font-size:0.95rem;"`
+      → `class="muted small mt-1"` (samme byggeklasse som de eksisterende
+      linjer på præcis de sider), og den danske «tilføjer **to ting**» →
+      «se hvad den **tilføjer** den gratis version», fordi tallet er en påstand
+      i prosa der skal kunne verificeres mod katalogens `pro_features` — og en
+      tredje Pro-funktion ville gøre den usand. Målt: alle 17 linjer ligger
+      umiddelbart før den `book-cta` de allerede havde, `/#price` findes **1**
+      gang på den byggede `cleancopy.tools/`, `/da/#priser` **1** på
+      `cleancopy.tools/da/`, og **0** af dem blev omskrevet til et
+      krydsdomæne-`href`. Fuld gate **GRØN — 177 steps**; `seo_check` 316
+      sider 0 fund, `stripe-worker` 474/474, `check_inline_js` 1318 blokke 0
+      problemer.
+    **Kendte huller denne opgave bevidst ikke lukker:** `mahope.tools/blog/
+    copy-table-website-to-{airtable,google-sheets}` og `blog/eaa-enforcement-2026`
+    nævner produktet kun i en **JSON-LD-FAQ** og en kort om licensetrafikken —
+    de sælger intet, så en købslinje dér ville være kulisse.
 
 18. **DeskUptime har otte ruter ingen læser nogensinde ser.** Hvem: alle nye.
     Tal: hvor mange af dem kommer i betragtning. Accept: hver bygget rute under
