@@ -20,6 +20,10 @@
   33 s. Ærlig baseline: **0 rigtige** kørsler.
 - **DeskUptime 'no phone-home' rettet** (`7dc00071`): hero + FAQ på EN/DA
   forklarer nu ærligt at Pro-licensaktivering checker op.
+- **Batch-kontrasttjek leveret 7/10** (`ceo/kontrast-batch`): indsæt en liste
+  af farvepar (ét pr. linje) og få ratio + AA/AAA-dom for hvert i én tabel.
+  Verificeret i Chromium 390/1280 px: ingen overflow, gate **GRØN**. Baseline:
+  **0** batch-kørsler.
 
 ## Åbne review-fund
 
@@ -29,6 +33,9 @@ kræver den formulering.
 
 ## Verificér deploy
 
+- **VERIFICÉR DEPLOY:** batch-kontrasttjek `ceo/kontrast-batch` 7/10 — tjek at
+  live `/contrast-checker` og `/contrast-checker-da` bærer `id="batch-input"`,
+  `id="batch-run"` og `id="batch-tbody"`, og at indsætning af par viser tabel.
 - **VERIFICÉR DEPLOY:** billed-farver i paletgeneratoren `ceo/palette-billede`
   7/10 — tjek at live `/palette-generator` og `-da` bærer
   `<script src="/palette-image.js">` og `id="pg-img-swatches"`.
@@ -183,12 +190,6 @@ side; tallene er ikke vores egen trafik. Alt det leverede (1–22) står i
     dage, Plausible 7/10). Accept: et `#`-link gendanner basisfarve og baggrund,
     og begge sprog læser det. Datagrund: simulatoren har allerede
     `cb-share-core.js`, og en palet er det ene man videresender.
-
-24. **Kontrasttjek af mange farvepar på én gang.** Hvem: et bureau der auditerer
-    en klients stylesheet. Tal: købsforsøg på EUComply Pro (`/api/conversion`).
-    Accept: indsæt en liste af par og få hver fejlende kombination i én tabel.
-    Datagrund: kontrastværktøjet tager ét par, men en side har snesevis —
-    `contrast-measured` er den eneste målte kørsel (baseline 0).
 
 25. **Farvenavn ved siden af hex.** Hvem: en ikke-designer der fik en farve ud af
     et billede. Tal: besøgende på `/palette-generator` (0/28 dage). Accept: hver
