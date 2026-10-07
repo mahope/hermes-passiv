@@ -24,6 +24,9 @@
   af farvepar (ét pr. linje) og få ratio + AA/AAA-dom for hvert i én tabel.
   Verificeret i Chromium 390/1280 px: ingen overflow, gate **GRØN**. Baseline:
   **0** batch-kørsler.
+- **Donation-linje tilføjet til kontrast-checkerne** (`ceo/donation-kontrast-checker`):
+  `contrast-checker.html` og `-da.html` manglede linjen, så `donation-paths-selftest`
+  var rød i CI. Gate **GRØN**.
 
 ## Åbne review-fund
 
