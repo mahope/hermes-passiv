@@ -299,8 +299,10 @@ on:
       - 'tests/cb-image.test.mjs'
       - 'tests/cb-contrast.test.mjs'
       - 'tests/palette-image.test.mjs'
+      - 'tests/palette-share.test.mjs'
       - 'tests/scan-share.test.mjs'
       - 'site/cb-share-core.js'
+      - 'site/palette-share-core.js'
       - 'site/scan-share-core.js'
       - 'test.js'
       # Licenskatalogen og kontrakten definerer priserne; `products/` er de

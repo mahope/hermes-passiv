@@ -9395,3 +9395,9 @@ C. ~~**En Pro-holder der kommer fra scanneren skal finde PDF'en selv.**~~
 - **Paletkontrast ved hver synstype** (`ceo/palet-farveblindhed`): feature 26.
   Hvert farvepar i paletten vises med WCAG-kontrast for normal/protan/deutan/tritan
   i en matrix. Begge sprog. Gate **GRØN**. Baseline: **3** besøgende/28 dage.
+- **Del din palet med et link leveret 8/10** (`ceo/palet-del-link`): feature 23.
+  Et `#c=<hex>;b=<hex>`-link gendanner basisfarve og baggrund i paletgeneratoren,
+  og en «Kopiér link»-knap giver det videre. Staten bor i `site/palette-share-core.js`,
+  som begge sprog deler; adresselinjen følger paletten. Målt i Chromium 390/1280 px:
+  delt link gendanner begge felter, 0 JS-fejl, gate **GRØN — 184 steps**. Baseline:
+  **0** besøgende/28 dage på `/palette-generator` (Plausible 7/10).

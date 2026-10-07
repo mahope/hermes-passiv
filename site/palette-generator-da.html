@@ -146,6 +146,7 @@
     <pre id="export-out" tabindex="0" aria-label="Genereret paletpkode — markér alt for at kopiere"></pre>
     <div style="margin-top:12px;display:flex;flex-wrap:wrap;gap:10px;align-items:center">
       <button type="button" class="pg-btn" id="copy-export" style="background:var(--color-accent);color:#fff">Kopiér kode</button>
+      <button type="button" class="pg-btn" id="copy-share" style="background:var(--color-surface);border:1px solid var(--color-border)">Kopiér link til denne palet</button>
       <button type="button" class="pg-btn pg-dl" id="download-export" style="background:var(--color-surface);border:1px solid var(--color-border)">Download fil</button>
       <span class="pg-copied" id="export-msg" aria-live="polite"></span>
     </div>
@@ -226,6 +227,7 @@
   mahoje.dk · Gratis GDPR- &amp; tilgængelighedsværktøj der kører i din browser
 </footer>
 
+<script src="/palette-share-core.js"></script>
 <script>
 (function () {
   'use strict';
@@ -387,7 +389,7 @@
   }
 
   var exportFmt = 'css';
-  var lastRows = null, lastBg = null;
+  var lastRows = null, lastBg = null, lastBase = null;
   function cssVarName(role) {
     return '--' + role.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
   }
@@ -444,6 +446,21 @@
       flashExport('Downloadet tilgaengelig-palet.' + exts[exportFmt]);
     } catch (e) { flashExport('Download understøttes ikke i denne browser.'); }
   }
+  // Adresselinjen bærer allerede paletten; dette giver læseren det samme link.
+  // Det bygges fra den sidste gyldige tilstand, ikke fra de rå felter, så en
+  // halvskrevet hex ikke kan kopieres som et tomt link.
+  function shareLink() {
+    if (!lastBase || !window.PALETTE_SHARE) return '';
+    return location.origin + location.pathname + window.PALETTE_SHARE.encode({ base: lastBase, bg: lastBg });
+  }
+  function copyShare() {
+    var link = shareLink();
+    if (!link) { flashExport('Byg en palet først.'); return; }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(link).then(function () { flashExport('Linket er kopieret'); },
+        function () { flashExport('Kopiering fejlede — markér adresselinjen.'); });
+    } else { flashExport('Kopiering fejlede — markér adresselinjen.'); }
+  }
 
   function update() {
     var errEl = $('pg-error');
@@ -457,6 +474,12 @@
     $('base-color').value = toHex(base);
     lastRows = buildPalette(base, bg);
     lastBg = $('bg-select').value;
+    lastBase = toHex(base);
+    // Hold adresselinjen i takt med paletten, så deling blot er at kopiere
+    // URL'en, og en genindlæsning gendanner præcis det, der står på skærmen.
+    if (window.history && history.replaceState && window.PALETTE_SHARE) {
+      try { history.replaceState(null, '', window.PALETTE_SHARE.encode({ base: lastBase, bg: lastBg })); } catch (e) {}
+    }
     render(lastRows);
     renderExport();
   }
@@ -465,12 +488,31 @@
     $(id).addEventListener('click', function () { exportFmt = id.slice(4); renderExport(); });
   });
   $('copy-export').addEventListener('click', copyExport);
+  $('copy-share').addEventListener('click', copyShare);
   $('download-export').addEventListener('click', downloadExport);
 
   $('base-color').addEventListener('input', function () { $('base-text').value = $('base-color').value; update(); });
   $('base-text').addEventListener('input', update);
   $('base-text').addEventListener('change', update);
   $('bg-select').addEventListener('change', update);
+  // Et delt link lægges ind før den første tegning, så læseren ser afsenderens
+  // palet i stedet for standardpaletten.
+  (function restoreShared() {
+    if (!window.PALETTE_SHARE) return;
+    var shared = window.PALETTE_SHARE.decode(location.hash);
+    if (shared.base) $('base-text').value = shared.base;
+    if (shared.bg) {
+      var sel = $('bg-select'), found = false;
+      for (var i = 0; i < sel.options.length; i++) {
+        if ((sel.options[i].value || '').toLowerCase() === shared.bg) { sel.value = sel.options[i].value; found = true; break; }
+      }
+      if (!found) {
+        var opt = document.createElement('option');
+        opt.value = shared.bg; opt.textContent = 'Tilpasset ' + shared.bg;
+        sel.appendChild(opt); sel.value = shared.bg;
+      }
+    }
+  })();
   update();
 })();
 </script>

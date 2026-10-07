@@ -339,6 +339,23 @@ STEPS: tuple[Step, ...] = (
             "site/palette-generator-da.html",
         ),
     ),
+    # Del-linket i paletgeneratoren (EN + DA). En palet — én basisfarve og én
+    # baggrund — døde med fanen, fordi værktøjet kører helt i browseren. Staten
+    # bor nu i fragmentet via `site/palette-share-core.js`, som begge sprog
+    # deler, så de to kopier ikke kan drive fra hinanden. Dommen læser codecen
+    # og begge *rigtige* sider, fordi den danske er en håndhævet kopi: et link
+    # der ikke kan gendanne basen og baggrunden, eller en side der har sin egen
+    # decoder, går rød her.
+    Step(
+        id="palette-share",
+        argv=("node", "tests/palette-share.test.mjs"),
+        inputs=(
+            "tests/palette-share.test.mjs",
+            "site/palette-share-core.js",
+            "site/palette-generator.html",
+            "site/palette-generator-da.html",
+        ),
+    ),
     # Del-linket på EAA/WCAG-scanneren (EN + DA). Før dette kopierede
     # `shareResult()` kun URL'en, så den der modtog linket så en tom formular
     # og skulle trykke Scan selv — og brugte sin *egen* kvote på en side, der

@@ -39,6 +39,10 @@ kræver den formulering.
 - **VERIFICÉR DEPLOY:** billed-farver i paletgeneratoren `ceo/palette-billede`
   7/10 — tjek at live `/palette-generator` og `-da` bærer
   `<script src="/palette-image.js">` og `id="pg-img-swatches"`.
+- **VERIFICÉR DEPLOY:** del-link i paletgeneratoren `ceo/palet-del-link` 8/10 —
+  tjek at live `/palette-generator` og `/palette-generator-da` bærer
+  `id="copy-share"`, `<script src="/palette-share-core.js">`, og at et
+  `#c=<hex>;b=<hex>`-link gendanner basisfarve og baggrund ved indlæsning.
 - **VERIFICÉR DEPLOY:** kontrast pr. synstype `ceo/cvd-kontrast` 7/10 — tjek at
   live `/color-blindness-simulator` og `-da` bærer `id="cvd-contrast"` og
   `<script src="/cb-contrast.js">`, og at tabellen tegner fire rækker.
@@ -182,14 +186,8 @@ er væk på alle fire, og `#url=`-vejen er fulgt i Chromium mod live: feltet bli
 ## Feature-kø
 
 Prioriteret efter hvor tæt den er på penge. Baseline er målt på den **byggede**
-side; tallene er ikke vores egen trafik. Alt det leverede (1–22, 26) står i
+side; tallene er ikke vores egen trafik. Alt det leverede (1–23, 26) står i
 `docs/plan-arkiv.md`.
-
-23. **Del din palet med et link.** Hvem: en designer der vil sende den palet hun
-    lige byggede til en kollega. Tal: besøgende på `/palette-generator` (0/28
-    dage, Plausible 7/10). Accept: et `#`-link gendanner basisfarve og baggrund,
-    og begge sprog læser det. Datagrund: simulatoren har allerede
-    `cb-share-core.js`, og en palet er det ene man videresender.
 
 25. **Farvenavn ved siden af hex.** Hvem: en ikke-designer der fik en farve ud af
     et billede. Tal: besøgende på `/palette-generator` (0/28 dage). Accept: hver

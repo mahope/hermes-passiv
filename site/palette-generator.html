@@ -146,6 +146,7 @@
     <pre id="export-out" tabindex="0" aria-label="Generated palette code, select all to copy"></pre>
     <div style="margin-top:12px;display:flex;flex-wrap:wrap;gap:10px;align-items:center">
       <button type="button" class="pg-btn" id="copy-export" style="background:var(--color-accent);color:#fff">Copy code</button>
+      <button type="button" class="pg-btn" id="copy-share" style="background:var(--color-surface);border:1px solid var(--color-border)">Copy link to this palette</button>
       <button type="button" class="pg-btn pg-dl" id="download-export" style="background:var(--color-surface);border:1px solid var(--color-border)">Download file</button>
       <span class="pg-copied" id="export-msg" aria-live="polite"></span>
     </div>
@@ -225,6 +226,7 @@
   mahoje.dk · Free GDPR &amp; accessibility tools that run in your browser
 </footer>
 
+<script src="/palette-share-core.js"></script>
 <script>
 (function () {
   'use strict';
@@ -406,7 +408,7 @@
   }
 
   var exportFmt = 'css';
-  var lastRows = null, lastBg = null;
+  var lastRows = null, lastBg = null, lastBase = null;
   function cssVarName(role) {
     return '--' + role.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
   }
@@ -463,6 +465,21 @@
       flashExport('Downloaded accessible-palette.' + exts[exportFmt]);
     } catch (e) { flashExport('Download not supported in this browser.'); }
   }
+  // The address bar already carries the palette; this hands the reader the same
+  // link. It is built from the last valid state, not from the raw fields, so a
+  // half-typed hex cannot be copied as an empty link.
+  function shareLink() {
+    if (!lastBase || !window.PALETTE_SHARE) return '';
+    return location.origin + location.pathname + window.PALETTE_SHARE.encode({ base: lastBase, bg: lastBg });
+  }
+  function copyShare() {
+    var link = shareLink();
+    if (!link) { flashExport('Build a palette first.'); return; }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(link).then(function () { flashExport('Link copied'); },
+        function () { flashExport('Copy failed — select the address bar.'); });
+    } else { flashExport('Copy failed — select the address bar.'); }
+  }
 
   function update() {
     var errEl = $('pg-error');
@@ -477,6 +494,12 @@
     $('base-color').value = toHex(base);
     lastRows = buildPalette(base, bg);
     lastBg = bgHex;
+    lastBase = toHex(base);
+    // Keep the address bar in step with the palette, so sharing is just copying
+    // the URL and a reload restores exactly what is on screen.
+    if (window.history && history.replaceState && window.PALETTE_SHARE) {
+      try { history.replaceState(null, '', window.PALETTE_SHARE.encode({ base: lastBase, bg: lastBg })); } catch (e) {}
+    }
     render(lastRows, bgHex);
     renderExport();
   }
@@ -485,12 +508,31 @@
     $(id).addEventListener('click', function () { exportFmt = id.slice(4); renderExport(); });
   });
   $('copy-export').addEventListener('click', copyExport);
+  $('copy-share').addEventListener('click', copyShare);
   $('download-export').addEventListener('click', downloadExport);
 
   $('base-color').addEventListener('input', function () { $('base-text').value = $('base-color').value; update(); });
   $('base-text').addEventListener('input', update);
   $('base-text').addEventListener('change', update);
   $('bg-select').addEventListener('change', update);
+  // A shared link is applied before the first render, so the reader sees the
+  // sender's palette instead of the default one.
+  (function restoreShared() {
+    if (!window.PALETTE_SHARE) return;
+    var shared = window.PALETTE_SHARE.decode(location.hash);
+    if (shared.base) $('base-text').value = shared.base;
+    if (shared.bg) {
+      var sel = $('bg-select'), found = false;
+      for (var i = 0; i < sel.options.length; i++) {
+        if ((sel.options[i].value || '').toLowerCase() === shared.bg) { sel.value = sel.options[i].value; found = true; break; }
+      }
+      if (!found) {
+        var opt = document.createElement('option');
+        opt.value = shared.bg; opt.textContent = 'Custom ' + shared.bg;
+        sel.appendChild(opt); sel.value = shared.bg;
+      }
+    }
+  })();
   update();
 })();
 </script>
