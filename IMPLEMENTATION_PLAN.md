@@ -1,5 +1,10 @@
 # STATUS
-- **CI:** grøn. CEO-kø punkt 0 (review-fund 29/9) verificeret færdigt: alle fem
+- **CI:** rød 7/09:39 i `product-copy` — den danske DeskUptime-forside (merge
+  `c3cf71d1`) sagde «overvågingstjeneste»/«enheds-ID» og manglede kommaet i
+  «nøglen, første gang». Rettet i `ceo/deskuptime-ci-disclosures`: fraserne
+  matcher nu porten OG production (live har allerede de korrekte fraser fra en
+  manuel deploy). Gate grøn lokalt.
+- CEO-kø punkt 0 (review-fund 29/9) verificeret færdigt: alle fem
   punkter rettet (`10f95b42`, `b772a466`, `67092c4c`, `e37b30a6`), gaten grøn,
   live `/api/url-inspect` svarer 200.
 - **Sentry er sat op og testet** (worker 149-246, test 1748-1833): DSN i kode,
@@ -321,8 +326,9 @@ C. ~~**En Pro-holder der kommer fra scanneren skal finde PDF'en selv.**~~
     `scrollWidth == viewport` ved 390 og 1280, og den primære handling
     («Check a site now» → `#check`) ligger i folden ved begge bredder. Folden
     var altså ikke årsagen; 7 besøgende kan heller ikke dømme en forside.
-    **LEVERET 7/10** — `ceo/deskuptime-forside-saelger`. **VERIFICÉR DEPLOY:**
-    dansk forside `index.html` + gratis/Pro-tabel + købsknap på `/da/` `ceo/deskuptime-forside-saelger` 7/10.
+     **LEVERET 7/10** — `ceo/deskuptime-forside-saelger`. **DEPLOY OK 7/10:**
+     live `/da/` bærer `Køb DeskUptime Pro`-knap, gratis/Pro-tabel og de
+     korrekte licens-fraser (målt med curl mod live).
 
 17. ~~**En guide-artikel har ingen vej til prislisten.**~~ **LEVERET 7/10**,
       `ceo/pro-vej-i-guides`.** 17 artikler (8 EN + 9 DA) på cleancopy.tools har
