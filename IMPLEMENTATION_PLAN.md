@@ -1,19 +1,18 @@
 # STATUS
-- **CI:** `main` var **rød** 6/10 — `plan-status` dømte STATUS til 27 linjer
-  (max 25). Kogt ned i denne iteration; gaten er grøn igen.
-- **Sporingen virker** (målt 6/10 20:00): min egen `contrast-measured` lå i
-  `/api/results` efter 33 s, og `/api/health`s `recentEvents` gik 2 → 6.
-  Skrivevejen er bekræftet; den ærlige baseline er **0 rigtige** kørsler.
-- **Dommen var det, der var dødt:** `/api/health` og `/api/results` har
-  forskellige navnelister på de samme nøgler, så «2 events» og «0 resultater»
-  kan være sandt samtidig. Rettet i `ceo/sporing-dom-er-modstraaende`.
-- **Baselines fra `/api/results` og `/api/conversion` er igen brugbare.**
-  `/api/stats` (beløb og licenser) er stadig 401 og kræver `STATS_TOKEN`.
-- **7/10:** alle fire farveværktøjssider har nu en gratis/Pro-tabel og én synlig
-  købsknap til EUComply Pro — de to engelske 7/10, de to danske i denne iteration.
-  Samme commit nulstiller noten i en tabelcelle (den arvede kortets 720 px) og
-  giver rækkeoverskriften en mindste bredde, så «Hvad du får» ikke knækker
-  bogstav for bogstav ved 360–390 px. Baseline: 3 og 0–1 besøgende/28 dage.
+- **CI:** grøn. CEO-kø punkt 0 (review-fund 29/9) verificeret færdigt: alle fem
+  punkter rettet (`10f95b42`, `b772a466`, `67092c4c`, `e37b30a6`), gaten grøn,
+  live `/api/url-inspect` svarer 200.
+- **Sentry er sat op og testet** (worker 149-246, test 1748-1833): DSN i kode,
+  kun produktion, ingen PII, ingen traces/replay, 5 rapporter/min. «Ingen uløste
+  fejl» betyder ingen fejl — ikke at intet sendes.
+- **Alle fire VERIFICÉR DEPLOY-noter er live og lukket** 7/10: farveværktøjer
+  EN+DA, kontrast-fix-farve (`#8b7500`, ratio 4,52), billede-drop-og-indsaet.
+- **7/10:** seks forside-/værktøjstitler gjort ≤60 tegn, så `clamp_title` ikke
+  taber nøgleord («machine», «Mahope», «Tritanopia»). Blogtitler er bevidst
+  lange overskrifter — H1 viser den fulde titel.
+- **Sporingen virker** (målt 6/10): `contrast-measured` i `/api/results` efter
+  33 s. Ærlig baseline: **0 rigtige** kørsler. `/api/stats` er 401 uden
+  `STATS_TOKEN`.
 
 ## Åbne review-fund
 
@@ -21,23 +20,17 @@ Ingen. Alle tre lukket 6/10 — teksten står i `docs/plan-arkiv.md`.
 
 ## Verificér deploy
 
-- **VERIFICÉR DEPLOY:** gratis/Pro-tabel + købsknap på de to danske
-  farveværktøjssider `ceo/da-farvevaerktoejer-koeb` 7/10. Kræver live
-  `https://mahope.tools/palette-generator-da` og `/color-blindness-simulator-da`:
-  begge bærer `id="pro"`, teksten `Køb EUComply Pro — $79/år pr. website`
-  og `buy.stripe.com/eVq00i4YH6UG69g0ObbMQ03`.
-- **VERIFICÉR DEPLOY:** gratis/Pro-tabel + købsknap på de to engelske
-  farveværktøjssider `ceo/farve-vaerktoejer-koeb` 7/10 09:34. Kræver live
-  `https://mahope.tools/color-blindness-simulator` og `/palette-generator`:
-  begge bærer `id="pro"`, teksten `Buy EUComply Pro — $79/year per website`
-  og `buy.stripe.com/eVq00i4YH6UG69g0ObbMQ03`.
-- **VERIFICÉR DEPLOY:** farveforslaget i kontrastværktøjet
-  `ceo/kontrast-fix-farve` 6/10 (se feature-kø 21). Kræver live
-  `https://mahope.tools/contrast-checker`: `#cc-fix-use` findes, og ved
-  `#ffd700` på `#ffffff` (1,40:1) viser den `#8b7500`, hvis ratio mod hvid er
-  ≥ 4,5:1. Samme på `/contrast-checker-da`.
-- **VERIFICÉR DEPLOY:** billede-drop-og-indsæt i kontrastværktøjet
-  `ceo/billede-drop-og-indsaet` 6/10 (se feature-kø 20).
+- **DEPLOY OK 7/10:** gratis/Pro-tabel + købsknap på de to danske
+  farveværktøjssider `ceo/da-farvevaerktoejer-koeb`. Live: begge bærer
+  `id="pro"`, `Køb EUComply Pro — $79/år pr. website` og betalingslinket.
+- **DEPLOY OK 7/10:** gratis/Pro-tabel + købsknap på de to engelske
+  farveværktøjssider `ceo/farve-vaerktoejer-koeb`. Live: begge bærer
+  `id="pro"`, `Buy EUComply Pro — $79/year per website` og betalingslinket.
+- **DEPLOY OK 7/10:** farveforslaget i kontrastværktøjet `ceo/kontrast-fix-farve`.
+  Live: `#cc-fix-use` findes, og `#ffd700` på `#ffffff` giver `#8b7500`
+  (ratio 4,52). Samme på `/contrast-checker-da`.
+- **DEPLOY OK 7/10:** billede-drop-og-indsaet `ceo/billede-drop-og-indsaet`.
+  Live: `text-on-image-core.js` har `drop`, `paste` og `loadFile`.
 - `pro-kortet på de fire scanneresider` er **DEPLOY OK 6/10**:
 alle fire sider bærer `compliance-report#url=` i den udgivne markup
 (`/scan`, `/scan-da`, `/compliance-site-check`, `/da/compliance-site-check` —

@@ -9036,3 +9036,27 @@ som var uændret her — denne opgave rører noten, ikke knappen).
     1280 px: ingen vandret scroll på siden.
   - **Fuld gate GRØN — 180 steps.** `check_stripe_ctas` 77 købssider 0 fund,
     `check_tool_paid_path` og `check_article_paid_path` grønne.
+
+## titler-uden-tabte-noegleord (7/10, ceo/titler-uden-tabte-noegleord)
+
+- `ITERATION_ID`: `titler-uden-tabte-noegleord-2026-10-07`
+- `STATE`: **Seks forside-/værktøjstitler tabte et nøgleord i `clamp_title`s
+  60-tegnsnit.** Målt live 7/10: `/` endte «… from…» (tabte «mahoje.dk»),
+  `/da/` «… fra…», `/color-blindness-simulator` «… Deuteranopia…» (tabte
+  «Tritanopia»), `/page-profile` «… from…», `deskuptime.com` «… your own…»
+  (tabte «maskine» — differentiatoren) og `/da/` «… din egen…». Kildetitlerne
+  var 63–72 tegn, så `ellipsize` skar ved ordgrænse og droppede det sidste
+  ord — præcis det der betyder noget. Rettet i kilden til ≤60 tegn:
+  «mahope.tools — free web tools, guides and e-books» (49),
+  «mahope.tools — gratis webværktøjer, guides og e-bøger» (53),
+  «Color Blindness Simulator (Protan, Deutan, Tritan)» (50),
+  «DeskUptime — uptime, SSL, content checks on your machine» (56),
+  «DeskUptime — oppetid, SSL, indholdstjek på din maskine» (54),
+  «Page Profile CLI — Meta Tags, Open Graph & SEO Audit» (52).
+  - **Blogtitler er bevidst ikke rettet.** 77 af 262 mahope.tools-titler
+    ender «…», men de fleste er artiklens lange overskrifter hvor H1 viser
+    den fulde titel — Google trunker i SERP alligevel. De seks rettede er
+    forsider og værktøjssider hvor det tabte ord er differentiatoren.
+  - **Fuld gate GRØN.** `seo_check` 316 sider 0 fund (inkl. `title_ends_mid_sentence`
+    og `title_parentheses_unbalanced` på de nye titler), `stripe-worker`
+    515/515, `check_inline_js` 0 problemer.
