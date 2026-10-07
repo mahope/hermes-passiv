@@ -9,10 +9,11 @@
   kan være sandt samtidig. Rettet i `ceo/sporing-dom-er-modstraaende`.
 - **Baselines fra `/api/results` og `/api/conversion` er igen brugbare.**
   `/api/stats` (beløb og licenser) er stadig 401 og kræver `STATS_TOKEN`.
-- **7/10:** de to engelske farveværktøjssider (`/palette-generator` og
-  `/color-blindness-simulator`) har nu en gratis/Pro-tabel og én synlig købsknap
-  til EUComply Pro. De danske udgaver mangler endnu — se Åbne opgaver.
-  Baseline: 3 og 0–1 besøgende/28 dage, så effekten måles på siden selv.
+- **7/10:** alle fire farveværktøjssider har nu en gratis/Pro-tabel og én synlig
+  købsknap til EUComply Pro — de to engelske 7/10, de to danske i denne iteration.
+  Samme commit nulstiller noten i en tabelcelle (den arvede kortets 720 px) og
+  giver rækkeoverskriften en mindste bredde, så «Hvad du får» ikke knækker
+  bogstav for bogstav ved 360–390 px. Baseline: 3 og 0–1 besøgende/28 dage.
 
 ## Åbne review-fund
 
@@ -20,6 +21,11 @@ Ingen. Alle tre lukket 6/10 — teksten står i `docs/plan-arkiv.md`.
 
 ## Verificér deploy
 
+- **VERIFICÉR DEPLOY:** gratis/Pro-tabel + købsknap på de to danske
+  farveværktøjssider `ceo/da-farvevaerktoejer-koeb` 7/10. Kræver live
+  `https://mahope.tools/palette-generator-da` og `/color-blindness-simulator-da`:
+  begge bærer `id="pro"`, teksten `Køb EUComply Pro — $79/år pr. website`
+  og `buy.stripe.com/eVq00i4YH6UG69g0ObbMQ03`.
 - **VERIFICÉR DEPLOY:** gratis/Pro-tabel + købsknap på de to engelske
   farveværktøjssider `ceo/farve-vaerktoejer-koeb` 7/10 09:34. Kræver live
   `https://mahope.tools/color-blindness-simulator` og `/palette-generator`:
@@ -41,14 +47,6 @@ er væk på alle fire, og `#url=`-vejen er fulgt i Chromium mod live: feltet bli
 `https://example.com` og rapporten kører (95/100, grade A) uden et klik.
 
 ## Åbne opgaver
-
-22. **De to danske farveværktøjssider mangler den købsvej de engelske fik 7/10.**
-    Hvorfor: `/color-blindness-simulator-da` og `/palette-generator-da` beskriver
-    EUComply Pro i prosa men har ingen knap. Accept: begge har en synlig
-    gratis/Pro-tabel og én købsknap, og gaten er grøn. Blokeret af at
-    `check_tool_paid_path`s anker-nøgle bruger synlig tekst, så de to «Dansk
-    version →»-links i `/free-tools` kolliderer; løsningen er et `id` pr. link
-    (eller unik tekst), hvorefter `--write` fanger begge. *(Egen opgave.)*
 
 3. **Konvertering kan ikke måles uden `STATS_TOKEN`.** Hvorfor: `/api/stats`
    svarer 401 siden uge 37, så næsten hver linje i enhver trafikrangering er vor

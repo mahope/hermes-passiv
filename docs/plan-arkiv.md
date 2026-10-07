@@ -9011,3 +9011,28 @@ som var uændret her — denne opgave rører noten, ikke knappen).
   - **Fuld gate GRØN — 180 steps.**
 - `Baseline`: `/contrast-checker` er ikke blandt Plausibles top-sider (0–1
   besøgende/28 dage), så effekten måles på siden selv, ikke på besøg.
+
+## da-farvevaerktoejer-koeb (7/10, ceo/da-farvevaerktoejer-koeb)
+
+- `ITERATION_ID`: `da-farvevaerktoejer-koeb-2026-10-07`
+- `STATE`: **De to danske farveværktøjssider manglede den købsvej de engelske fik
+  7/10.** `/palette-generator-da` og `/color-blindness-simulator-da` beskrev
+  EUComply Pro i prosa men havde ingen knap, så en dansk læser der ville købe
+  skulle skifte til den engelske side. Nu bærer begge en synlig gratis/Pro-tabel
+  og én købsknap med de danske kataloglabels (`tilgængelighedstjekkene`,
+  `scoren og karakteren`, `hele rapporten på siden`, `GDPR/cookie- og
+  NIS2/sikkerhedstjekkene`, `hele pdf-rapporten`), og `id="pro"` så
+  «Se hvad Pro tilføjer» i heroen rammer tabellen.
+  - **Kollisionen blev løst med et id.** Anker-nøglen i `check_tool_paid_path`
+    er synlig tekst, og `/free-tools` har to «Dansk version →»-links; så snart
+    de to danske ruter blev `offers`, kolliderede de. `id="da-palette-generator"`
+    og `id="da-color-blindness-simulator"` gør dem unikke, og `--write` fangede
+    begge i ratchetten (målt: 13 nye destinationer).
+  - **Mobil-fejlen deles med de engelske sider.** Målt i Chromium 7/10: noten i
+    en tabelcelle arvede sidens `.pro-note`-kort og blev et 720 px felt, så
+    «$79/år» blev klippet ved 390 px. `.pro-table .pro-note` nulstiller nu
+    padding/kant/baggrund/max-width, og `th[scope="row"]` har `min-width:4.5rem`,
+    så «Hvad du får» ikke knækker bogstav for bogstav. Målt ved 360, 390, 768 og
+    1280 px: ingen vandret scroll på siden.
+  - **Fuld gate GRØN — 180 steps.** `check_stripe_ctas` 77 købssider 0 fund,
+    `check_tool_paid_path` og `check_article_paid_path` grønne.

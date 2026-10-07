@@ -1756,6 +1756,34 @@
         "Buy EUComply Pro — $79/year per website"
       ],
       "product_note": "Paletgeneratoren beskriver EUComply Pro i sin pro-note, men havde ingen købsknap."
+    },
+    {
+      "path": "site/palette-generator-da.html",
+      "domain": "mahope.tools",
+      "route": "/palette-generator-da",
+      "product": "eucomply-pro",
+      "prices": [
+        "$0",
+        "$79"
+      ],
+      "requires_text": [
+        "Køb EUComply Pro — $79/år pr. website"
+      ],
+      "product_note": "Den danske paletgenerator fik samme synlige gratis/Pro-tabel og købsknap som den engelske 7/10, så en dansk læser ikke skal skifte sprog for at købe."
+    },
+    {
+      "path": "site/color-blindness-simulator-da.html",
+      "domain": "mahope.tools",
+      "route": "/color-blindness-simulator-da",
+      "product": "eucomply-pro",
+      "prices": [
+        "$0",
+        "$79"
+      ],
+      "requires_text": [
+        "Køb EUComply Pro — $79/år pr. website"
+      ],
+      "product_note": "Den danske farveblindhedssimulator fik samme synlige gratis/Pro-tabel og købsknap som den engelske 7/10."
     }
   ],
   "built_offers": [],

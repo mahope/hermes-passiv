@@ -67,7 +67,10 @@
    "palette generator": "/palette-generator"
   },
   "/color-blindness-simulator-da": {
-   "EUComply Pro": "/da/compliance-report"
+   "EUComply Pro": "/da/compliance-report",
+   "Køb EUComply Pro — $79/år pr. website": "https://buy.stripe.com/eVq00i4YH6UG69g0ObbMQ03",
+   "Palet-generator": "/palette-generator-da",
+   "palet-generatoren": "/palette-generator-da"
   },
   "/compliance-guide": {
    "Cookie Consent for Web Agencies Consent banners that actually comply with GDPR.": "/blog/cookie-consent-gdpr-compliance",
@@ -98,7 +101,8 @@
   "/contrast-checker-da": {
    "#4": "https://buy.stripe.com/eVq00i4YH6UG69g0ObbMQ03",
    "#5": "/da/compliance-report",
-   "EUComply Pro": "/da/compliance-report"
+   "EUComply Pro": "/da/compliance-report",
+   "Palette generator": "/palette-generator-da"
   },
   "/cookie-check": {
    "Cookie Consent & GDPR Compliance for Small Websites": "/blog/cookie-consent-gdpr-compliance",
@@ -129,8 +133,10 @@
   "/da/free-tools": {
    "Betalt compliance-rapport": "/da/compliance-report",
    "Betalt skabeloner og klausulsæt": "/da/paid-templates",
+   "Generator til tilgængelig farvepalet": "/palette-generator-da",
    "Se de syv dokumenter →": "/da/paid-templates",
    "Se hvad rapporten dækker →": "/da/compliance-report",
+   "Simulator for farveblindhed": "/color-blindness-simulator-da",
    "Sådan bruger du den på din egen hjemmeside →": "/da/blog/tilgaengelighedsscanner-cli",
    "Sådan kører du det i din pipeline →": "/da/blog/compliance-tjek-github-action",
    "Sådan opbygger du samtykke korrekt →": "/da/blog/cookie-consent-gdpr-2026",
@@ -226,6 +232,8 @@
    "Premium Compliance Report": "/compliance-report",
    "See the seven documents →": "/paid-templates",
    "See what the report covers →": "/compliance-report",
+   "da-color-blindness-simulator": "/color-blindness-simulator-da",
+   "da-palette-generator": "/palette-generator-da",
    "page-profile": "/page-profile"
   },
   "/guides": {
@@ -369,7 +377,9 @@
    "EUComply Pro": "/compliance-report"
   },
   "/palette-generator-da": {
-   "EUComply Pro": "/da/compliance-report"
+   "EUComply Pro": "/da/compliance-report",
+   "Farveblindhedssimulator": "/color-blindness-simulator-da",
+   "Køb EUComply Pro — $79/år pr. website": "https://buy.stripe.com/eVq00i4YH6UG69g0ObbMQ03"
   },
   "/pricing": {
    "Buy Client Compliance Report Kit": "/paid-templates",
@@ -432,9 +442,12 @@
   },
   "/text-on-image-checker-da": {
    "EUComply Pro": "/da/compliance-report",
-   "Guide: sådan tester du tekst på billeder trin for trin": "/da/blog/tekst-paa-billede-kontrasttjek"
+   "Guide: sådan tester du tekst på billeder trin for trin": "/da/blog/tekst-paa-billede-kontrasttjek",
+   "Paletgenerator": "/palette-generator-da",
+   "farveblindhedssimulatoren": "/color-blindness-simulator-da"
   },
   "/tilgaengelighedserklaering-generator-da": {
+   "#1": "/color-blindness-simulator-da",
    "EUComply Pro": "/da/compliance-report"
   },
   "/tools": {
