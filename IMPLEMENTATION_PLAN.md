@@ -1,31 +1,18 @@
 # STATUS
-- **CI:** `main` er **grøn** (deploy-sites, push 6/10 18:50). `PR-TJEK 6/10`:
-  **0** åbne PR'er.
-- **Sporingen er ikke død — dommen var det (målt 6/10 20:00).** Jeg skrev en
-  rigtig begivenhed til `/api/track` fra min egen maskine: `contrast-measured`
-  på `/text-on-image-checker` med korrekt `Origin` og `Referer`. Den lå i
-  `/api/results` som `runs: 1` efter **33 sekunder** (KV-listninger er
-  asynkrone), og `/api/health` steg `recentEvents 2 → 6` fordi mine egne
-  poster tæller med. **Skrivevejen virker.**
-- **Hvor dommen galt gik hen:** `/api/health` og `/api/results` læser **samme**
-  `p:v3:…:event:…`-nøgler, så et `recentEvents > 0` *beviser* at events lander.
-  Værktøjet skrev alligevel «TRACKING DØD» i samme sætning som det citerede
-  `recentEvents: 2` — de to tal modsagde hinanden, fordi de har forskellige
-  navnelister (`/api/results` tæller kun `RESULT_EVENTS`; `cta-*` og
-  `store-click` er bevidst holdt ude). Rettet i denne iteration, se feature-kø B.
-- **Baselines er dermed reelle igen.** Den ærlige baseline for
-  `contrast-measured` på `/text-on-image-checker` er **0 rigtige** — de 3
-  `runs` i `/api/results` i dag er **mine egne probe-poster** (2 synlige efter
-  33 s + 1 i et senere kald), ikke en bruger. Jeg tæller dem ikke som
-  efterspørgsel, og det er dem der gjorde at `/api/results` så levende ud.
-- **Næste:** `/api/results` og `/api/conversion` kan igen bruges som baseline,
-  så de næste to opgaver kan prioriteres på **hvad brugerne gør** frem for på
-  nul. `/api/stats` (beløb og licenser) er stadig 401 og kræver `STATS_TOKEN`.
-- **6/10:** kontrastværktøjet (`/contrast-checker` EN+DA) foreslår nu den
-  nærmeste tekstfarve der består AA for almindelig tekst — med samme kulør og
-  mætning — og kan kopieres i ét klik. Se feature-kø 21. Baseline:
-  `/contrast-checker` er ikke blandt Plausibles top-sider (0–1 besøgende/28
-  dage), så effekten måles på siden selv, ikke på besøg.
+- **CI:** `main` var **rød** 6/10 — `plan-status` dømte STATUS til 27 linjer
+  (max 25). Kogt ned i denne iteration; gaten er grøn igen.
+- **Sporingen virker** (målt 6/10 20:00): min egen `contrast-measured` lå i
+  `/api/results` efter 33 s, og `/api/health`s `recentEvents` gik 2 → 6.
+  Skrivevejen er bekræftet; den ærlige baseline er **0 rigtige** kørsler.
+- **Dommen var det, der var dødt:** `/api/health` og `/api/results` har
+  forskellige navnelister på de samme nøgler, så «2 events» og «0 resultater»
+  kan være sandt samtidig. Rettet i `ceo/sporing-dom-er-modstraaende`.
+- **Baselines fra `/api/results` og `/api/conversion` er igen brugbare.**
+  `/api/stats` (beløb og licenser) er stadig 401 og kræver `STATS_TOKEN`.
+- **7/10:** de to engelske farveværktøjssider (`/palette-generator` og
+  `/color-blindness-simulator`) har nu en gratis/Pro-tabel og én synlig købsknap
+  til EUComply Pro. De danske udgaver mangler endnu — se Åbne opgaver.
+  Baseline: 3 og 0–1 besøgende/28 dage, så effekten måles på siden selv.
 
 ## Åbne review-fund
 
@@ -33,6 +20,11 @@ Ingen. Alle tre lukket 6/10 — teksten står i `docs/plan-arkiv.md`.
 
 ## Verificér deploy
 
+- **VERIFICÉR DEPLOY:** gratis/Pro-tabel + købsknap på de to engelske
+  farveværktøjssider `ceo/farve-vaerktoejer-koeb` 7/10 09:34. Kræver live
+  `https://mahope.tools/color-blindness-simulator` og `/palette-generator`:
+  begge bærer `id="pro"`, teksten `Buy EUComply Pro — $79/year per website`
+  og `buy.stripe.com/eVq00i4YH6UG69g0ObbMQ03`.
 - **VERIFICÉR DEPLOY:** farveforslaget i kontrastværktøjet
   `ceo/kontrast-fix-farve` 6/10 (se feature-kø 21). Kræver live
   `https://mahope.tools/contrast-checker`: `#cc-fix-use` findes, og ved
@@ -49,6 +41,14 @@ er væk på alle fire, og `#url=`-vejen er fulgt i Chromium mod live: feltet bli
 `https://example.com` og rapporten kører (95/100, grade A) uden et klik.
 
 ## Åbne opgaver
+
+22. **De to danske farveværktøjssider mangler den købsvej de engelske fik 7/10.**
+    Hvorfor: `/color-blindness-simulator-da` og `/palette-generator-da` beskriver
+    EUComply Pro i prosa men har ingen knap. Accept: begge har en synlig
+    gratis/Pro-tabel og én købsknap, og gaten er grøn. Blokeret af at
+    `check_tool_paid_path`s anker-nøgle bruger synlig tekst, så de to «Dansk
+    version →»-links i `/free-tools` kolliderer; løsningen er et `id` pr. link
+    (eller unik tekst), hvorefter `--write` fanger begge. *(Egen opgave.)*
 
 3. **Konvertering kan ikke måles uden `STATS_TOKEN`.** Hvorfor: `/api/stats`
    svarer 401 siden uge 37, så næsten hver linje i enhver trafikrangering er vor
