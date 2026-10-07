@@ -1,9 +1,8 @@
 # STATUS
-- **CI:** rød 7/09:39 i `product-copy` — den danske DeskUptime-forside (merge
-  `c3cf71d1`) sagde «overvågingstjeneste»/«enheds-ID» og manglede kommaet i
-  «nøglen, første gang». Rettet i `ceo/deskuptime-ci-disclosures`: fraserne
-  matcher nu porten OG production (live har allerede de korrekte fraser fra en
-  manuel deploy). Gate grøn lokalt.
+- **CI:** grøn 7/10 efter `ceo/deskuptime-da-ci-fix` — den danske
+  DeskUptime-forside manglede fire fraser i `stripe-ctas`: «én gang,
+  3 maskiner», «client-report», «Enkelttjek» og «SSL- og content-tjek».
+  Rettet i pro-tabellen. Gate grøn.
 - CEO-kø punkt 0 (review-fund 29/9) verificeret færdigt: alle fem
   punkter rettet (`10f95b42`, `b772a466`, `67092c4c`, `e37b30a6`), gaten grøn,
   live `/api/url-inspect` svarer 200.

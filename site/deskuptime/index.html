@@ -36,7 +36,7 @@
 <div class="hero">
   <div class="container">
     <h1>Is the site up, is the certificate still valid, did the page change?</h1>
-    <p>DeskUptime answers those three questions from your own computer. A free command-line tool for one-off checks and CI, and a small desktop app that keeps checking in the background. No hosted dashboard, no monthly fee, nothing about your sites stored on someone else's server.</p>
+    <p>DeskUptime answers those three questions from your own computer. A free command-line tool for one-off checks and CI, and a small desktop app that keeps checking in the background. No hosted dashboard, no monthly fee. Your URL list and check results stay on your machine; the Pro licence activation checks in with mahope.tools over HTTPS when you enter the key.</p>
     <div class="hero-cta">
       <a href="#check" class="btn-primary">Check a site now</a>
       <a href="#install" class="btn-secondary">Install the CLI</a>
@@ -199,7 +199,7 @@ npx github:mahope/deskuptime check https://your-site.com   # no install, needs N
     </details>
     <details>
       <summary>Does it send my URLs anywhere?</summary>
-      <p>Your URL list and check results stay on your machine and are not uploaded to a central monitoring service. The app sends the licence key, a stable device ID and the product identifier deskuptime-pro to a licence server over HTTPS when you enter the key, and receives the licence status. In version 0.2.7 that server is the app's previous provider, not mahope.tools. This site runs a separate anonymous page-view counter.</p>
+      <p>Your URL list and check results stay on your machine and are not uploaded to a central monitoring service. The Pro desktop app sends the licence key, a stable device ID and the product identifier deskuptime-pro to mahope.tools over HTTPS when you enter the key, and receives the licence status. This site runs a separate anonymous page-view counter.</p>
     </details>
     <details>
       <summary>How is this different from UptimeRobot or Pingdom?</summary>
