@@ -323,6 +323,22 @@ STEPS: tuple[Step, ...] = (
             "site/color-blindness-simulator-da.html",
         ),
     ),
+    # Farverne ud af et billede i paletgeneratoren (EN + DA). Generatoren tog
+    # kun en hexfarve ind, men de fleste har deres brandfarve i et logo eller et
+    # skærmbillede. `site/palette-image.js` læser billedet med canvas og
+    # trækker de dominerende farver ud. Dommen kalder den rene `extract()` på et
+    # kendt pixel-array og læser begge *rigtige* sider, fordi den danske er en
+    # håndhævet kopi.
+    Step(
+        id="palette-image",
+        argv=("node", "tests/palette-image.test.mjs"),
+        inputs=(
+            "tests/palette-image.test.mjs",
+            "site/palette-image.js",
+            "site/palette-generator.html",
+            "site/palette-generator-da.html",
+        ),
+    ),
     # Del-linket på EAA/WCAG-scanneren (EN + DA). Før dette kopierede
     # `shareResult()` kun URL'en, så den der modtog linket så en tom formular
     # og skulle trykke Scan selv — og brugte sin *egen* kvote på en side, der

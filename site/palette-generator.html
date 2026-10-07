@@ -49,6 +49,19 @@
   .pg-tab { padding:8px 14px; border-radius:8px; border:1px solid var(--color-border); background:var(--color-surface); cursor:pointer; font-weight:600; font-size:.88rem; }
   .pg-tab[aria-selected="true"] { background:var(--color-accent); color:#fff; border-color:var(--color-accent); }
   .pg-dl { display:inline-block; margin-left:auto; }
+  .pg-img { margin-top:20px; border:1px dashed var(--color-border); border-radius:var(--radius); padding:16px 18px; background:var(--color-surface-2); }
+  .pg-img.pg-img-over { border-color:var(--color-accent); background:var(--color-accent-soft); }
+  .pg-img-title { margin:0 0 4px; font-weight:600; }
+  .pg-img-help { margin:0; font-size:.88rem; color:var(--color-text-muted); }
+  .pg-img-label { color:var(--color-accent); cursor:pointer; text-decoration:underline; }
+  .pg-img-swatches { display:flex; flex-wrap:wrap; gap:10px; margin-top:12px; }
+  .pg-img-swatch { width:44px; height:44px; border-radius:10px; border:1px solid var(--color-border); cursor:pointer; padding:0; }
+  .pg-img-swatch:hover { outline:2px solid var(--color-accent); }
+  .pg-img-swatch[aria-pressed="true"] { outline:3px solid var(--color-accent); outline-offset:2px; }
+  /* style.css har `input[type="file"]{width:100%}`, som slår `.sr-only`s
+     1 px (0,1,1 mod 0,1,0), så filfeltet ellers fyldte hele bredden og skubbede
+     siden vandret. Denne regel er mere specifik og holder det usynligt. */
+  .pg-img input[type="file"].sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
   .pro-note { max-width:720px; margin:32px auto 0; padding:18px 22px; border:1px solid var(--color-accent); border-radius:10px; background:var(--color-accent-soft); }
   .pro-note h2 { font-size:1.05rem; margin:0 0 8px; }
   .pro-note p { margin:0; color:var(--color-text); font-size:.95rem; line-height:1.7; }
@@ -101,6 +114,16 @@
     </div>
   </div>
   <p class="pg-error" id="pg-error" role="alert"></p>
+
+  <div class="pg-img" id="pg-img">
+    <p class="pg-img-title">Or pull the colours from an image</p>
+    <p class="pg-img-help">Drop a logo or a screenshot here, paste it (Ctrl+V), or
+    <label for="pg-img-file" class="pg-img-label">choose a file</label> — it is read
+    in your browser, nothing is uploaded. Click a colour to use it as the base.</p>
+    <input type="file" id="pg-img-file" accept="image/*" class="sr-only">
+    <div class="pg-img-swatches" id="pg-img-swatches" role="group" aria-label="Colours found in the image"></div>
+    <p class="pg-error" id="pg-img-error" role="alert"></p>
+  </div>
 
   <div style="overflow-x:auto">
   <table class="pg-table">
@@ -469,6 +492,30 @@
   $('base-text').addEventListener('change', update);
   $('bg-select').addEventListener('change', update);
   update();
+})();
+</script>
+<script src="/palette-image.js"></script>
+<script>
+/* Farverne fra et billede sætter basisfarven. Vi rører de samme to felter
+   som filvælgeren gør og fyrer et `input`, så sidens egen `update()` regner
+   paletten om — der er ingen anden vej til at sætte basisfarven. */
+(function () {
+  var base = document.getElementById('base-text');
+  var color = document.getElementById('base-color');
+  if (!window.PALETTE_IMAGE || !base || !color) return;
+  window.PALETTE_IMAGE.mount({
+    onPick: function (hex) {
+      base.value = hex;
+      color.value = hex;
+      base.dispatchEvent(new Event('input', { bubbles: true }));
+    },
+    strings: {
+      pick: 'Use', none: 'No colours found in that image — try another.',
+      errNotImage: 'Please choose an image file.',
+      errUnreadable: 'Could not read that image file.',
+      errRead: 'Could not read that image.'
+    }
+  });
 })();
 </script>
 <script>
