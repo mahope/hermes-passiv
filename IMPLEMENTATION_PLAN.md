@@ -314,13 +314,15 @@ C. ~~**En Pro-holder der kommer fra scanneren skal finde PDF'en selv.**~~
   `docs/plan-arkiv.md`.
 
 2. **`deskuptime.com`: 7 besøgende, 100 % bounce, 0 s opholdt tid.** Hvem:
-   alle 7 på `/`. Tal: hvor mange køber. Accept: en forside der sælger uden
-   at kræve scroll. Datagrund: **0 s** er ikke en lang læsning, det er en
-   besøger der gik med det samme — på den eneste udgivne side der kun er én.
-   Målt i Chromium 4/10 mod live: **0** JS-fejl, **0** fejlede requests,
-   `scrollWidth == viewport` ved 390 og 1280, og den primære handling
-   («Check a site now» → `#check`) ligger i folden ved begge bredder. Folden
-   var altså ikke årsagen; 7 besøgende kan heller ikke dømme en forside.
+    alle 7 på `/`. Tal: hvor mange køber. Accept: en forside der sælger uden
+    at kræve scroll. Datagrund: **0 s** er ikke en lang læsning, det er en
+    besøger der gik med det samme — på den eneste udgivne side der kun er én.
+    Målt i Chromium 4/10 mod live: **0** JS-fejl, **0** fejlede requests,
+    `scrollWidth == viewport` ved 390 og 1280, og den primære handling
+    («Check a site now» → `#check`) ligger i folden ved begge bredder. Folden
+    var altså ikke årsagen; 7 besøgende kan heller ikke dømme en forside.
+    **LEVERET 7/10** — `ceo/deskuptime-forside-saelger`. **VERIFICÉR DEPLOY:**
+    dansk forside `index.html` + gratis/Pro-tabel + købsknap på `/da/` `ceo/deskuptime-forside-saelger` 7/10.
 
 17. ~~**En guide-artikel har ingen vej til prislisten.**~~ **LEVERET 7/10**,
       `ceo/pro-vej-i-guides`.** 17 artikler (8 EN + 9 DA) på cleancopy.tools har
