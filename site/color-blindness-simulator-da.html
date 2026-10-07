@@ -56,6 +56,7 @@
   .cbi-drop canvas { max-width:100%; height:auto; display:block; margin:0 auto; border-radius:8px; }
   .cbi-empty { margin:0; color:var(--color-text-muted); font-size:.9rem; }
   .cbi-file { padding:9px 12px; border:1px solid var(--color-border); border-radius:8px; background:var(--color-surface-2); color:var(--color-text); max-width:100%; }
+  #cvd-contrast th[scope="row"] { white-space:nowrap; }
 </style>
   <meta property="og:image" content="https://hermes-passiv.pages.dev/cover.jpg">
   <meta name="twitter:card" content="summary_large_image">
@@ -154,6 +155,12 @@
   <a href="/contrast-checker-da">kontrasttjekker</a>; til en hel tilgængelig palet,
   prøv <a href="/palette-generator-da">palet-generatoren</a>. Vil du tjekke en hel
   side, så kør den gratis <a href="/scan-da">tilgængelighedsscanner</a>.</p>
+
+  <h3 style="margin-top:28px">Kontrast ved hver synstype</h3>
+  <p class="cb-note" style="margin-top:0">WCAG-forholdet mellem de to farver ovenfor,
+  regnet om for hver simuleret synstype. Et par kan bestå for dig og alligevel fejle
+  for en anden — det er den forskel et almindeligt kontrasttjek ikke ser.</p>
+  <div id="cvd-contrast"></div>
 </section>
 
 <section class="cb-card" id="cbi" aria-labelledby="cbi-heading">
@@ -578,6 +585,9 @@
     updatePreview();
     renderExport();
     writeHash();
+    // Kontrast-tabellen pr. synstype (`/cb-contrast.js`) læser de samme felter,
+    // så den skal tegnes om når sværhedsgraden eller paletten ændrer sig.
+    if (globalThis.CBCONTRAST) globalThis.CBCONTRAST.update();
   }
 
   // Adresselinjen *er* del-linket, hele tiden — ikke kun efter knappen.
@@ -660,6 +670,35 @@
       errNotImage: 'Vælg venligst en billedfil.',
       errUnreadable: 'Kunne ikke læse den billedfil.',
       errDownload: 'Din browser kunne ikke gemme billedet — højreklik på feltet i stedet.'
+    }
+  });
+})();
+</script>
+<script src="/cb-contrast.js"></script>
+<script>
+/* Kontrasten pr. synstype. Kernen ligger i `/cb-contrast.js` og læser den samme
+   Machado-model som tabellen gennem `window.CB_SIM`. Ordene er sidens egne, så
+   den danske side ikke møder engelsk tekst. */
+(function () {
+  if (!window.CBCONTRAST) return;
+  window.CBCONTRAST.mount({
+    strings: {
+      normal: 'Normalt syn',
+      protan: 'Protanopi',
+      deutan: 'Deuteranopi',
+      tritan: 'Tritanopi',
+      decimal: ',',
+      caption: 'WCAG-kontrastforholdet mellem tekst- og baggrundsfarven for hver synstype',
+      colVision: 'Synstype',
+      colRatio: 'Forhold',
+      colVerdict: 'AA',
+      pass: 'Består',
+      largeOnly: 'Kun stor tekst',
+      fail: 'Fejler',
+      baseFails: 'Parret fejler allerede AA for almindelig tekst — ret grundkontrasten, før farveblindhed kommer ind i billedet.',
+      dropPrefix: 'Farveblindhed ændrer dommen: ',
+      dropSuffix: ' falder under 4,5:1, selv om normalt syn består.',
+      unchanged: 'Alle synstyper holder sig på eller over 4,5:1 — farveblindhed ændrer ikke dommen for dette par.'
     }
   });
 })();

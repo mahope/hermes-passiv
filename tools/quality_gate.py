@@ -304,6 +304,25 @@ STEPS: tuple[Step, ...] = (
             "site/color-blindness-simulator-da.html",
         ),
     ),
+    # Kontrasten pr. synstype i farveblindhedssimulatoren (EN + DA). Tabellen og
+    # forhåndsvisningen viste hvordan farverne *ser ud*, men ikke WCAG-forholdet
+    # for hver synstype — og et par kan bestå AA for normalt syn og falde under
+    # 4.5:1 for en deuteranop. `site/cb-contrast.js` regner det tal med den
+    # samme `CB_SIM.simulate` som tabellen bruger. Dommen har sin egen
+    # luminans-implementering og kræver præcis samme forhold, og den læser begge
+    # *rigtige* sider, fordi den danske er en håndhævet kopi.
+    Step(
+        id="cb-contrast",
+        argv=("node", "tests/cb-contrast.test.mjs"),
+        inputs=(
+            "tests/cb-contrast.test.mjs",
+            "site/cb-contrast.js",
+            "site/cb-image.js",
+            "site/cb-share-core.js",
+            "site/color-blindness-simulator.html",
+            "site/color-blindness-simulator-da.html",
+        ),
+    ),
     # Del-linket på EAA/WCAG-scanneren (EN + DA). Før dette kopierede
     # `shareResult()` kun URL'en, så den der modtog linket så en tom formular
     # og skulle trykke Scan selv — og brugte sin *egen* kvote på en side, der

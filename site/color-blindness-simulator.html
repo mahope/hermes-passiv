@@ -56,6 +56,7 @@
   .cbi-drop canvas { max-width:100%; height:auto; display:block; margin:0 auto; border-radius:8px; }
   .cbi-empty { margin:0; color:var(--color-text-muted); font-size:.9rem; }
   .cbi-file { padding:9px 12px; border:1px solid var(--color-border); border-radius:8px; background:var(--color-surface-2); color:var(--color-text); max-width:100%; }
+  #cvd-contrast th[scope="row"] { white-space:nowrap; }
 </style>
   <meta property="og:image" content="https://hermes-passiv.pages.dev/cover.jpg">
   <meta name="twitter:card" content="summary_large_image">
@@ -155,6 +156,12 @@
   use our <a href="/contrast-checker">contrast checker</a>; for a full accessible
   palette, try the <a href="/palette-generator">palette generator</a>. To check an
   entire live page, run the free <a href="/scan">Accessibility Scanner</a>.</p>
+
+  <h3 style="margin-top:28px">Contrast under each vision type</h3>
+  <p class="cb-note" style="margin-top:0">The WCAG ratio between the two colors above,
+  recomputed for each simulated vision type. A pair can pass for you and still fail
+  for someone else — that is the difference a plain contrast check does not see.</p>
+  <div id="cvd-contrast"></div>
 </section>
 
 <section class="cb-card" id="cbi" aria-labelledby="cbi-heading">
@@ -579,6 +586,9 @@
     updatePreview();
     renderExport();
     writeHash();
+    // Kontrast-tabellen pr. synstype (`/cb-contrast.js`) læser de samme felter,
+    // så den skal tegnes om når sværhedsgraden eller paletten ændrer sig.
+    if (globalThis.CBCONTRAST) globalThis.CBCONTRAST.update();
   }
 
   // The address bar is the share link, always — not just after the button.
@@ -659,6 +669,33 @@
       errNotImage: 'Please choose an image file.',
       errUnreadable: 'Could not read that image file.',
       errDownload: 'Your browser could not save the image — right-click the panel instead.'
+    }
+  });
+})();
+</script>
+<script src="/cb-contrast.js"></script>
+<script>
+/* Kontrasten pr. synstype. Kernen ligger i `/cb-contrast.js` og læser den samme
+   Machado-model som tabellen gennem `window.CB_SIM`. Ordene er sidens egne. */
+(function () {
+  if (!window.CBCONTRAST) return;
+  window.CBCONTRAST.mount({
+    strings: {
+      normal: 'Normal vision',
+      protan: 'Protanopia',
+      deutan: 'Deuteranopia',
+      tritan: 'Tritanopia',
+      caption: 'WCAG contrast ratio between the text and background colors for each vision type',
+      colVision: 'Vision',
+      colRatio: 'Ratio',
+      colVerdict: 'AA',
+      pass: 'Pass',
+      largeOnly: 'Large text only',
+      fail: 'Fail',
+      baseFails: 'This pair already fails AA for normal text — fix the base contrast before colour blindness is considered.',
+      dropPrefix: 'Colour blindness changes the verdict: ',
+      dropSuffix: ' drop below 4.5:1 even though normal vision passes.',
+      unchanged: 'Every vision type stays at or above 4.5:1 — colour blindness does not change the verdict for this pair.'
     }
   });
 })();

@@ -1,20 +1,22 @@
 # STATUS
+- **Kontrast pr. synstype i farveblindhedssimulatoren leveret 7/10**
+  (`ceo/cvd-kontrast`): `site/cb-contrast.js` regner WCAG-forholdet mellem
+  tekst og baggrund for hver simuleret synstype med den samme `CB_SIM.simulate`
+  som tabellen, og siger når et par består for normalt syn men fejler for en
+  farveblind (fx rød på hvidt: 4,83 normalt, 4,00 ved deuteranopi). Målt i
+  Chromium 390 og 1280 px: 4 rækker, ingen JS-fejl, ingen overflow. Gate
+  **GRØN — 182 steps**. Baseline: **3** besøgende/28 dage.
 - **Billed-simulering i farveblindhedssimulatoren leveret 7/10**
   (`ceo/cb-billede-simulering`): et billede kan trækkes ind, indsættes eller
   vælges, og de fire felter tegnes af den samme Machado-model som
   farve-tabellen. Målt i Chromium 390 og 1280 px: 0 overflow, ingen JS-fejl.
   Gate **GRØN — 181 steps**. Baseline: **3** besøgende/28 dage.
-- **CI:** grøn 7/10 efter `ceo/da-deskuptime-gate` — den danske
-  DeskUptime-forside brød tre porte. Tabellen tegnes nu af katalogen.
-  Gate grøn — 180 steps.
 - CEO-kø punkt 0 (review-fund 29/9) verificeret færdigt: alle fem punkter
   rettet (`10f95b42`, `b772a466`, `67092c4c`, `e37b30a6`), gaten grøn.
 - **Sentry er sat op og testet** (worker 149-246, test 1748-1833): DSN i kode,
   kun produktion, ingen PII, ingen traces/replay. «Ingen uløste fejl» betyder
   ingen fejl — ikke at intet sendes.
 - **Alle fire VERIFICÉR DEPLOY-noter er live og lukket** 7/10.
-- **7/10:** seks forside-/værktøjstitler gjort ≤60 tegn, så `clamp_title` ikke
-  taber nøgleord.
 - **Sporingen virker** (målt 6/10): `contrast-measured` i `/api/results` efter
   33 s. Ærlig baseline: **0 rigtige** kørsler.
 - **DeskUptime 'no phone-home' rettet** (`7dc00071`): hero + FAQ på EN/DA
@@ -22,13 +24,15 @@
 
 ## Åbne review-fund
 
-Review-fund 7/10 (deskuptime-kopi) rettet i `ceo/deskuptime-kopi-ensartet`:
-hero/FAQ sagde «maope.tools», Pro-kortet sagde «previous licence provider».
-Målt sandhed (84b094de): 0.2.7 kalder api.lemonsqueezy.com. Nu siger alle
-tre steder det samme, og porten kræver den rette formulering.
+Ingen. Review-fund 7/10 (deskuptime-kopi) er rettet og merged (`7e101213`):
+hero/FAQ og Pro-kortet siger nu alle «previous licence provider», og porten
+kræver den formulering.
 
 ## Verificér deploy
 
+- **VERIFICÉR DEPLOY:** kontrast pr. synstype `ceo/cvd-kontrast` 7/10 — tjek at
+  live `/color-blindness-simulator` og `-da` bærer `id="cvd-contrast"` og
+  `<script src="/cb-contrast.js">`, og at tabellen tegner fire rækker.
 - **VERIFICÉR DEPLOY:** billed-simulering `ceo/cb-billede-simulering` 7/10 — tjek
   at live `/color-blindness-simulator` og `-da` bærer `id="cbi-cv"`,
   `id="cbi-file"` og `<script src="/cb-image.js">`.
