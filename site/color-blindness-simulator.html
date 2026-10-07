@@ -162,6 +162,12 @@
   recomputed for each simulated vision type. A pair can pass for you and still fail
   for someone else — that is the difference a plain contrast check does not see.</p>
   <div id="cvd-contrast"></div>
+
+  <h3 style="margin-top:28px">Palette contrast under each vision type</h3>
+  <p class="cb-note" style="margin-top:0">Every pair in your palette, recomputed for
+  each simulated vision type. A pair that passes for you can fail for someone else —
+  this matrix shows which ones, so you can fix them before they reach a client.</p>
+  <div id="palette-contrast"></div>
 </section>
 
 <section class="cb-card" id="cbi" aria-labelledby="cbi-heading">
@@ -589,6 +595,70 @@
     // Kontrast-tabellen pr. synstype (`/cb-contrast.js`) læser de samme felter,
     // så den skal tegnes om når sværhedsgraden eller paletten ændrer sig.
     if (globalThis.CBCONTRAST) globalThis.CBCONTRAST.update();
+    renderPaletteContrast();
+  }
+
+  function renderPaletteContrast() {
+    var box = document.getElementById('palette-contrast');
+    if (!box) return;
+    if (!globalThis.CBCONTRAST) { box.innerHTML = ''; return; }
+    var sev = Number(document.getElementById('severity').value) / 100;
+    var hexes = colors.map(function (c) { return c.hex; });
+    if (hexes.length < 2) {
+      box.innerHTML = '<p class="cb-note">Add at least two colors to see the palette contrast matrix.</p>';
+      return;
+    }
+    var types = [
+      { type: null, key: 'normal', label: 'Normal' },
+      { type: 'protanomaly', key: 'protan', label: 'Protan' },
+      { type: 'deuteranomaly', key: 'deutan', label: 'Deutan' },
+      { type: 'tritanomaly', key: 'tritan', label: 'Tritan' }
+    ];
+    var table = document.createElement('table');
+    table.className = 'cb-grid';
+    var cap = document.createElement('caption');
+    cap.textContent = 'WCAG contrast ratio for every pair in the palette, for each vision type';
+    cap.style.cssText = 'position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden';
+    table.appendChild(cap);
+    var thead = document.createElement('thead');
+    var hr = document.createElement('tr');
+    var th0 = document.createElement('th');
+    th0.textContent = 'Pair';
+    th0.setAttribute('scope', 'col');
+    hr.appendChild(th0);
+    types.forEach(function (t) {
+      var th = document.createElement('th');
+      th.textContent = t.label;
+      th.setAttribute('scope', 'col');
+      hr.appendChild(th);
+    });
+    thead.appendChild(hr);
+    table.appendChild(thead);
+    var tbody = document.createElement('tbody');
+    for (var i = 0; i < hexes.length; i++) {
+      for (var j = i + 1; j < hexes.length; j++) {
+        var tr = document.createElement('tr');
+        var th = document.createElement('th');
+        th.setAttribute('scope', 'row');
+        th.textContent = hexes[i] + ' / ' + hexes[j];
+        tr.appendChild(th);
+        types.forEach(function (t) {
+          var td = document.createElement('td');
+          var res = globalThis.CBCONTRAST.readout(hexes[i], hexes[j], sev, {});
+          var row = res.rows[types.indexOf(t)];
+          var num = row.ratio.toFixed(2);
+          td.textContent = num + ' : 1';
+          if (!row.passesNormal) td.className = 'fail';
+          else if (!row.passesLarge) td.className = 'warn';
+          else td.className = 'pass';
+          tr.appendChild(td);
+        });
+        tbody.appendChild(tr);
+      }
+    }
+    table.appendChild(tbody);
+    box.innerHTML = '';
+    box.appendChild(table);
   }
 
   // The address bar is the share link, always — not just after the button.
