@@ -27,6 +27,9 @@
 - **Donation-linje tilføjet til kontrast-checkerne** (`ceo/donation-kontrast-checker`):
   `contrast-checker.html` og `-da.html` manglede linjen, så `donation-paths-selftest`
   var rød i CI. Gate **GRØN**.
+- **Paletkontrast ved hver synstype** (`ceo/palet-farveblindhed`): feature 26.
+  Hvert farvepar i paletten vises med WCAG-kontrast for normal/protan/deutan/tritan
+  i en matrix. Begge sprog. Gate **GRØN**. Baseline: **3** besøgende/28 dage.
 
 ## Åbne review-fund
 
@@ -36,6 +39,11 @@ kræver den formulering.
 
 ## Verificér deploy
 
+- **VERIFICÉR DEPLOY:** paletkontrast `ceo/palet-farveblindhed` 7/10 — tjek at
+  live `/color-blindness-simulator` og `-da` bærer `id="palette-contrast"` og at
+  matrixen tegnes når paletten har mindst to farver.
+- **VERIFICÉR DEPLOY:** donation-linje `ceo/donation-kontrast-checker` 7/10 — tjek
+  at live `/contrast-checker` og `-da` bærer donation-linket i footeren.
 - **VERIFICÉR DEPLOY:** batch-kontrasttjek `ceo/kontrast-batch` 7/10 — tjek at
   live `/contrast-checker` og `/contrast-checker-da` bærer `id="batch-input"`,
   `id="batch-run"` og `id="batch-tbody"`, og at indsætning af par viser tabel.
