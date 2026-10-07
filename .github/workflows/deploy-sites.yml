@@ -296,6 +296,7 @@ on:
       - 'tests/markdown-escape.test.mjs'
       - 'tests/cb-share.test.mjs'
       - 'tests/cb-preview.test.mjs'
+      - 'tests/cb-image.test.mjs'
       - 'tests/scan-share.test.mjs'
       - 'site/cb-share-core.js'
       - 'site/scan-share-core.js'

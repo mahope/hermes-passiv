@@ -1,4 +1,13 @@
 # STATUS
+- **Billed-simulering i farveblindhedssimulatoren leveret 7/10**
+  (`ceo/cb-billede-simulering`): værktøjet kunne kun simulere et par hex-felter,
+  mens de store simulatorer (Coblis, Toptal) kan tage et skærmbillede eller et
+  logo. Nu kan et billede trækkes ind, indsættes eller vælges, og de fire felter
+  (original + protan/deutan/tritan) tegnes af den **samme** Machado-model som
+  farve-tabellen, delt gennem `window.CB_SIM`, så der ikke er to modeller på én
+  side. Målt i Chromium 390 og 1280 px: canvas 996×684, **0** overflow, ingen
+  JS-fejl. Gate **GRØN — 181 steps** (nyt `cb-image`-step). Baseline:
+  `/color-blindness-simulator` havde **3** besøgende/28 dage (Plausible 7/10).
 - **CI:** grøn 7/10 efter `ceo/da-deskuptime-gate` — den danske
   DeskUptime-forside brød tre porte efter den nye danske forside:
   `stripe-ctas`-selftestens anker var forældet, `own-prices` kunne ikke se
@@ -29,6 +38,9 @@ Ingen. Alle tre lukket 6/10 — teksten står i `docs/plan-arkiv.md`.
 
 ## Verificér deploy
 
+- **VERIFICÉR DEPLOY:** billed-simulering `ceo/cb-billede-simulering` 7/10 — tjek
+  at live `/color-blindness-simulator` og `-da` bærer `id="cbi-cv"`,
+  `id="cbi-file"` og `<script src="/cb-image.js">`.
 - **VERIFICÉR DEPLOY:** dansk DeskUptime-pris/pro-tabel
   `ceo/da-deskuptime-gate` 7/10 — tjek at live `/da/` bærer «Køb DeskUptime
   Pro — 19 USD én gang» og «én gang, 3 maskiner».
@@ -165,6 +177,13 @@ er væk på alle fire, og `#url=`-vejen er fulgt i Chromium mod live: feltet bli
 Prioriteret efter hvor tæt den er på penge. Baseline er målt på den **byggede**
 side; tallene er ikke vores egen trafik. Alt det der er leveret (1–11) står i
 `docs/plan-arkiv.md`.
+
+22. **Billed-simulering i farveblindhedssimulatoren.** Hvem: en designer med et
+    skærmbillede, et logo eller et diagram — ikke to hex-felter. Tal: besøgende
+    på `/color-blindness-simulator` (3/28 dage, Plausible 7/10). Accept: et
+    billede kan trækkes ind, indsættes eller vælges, og de fire felter tegnes af
+    samme model som farve-tabellen. **LEVERET 7/10**,
+    `ceo/cb-billede-simulering`.
 
 21. ~~**Kontrastværktøjet sagde hvad der fejlede, men ikke hvad man skulle gøre.**~~
     **LEVERET 6/10**, `ceo/kontrast-fix-farve`.** FAQ'en sagde allerede «skift

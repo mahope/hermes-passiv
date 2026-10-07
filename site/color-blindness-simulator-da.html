@@ -51,6 +51,11 @@
   .cb-tab { padding:8px 14px; border-radius:8px; border:1px solid var(--color-border); background:var(--color-surface); cursor:pointer; font-weight:600; font-size:.88rem; }
   .cb-tab[aria-selected="true"] { background:var(--color-accent); color:#fff; border-color:var(--color-accent); }
   @media (max-width:640px){ .cb-chip{width:44px;height:30px} .cb-grid td,.cb-grid th{padding:7px;font-size:.85rem} }
+  .cbi-drop { margin-top:16px; border:2px dashed var(--color-border); border-radius:var(--radius); padding:14px; text-align:center; }
+  .cbi-drop.cbi-over { border-color:var(--color-accent); background:var(--color-accent-soft); }
+  .cbi-drop canvas { max-width:100%; height:auto; display:block; margin:0 auto; border-radius:8px; }
+  .cbi-empty { margin:0; color:var(--color-text-muted); font-size:.9rem; }
+  .cbi-file { padding:9px 12px; border:1px solid var(--color-border); border-radius:8px; background:var(--color-surface-2); color:var(--color-text); max-width:100%; }
 </style>
   <meta property="og:image" content="https://hermes-passiv.pages.dev/cover.jpg">
   <meta name="twitter:card" content="summary_large_image">
@@ -149,6 +154,30 @@
   <a href="/contrast-checker-da">kontrasttjekker</a>; til en hel tilgængelig palet,
   prøv <a href="/palette-generator-da">palet-generatoren</a>. Vil du tjekke en hel
   side, så kør den gratis <a href="/scan-da">tilgængelighedsscanner</a>.</p>
+</section>
+
+<section class="cb-card" id="cbi" aria-labelledby="cbi-heading">
+  <h2 id="cbi-heading">Simulér et billede, ikke bare en farveprøve</h2>
+  <p>De fleste rigtige farveproblemer sidder i et skærmbillede, et logo eller et
+  diagram — ikke i to hex-felter. Slip et billede her, og den samme
+  Machado-model viser det for protanopi, deuteranopi og tritanopi ved den
+  sværhedsgrad, du satte ovenfor. Det læses i din browser med canvas-API'et;
+  filen uploades aldrig.</p>
+  <div class="cb-row" style="margin-top:14px">
+    <div class="cb-field">
+      <label for="cbi-file">Vælg et billede</label>
+      <input type="file" id="cbi-file" accept="image/*" class="cbi-file">
+    </div>
+    <button type="button" class="cb-add" id="cbi-download" disabled>Hent det simulerede billede</button>
+  </div>
+  <p class="cb-note" style="margin-top:8px">Eller træk et billede ind på feltet,
+  eller indsæt et med <kbd>Ctrl</kbd>+<kbd>V</kbd> / <kbd>⌘</kbd>+<kbd>V</kbd>.
+  Skyderen ovenfor ændrer alle fire felter med det samme.</p>
+  <p class="cb-error" id="cbi-error" role="alert"></p>
+  <div id="cbi-drop" class="cbi-drop">
+    <canvas id="cbi-cv" role="img" hidden aria-label="Det valgte billede vist med normalt syn og simuleret for protanopi, deuteranopi og tritanopi"></canvas>
+    <p class="cbi-empty" id="cbi-empty">Endnu intet billede — vælg et ovenfor for at se det gennem de tre synstyper.</p>
+  </div>
 </section>
 
 <section class="cb-card">
@@ -371,6 +400,12 @@
     });
     return fromLinear(out.map(function (c) { return Math.max(0, Math.min(1, c)); }));
   }
+
+  // Billed-simuleringen nedenfor (`/cb-image.js`) tegner den *samme* model, men
+  // pr. pixel. Modellen gives derfor videre her i stedet for at blive skrevet
+  // igen: én Machado-implementering på siden, to måder at kalde den på. Uden
+  // dette ville et billede og et farvefelt kunne vise hver sit svar.
+  globalThis.CB_SIM = { simulate: simulate, matrix: machadoMatrix };
 
   var colors = [
     {hex:'#dc2626'}, {hex:'#16a34a'}, {hex:'#2563eb'},
@@ -607,6 +642,26 @@
   renderGrid();
   renderSelects();
   updateAll();
+})();
+</script>
+<script src="/cb-image.js"></script>
+<script>
+/* Billed-simuleringen. Kernen ligger i `/cb-image.js` og deler Machado-modellen
+   med farve-tabellen gennem `window.CB_SIM`, så de to ikke kan vise hver sit
+   svar. Ordene er sidens egne, så den danske side ikke møder engelsk tekst. */
+(function () {
+  if (!window.CBIMAGE) return;
+  window.CBIMAGE.mount({
+    strings: {
+      original: 'Original',
+      protan: 'Protanopi',
+      deutan: 'Deuteranopi',
+      tritan: 'Tritanopi',
+      errNotImage: 'Vælg venligst en billedfil.',
+      errUnreadable: 'Kunne ikke læse den billedfil.',
+      errDownload: 'Din browser kunne ikke gemme billedet — højreklik på feltet i stedet.'
+    }
+  });
 })();
 </script>
 <script>

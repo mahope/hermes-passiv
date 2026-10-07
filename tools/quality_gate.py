@@ -287,6 +287,23 @@ STEPS: tuple[Step, ...] = (
             "site/color-blindness-simulator-da.html",
         ),
     ),
+    # Billed-simuleringen i farveblindhedssimulatoren (EN + DA). Farve-tabellen
+    # kunne kun simulere et par hex-felter, mens de store simulatorer kan tage et
+    # skærmbillede eller et logo — det hul lukkes af `site/cb-image.js`, som
+    # tegner den *samme* Machado-model pr. pixel. Dommen kræver at pixel-løkken
+    # giver præcis samme RGB som `CB_SIM.simulate`, den funktion tabellen selv
+    # bruger, så der ikke kan opstå to modeller på én side. Begge *rigtige*
+    # sider læses, fordi den danske er en håndhævet kopi.
+    Step(
+        id="cb-image",
+        argv=("node", "tests/cb-image.test.mjs"),
+        inputs=(
+            "tests/cb-image.test.mjs",
+            "site/cb-image.js",
+            "site/color-blindness-simulator.html",
+            "site/color-blindness-simulator-da.html",
+        ),
+    ),
     # Del-linket på EAA/WCAG-scanneren (EN + DA). Før dette kopierede
     # `shareResult()` kun URL'en, så den der modtog linket så en tom formular
     # og skulle trykke Scan selv — og brugte sin *egen* kvote på en side, der
