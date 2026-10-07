@@ -2639,7 +2639,7 @@
       "pro_features": [
         {
           "id": "crawl",
-          "where": "site/contrast-checker.html:176-178 «it reads the page from the server, runs the 15 accessibility checks» — målt mod `handleReport`s ene `cscFetch`-kald; dommen er `check_scan_page_claims.py` dom 5",
+          "where": "site/contrast-checker.html:205-207 «it reads the page from the server, runs the 15 accessibility checks» — målt mod `handleReport`s ene `cscFetch`-kald; dommen er `check_scan_page_claims.py` dom 5",
           "labels": {
             "en": [
               "It reads the page from the server too — response headers included, which a browser check cannot see"
@@ -2651,7 +2651,7 @@
         },
         {
           "id": "server-checks",
-          "where": "site/contrast-checker.html:177-178 «18 server-side GDPR, cookie, security and metadata checks on top, 33 in all»",
+          "where": "site/contrast-checker.html:205-207 «18 server-side GDPR, cookie, security and metadata checks on top, 33 in all»",
           "labels": {
             "en": [
               "18 server-side GDPR, cookie, security and metadata checks"
@@ -2663,7 +2663,7 @@
         },
         {
           "id": "pdf",
-          "where": "site/contrast-checker.html:177-178 «33 in all, in a PDF report you can hand to a client»",
+          "where": "site/contrast-checker.html:205-207 «33 in all, in a PDF report you can hand to a client»",
           "labels": {
             "en": [
               "The findings as a PDF report you can hand a client"
@@ -2714,7 +2714,7 @@
       "pro_features": [
         {
           "id": "crawl",
-          "where": "site/contrast-checker-da.html:176-177 «den læser siden fra serveren, kører de 15 tilgængelighedstjek» — målt mod `handleReport`s ene `cscFetch`-kald; dommen er `check_scan_page_claims.py` dom 5",
+          "where": "site/contrast-checker-da.html:204-208 «den læser siden fra serveren, kører de 15 tilgængelighedstjek» — målt mod `handleReport`s ene `cscFetch`-kald; dommen er `check_scan_page_claims.py` dom 5",
           "labels": {
             "en": [
               "It reads the page from the server too — response headers included, which a browser check cannot see"
@@ -2726,7 +2726,7 @@
         },
         {
           "id": "server-checks",
-          "where": "site/contrast-checker-da.html:177-178 «18 serverside-tjek for GDPR, cookies, sikkerhed og metadata oveni, i alt 33»",
+          "where": "site/contrast-checker-da.html:204-208 «18 serverside-tjek for GDPR, cookies, sikkerhed og metadata oveni, i alt 33»",
           "labels": {
             "en": [
               "18 server-side GDPR, cookie, security and metadata checks"
@@ -2738,7 +2738,7 @@
         },
         {
           "id": "pdf",
-          "where": "site/contrast-checker-da.html:178-179 «i alt 33, i en PDF-rapport du kan give en kunde»",
+          "where": "site/contrast-checker-da.html:204-208 «i alt 33, i en PDF-rapport du kan give en kunde»",
           "labels": {
             "en": [
               "The findings as a PDF report you can hand a client"

@@ -9367,3 +9367,31 @@ C. ~~**En Pro-holder der kommer fra scanneren skal finde PDF'en selv.**~~
       håndskrevet absolut `https://mahope.tools/…`. Fuld gate **GRØN — 177
       steps**; `stripe-worker` 474/474, `seo_check` 316 sider 0 fund,
       `check_inline_js` 1318 blokke 0 problemer.
+
+## STATUS-poster flyttet 2026-10-07 (planen skal være en arbejdskø, ikke en dagbog)
+
+- **Kontrast pr. synstype og billed-simulering i farveblindhedssimulatoren
+  leveret 7/10** (`ceo/cvd-kontrast`, `ceo/cb-billede-simulering`):
+  `site/cb-contrast.js` regner WCAG-forholdet for hver synstype med samme
+  `CB_SIM.simulate` som tabellen, og et billede kan trækkes ind, indsættes eller
+  vælges og tegnes af samme Machado-model. Målt i Chromium 390/1280 px: 0
+  overflow, 0 JS-fejl. Gate **GRØN — 182 steps**. Baseline: **3** besøgende/28 dage.
+- **Farver ud af et billede i paletgeneratoren leveret 7/10**
+  (`ceo/palette-billede`): et logo eller skærmbillede kan trækkes ind, indsættes
+  eller vælges, og de dominerende farver bliver klikbare prøver der sætter
+  basisfarven. Målt i Chromium 390/1280 px: 0 overflow, 0 JS-fejl, gate
+  **GRØN — 183 steps**. Baseline: **0** besøgende/28 dage på `/palette-generator`.
+- CEO-kø punkt 0 (review-fund 29/9) verificeret færdigt: alle fem punkter
+  rettet (`10f95b42`, `b772a466`, `67092c4c`, `e37b30a6`), gaten grøn.
+- **Batch-kontrasttjek leveret 7/10** (`ceo/kontrast-batch`): indsæt en liste
+  af farvepar (ét pr. linje) og få ratio + AA/AAA-dom for hvert i én tabel.
+  Verificeret i Chromium 390/1280 px: ingen overflow, gate **GRØN**. Baseline:
+  **0** batch-kørsler.
+- **Donation-linje tilføjet til kontrast-checkerne** (`ceo/donation-kontrast-checker`):
+  `contrast-checker.html` og `-da.html` manglede linjen, så `donation-paths-selftest`
+  var rød i CI. Gate **GRØN**. (Rettet videre 7/10 i `ceo/ci-groen`: linjen lå i
+  statisk markup og brød `stripe-ctas`; den er nu sat ind i scriptet som på de
+  øvrige værktøjssider.)
+- **Paletkontrast ved hver synstype** (`ceo/palet-farveblindhed`): feature 26.
+  Hvert farvepar i paletten vises med WCAG-kontrast for normal/protan/deutan/tritan
+  i en matrix. Begge sprog. Gate **GRØN**. Baseline: **3** besøgende/28 dage.

@@ -1,35 +1,20 @@
 # STATUS
-- **Kontrast pr. synstype og billed-simulering i farveblindhedssimulatoren
-  leveret 7/10** (`ceo/cvd-kontrast`, `ceo/cb-billede-simulering`):
-  `site/cb-contrast.js` regner WCAG-forholdet for hver synstype med samme
-  `CB_SIM.simulate` som tabellen, og et billede kan trækkes ind, indsættes eller
-  vælges og tegnes af samme Machado-model. Målt i Chromium 390/1280 px: 0
-  overflow, 0 JS-fejl. Gate **GRØN — 182 steps**. Baseline: **3** besøgende/28 dage.
-- **Farver ud af et billede i paletgeneratoren leveret 7/10**
-  (`ceo/palette-billede`): et logo eller skærmbillede kan trækkes ind, indsættes
-  eller vælges, og de dominerende farver bliver klikbare prøver der sætter
-  basisfarven. Målt i Chromium 390/1280 px: 0 overflow, 0 JS-fejl, gate
-  **GRØN — 183 steps**. Baseline: **0** besøgende/28 dage på `/palette-generator`.
-- CEO-kø punkt 0 (review-fund 29/9) verificeret færdigt: alle fem punkter
-  rettet (`10f95b42`, `b772a466`, `67092c4c`, `e37b30a6`), gaten grøn.
+- **Rød CI på `main` rettet 7/10** (`ceo/ci-groen`): tre porte var røde.
+  `scan-clients`/`stripe-ctas`: contrast-checker-sidernes donation lå i statisk
+  markup, så porten så et synligt købslink uden inventory; den sættes nu ind i
+  scriptet som på de øvrige værktøjssider. `catalog-where`: katalogens
+  `where`-linjer for contrast-checker EN/DA var drevet ~27 linjer efter
+  batch-afsnittet kom ind; de peger nu på de rigtige linjer. Gate **GRØN**.
 - **Sentry er sat op og testet** (worker 149-246, test 1748-1833): DSN i kode,
   kun produktion, ingen PII, ingen traces/replay. «Ingen uløste fejl» betyder
   ingen fejl — ikke at intet sendes.
-- **Alle fire VERIFICÉR DEPLOY-noter er live og lukket** 7/10.
 - **Sporingen virker** (målt 6/10): `contrast-measured` i `/api/results` efter
   33 s. Ærlig baseline: **0 rigtige** kørsler.
+- **Donation-paths dømmer 45 sider** (målt 7/10), **3** værktøjssider tælles uden
+  dom; `contrast-checker` og `-da` har nu linjen i scriptet.
+- **Alle VERIFICÉR DEPLOY-noter fra 7/10 er live og lukket.**
 - **DeskUptime 'no phone-home' rettet** (`7dc00071`): hero + FAQ på EN/DA
   forklarer nu ærligt at Pro-licensaktivering checker op.
-- **Batch-kontrasttjek leveret 7/10** (`ceo/kontrast-batch`): indsæt en liste
-  af farvepar (ét pr. linje) og få ratio + AA/AAA-dom for hvert i én tabel.
-  Verificeret i Chromium 390/1280 px: ingen overflow, gate **GRØN**. Baseline:
-  **0** batch-kørsler.
-- **Donation-linje tilføjet til kontrast-checkerne** (`ceo/donation-kontrast-checker`):
-  `contrast-checker.html` og `-da.html` manglede linjen, så `donation-paths-selftest`
-  var rød i CI. Gate **GRØN**.
-- **Paletkontrast ved hver synstype** (`ceo/palet-farveblindhed`): feature 26.
-  Hvert farvepar i paletten vises med WCAG-kontrast for normal/protan/deutan/tritan
-  i en matrix. Begge sprog. Gate **GRØN**. Baseline: **3** besøgende/28 dage.
 
 ## Åbne review-fund
 
@@ -39,6 +24,10 @@ kræver den formulering.
 
 ## Verificér deploy
 
+- **VERIFICÉR DEPLOY:** rød-CI-fix `ceo/ci-groen` 7/10 — tjek at live
+  `/contrast-checker` og `/contrast-checker-da` bærer `id="cc-donate"` (tom og
+  skjult i markup'en) og at scriptet fylder donationslinjen ind når resultatet
+  vises, samt at `id="cc-pro"` fortsat afsløres.
 - **VERIFICÉR DEPLOY:** paletkontrast `ceo/palet-farveblindhed` 7/10 — tjek at
   live `/color-blindness-simulator` og `-da` bærer `id="palette-contrast"` og at
   matrixen tegnes når paletten har mindst to farver.
@@ -193,7 +182,7 @@ er væk på alle fire, og `#url=`-vejen er fulgt i Chromium mod live: feltet bli
 ## Feature-kø
 
 Prioriteret efter hvor tæt den er på penge. Baseline er målt på den **byggede**
-side; tallene er ikke vores egen trafik. Alt det leverede (1–22) står i
+side; tallene er ikke vores egen trafik. Alt det leverede (1–22, 26) står i
 `docs/plan-arkiv.md`.
 
 23. **Del din palet med et link.** Hvem: en designer der vil sende den palet hun
@@ -207,9 +196,3 @@ side; tallene er ikke vores egen trafik. Alt det leverede (1–22) står i
     prøve viser nærmeste CSS-navn (`crimson`, `slateblue`), så man kan tale om
     farven. Datagrund: `PALETTE_IMAGE` giver hex; navnet er den næste sætning en
     ikke-designer bruger.
-
-26. **Paletten under farveblindhed.** Hvem: en designer der netop har bygget en
-    palet. Tal: besøgende på `/color-blindness-simulator` (3/28 dage). Accept:
-    hvert farvepar vises simuleret for protan/deutan/tritan med samme pr.
-    synstype-kontrast som simulatoren. Datagrund: WCAG-kontrast fanger ikke at
-    rød og grøn kollapser; modellen findes allerede i `CB_SIM`.

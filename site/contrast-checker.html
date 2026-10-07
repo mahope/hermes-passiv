@@ -208,7 +208,7 @@
 </section>
 
 </main>
-<p style="font-size:13px;color:var(--color-text-muted);margin:16px 0 0">This checker is free and runs entirely in your browser. If it saved you time, a small <a href="https://donate.stripe.com/7sYeVcbn50wieFM8gDbMQ0c" rel="nofollow noopener">donation</a> keeps it running.</p>
+<p id="cc-donate" style="font-size:13px;color:var(--color-text-muted);margin:16px 0 0" hidden></p>
 <footer class="container" style="padding:40px 24px;color:var(--color-text-muted);font-size:.85rem">
   mahoje.dk · Free browser-based GDPR &amp; accessibility tooling
 </footer>
@@ -219,6 +219,10 @@
   var $ = function (id) { return document.getElementById(id); };
   var fgColor = $('fg-color'), bgColor = $('bg-color');
   var fgText = $('fg-text'), bgText = $('bg-text');
+  // Donationslinjen sættes ind her og vises først sammen med resultatet — en
+  // donation i selve markup'en beder om penge, før læseren har fået et svar.
+  var donateEl = $('cc-donate');
+  donateEl.innerHTML = 'This checker is free and runs entirely in your browser. If it saved you time, a small <a href="https://donate.stripe.com/7sYeVcbn50wieFM8gDbMQ0c" rel="nofollow noopener">donation</a> keeps it running.';
 
   function parseHex(v) {
     v = v.trim().replace(/^#/, '');
@@ -324,6 +328,7 @@
     // The paid path appears with the first real result, not on page load: a
     // price above a checker nobody has run yet is a sales pitch, not a handoff.
     $('cc-pro').hidden = false;
+    donateEl.hidden = false;
     fgColor.value = toHex(fg);
     bgColor.value = toHex(bg);
 

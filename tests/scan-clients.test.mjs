@@ -1415,12 +1415,13 @@ function mutated(path, from, to) {
       async kør() {
         const { nodes } = loadPage('site/contrast-checker.html', responses([OK_COOKIE]).fetchImpl, { match: /parseHex/ });
         await sleep(30);
-        return { markup: statisk(readFileSync(join(root, 'site/contrast-checker.html'), 'utf8'), 'cc-pro'),
-                 // Værktøjet kører udelukkende i browseren og beder ikke om
-                 // penge, så den har aldrig haft en donationslinje. Dommen
-                 // kræver derfor kun at den *kunne* være der — en ny boks må
-                 // ikke have fjernet en linje der fandtes før.
-                 donation: '', afsløret: (nodes.get('cc-pro') || {}).hidden === false };
+        const src = readFileSync(join(root, 'site/contrast-checker.html'), 'utf8');
+        return { markup: statisk(src, 'cc-pro'),
+                 // Donationslinjen sættes ind i scriptet og vises sammen med
+                 // resultatet, ikke i den statiske markup. Den kom til 7/10, så
+                 // dommen kræver nu at den stadig er der — og at den er afsløret.
+                 donation: (nodes.get('cc-donate') || {}).innerHTML || '',
+                 afsløret: (nodes.get('cc-pro') || {}).hidden === false };
       },
     },
     {
