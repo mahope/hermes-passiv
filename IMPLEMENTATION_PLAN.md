@@ -17,6 +17,9 @@
 - **Sporingen virker** (målt 6/10): `contrast-measured` i `/api/results` efter
   33 s. Ærlig baseline: **0 rigtige** kørsler. `/api/stats` er 401 uden
   `STATS_TOKEN`.
+- **DeskUptime 'no phone-home' rettet** (`7dc00071`): hero + FAQ på EN/DA
+  forklarer nu ærligt at URL-liste/resultater bliver lokalt, men
+  Pro-licensaktivering checker op mod mahope.tools.
 
 ## Åbne review-fund
 
