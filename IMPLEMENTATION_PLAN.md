@@ -1,8 +1,10 @@
 # STATUS
-- **CI:** grøn 7/10 efter `ceo/deskuptime-da-ci-fix` — den danske
-  DeskUptime-forside manglede fire fraser i `stripe-ctas`: «én gang,
-  3 maskiner», «client-report», «Enkelttjek» og «SSL- og content-tjek».
-  Rettet i pro-tabellen. Gate grøn.
+- **CI:** grøn 7/10 efter `ceo/da-deskuptime-gate` — den danske
+  DeskUptime-forside brød tre porte efter den nye danske forside:
+  `stripe-ctas`-selftestens anker var forældet, `own-prices` kunne ikke se
+  «engangsbetaling» som periode, og pro-tabellen var håndskrevet. Tabellen
+  tegnes nu af katalogen, knap og pristag skriver «én gang». Gate grøn —
+  180 steps.
 - CEO-kø punkt 0 (review-fund 29/9) verificeret færdigt: alle fem
   punkter rettet (`10f95b42`, `b772a466`, `67092c4c`, `e37b30a6`), gaten grøn,
   live `/api/url-inspect` svarer 200.
@@ -27,6 +29,9 @@ Ingen. Alle tre lukket 6/10 — teksten står i `docs/plan-arkiv.md`.
 
 ## Verificér deploy
 
+- **VERIFICÉR DEPLOY:** dansk DeskUptime-pris/pro-tabel
+  `ceo/da-deskuptime-gate` 7/10 — tjek at live `/da/` bærer «Køb DeskUptime
+  Pro — 19 USD én gang» og «én gang, 3 maskiner».
 - **DEPLOY OK 7/10:** gratis/Pro-tabel + købsknap på de to danske
   farveværktøjssider `ceo/da-farvevaerktoejer-koeb`. Live: begge bærer
   `id="pro"`, `Køb EUComply Pro — $79/år pr. website` og betalingslinket.

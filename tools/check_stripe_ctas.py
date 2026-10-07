@@ -4138,7 +4138,7 @@ def self_test() -> int:
         ),
         "site/da/deskuptime/index.html#prose": (
             "tilføjer e-mail- og webhook-alarmer",
-            "tilføjer webhook-alarmer og en kunderapport",
+            "tilføjer webhook-alarmer og en klientklar rapport",
         ),
         "site/blog/desktop-website-monitor-cli.html": (
             "Email &amp; webhook alerts",
