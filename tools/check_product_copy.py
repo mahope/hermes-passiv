@@ -56,12 +56,14 @@ PUBLIC_CHECKS = (
             "no central server",
             "no telemetry",
             "your data never leaves your computer",
+            "to mahope.tools over https",
         ),
         (
             "the desktop app asks for the key the first time you start it",
             "your url list and check results stay on your machine and are not uploaded to a central monitoring service",
             "the licence key, a stable device id and the product identifier deskuptime-pro",
             "and receives the licence status",
+            "to the app's previous licence provider",
         ),
     ),
     (
@@ -70,12 +72,14 @@ PUBLIC_CHECKS = (
             "ingen phone-home",
             "ingen central server",
             "ingen telemetri",
+            "til mahope.tools over https",
         ),
         (
             "desktop-appen beder om nøglen, første gang du starter den",
             "din url-liste og dine tjekresultater bliver på din maskine og uploades ikke til en central monitoreringstjeneste",
             "licensnøglen, et stabilt device-id og produktidentifieren deskuptime-pro",
             "og modtager licensstatus",
+            "til appens tidligere licensudbyder",
         ),
     ),
     (
