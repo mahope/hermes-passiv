@@ -298,6 +298,7 @@ on:
       - 'tests/cb-preview.test.mjs'
       - 'tests/cb-image.test.mjs'
       - 'tests/cb-contrast.test.mjs'
+      - 'tests/color-names.test.mjs'
       - 'tests/palette-image.test.mjs'
       - 'tests/palette-share.test.mjs'
       - 'tests/scan-share.test.mjs'

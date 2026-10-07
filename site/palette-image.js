@@ -93,19 +93,32 @@
       if (!colors.length) { setErr(s.none || 'No colours found in that image — try another.'); return; }
       setErr('');
       colors.forEach(function (c) {
+        // Navnet er hele grunden til at prøven er der: en ikke-designer kan
+        // pege på den og sige «den blå», ikke «#2563eb». Slås op i den ene
+        // tabel i /color-names.js, som siden indlæser før denne fil.
+        var name = (global.COLOR_NAMES && global.COLOR_NAMES.nearestName) ? global.COLOR_NAMES.nearestName(c.hex) : '';
+        var item = doc.createElement('div');
+        item.className = 'pg-img-item';
         var b = doc.createElement('button');
         b.type = 'button';
         b.className = 'pg-img-swatch';
         b.style.background = c.hex;
-        b.title = c.hex;
-        b.setAttribute('aria-label', (s.pick || 'Use') + ' ' + c.hex);
+        b.title = name ? (c.hex + ' — ' + name) : c.hex;
+        b.setAttribute('aria-label', (s.pick || 'Use') + ' ' + c.hex + (name ? ' (' + name + ')' : ''));
         b.addEventListener('click', function () {
           if (typeof o.onPick === 'function') o.onPick(c.hex);
-          Array.prototype.forEach.call(box.children, function (el) {
+          Array.prototype.forEach.call(box.querySelectorAll('.pg-img-swatch'), function (el) {
             el.setAttribute('aria-pressed', el === b ? 'true' : 'false');
           });
         });
-        box.appendChild(b);
+        item.appendChild(b);
+        if (name) {
+          var cap = doc.createElement('span');
+          cap.className = 'pg-img-name';
+          cap.textContent = name;
+          item.appendChild(cap);
+        }
+        box.appendChild(item);
       });
     }
 

@@ -47,6 +47,9 @@ EJERE: dict[str, str] = {
     "NET": "net.js",
     "ONE_OFF_CHECK": "one-off-check.js",
     "CONVERT_CHECK": "convert-check.js",
+    # Paletgeneratoren slår farvenavnet op her; en side der kalder det uden at
+    # indlæse tabellen ville vise en tom kolonne uden en fejl nogen steder.
+    "COLOR_NAMES": "color-names.js",
 }
 
 SCRIPT_SRC = re.compile(r"""<script[^>]+src=["']([^"']+)["']""")

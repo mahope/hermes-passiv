@@ -34,6 +34,7 @@
   .pg-chip { display:inline-block; width:26px; height:26px; border-radius:6px; vertical-align:middle; margin-right:10px; border:1px solid rgba(0,0,0,.15); }
   code.pg-hex { font-family:ui-monospace,monospace; cursor:pointer; padding:3px 7px; border-radius:6px; background:var(--color-surface-2); }
   code.pg-hex:hover { outline:2px solid var(--color-accent); }
+  .pg-name { display:block; margin-top:3px; font-size:.78rem; color:var(--color-text-muted); }
   .pass { color:var(--color-green); font-weight:600; } .fail { color:var(--color-red); font-weight:600; }
   .pg-preview { margin-top:22px; border-radius:var(--radius); border:1px solid var(--color-border); overflow:hidden; }
   .pg-preview-bar { display:flex; align-items:center; justify-content:space-between; padding:14px 18px; }
@@ -54,7 +55,9 @@
   .pg-img-title { margin:0 0 4px; font-weight:600; }
   .pg-img-help { margin:0; font-size:.88rem; color:var(--color-text-muted); }
   .pg-img-label { color:var(--color-accent); cursor:pointer; text-decoration:underline; }
-  .pg-img-swatches { display:flex; flex-wrap:wrap; gap:10px; margin-top:12px; }
+  .pg-img-swatches { display:flex; flex-wrap:wrap; gap:12px; margin-top:12px; }
+  .pg-img-item { display:flex; flex-direction:column; align-items:center; gap:4px; }
+  .pg-img-name { max-width:72px; font-size:.72rem; color:var(--color-text-muted); text-align:center; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   .pg-img-swatch { width:44px; height:44px; border-radius:10px; border:1px solid var(--color-border); cursor:pointer; padding:0; }
   .pg-img-swatch:hover { outline:2px solid var(--color-accent); }
   .pg-img-swatch[aria-pressed="true"] { outline:3px solid var(--color-accent); outline-offset:2px; }
@@ -349,7 +352,12 @@
       function td(html) { var d = document.createElement('td'); d.innerHTML = html; return d; }
       tr.appendChild(td('<span class="pg-chip" style="background:' + row.hex + '"></span>'));
       tr.appendChild(td(row.role));
-      var codeTd = td('<code class="pg-hex" tabindex="0" role="button" aria-label="Kopiér ' + row.hex + '">' + row.hex + '</code>');
+      // Hex er hvad en maskine bruger; CSS-navnet er hvad et menneske siger.
+      // Navnet slås op i den ene tabel i /color-names.js, så siden aldrig bærer
+      // en anden stavning af det.
+      var rowName = window.COLOR_NAMES ? window.COLOR_NAMES.nearestName(row.hex) : '';
+      var codeTd = td('<code class="pg-hex" tabindex="0" role="button" aria-label="Kopiér ' + row.hex + (rowName ? ', ' + rowName : '') + '">' + row.hex + '</code>'
+        + (rowName ? '<span class="pg-name">' + rowName + '</span>' : ''));
       codeTd.querySelector('code').addEventListener('click', function () { copyHex(row.hex); });
       codeTd.querySelector('code').addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); copyHex(row.hex); } });
       tr.appendChild(codeTd);
@@ -516,6 +524,7 @@
   update();
 })();
 </script>
+<script src="/color-names.js"></script>
 <script src="/palette-image.js"></script>
 <script>
 /* Farverne fra et billede sætter basisfarven. Vi rører de samme to felter

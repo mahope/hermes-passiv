@@ -339,6 +339,23 @@ STEPS: tuple[Step, ...] = (
             "site/palette-generator-da.html",
         ),
     ),
+    # Farvenavnet ved siden af hex i paletgeneratoren (EN + DA). Generatoren
+    # regner i hex, men en ikke-designer taler om «den blå»; `site/color-names.js`
+    # bærer de 139 forskellige CSS-farver og vælger den nærmeste. Dommen kalder
+    # den rene `nearestName()` på kendte hexer — også de nære par, hvor «den
+    # første række» ville være forkert (`#00ff00` er lime, ikke green) — og læser
+    # begge *rigtige* sider, fordi den danske er en håndhævet kopi.
+    Step(
+        id="color-names",
+        argv=("node", "tests/color-names.test.mjs"),
+        inputs=(
+            "tests/color-names.test.mjs",
+            "site/color-names.js",
+            "site/palette-image.js",
+            "site/palette-generator.html",
+            "site/palette-generator-da.html",
+        ),
+    ),
     # Del-linket i paletgeneratoren (EN + DA). En palet — én basisfarve og én
     # baggrund — døde med fanen, fordi værktøjet kører helt i browseren. Staten
     # bor nu i fragmentet via `site/palette-share-core.js`, som begge sprog

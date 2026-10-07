@@ -9401,3 +9401,18 @@ C. ~~**En Pro-holder der kommer fra scanneren skal finde PDF'en selv.**~~
   som begge sprog deler; adresselinjen følger paletten. Målt i Chromium 390/1280 px:
   delt link gendanner begge felter, 0 JS-fejl, gate **GRØN — 184 steps**. Baseline:
   **0** besøgende/28 dage på `/palette-generator` (Plausible 7/10).
+- **Farvenavn ved siden af hex leveret 8/10** (`ceo/farvenavn`): feature 25.
+  Hver paletrække viser nærmeste CSS-navn under hex'en, og billed-prøverne viser
+  navnet under farven. Navnene kommer fra én tabel i `site/color-names.js` (139
+  forskellige CSS-farver), delt af EN/DA og billedværktøjet. Dommen kalder den
+  rene `nearestName()` på kendte hexer og læser begge sider; gate **GRØN — 185
+  steps**. Baseline: **0** besøgende/28 dage på `/palette-generator` (Plausible 7/10).
+- **Lukkede VERIFICÉR DEPLOY-noter 8/10** (målt mod live): paletkontrast,
+  del-link, cvd-kontrast, billed-simulering, billed-drop, batch-kontrast,
+  kontrast-fix-farve, donation-linjer, dansk DeskUptime-pris og
+  DeskUptime-licens-kopi. Alle bærere og scripts fundet på mahope.tools og
+  deskuptime.com; `contrast-checker` bærer donationslinket i footeren.
+- **CEO-kø #0 lukket 8/10** (var merged via `5693853d`, `06451667`, `10f95b42`):
+  `/api/url-inspect` tager `env` og har `targetIsPublic()` pr. redirect-hop,
+  tak-siden skelner 202/429, 429 er endelig i `/net.js` og alle kaldere,
+  AI-slot'en refunderes ved 502, og IPv4-mappede IPv6-adresser afvises.
