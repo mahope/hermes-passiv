@@ -9509,3 +9509,32 @@ C. ~~**En Pro-holder der kommer fra scanneren skal finde PDF'en selv.**~~
 - 0 åbne review-fund. Sentry: 0 uløste fejl (14 dage). 0 åbne PR'er.
 - **PR-TJEK 8/10:** 0 åbne PR'er. **BRANCH-TJEK:** ikke kørt denne iteration.
 - **CEO-kø #0** er færdig og merged; 0 åbent.
+
+## 9/10 — farveblindhedsguide (feature 49)
+
+- **9/10:** feature 49 leveret på `ceo/farveblindhed-artikel`:
+  `site/blog/color-blindness-simulation-check.html` og
+  `site/da/blog/farveblindhed-tjek.html` er en ny guide i to sprog om
+  farveblindhedssimulering. Guiden har en **mående** tabel med kontrastforhold
+  for seks farver mod hvid, pr. synstype (normal, protanopi, deuteranopi,
+  tritanopi) — 24 tal i alt, beregnet med simulatorens egen Machado-model
+  (`site/cb-contrast.js` + `CB_SIM.simulate`), ikke estimeret. Et engangs-script
+  gennemregnede alle 24 og par-tallene (rød/mod grøn 1,47:1 og 1,14:1, blå/mod
+  ravgul 2,41:1 → 1,74:1 som **minimum**, protanopi) direkte mod tabellen.
+  Den eneste rettelse var en præcision: "faldende til 1,74:1" stod i en
+  deuteranopi-sætning, men 1,74 er parrets værst tænkelige i protanopi (ved
+  deuteranopi er den 1,14). Nu står der "falder aldrig under … i protanopi" i
+  begge sprog.
+- **9/10:** tallene "15 WCAG-regler" og "18 mere, 33 i alt" i guidens
+  gratis/Pro-tabel er ikke guiderens egne — `check_rule_claims.py` dømmer dem
+  ("243 regel-løfter … 15 frie + 18 Pro = 33"), og guidens to sider er
+  tilmeldt `PRODUCT_ENGINE` med web-kernen, fordi den sælger simulatoren som
+  gratis.
+- **9/10:** deploy-noter lukket på live-indhold, ikke på HTTP-status alene:
+  `eaa-action` (`mahope.tools/downloads` 200, viser action-skabelonen med
+  `action.yml`, `--sarif`, `--fail-on`) og `sitemap-scan` (`/scan` og
+  `/da/scan` 200, begge med Pages/Sitemap-skifteren i folden).
+- **9/10:** planens deploy-sektion renset: tre lukkede noter flyttet hertil
+  (dubletten af free-tools-kataloget, `first-action-form-hero` som ikke rører
+  markup, og `compliance-report-pricing-visible` der er dækket af
+  `compliance-hero-buy`). STATUS er nede på 8 linjer.

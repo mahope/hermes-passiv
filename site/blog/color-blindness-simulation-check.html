@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Color Blindness Simulation — Test Your Palette Before You Ship</title>
+<meta name="description" content="Simulate protanopia, deuteranopia and tritanopia on your colors and screenshots, with measured contrast numbers for each vision type — and what WCAG SC 1.4.1 actually requires. Free, runs in your browser.">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Hermes Passiv">
+<meta property="og:title" content="Color blindness simulation — test your palette before you ship">
+<meta property="og:description" content="See how your brand colors behave under protanopia, deuteranopia and tritanopia, with real measured contrast ratios. Free, no sign-up.">
+<meta property="og:image" content="https://hermes-passiv.pages.dev/cover.jpg">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/blog/color-blindness-simulation-check">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Color blindness simulation — test your palette before you ship">
+<meta name="twitter:description" content="See how your brand colors behave under protanopia, deuteranopia and tritanopia, with real measured contrast ratios. Free, no sign-up.">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/blog/color-blindness-simulation-check">
+<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/blog/color-blindness-simulation-check">
+<link rel="alternate" hreflang="da" href="https://hermes-passiv.pages.dev/da/blog/farveblindhed-tjek">
+<link rel="alternate" hreflang="en" href="https://hermes-passiv.pages.dev/blog/color-blindness-simulation-check">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "Article", "headline": "Color blindness simulation — how to test your palette before you ship", "description": "Simulate protanopia, deuteranopia and tritanopia on your colors and screenshots, with measured contrast numbers for each vision type, and what WCAG SC 1.4.1 requires.", "url": "https://hermes-passiv.pages.dev/blog/color-blindness-simulation-check", "datePublished": "2026-10-08", "dateModified": "2026-10-08", "author": {"@type": "Person", "name": "Mads Holst Jensen", "url": "https://mahoje.dk"}, "publisher": {"@type": "Organization", "name": "mahoje.dk", "url": "https://mahoje.dk"}}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "What is the difference between a contrast checker and a color blindness simulator?", "acceptedAnswer": {"@type": "Answer", "text": "A contrast checker answers whether one color is readable on another — a single ratio. A simulator answers whether two colors stay distinguishable when color vision is impaired, by rendering both through a model of protanopia, deuteranopia or tritanopia. A pair can have plenty of contrast and still collapse into the same color, which is why both are needed."}}, {"@type": "Question", "name": "How accurate is the simulation?", "acceptedAnswer": {"@type": "Answer", "text": "The tool uses the Machado, Oliveira and Fernandes (2009) severity matrices, the same model professional design tools use, with an adjustable severity from 0 to 100 percent. It approximates how colors are perceived. Only a clinical test can diagnose color vision deficiency in a person."}}, {"@type": "Question", "name": "Which vision type should I check against?", "acceptedAnswer": {"@type": "Answer", "text": "Start with deuteranopia. It is by far the most common form, and red and green are the pair that fails. If your design still works for deuteranopia and tritanopia, it will almost always work for the rarer types as well."}}, {"@type": "Question", "name": "What does WCAG require for color?", "acceptedAnswer": {"@type": "Answer", "text": "SC 1.4.1 Use of Color: color must not be the only visual means of conveying information, indicating an action or distinguishing an element. The fix is never to remove the color — it is to add a second signal: a label, an icon, a pattern, or text that says what the color is saying."}}]}</script>
+<script defer src="/track.js"></script>
+</head>
+<body>
+<header class="hero">
+  <div class="container">
+    <div class="badge">BLOG &middot; ACCESSIBILITY</div>
+    <h1>Color blindness simulation<br>Test your palette before you ship</h1>
+    <p class="subtitle">Red and green are the two colors a design leans on hardest, and they are also the pair that disappears first. Here is how to render your own palette through protanopia, deuteranopia and tritanopia &mdash; and how to read what comes out.</p>
+    <div class="hero-cta">
+      <a href="#try-it" class="btn-primary">Simulate your colors now &rarr;</a>
+      <a href="#how" class="btn-secondary">See how it works</a>
+    </div>
+    <p class="hero-note">Updated October 2026 &middot; 5 minute read</p>
+  </div>
+</header>
+
+<section class="problem" id="why">
+  <div class="container">
+    <h2>Why a palette that passes contrast can still fail</h2>
+    <p>A contrast ratio is a number about one color on another. It says nothing about whether a reader can tell the two apart. Red <code>#dc2626</code> and green <code>#16a34a</code> on a white background both clear the bar on their own &mdash; and under deuteranopia they become <code>#8f801b</code> and <code>#958951</code>, two shades of the same olive. A status badge that reads "failed / passed" to you reads as one repeated word to roughly one man in twelve.</p>
+    <p style="margin-bottom:0">Your own palette is the next step: <a href="/color-blindness-simulator" style="color:var(--color-accent);">run it through the free simulator &rarr;</a></p>
+    <div class="problem-cards">
+      <div class="card"><h3>What the rule actually says</h3><p>WCAG SC 1.4.1 <em>Use of Color</em>: color must not be the only visual means of conveying information, indicating an action, prompting a response or distinguishing an element. It is not a rule about which colors you may use &mdash; it is a rule about using them alone.</p></div>
+      <div class="card"><h3>The common case is red-green</h3><p>Deuteranomaly is by far the most common form of color vision deficiency, and it is red-green. Protanomaly darkens reds until they sink into grey. Tritanomaly, blue-yellow, is rare enough that it is usually the last thing to check.</p></div>
+      <div class="card"><h3>What a contrast checker cannot see</h3><p>Two colors can have a 5:1 ratio against the page and still be indistinguishable from each other. Contrast measures readability; a simulation measures separation. You need both, because they fail in different places.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="products" id="how">
+  <div class="container">
+    <h2>How to do it (under a minute)</h2>
+    <ol>
+      <li>Open the simulator and paste your colors &mdash; up to a whole palette at once. It starts with six common ones so you can see the model work before you add anything of your own.</li>
+      <li>Set the severity. 100% is full dichromacy; lower values approximate the milder forms, which are much more common than the full ones.</li>
+      <li>Read the table. Every color is rendered for normal vision and for protanopia, deuteranopia and tritanopia, each with its contrast ratio against a background of your choice.</li>
+      <li>Upload a screenshot if you have one. The same model runs per pixel over the whole image, so you see the page, not just the swatches.</li>
+      <li>Export as CSS or JSON, fix what collapsed, and run it again.</li>
+    </ol>
+    <p>The model is the Machado, Oliveira and Fernandes (2009) severity model, interpolated between neighbouring matrices as the authors recommend &mdash; the same approach professional design tools use. Everything runs in JavaScript in your own browser; your palette never leaves the machine.</p>
+  </div>
+</section>
+
+<section class="products" id="try-it">
+  <div class="container">
+    <h2>Try it on your own colors</h2>
+    <p style="margin-top:0">The <a href="/color-blindness-simulator" style="color:var(--color-accent);">color blindness simulator</a> is the tool this guide describes: a whole palette at once, adjustable severity, a screenshot mode, and the CSS or JSON back out. Nothing to install, no account, and the colors stay in your browser.</p>
+    <div class="problem-cards">
+      <div class="card"><span class="badge" style="font-size:0.75em;display:inline-block;margin-bottom:6px;">SIMULATOR</span><h3><a href="/color-blindness-simulator" style="color:var(--color-accent);text-decoration:none;">Color blindness simulator</a></h3><p>Protanopia, deuteranopia and tritanopia over a whole palette, with severity and a per-pixel screenshot mode.</p></div>
+      <div class="card"><span class="badge" style="font-size:0.75em;display:inline-block;margin-bottom:6px;">CONTRAST</span><h3><a href="/contrast-checker" style="color:var(--color-accent);text-decoration:none;">WCAG contrast checker</a></h3><p>The other half of the job: the ratio between two colors, with the AA and AAA thresholds spelled out.</p></div>
+      <div class="card"><span class="badge" style="font-size:0.75em;display:inline-block;margin-bottom:6px;">PALETTE</span><h3><a href="/palette-generator" style="color:var(--color-accent);text-decoration:none;">Accessible palette generator</a></h3><p>Builds a palette that holds together &mdash; useful when simulation tells you the one you have does not.</p></div>
+    </div>
+  </div>
+</section>
+<div class="blog-tool-cta"><span class="btc-label">Check any page for GDPR &amp; cookie issues:</span> <a href="/scan" class="btn-secondary">Run the Free Scanner →</a></div>
+
+<section class="products" id="measured">
+  <div class="container">
+    <h2>Measured: what a red/green status pair does</h2>
+    <p>These numbers come from the same model the simulator runs, at full severity, against white. The first column is a color as you picked it; the other three are what it becomes. Every figure was computed, not estimated.</p>
+    <div class="table-wrap">
+    <table class="compare pro-table">
+      <caption class="sr-only">Contrast ratio against a white background, per vision type</caption>
+      <thead>
+        <tr><th scope="col">Color</th><th scope="col">Normal</th><th scope="col">Protanopia</th><th scope="col">Deuteranopia</th><th scope="col">Tritanopia</th></tr>
+      </thead>
+      <tbody>
+        <tr><th scope="row">Red <code>#dc2626</code></th><td>4.83:1</td><td>7.06:1</td><td>4.00:1</td><td>4.35:1</td></tr>
+        <tr><th scope="row">Green <code>#16a34a</code></th><td>3.30:1</td><td>3.05:1</td><td>3.50:1</td><td>3.28:1</td></tr>
+        <tr><th scope="row">Blue <code>#2563eb</code></th><td>5.17:1</td><td>4.32:1</td><td>5.24:1</td><td>4.30:1</td></tr>
+        <tr><th scope="row">Amber <code>#f59e0b</code></th><td>2.15:1</td><td>2.48:1</td><td>1.97:1</td><td>2.30:1</td></tr>
+        <tr><th scope="row">Violet <code>#7c3aed</code></th><td>5.70:1</td><td>4.89:1</td><td>5.29:1</td><td>5.30:1</td></tr>
+        <tr><th scope="row">Ink <code>#111827</code></th><td>17.74:1</td><td>17.53:1</td><td>17.87:1</td><td>17.68:1</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p>Three things fall out of that table, and none of them are visible in a contrast checker.</p>
+    <div class="problem-cards">
+      <div class="card"><h3>A passing color stops passing</h3><p>Red at 4.83:1 clears AA for normal text. Under deuteranopia it is 4.00:1, which does not. The color did not change &mdash; the reader did.</p></div>
+      <div class="card"><h3>The pair merges completely</h3><p>Red against green is 1.47:1 for normal vision and 1.14:1 under deuteranopia. Blue against amber survives at 2.41:1 and never drops below 1.74:1, its worst figure under protanopia &mdash; still low, but it holds.</p></div>
+      <div class="card"><h3>Dark neutrals are stable</h3><p>Ink barely moves, 17.74:1 to 17.53:1, because it is already near black for every model. Neutral text is the safest ground you have.</p></div>
+    </div>
+    <p style="font-size:0.95rem;color:var(--color-text-muted);max-width:44rem;">Contrast is not the whole story either: it measures readability of one color on another, not whether two colors stay apart. Run both a contrast check and a simulation before you call a palette done.</p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>From one image to a whole page</h2>
+    <p>A simulator tells you what your palette does. It cannot tell you what actually got published &mdash; which theme overrode your button color on the page nobody has opened since launch, or which chart is shipping a red/green legend someone pasted in from a spreadsheet. Use the free <a href="/scan" style="color:var(--color-accent);">Accessibility Scanner</a> for that: it runs 15 WCAG checks against a real URL, contrast among them, and tells you which page and which element failed.</p>
+    <div class="problem-cards">
+      <div class="card"><span class="badge" style="font-size:0.75em;display:inline-block;margin-bottom:6px;">RELATED TOOLS</span><h3>More contrast help</h3><p>The <a href="/contrast-checker" style="color:var(--color-accent);">contrast checker</a> tests color pairs &middot; the <a href="/palette-generator" style="color:var(--color-accent);">palette generator</a> builds accessible palettes &middot; the <a href="/text-on-image-checker" style="color:var(--color-accent);">text-on-image checker</a> measures text over a photo.</p></div>
+      <div class="card"><span class="badge" style="font-size:0.75em;display:inline-block;margin-bottom:6px;">GUIDE</span><h3>Read the contrast guide</h3><p>A step-by-step guide to the WCAG requirements themselves: <a href="/blog/wcag-contrast-checker" style="color:var(--color-accent);">WCAG contrast checker, step by step</a>.</p></div>
+      <div class="card"><span class="badge" style="font-size:0.75em;display:inline-block;margin-bottom:6px;">DANISH VERSION</span><h3>Working in Danish?</h3><p>The same guide is available in <a href="/da/blog/farveblindhed-tjek" hreflang="da" style="color:var(--color-accent);">Danish here</a>.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="products" id="report">
+  <div class="container">
+    <h2>The simulator is free. A report you can hand over is not.</h2>
+    <p>The simulator and the free <a href="/scan" style="color:var(--color-accent);">Accessibility Scanner</a> stay free forever &mdash; no account, no trial, no limit on how many palettes or pages you run through them.</p>
+    <p>What neither gives you is something you can send to a client or file with an accessibility statement: a written report that also covers the parts of a site only a server can see. Pro adds the GDPR/cookie and NIS2/security checks, and the report as a file you can attach.</p>
+    <table style="width:100%;border-collapse:collapse;margin:1rem 0">
+      <tr><th style="text-align:left;padding:8px;border-bottom:1px solid var(--color-border)">What you get</th><th style="text-align:left;padding:8px;border-bottom:1px solid var(--color-border)">Free</th><th style="text-align:left;padding:8px;border-bottom:1px solid var(--color-border)">EUComply Pro &mdash; $79/year per website</th></tr>
+      <tr><td style="padding:8px;border-bottom:1px solid var(--color-border)">Color blindness simulation</td><td style="padding:8px;border-bottom:1px solid var(--color-border)">yes, the whole palette and screenshots</td><td style="padding:8px;border-bottom:1px solid var(--color-border)">included</td></tr>
+      <tr><td style="padding:8px;border-bottom:1px solid var(--color-border)">Page checks</td><td style="padding:8px;border-bottom:1px solid var(--color-border)">the accessibility checks &mdash; 15 WCAG rules, contrast included</td><td style="padding:8px;border-bottom:1px solid var(--color-border)">the same 15 rules</td></tr>
+      <tr><td style="padding:8px;border-bottom:1px solid var(--color-border)">Result</td><td style="padding:8px;border-bottom:1px solid var(--color-border)">score and grade for the page</td><td style="padding:8px;border-bottom:1px solid var(--color-border)">included</td></tr>
+      <tr><td style="padding:8px;border-bottom:1px solid var(--color-border)">The report</td><td style="padding:8px;border-bottom:1px solid var(--color-border)">the whole report on the page</td><td style="padding:8px;border-bottom:1px solid var(--color-border)">included</td></tr>
+      <tr><td style="padding:8px;border-bottom:1px solid var(--color-border)">A report you can attach to an email</td><td style="padding:8px;border-bottom:1px solid var(--color-border)">&mdash;</td><td style="padding:8px;border-bottom:1px solid var(--color-border)">pdf download of the whole report as a file</td></tr>
+      <tr><td style="padding:8px">Checks only a server can make</td><td style="padding:8px">&mdash;</td><td style="padding:8px">GDPR/cookie and NIS2/security checks &mdash; 18 more, 33 in all</td></tr>
+    </table>
+    <p style="font-size:0.95rem;color:var(--color-text-muted);max-width:44rem;">The licence covers one website. If you only need to know what your palette does under deuteranopia, you never need to pay for anything &mdash; the free simulator above is the whole answer.</p>
+    <p style="text-align:center;margin-top:1.2rem;"><a href="https://buy.stripe.com/eVq00i4YH6UG69g0ObbMQ03" class="btn-primary" rel="nofollow noopener">Buy EUComply Pro &mdash; $79/year</a></p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Frequently asked questions</h2>
+    <div class="problem-cards">
+      <div class="card"><h3>What is the difference between a contrast checker and a color blindness simulator?</h3><p>A contrast checker answers whether one color is readable on another &mdash; a single ratio. A simulator answers whether two colors stay distinguishable when color vision is impaired, by rendering both through a model of protanopia, deuteranopia or tritanopia. A pair can have plenty of contrast and still collapse into the same color, which is why both are needed.</p></div>
+      <div class="card"><h3>How accurate is the simulation?</h3><p>The tool uses the Machado, Oliveira and Fernandes (2009) severity matrices with an adjustable severity from 0 to 100 percent &mdash; the same model professional design tools use. It approximates how colors are perceived. Only a clinical test can diagnose color vision deficiency in a person.</p></div>
+      <div class="card"><h3>Which vision type should I check against?</h3><p>Start with deuteranopia. It is by far the most common form, and red and green are the pair that fails. If your design still works for deuteranopia and tritanopia, it will almost always work for the rarer types as well.</p></div>
+      <div class="card"><h3>What does WCAG require for color?</h3><p>SC 1.4.1 Use of Color: color must not be the only visual means of conveying information, indicating an action or distinguishing an element. The fix is never to remove the color &mdash; it is to add a second signal: a label, an icon, a pattern, or text that says what the color is saying.</p></div>
+    </div>
+    <div style="text-align:center;margin-top:24px;">
+      <a href="/color-blindness-simulator" class="btn-primary">Try the simulator free &rarr;</a>
+      &nbsp;&nbsp;
+      <a href="/scan" class="btn-secondary">Or scan the whole page &rarr;</a>
+    </div>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Tools and guides</h2>
+    <div class="problem-cards">
+      <div class="card"><span class="badge" style="font-size:0.75em;display:inline-block;margin-bottom:6px;">CONTRAST</span><h3><a href="/blog/text-on-image-contrast-check" style="color:var(--color-accent);text-decoration:none;">Text-on-image contrast check</a></h3><p>Hero images with text on top are one of the most common failures. Measure the worst case behind your letters.</p></div>
+      <div class="card"><span class="badge" style="font-size:0.75em;display:inline-block;margin-bottom:6px;">SCANNER</span><h3><a href="/blog/accessibility-scanner-cli" style="color:var(--color-accent);text-decoration:none;">Accessibility scanner from the terminal</a></h3><p>Run the same 15 checks against any URL without opening a browser, in CI or locally.</p></div>
+      <div class="card"><span class="badge" style="font-size:0.75em;display:inline-block;margin-bottom:6px;">EAA</span><h3><a href="/blog/eaa-deadline-2026" style="color:var(--color-accent);text-decoration:none;">EAA deadlines: when does the law apply to you?</a></h3></div>
+      <div class="card"><span class="badge" style="font-size:0.75em;display:inline-block;margin-bottom:6px;">TOOLS</span><h3><a href="/free-tools" style="color:var(--color-accent);text-decoration:none;">All free tools</a></h3></div>
+      <div class="card"><h3><a href="/blog/free-accessibility-testing-tools" style="color:var(--color-accent);text-decoration:none;">Free accessibility testing tools</a></h3><p>What each free tool actually checks, and where you still need a human.</p></div>
+      <div class="card"><h3><a href="/blog/free-gdpr-document-generators" style="color:var(--color-accent);text-decoration:none;">Free GDPR document generators</a></h3><p>Privacy notices, DPAs and records of processing, generated from your own answers.</p></div>
+    </div>
+  </div>
+</section>
+
+<p style="text-align:center;"><a href="/da/blog/farveblindhed-tjek" lang="da">Danish version of this guide</a></p>
+<footer style="padding:32px 24px;">
+  <p><a href="/">Home</a> &middot; <a href="/color-blindness-simulator">Color blindness simulator</a> &middot; <a href="/free-tools">Free tools</a> &middot; <a href="/blog">Blog</a></p>
+  <div class="book-cta" style="border:1px solid #ddd;border-radius:8px;padding:16px 20px;margin:32px 0;">
+    <h3>Free e-books: EU compliance guides</h3>
+    <p>Six practical guides (NIS2, GDPR, EAA, cookies) — every complete book is a free EPUB download.</p>
+    <a href="/books" class="btn-primary">Browse the free e-books →</a>
+    <p style="margin:12px 0 0;font-size:13px;color:#555;">Want all six guides? <a href="/books/compliance-bundle"><strong>Complete EU Compliance Bundle</strong></a> — all six listed together, each a free EPUB.</p>
+  </div>
+</footer>
+<script>
+(function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';fetch('/api/track',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:p}),keepalive:true}).catch(function(){});}catch(e){}})();
+</script>
+<script>
+(function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';document.addEventListener('click',function(ev){var a=ev.target&&ev.target.closest?ev.target.closest('a[href]'):null;if(!a)return;var h=a.getAttribute('href')||'';var m=h.match(/^\/(?:da\/)?(color-blindness-simulator|palette-generator|contrast-checker|text-on-image-checker|scan|blog|books|free-tools|compliance-report)(\.html)?(#[^#]*)?$/);if(!m)return;try{navigator.sendBeacon('/api/track',new Blob([JSON.stringify({path:p,event:'cta-'+m[1]})],{type:'application/json'}));}catch(e){}},true);}catch(e){}})();
+</script>
+</body>
+</html>

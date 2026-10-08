@@ -1,31 +1,25 @@
 # STATUS
 
-- **8/10:** CI på `main` var rød i fem gate-steps, alle rettet på
-  `ceo/eaa-github-action`: `storage-claims`-selftesten ramte det forkerte
-  `rateLimitIp`-kald efter sitemap-featuren; `first-action` fandt to
-  primærknapper i DeskUptime-folden (købslinket er nu sekundært mod `#pro`);
-  `contrast-sampling` dømte artikel-demoens `mount()` som værktøj;
-  `catalog-where` havde forældede linjenumre; `scan-events` talte ét scan som
-  to. Gate grøn (alle steps).
-- **8/10:** feature 47 (GitHub Action for eaa-scanner) leveret: `action.yml`
-  scanner og uploader SARIF; CLI'en skriver nu rapporten før fail-on-dommen, og
-  `--fail-on never` afvises ikke længere. Testen dømmer action, workflow-skabelon
-  og salgsside og kører CLI'en for rigtigt.
-- **8/10:** `bugbottle.dev` er bevidst ude af deploy-matrixen igen — vores
-  7 ruter ville overskrive den rigtige produktside. Afventer Mads' ja (❓).
-- **8/10:** planens STATUS skåret til ≤25 linjer; historik i `docs/plan-arkiv.md`.
+- **9/10:** feature 49 leveret (`ceo/farveblindhed-artikel`): ny guide i EN+DA,
+  `/blog/color-blindness-simulation-check` + `/da/blog/farveblindhed-tjek`, med
+  en målende kontrasttabel pr. synstype — alle 24 tal beregnet med simulatorens
+  egen Machado-model, ikke estimeret. Gate GRØN.
+- **9/10:** to deploy-noter lukket på live-indhold (eaa-action, sitemap-scan).
 - 0 åbne review-fund. Sentry: 0 uløste fejl (14 dage). 0 åbne PR'er.
 - **PR-TJEK 8/10:** 0 åbne PR'er. **BRANCH-TJEK:** ikke kørt.
 - **CEO-kø #0** er færdig og merged; 0 åbent.
-- **VERIFICÉR DEPLOY:** eaa-action `ceo/eaa-github-action` — tjek at
-  `https://mahope.tools/downloads` viser GitHub Action-skabelonen med
-  `--sarif` og `--fail-on`, og at siden stadig svarer 200.
 ## Åbne review-fund
 
 Ingen.
 
 ## Verificér deploy
 
+- **VERIFICÉR DEPLOY OK 9/10:** eaa-action `ceo/eaa-github-action` — live
+  `https://mahope.tools/downloads` (200) viser GitHub Action-skabelonen med
+  `action.yml`, `--sarif` og `--fail-on`.
+- **VERIFICÉR DEPLOY OK 9/10:** sitemap-scanning `ceo/sitemap-scan` — live
+  `https://mahope.tools/scan` og `/da/scan` (200) viser Pages/Sitemap-skifteren
+  i heroen («Sider» på dansk).
 - **VERIFICÉR DEPLOY:** compliance-score-simulator `ceo/compliance-score-simulator`
   — tjek at `https://mahope.tools/compliance-report` viser score-simulatoren
   (score-bar med «Nu» vs «Fixed» og point-værdier per fix).
@@ -43,35 +37,16 @@ Ingen.
 - **VERIFICÉR DEPLOY OK 8/10:** text-on-image-checker del-link `2613639a` — live
   `https://mahope.tools/text-on-image-checker` og `-da` svarer 200 og viser
   «Share this check»-knappen i resultatet (delt-linket gendanner tilstanden).
-- **VERIFICÉR DEPLOY OK 8/10:** gate-rettelsen `ceo/first-action-form-hero` —
-  påvirker intet i markup; CI grøn på `main`.
-- **VERIFICÉR DEPLOY OK 8/10:** free-tools-katalog `ceo/free-tools-hero-catalog` —
-  live `https://mahope.tools/free-tools` og `/da/free-tools` viser kataloget med
-  7 kategorier i folden (EN: `#catalog-heading` "Tools by category", DA:
-  "Værktøjer efter kategori"), og «Alle værktøjer» / «All tools» ruller til den.
-  Gate grøn.
-- **VERIFICÉR DEPLOY OK 8/10:** free-tools-katalog `ceo/free-tools-hero-catalog` —
-  live `https://mahope.tools/free-tools` og `/da/free-tools` viser kataloget med
-  7 kategorier i folden (EN: `#catalog-heading` "Tools by category", DA:
-  "Værktøjer efter kategori"), og «Alle værktøjer» / «All tools» ruller til den.
-  Gate grøn.
 - **VERIFICÉR DEPLOY OK 8/10:** compliance-report-folden `ceo/compliance-hero-buy`
   — live `https://mahope.tools/compliance-report` (200) viser «See pricing —
   EUComply Pro» i heroen, og `id="pricingSection"` findes med den ene «Buy
   EUComply Pro — $79/year»-knap.
-- **VERIFICÉR DEPLOY OK 8/10:** compliance-report-prissektionen
-  `ceo/compliance-report-pricing-visible` — live `https://mahope.tools/compliance-report`
-  (200) viser `#pricingSection` med «See pricing — EUComply Pro», «No licence
-  yet?»-kortet og «Buy EUComply Pro — $79/year per website»-knappen.
 - **VERIFICÉR DEPLOY OK 8/10:** text-on-image-eksport `ceo/text-on-image-export` —
   live `https://mahope.tools/text-on-image-checker` viser «Download the marked
   check» og `/text-on-image-checker-da` viser «Hent det markerede tjek».
 - **VERIFICÉR DEPLOY OK 8/10:** DeskUptime-frontside `ceo/deskuptime-bounce` — live
   `deskuptime.com` og `deskuptime.com/da` viser klar værdi og én købsknap i
   heroen, konvertering er tydelig.
-- **VERIFICÉR DEPLOY:** sitemap-scanning `ceo/sitemap-scan` — tjek at
-  `https://mahope.tools/scan` og `/da/scan` viser Pages/Sitemap-skifteren i
-  heroen, og at en sitemap-URL giver et multi-resultat med alle sider.
 
 ## Åbne opgaver
 
@@ -147,6 +122,10 @@ side; tallene er ikke vores egen trafik. Alt det leverede (1–44) står i
     til Page Profile Pro ($19/år). Accept: `page-profile --compare A B` giver
     en diff. Datagrund: Pro-funktionen findes ikke endnu; CLI'en har allerede
     score og grade.
+49. **Guide: farveblindhedssimulering.** Hvem: de 5 besøgende/28d på
+    `/color-blindness-simulator` + 9 på kontrastartiklen. Tal: trafik til
+    simulatoren og videre til `/scan`/EUComply Pro. Accept: EN+DA-guide med
+    målte tal. **LEVERET** `ceo/farveblindhed-artikel`.
 
 33. **`/compliance-report`: virkende vej fra den frie rapport til Pro.** Hvem: de
     besøgende der kører det gratis tjek. Tal: `checkout.pages` i

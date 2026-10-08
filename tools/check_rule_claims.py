@@ -565,6 +565,14 @@ PRODUCT_ENGINE: tuple[tuple[str, str], ...] = (
     # tilgængelighedserklæring, hvilket er præcis den fil Pro leverer.
     ("blog/prestashop-eaa-accessibility.html", "web"),
     ("da/blog/prestashop-tilgaengelighed-eaa.html", "web"),
+    # Farveblindhedsguiden og dens danske spejling (8/10). Samme licens og
+    # samme to tal som kontrastartiklen, af præcis samme grund: begge sælger
+    # EUComply Pro, og begge har skrevet gratis- og Pro-spalten med
+    # `compliance-report.html`'s egen tabel. Guiden sælger simulatoren som
+    # gratis, så det den lover regler for er webkernens 15 — ikke desktop- eller
+    # plugin-motoren. Uden linjen var "15 WCAG-regler" et løfte uden motor.
+    ("blog/color-blindness-simulation-check.html", "web"),
+    ("da/blog/farveblindhed-tjek.html", "web"),
     # GDPR-vs-NIS2-artiklen og dens danske spejling (30/9) — toppen på
     # blindlisten fra `check_article_paid_path.py` med 9 indgående sider.
     # Samme licens og samme to tal som de otte ovenfor: artiklens egen

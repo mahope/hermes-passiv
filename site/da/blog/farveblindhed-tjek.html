@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Farveblindhedstjek — test din palette før du udgiver</title>
+<meta name="description" content="Simulér protanopi, deuteranopi og tritanopi på dine farver og skærmbilleder, med målte kontrasttal for hver synstype — og hvad WCAG SC 1.4.1 egentlig kræver. Gratis, kører i din browser.">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Hermes Passiv">
+<meta property="og:title" content="Farveblindhedstjek — test din palette før du udgiver">
+<meta property="og:description" content="Se hvordan dine brandfarver opfører sig ved protanopi, deuteranopi og tritanopi, med rigtige målte kontrastforhold. Gratis og uden tilmelding.">
+<meta property="og:image" content="https://hermes-passiv.pages.dev/cover.jpg">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/da/blog/farveblindhed-tjek">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Farveblindhedstjek — test din palette før du udgiver">
+<meta name="twitter:description" content="Se hvordan dine brandfarver opfører sig ved protanopi, deuteranopi og tritanopi, med rigtige målte kontrastforhold. Gratis og uden tilmelding.">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/da/blog/farveblindhed-tjek">
+<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/blog/color-blindness-simulation-check">
+<link rel="alternate" hreflang="da" href="https://hermes-passiv.pages.dev/da/blog/farveblindhed-tjek">
+<link rel="alternate" hreflang="en" href="https://hermes-passiv.pages.dev/blog/color-blindness-simulation-check">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "Article", "headline": "Farveblindhedstjek — sådan tester du din palette før du udgiver", "description": "Simulér protanopi, deuteranopi og tritanopi på dine farver og skærmbilleder, med målte kontrasttal for hver synstype, og hvad WCAG SC 1.4.1 kræver.", "url": "https://hermes-passiv.pages.dev/da/blog/farveblindhed-tjek", "datePublished": "2026-10-08", "dateModified": "2026-10-08", "author": {"@type": "Person", "name": "Mads Holst Jensen", "url": "https://mahoje.dk"}, "publisher": {"@type": "Organization", "name": "mahoje.dk", "url": "https://mahoje.dk"}}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Hvad er forskellen på en kontrasttjekker og en farveblindhedssimulator?", "acceptedAnswer": {"@type": "Answer", "text": "En kontrasttjekker svarer på om én farve kan læses på en anden — ét tal. En simulator svarer på om to farver bliver ved med at være til at skelne, når farvesynet er nedsat, ved at tegne begge gennem en model for protanopi, deuteranopi eller tritanopi. Et par kan have god kontrast og alligevel blive til samme farve, og derfor skal man bruge begge."}}, {"@type": "Question", "name": "Hvor præcis er simuleringen?", "acceptedAnswer": {"@type": "Answer", "text": "Værktøjet bruger Machado, Oliveira og Fernandes' sværhedsgradsmatricer fra 2009 med en justerbar sværhedsgrad fra 0 til 100 procent — den samme model som professionelle designværktøjer. Den tilnærmer hvordan farver opfattes. Kun en klinisk test kan stille diagnosen om et menneskes farvesyn."}}, {"@type": "Question", "name": "Hvilken synstype skal jeg tjekke mod?", "acceptedAnswer": {"@type": "Answer", "text": "Start med deuteranopi. Det er langt den mest udbredte form, og det er rød-grøn-parret der svigter. Virker designet stadig for deuteranopi og tritanopi, virker det næsten altid også for de sjældnere typer."}}, {"@type": "Question", "name": "Hvad kræver WCAG om farve?", "acceptedAnswer": {"@type": "Answer", "text": "SC 1.4.1 Brug af farve: farve må ikke være den eneste visuelle måde at formidle information på, ikke den eneste måde at markere en handling, eller at skelne ét element fra et andet. Retningen er aldrig at fjerne farven — det er at tilføje et andet signal: en label, et ikon, et mønster eller tekst der siger det farven siger."}}]}</script>
+<script defer src="/track.js"></script>
+</head>
+<body>
+<header class="hero">
+  <div class="container">
+    <div class="badge">BLOG &middot; TILGÆNGELIGHED</div>
+    <h1>Farveblindhedstjek<br>Test din palette før du udgiver</h1>
+    <p class="subtitle">Rødt og grønt er de to farver et design støtter sig hårdest til, og det er også det par der forsvinder først. Her er hvordan du tegner din egen palette gennem protanopi, deuteranopi og tritanopi — og hvad du skal læse ud af det.</p>
+    <div class="hero-cta">
+      <a href="#try-it" class="btn-primary">Simulér dine farver nu &rarr;</a>
+      <a href="#how" class="btn-secondary">Se hvordan det virker</a>
+    </div>
+    <p class="hero-note">Opdateret oktober 2026 &middot; 5 minutters læsning</p>
+  </div>
+</header>
+
+<section class="problem" id="why">
+  <div class="container">
+    <h2>Hvorfor en palette kan bestå kontrasttjekket og alligevel svigte</h2>
+    <p>Et kontrastforhold er et tal om én farve på en anden. Det siger ingenting om, om læseren kan skelne de to ad. Rødt <code>#dc2626</code> og grønt <code>#16a34a</code> på hvid baggrund klarer hver for sig &mdash; og ved deuteranopi bliver de til <code>#8f801b</code> og <code>#958951</code>, to nuancer af samme olivengrøn. Et statusmærke der siger "fejlet / bestået" for dig siger det samme ord to gange for omkring en mand ud af tolv.</p>
+    <p style="margin-bottom:0">Din egen palette er næste skridt: <a href="/color-blindness-simulator-da" style="color:var(--color-accent);">kør den gennem den gratis simulator &rarr;</a></p>
+    <div class="problem-cards">
+      <div class="card"><h3>Hvad reglen egentlig siger</h3><p>WCAG SC 1.4.1 <em>Brug af farve</em>: farve må ikke være den eneste visuelle måde at formidle information på, markere en handling eller skelne et element fra et andet. Det er ikke en regel om hvilke farver du må bruge — det er en regel om at bruge dem alene.</p></div>
+      <div class="card"><h3>Det udbredte tilfælde er rød-grøn</h3><p>Deuteranopi er langt den mest udbredte form for nedsat farvesyn, og den er rød-grøn. Protanopi gør rødt mørkere, indtil det synker ned i gråen. Tritanopi, blå-gul, er så sjælden at den normalt er det sidste du tjekker.</p></div>
+      <div class="card"><h3>Det en kontrasttjekker ikke kan se</h3><p>To farver kan have 5:1 mod siden og alligevel være umulige at skelne fra hinanden. Kontrast måler læsbarhed; en simulering måler separation. Du skal bruge begge, for de svigter forskellige steder.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="products" id="how">
+  <div class="container">
+    <h2>Sådan gør du (under et minut)</h2>
+    <ol>
+      <li>Åbn simuleringen og sæt dine farver ind — gerne en hel palette ad gangen. Den starter med seks almindelige farver, så du kan se modellen virke før du tilføjer dine egne.</li>
+      <li>Sæt sværhedsgraden. 100 % er fuld dikromasi; lavere værdier tilnærmer de mildere former, som er langt mere udbredte end de fulde.</li>
+      <li>Læs tabellen. Hver farve tegnes for normalt syn og for protanopi, deuteranopi og tritanopi, hver med sit kontrastforhold mod en baggrund du vælger.</li>
+      <li>Læg et skærmbillede op, hvis du har et. Samme model kører på hver enkelt pixel i hele billedet, så du ser siden og ikke bare farvefelterne.</li>
+      <li>Eksportér som CSS eller JSON, ret det der brød sammen, og kør det igen.</li>
+    </ol>
+    <p>Modellen er Machado, Oliveira og Fernandes' sværhedsgradsmodel fra 2009, interpoleret mellem nabomatricerne som forfatterne anbefaler — den samme fremgangsmåde som professionelle designværktøjer bruger. Alt kører i JavaScript i din egen browser; din palette forlader aldrig maskinen.</p>
+  </div>
+</section>
+
+<section class="products" id="try-it">
+  <div class="container">
+    <h2>Prøv det på dine egne farver</h2>
+    <p style="margin-top:0"><a href="/color-blindness-simulator-da" style="color:var(--color-accent);">Farveblindhedssimulatoren</a> er det værktøj denne guide beskriver: en hel palette ad gangen, justerbar sværhedsgrad, en skærmbillede-tilstand og CSS eller JSON ud igen. Intet at installere, ingen konto, og farverne bliver i din browser.</p>
+    <div class="problem-cards">
+      <div class="card"><span class="badge" style="font-size:0.75em;display:inline-block;margin-bottom:6px;">SIMULATOR</span><h3><a href="/color-blindness-simulator-da" style="color:var(--color-accent);text-decoration:none;">Farveblindhedssimulator</a></h3><p>Protanopi, deuteranopi og tritanopi over en hel palette, med sværhedsgrad og en skærmbillede-tilstand der går pixel for pixel.</p></div>
+      <div class="card"><span class="badge" style="font-size:0.75em;display:inline-block;margin-bottom:6px;">KONTRAST</span><h3><a href="/contrast-checker-da" style="color:var(--color-accent);text-decoration:none;">WCAG-kontrasttjekker</a></h3><p>Den anden halvdel af opgaven: forholdet mellem to farver, med AA- og AAA-grænserne skrevet ud.</p></div>
+      <div class="card"><span class="badge" style="font-size:0.75em;display:inline-block;margin-bottom:6px;">PALETTE</span><h3><a href="/palette-generator-da" style="color:var(--color-accent);text-decoration:none;">Tilgængelighedspalette-generator</a></h3><p>Bygger en palette der hænger sammen — nyttig når simuleringen fortæller at din ikke gør.</p></div>
+    </div>
+  </div>
+</section>
+<div class="blog-tool-cta"><span class="btc-label">Tjek en vilkårlig side for GDPR- og cookie-problemer:</span> <a href="/scan-da" class="btn-secondary">Kør den gratis scanner →</a></div>
+
+<section class="products" id="measured">
+  <div class="container">
+    <h2>Målt: hvad et rød-grønt statuspar gør</h2>
+    <p>Tallene herunder kommer fra den samme model som simuleringen kører, ved fuld sværhedsgrad, mod hvid. Første kolonne er farven som du valgte den; de øvrige tre er, hvad den bliver til. Hvert tal er beregnet, ikke estimeret.</p>
+    <div class="table-wrap">
+    <table class="compare pro-table">
+      <caption class="sr-only">Kontrastforhold mod hvid baggrund, pr. synstype</caption>
+      <thead>
+        <tr><th scope="col">Farve</th><th scope="col">Normalt</th><th scope="col">Protanopi</th><th scope="col">Deuteranopi</th><th scope="col">Tritanopi</th></tr>
+      </thead>
+      <tbody>
+        <tr><th scope="row">Rød <code>#dc2626</code></th><td>4,83:1</td><td>7,06:1</td><td>4,00:1</td><td>4,35:1</td></tr>
+        <tr><th scope="row">Grøn <code>#16a34a</code></th><td>3,30:1</td><td>3,05:1</td><td>3,50:1</td><td>3,28:1</td></tr>
+        <tr><th scope="row">Blå <code>#2563eb</code></th><td>5,17:1</td><td>4,32:1</td><td>5,24:1</td><td>4,30:1</td></tr>
+        <tr><th scope="row">Ravgul <code>#f59e0b</code></th><td>2,15:1</td><td>2,48:1</td><td>1,97:1</td><td>2,30:1</td></tr>
+        <tr><th scope="row">Violet <code>#7c3aed</code></th><td>5,70:1</td><td>4,89:1</td><td>5,29:1</td><td>5,30:1</td></tr>
+        <tr><th scope="row">Blæk <code>#111827</code></th><td>17,74:1</td><td>17,53:1</td><td>17,87:1</td><td>17,68:1</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p>Tre ting falder ud af den tabel, og ingen af dem kan du se i en kontrasttjekker.</p>
+    <div class="problem-cards">
+      <div class="card"><h3>En bestået farve holder op med at bestå</h3><p>Rød på 4,83:1 klarer AA for normal tekst. Ved deuteranopi er den 4,00:1, og det gør den ikke. Farven ændrede sig ikke — læseren gjorde.</p></div>
+      <div class="card"><h3>Parret smelter helt sammen</h3><p>Rødt mod grønt er 1,47:1 for normalt syn og 1,14:1 ved deuteranopi. Blåt mod ravgul holder på 2,41:1 og falder aldrig under 1,74:1, det værst tænkelige i protanopi — stadig lavt, men det holder.</p></div>
+      <div class="card"><h3>Mørke neutraler er stabile</h3><p>Blæk rører sig næsten ikke, fra 17,74:1 til 17,53:1, fordi det allerede er næsten sort i alle modeller. Neutral tekst er det sikreste grund du har.</p></div>
+    </div>
+    <p style="font-size:0.95rem;color:var(--color-text-muted);max-width:44rem;">Kontrast er ikke hele historien heller: den måler om én farve kan læses på en anden, ikke om to farver bliver adskilt. Kør både et kontrasttjek og en simulering, før du kalder en palette færdig.</p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Fra ét billede til en hel side</h2>
+    <p>En simulator fortæller dig hvad din palette gør. Den kan ikke fortælle dig hvad der faktisk blev udgivet — hvilket tema der overskrev din knapfarve på den side ingen har åbnet siden lanceringen, eller hvilket foto der sender en rød-grøn forklaring ud, fordi nogen klistrede den ind fra et regneark. Brug den gratis <a href="/scan-da" style="color:var(--color-accent);">Accessibility Scanner</a> til det: den kører 15 WCAG-tjek mod en rigtig URL, kontrast med i blandingen, og fortæller hvilken side og hvilket element der fejler.</p>
+    <div class="problem-cards">
+      <div class="card"><span class="badge" style="font-size:0.75em;display:inline-block;margin-bottom:6px;">RELATEREDE VÆRKTØJER</span><h3>Mere kontrasthjælp</h3><p><a href="/contrast-checker-da" style="color:var(--color-accent);">Kontrasttjekkeren</a> tjekker farvepar &middot; <a href="/palette-generator-da" style="color:var(--color-accent);">palette-generatoren</a> bygger tilgængelige paletter &middot; <a href="/text-on-image-checker-da" style="color:var(--color-accent);">tekst-på-billede-tjekket</a> måler tekst over et foto.</p></div>
+      <div class="card"><span class="badge" style="font-size:0.75em;display:inline-block;margin-bottom:6px;">GUIDE</span><h3>Læs kontrastguiden</h3><p>En trin-for-trin-guide til WCAG-kravene selv: <a href="/da/blog/wcag-kontrast-checker" style="color:var(--color-accent);">WCAG-kontrasttjekker, trin for trin</a>.</p></div>
+      <div class="card"><span class="badge" style="font-size:0.75em;display:inline-block;margin-bottom:6px;">ENGELSK VERSION</span><h3>Arbejder du på engelsk?</h3><p>Samme guide findes på <a href="/blog/color-blindness-simulation-check" hreflang="en" style="color:var(--color-accent);">engelsk her</a>.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="products" id="rapport">
+  <div class="container">
+    <h2>Simulatoren er gratis. En rapport du kan aflevere er ikke.</h2>
+    <p>Simulatoren og den gratis <a href="/scan-da" style="color:var(--color-accent);">Accessibility Scanner</a> er gratis for evigt &mdash; ingen konto, ingen prøveversion, ingen grænse på hvor mange paletter eller sider du kører gennem dem.</p>
+    <p>Hvad ingen af dem giver dig er noget, du kan sende til en kunde eller vedlægge en tilgængelighedserklæring: en skriftlig rapport, der også dækker de dele af et site kun en server kan se. Pro tilføjer GDPR/cookie- og NIS2/sikkerhedstjekkene, og rapporten som en fil, du kan vedlægge.</p>
+    <table style="width:100%;border-collapse:collapse;margin:1rem 0">
+      <tr><th style="text-align:left;padding:8px;border-bottom:1px solid var(--color-border)">Hvad du får</th><th style="text-align:left;padding:8px;border-bottom:1px solid var(--color-border)">Gratis</th><th style="text-align:left;padding:8px;border-bottom:1px solid var(--color-border)">EUComply Pro &mdash; 79 $ pr. år pr. website</th></tr>
+      <tr><td style="padding:8px;border-bottom:1px solid var(--color-border)">Farveblindhedssimulering</td><td style="padding:8px;border-bottom:1px solid var(--color-border)">ja, hele paletten og skærmbilleder</td><td style="padding:8px;border-bottom:1px solid var(--color-border)">med i licensen</td></tr>
+      <tr><td style="padding:8px;border-bottom:1px solid var(--color-border)">Sidetjek</td><td style="padding:8px;border-bottom:1px solid var(--color-border)">tilgængelighedstjekkene &mdash; 15 WCAG-regler, kontrast indbefattet</td><td style="padding:8px;border-bottom:1px solid var(--color-border)">de samme 15 regler</td></tr>
+      <tr><td style="padding:8px;border-bottom:1px solid var(--color-border)">Resultat</td><td style="padding:8px;border-bottom:1px solid var(--color-border)">scoren og karakteren for siden</td><td style="padding:8px;border-bottom:1px solid var(--color-border)">med i licensen</td></tr>
+      <tr><td style="padding:8px;border-bottom:1px solid var(--color-border)">Rapporten</td><td style="padding:8px;border-bottom:1px solid var(--color-border)">hele rapporten på siden</td><td style="padding:8px;border-bottom:1px solid var(--color-border)">med i licensen</td></tr>
+      <tr><td style="padding:8px;border-bottom:1px solid var(--color-border)">En rapport, du kan vedlægge en mail</td><td style="padding:8px;border-bottom:1px solid var(--color-border)">&mdash;</td><td style="padding:8px;border-bottom:1px solid var(--color-border)">hele pdf-rapporten som en fil</td></tr>
+      <tr><td style="padding:8px">Tjek kun en server kan lave</td><td style="padding:8px">&mdash;</td><td style="padding:8px">GDPR/cookie- og NIS2/sikkerhedstjekkene &mdash; 18 mere, 33 i alt</td></tr>
+    </table>
+    <p style="font-size:0.95rem;color:var(--color-text-muted);max-width:44rem;">Licensen dækker ét website. Hvis du kun skal vide hvad din palette gør ved deuteranopi, behøver du aldrig betale for noget &mdash; den gratis simulator ovenfor er hele svaret.</p>
+    <p style="text-align:center;margin-top:1.2rem;"><a href="https://buy.stripe.com/eVq00i4YH6UG69g0ObbMQ03" class="btn-primary" rel="nofollow noopener">Køb EUComply Pro &mdash; 79 $ pr. år</a></p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Ofte stillede spørgsmål</h2>
+    <div class="problem-cards">
+      <div class="card"><h3>Hvad er forskellen på en kontrasttjekker og en farveblindhedssimulator?</h3><p>En kontrasttjekker svarer på om én farve kan læses på en anden &mdash; ét tal. En simulator svarer på om to farver bliver ved med at være til at skelne, når farvesynet er nedsat, ved at tegne begge gennem en model for protanopi, deuteranopi eller tritanopi. Et par kan have god kontrast og alligevel blive til samme farve, og derfor skal man bruge begge.</p></div>
+      <div class="card"><h3>Hvor præcis er simuleringen?</h3><p>Værktøjet bruger Machado, Oliveira og Fernandes' sværhedsgradsmatricer fra 2009 med en justerbar sværhedsgrad fra 0 til 100 procent &mdash; den samme model som professionelle designværktøjer. Den tilnærmer hvordan farver opfattes. Kun en klinisk test kan stille diagnosen om et menneskes farvesyn.</p></div>
+      <div class="card"><h3>Hvilken synstype skal jeg tjekke mod?</h3><p>Start med deuteranopi. Det er langt den mest udbredte form, og det er rød-grøn-parret der svigter. Virker designet stadig for deuteranopi og tritanopi, virker det næsten altid også for de sjældnere typer.</p></div>
+      <div class="card"><h3>Hvad kræver WCAG om farve?</h3><p>SC 1.4.1 Brug af farve: farve må ikke være den eneste visuelle måde at formidle information på, markere en handling eller skelne et element fra et andet. Retningen er aldrig at fjerne farven &mdash; det er at tilføje et andet signal: en label, et ikon, et mønster eller tekst der siger det farven siger.</p></div>
+    </div>
+    <div style="text-align:center;margin-top:24px;">
+      <a href="/color-blindness-simulator-da" class="btn-primary">Prøv simulatoren gratis &rarr;</a>
+      &nbsp;&nbsp;
+      <a href="/scan-da" class="btn-secondary">Eller scan hele siden &rarr;</a>
+    </div>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Værktøjer og guides</h2>
+    <div class="problem-cards">
+      <div class="card"><span class="badge" style="font-size:0.75em;display:inline-block;margin-bottom:6px;">KONTRAST</span><h3><a href="/da/blog/tekst-paa-billede-kontrasttjek" style="color:var(--color-accent);text-decoration:none;">Tekst-på-billede kontrasttjek</a></h3><p>Hero-billeder med tekst ovenpå er en af de mest almindelige fejl. Mål det værste tilfælde bag dine bogstaver.</p></div>
+      <div class="card"><span class="badge" style="font-size:0.75em;display:inline-block;margin-bottom:6px;">SCANNER</span><h3><a href="/da/blog/tilgaengelighedsscanner-cli" style="color:var(--color-accent);text-decoration:none;">Tilgængelighedsscanner fra terminalen</a></h3><p>Kør de samme 15 tjek mod en vilkårlig URL uden at åbne en browser, i CI eller lokalt.</p></div>
+      <div class="card"><span class="badge" style="font-size:0.75em;display:inline-block;margin-bottom:6px;">EAA</span><h3><a href="/da/blog/eaa-frister-2026" style="color:var(--color-accent);text-decoration:none;">EAA-frister: hvornår gælder loven dig?</a></h3></div>
+      <div class="card"><span class="badge" style="font-size:0.75em;display:inline-block;margin-bottom:6px;">VÆRKTØJER</span><h3><a href="/da/free-tools" style="color:var(--color-accent);text-decoration:none;">Alle gratis værktøjer</a></h3></div>
+      <div class="card"><h3><a href="/da/blog/gratis-tilgaengelighedsvaerktoejer" style="color:var(--color-accent);text-decoration:none;">Gratis tilgængelighedsværktøjer</a></h3><p>Hvad hvert gratis værktøj egentlig tjekker, og hvor du stadig har brug for et menneske.</p></div>
+      <div class="card"><h3><a href="/da/blog/gratis-gdpr-dokumentgeneratorer" style="color:var(--color-accent);text-decoration:none;">Gratis GDPR-dokumentgeneratorer</a></h3><p>Privatlivspolitikker, DBB-aftaler og behandlingsoversigter, lavet ud fra dine egne svar.</p></div>
+    </div>
+  </div>
+</section>
+
+<p style="text-align:center;"><a href="/blog/color-blindness-simulation-check" lang="en">Engelsk version af denne guide</a></p>
+<footer style="padding:32px 24px;">
+  <p><a href="/da/">Forside</a> &middot; <a href="/color-blindness-simulator-da">Farveblindhedssimulator</a> &middot; <a href="/da/free-tools">Gratis værktøjer</a> &middot; <a href="/da/blog">Blog</a></p>
+  <div class="book-cta" style="border:1px solid #ddd;border-radius:8px;padding:16px 20px;margin:32px 0;">
+    <h3>Gratis e-bøger: EU-compliance-guides</h3>
+    <p>Seks praktiske guides (NIS2, GDPR, EAA, cookies) — hver komplet bog er en gratis EPUB-download.</p>
+    <a href="/books" class="btn-primary">Se de gratis e-bøger →</a>
+    <p style="margin:12px 0 0;font-size:13px;color:#555;">Skal du have alle seks guides? <a href="/books/compliance-bundle"><strong>Komplet EU-compliance-bundlet</strong></a> — alle seks samlet, hver som gratis EPUB.</p>
+  </div>
+</footer>
+<script>
+(function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';fetch('/api/track',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:p}),keepalive:true}).catch(function(){});}catch(e){}})();
+</script>
+<script>
+(function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';document.addEventListener('click',function(ev){var a=ev.target&&ev.target.closest?ev.target.closest('a[href]'):null;if(!a)return;var h=a.getAttribute('href')||'';var m=h.match(/^\/(?:da\/)?(color-blindness-simulator|palette-generator|contrast-checker|text-on-image-checker|scan|blog|books|free-tools|compliance-report)(\.html)?(#[^#]*)?$/);if(!m)return;try{navigator.sendBeacon('/api/track',new Blob([JSON.stringify({path:p,event:'cta-'+m[1]})],{type:'application/json'}));}catch(e){}},true);}catch(e){}})();
+</script>
+</body>
+</html>
