@@ -1,4 +1,8 @@
 # STATUS
+- **8/10:** feature 43 (blog hero-demo) leveret på `ceo/blog-hero-demo`:
+  kontrast-bloggen har nu en live-demo i heroen, så besøgende kan prøve
+  værktøjet med det samme. Forventet at reducere bounce-rate (100% → lavere).
+  Gate GRØN.
 - **8/10:** feature 42 (compliance score-simulator) leveret på
   `ceo/compliance-score-simulator`: rapporten viser nu en visuel score-bar
   med «Nu» vs «Fixed» og beregner hvert fixs point-værdi (+12 pr. error,

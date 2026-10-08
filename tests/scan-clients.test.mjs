@@ -2081,7 +2081,7 @@ function mutated(path, from, to) {
   ];
   for (const t of SIDER) {
     const { nodes, st } = loadPage(t.side, responses([OK_SCAN]).fetchImpl,
-      { match: /TiContrast\.mount/, canvas: true, levendeBilleder: true, preload: [KERNE] });
+      { match: /TiContrast\.mount[\s\S]*prefix: '(?:art-|')/, canvas: true, levendeBilleder: true, preload: [KERNE] });
     await sleep(20);
     const cv = nodes.get(t.cv);
     ok(`${t.sprog} (${t.side}): lærredet har en drop-lytter`,
