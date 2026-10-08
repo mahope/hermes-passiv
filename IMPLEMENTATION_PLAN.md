@@ -62,6 +62,9 @@ Ingen.
 - **VERIFICÉR DEPLOY OK 8/10:** text-on-image-eksport `ceo/text-on-image-export` —
   live `https://mahope.tools/text-on-image-checker` viser «Download the marked
   check» og `/text-on-image-checker-da` viser «Hent det markerede tjek».
+- **VERIFICÉR DEPLOY OK 8/10:** DeskUptime-frontside `ceo/deskuptime-bounce` — live
+  `deskuptime.com` og `deskuptime.com/da` viser klar værdi og én købsknap i
+  heroen, konvertering er tydelig.
 - **VERIFICÉR DEPLOY:** sitemap-scanning `ceo/sitemap-scan` — tjek at
   `https://mahope.tools/scan` og `/da/scan` viser Pages/Sitemap-skifteren i
   heroen, og at en sitemap-URL giver et multi-resultat med alle sider.
