@@ -1,17 +1,12 @@
 # STATUS
-- **8/10:** feature 35 (GDPR-brudsgenerator) leveret på
-  `ceo/gdpr-breach-report-generator`: EN/DA-side der laver en Artikel 33-melding
-  med 72-timers-fristen beregnet live, og en Artikel 34-kommunikation, helt i
-  browseren. Linket fra `/free-tools`, forsiden, `track.js` og
-  `route_inventory.json`; betalt vej til `/paid-templates`, ratchet opdateret.
-  Gate GRØN — 185 steps.
-- **8/10:** `/compliance-report` havde en død købsvej. Første rettelse (`bdf5f4fa`)
-  fjernede kun ét af to `display:none` på `#pricingSection`: `generateReport()`
-  skjulte den stadig ved hver scanning og genskabte den aldrig, så hero-knappen
-  «See pricing — EUComply Pro» og rapportens «Compare free and Pro» pegede på et
-  skjult afsnit. Nu skjules prissektionen aldrig; opgraderingskortet (15
-  gratis-regler mod 18 server-side tjek + PDF, pris og købsknap) står fortsat efter
-  rapporten. Gate GRØN — 185 steps.
+- **8/10:** feature 36 (text-on-image-checker eksport) leveret på
+  `ceo/text-on-image-export`: «Download the marked check»-knappen brænder nu
+  dommen (PASS/FAIL + ratio) ind i det eksporterede billede, sammen med den
+  røde ramme om det dårligste sted. Begge sider (EN/DA) opdateret. Gate GRØN.
+- **8/10:** Verificeret tre åbne deploy-noter: GDPR-brudsgenerator (EN/DA 200,
+  72-timer vises, Generate report + paid-templates link), compliance-report
+  (#pricingSection synlig, No licence yet? + Buy EUComply Pro), gate-rettelsen
+  (CI grøn på main).
 - 0 åbne review-fund. Sentry: 0 uløste fejl (14 dage). 0 åbne PR'er.
 - **PR-TJEK 8/10:** 0 åbne PR'er. **BRANCH-TJEK:** ikke kørt denne iteration.
 - **CEO-kø #0** er færdig og merged; 0 åbent.
@@ -22,10 +17,9 @@ Ingen.
 
 ## Verificér deploy
 
-- **VERIFICÉR DEPLOY:** GDPR-brudsgenerator `ceo/gdpr-breach-report-generator` —
-  tjek at `https://mahope.tools/gdpr-breach-report-generator` og `-da` svarer 200,
-  at 72-timers-fristen vises når `#awareAt` udfyldes, og at «Generate report»/
-  «Lav rapport» viser rapporten med vejen til `/paid-templates`.
+- **VERIFICÉR DEPLOY OK 8/10:** GDPR-brudsgenerator `ceo/gdpr-breach-report-generator` —
+  live EN/DA svarer 200, 72-timers-fristen vises, «Generate report»/«Lav rapport»
+  viser rapporten med link til `/paid-templates`.
 - **VERIFICÉR DEPLOY OK 8/10:** url-inspector-folden `ceo/url-inspector-fold-pro-link` —
   live `https://mahope.tools/url-inspector/` viser URL-feltet og «Inspect» i heroen
   (200), og `id="ui-pro-heading"` findes to steder i markup.
@@ -37,11 +31,13 @@ Ingen.
 - **VERIFICÉR DEPLOY OK 8/10:** text-on-image-checker del-link `2613639a` — live
   `https://mahope.tools/text-on-image-checker` og `-da` svarer 200 og viser
   «Share this check»-knappen i resultatet (delt-linket gendanner tilstanden).
-- **VERIFICÉR DEPLOY:** gate-rettelsen `ceo/first-action-form-hero` — påvirker
-  intet i markup, så intet at se live; CI skal være grøn på `main`.
-- **VERIFICÉR DEPLOY:** free-tools-katalog `ceo/free-tools-hero-catalog` — tjek
-  at `https://mahope.tools/free-tools` og `https://mahope.tools/da/free-tools`
-  viser katalogen med 7 kategorier i folden, og at «Alle værktøjer» ruller til den.
+- **VERIFICÉR DEPLOY OK 8/10:** gate-rettelsen `ceo/first-action-form-hero` —
+  påvirker intet i markup; CI grøn på `main`.
+- **VERIFICÉR DEPLOY OK 8/10:** free-tools-katalog `ceo/free-tools-hero-catalog` —
+  live `https://mahope.tools/free-tools` og `/da/free-tools` viser kataloget med
+  7 kategorier i folden (EN: `#catalog-heading` "Tools by category", DA:
+  "Værktøjer efter kategori"), og «Alle værktøjer» / «All tools» ruller til den.
+  Gate grøn.
 - **VERIFICÉR DEPLOY OK 8/10:** free-tools-katalog `ceo/free-tools-hero-catalog` —
   live `https://mahope.tools/free-tools` og `/da/free-tools` viser kataloget med
   7 kategorier i folden (EN: `#catalog-heading` "Tools by category", DA:
@@ -51,13 +47,14 @@ Ingen.
   — live `https://mahope.tools/compliance-report` (200) viser «See pricing —
   EUComply Pro» i heroen, og `id="pricingSection"` findes med den ene «Buy
   EUComply Pro — $79/year»-knap.
-- **VERIFICÉR DEPLOY:** compliance-report-prissektionen
-  `ceo/compliance-report-pricing-visible` — kør en scanning på
-  `https://mahope.tools/compliance-report`, og tjek at `#pricingSection` bliver
-  stående synlig efter rapporten (hero-knappen «See pricing — EUComply Pro» og
-  «Compare free and Pro» ruller til den), og at rapporten slutter med et
-  «No licence yet?»-kort med «Buy EUComply Pro — $79/year per website». Den
-  forrige rettelse fjernede kun ét af to `display:none`.
+- **VERIFICÉR DEPLOY OK 8/10:** compliance-report-prissektionen
+  `ceo/compliance-report-pricing-visible` — live `https://mahope.tools/compliance-report`
+  (200) viser `#pricingSection` med «See pricing — EUComply Pro», «No licence
+  yet?»-kortet og «Buy EUComply Pro — $79/year per website»-knappen.
+- **VERIFICÉR DEPLOY:** text-on-image-eksport `ceo/text-on-image-export` — tjek
+  at `https://mahope.tools/text-on-image-checker` og `-da` viser «Download the
+  marked check»/«Hent det markerede tjek»-knappen i resultatet, og at den
+  eksporterede PNG indeholder dommen (PASS/FAIL + ratio) og den røde ramme.
 
 ## Åbne opgaver
 
@@ -139,6 +136,7 @@ side; tallene er ikke vores egen trafik. Alt det leverede (1–32) står i
     de 6 besøgende på værktøjet (top-værktøjsside i ugerapporten). Tal:
     besøgende/brug. Accept: en «Download the marked check»-fil med dommen
     indbrændt. Datagrund: del-linket findes, men billedet gør ikke.
+    **LEVERET** `ceo/text-on-image-export`.
 
 37. **`/deskuptime`: vis Pro-forskellen i selve tjekresultatet.** Hvem: de 8
     besøgende/28 dage, der alle forlader forsiden (bounce 100%). Tal: bounce på

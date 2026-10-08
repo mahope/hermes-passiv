@@ -967,7 +967,9 @@
       // den rene download også fik feltet, og de to valg blev ét.
       if (dl) dl.addEventListener('click', function () { downloadPng(false); });
       var dlMark = res.querySelector('[data-ti-dl-mark]');
-      if (dlMark) dlMark.addEventListener('click', function () { downloadPng(true); });
+      if (dlMark) dlMark.addEventListener('click', function () {
+        downloadPng(true, { ratio: r, passAA: passAA, need: need, large: large });
+      });
       var spot = res.querySelector('[data-ti-spot]');
       if (spot) spot.addEventListener('click', function () {
         // Samme værdi som i `applyFix()`-kaldet: tallet fra denne måling.
@@ -1002,7 +1004,7 @@
     // Filnavnet er sidens egen streng, aldrig bruterens tekst: et navn bygget på
     // noget en besøgende har skrevet kan indeholde `/`, `..` eller et tegn, der
     // ikke kan bruges i et filnavn.
-    function downloadPng(mark) {
+    function downloadPng(mark, verdict) {
       if (!img) return false;
       // Målingen *før* `draw()`: `sampleContrast()` rydder canvasen, så hvis
       // feltet blev tegnet før den, ville det blive malet på en tom flade — og
@@ -1012,6 +1014,7 @@
       var dataUrl = null;
       try {
         if (sample) drawMark(sample.punkt);
+        if (mark && verdict && verdict.ratio !== null) drawVerdictOnCanvas(verdict);
         dataUrl = cv.toDataURL('image/png');
       } catch (e) {
         dataUrl = null;
@@ -1032,6 +1035,30 @@
       if (a.click) a.click();
       if (a.remove) a.remove();
       return true;
+    }
+
+    // Tegner dommen på canvas så den er en del af den eksporterede fil.
+    // Samme farver som badge'en i resultatet: grøn for PASS, rød for FAIL.
+    // Placeret i øverste venstre hjørne med en baggrund der dækker billedet
+    // under, så teksten er læselig uanset hvad billedet viser.
+    function drawVerdictOnCanvas(verdict) {
+      var pad = Math.round(fontSizePx() * 0.35);
+      var badgeH = Math.round(fontSizePx() * 0.55);
+      var subH = Math.round(fontSizePx() * 0.35);
+      var w = cv.width - pad * 2;
+      var h = badgeH + subH + pad * 2;
+      ctx.save();
+      ctx.fillStyle = verdict.passAA ? 'rgba(22,163,74,0.92)' : 'rgba(220,38,38,0.92)';
+      ctx.fillRect(pad, pad, w, h);
+      ctx.fillStyle = '#ffffff';
+      ctx.textBaseline = 'top';
+      ctx.font = '700 ' + Math.round(fontSizePx() * 0.42) + 'px system-ui, sans-serif';
+      var badge = (verdict.passAA ? s.pass : s.fail) + ' ' + fmt(verdict.ratio.toFixed(2)) + ':1';
+      ctx.fillText(badge, pad * 2, pad + Math.round(fontSizePx() * 0.08));
+      ctx.font = '400 ' + Math.round(fontSizePx() * 0.28) + 'px system-ui, sans-serif';
+      var sub = (s.needs || 'needs') + ' ' + fmt(verdict.need) + ':1 ' + (s.forAA || 'for WCAG AA');
+      ctx.fillText(sub, pad * 2, pad + badgeH + Math.round(fontSizePx() * 0.06));
+      ctx.restore();
     }
 
     function loadFile(file) {
