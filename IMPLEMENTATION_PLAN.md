@@ -19,6 +19,9 @@
   endelig, AI-kvote, SSRF pr. hop). Verificeret i koden 8/10; intet åbent.
 - **Sentry er sat op og testet** (worker 149-246, test 1748-1833): DSN i kode,
   kun produktion, ingen PII, ingen traces/replay.
+- **Feature 31 leveret 8/10** (`69ec807e`): free-tools-siderne har nu en
+  værktøjskatalog i folden med 7 kategorier; heroen matcher forsiden med tre
+  knapper; ratchet opdateret. Gate grøn.
 
 ## Åbne review-fund
 
@@ -40,6 +43,9 @@ Ingen.
   og at et kopieret link gendanner gradient/tekst/farve/placering.
 - **VERIFICÉR DEPLOY:** gate-rettelsen `ceo/first-action-form-hero` — påvirker
   intet i markup, så intet at se live; CI skal være grøn på `main`.
+- **VERIFICÉR DEPLOY:** free-tools-katalog `ceo/free-tools-hero-catalog` — tjek
+  at `https://mahope.tools/free-tools` og `https://mahope.tools/da/free-tools`
+  viser katalogen med 7 kategorier i folden, og at «Alle værktøjer» ruller til den.
 
 ## Åbne opgaver
 
@@ -126,3 +132,5 @@ side; tallene er ikke vores egen trafik. Alt det leverede (1–26) står i
     (e-mail, kontrast, GDPR, tabel, skærmbillede), ikke ét anker, og `/`
     peger på samme rute. Datagrund: portens egen `handlinger()` målt 8/10 —
     foldens eneste primære er `#gdpr-heading`.
+    **LEVERET** `69ec807e` — heroen matcher forsiden (tre knapper), katalog
+    med 7 kategorier vises i folden, ratchet opdateret til `#catalog-heading`.
