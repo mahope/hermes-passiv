@@ -59,10 +59,14 @@ SITE = ROOT / "site"
 RATCHET = ROOT / "tools" / "first_action.json"
 
 HERO_RE = re.compile(
-    r'<div class="hero">(.*?)\n</div>|<header class="hero">(.*?)</header>', re.S)
+    r'<div class="hero"[^>]*>(.*?)\n</div>|<header class="hero"[^>]*>(.*?)</header>',
+    re.S)
 BANNER_RE = re.compile(r'<div class="blog-tool-cta(?: ai-cta)?">.*?</div>', re.S)
-A_RE = re.compile(r"<a\b([^>]*)>")
+TOKEN_RE = re.compile(
+    r"<a\b([^>]*)>|<form\b([^>]*)>|(</form\s*>)|<button\b([^>]*)>", re.S)
 HREF_RE = re.compile(r'href="([^"]*)"')
+ACTION_RE = re.compile(r'action="([^"]*)"')
+TYPE_RE = re.compile(r'type="([^"]*)"')
 CLASS_RE = re.compile(r'class="([^"]*)"')
 
 
@@ -86,14 +90,38 @@ def fold_region(html: str) -> str:
 
 
 def handlinger(region: str) -> list[tuple[str, str]]:
-    """`(href, classes)` for hvert link i foldregionen, i dokumentrækkefølge."""
+    """`(destination, klasser)` for hver handling i foldregionen i rækkefølge.
+
+    En `<a>` er en handling, og det er en `<button type="submit">` også: et URL-
+    felt i heroen med knappen «Tjek nu» *er* læserens første handling, og det er
+    den bedre end et anker der kun flytter læseren ned til den. 8/10 blev CI rød
+    på fire sider, fordi porten så `0 btn-primary` og sagde «foldregionen findes
+    ikke», selv om folden stod der med det hele. Destinationen er
+    formularet `action`, så knappen dømmes mod ratchetets rute ligesom et link.
+    """
     fund: list[tuple[str, str]] = []
-    for attributer in A_RE.findall(region):
-        href = HREF_RE.search(attributer)
-        if href is None:
-            continue
-        klasser = CLASS_RE.search(attributer)
-        fund.append((href.group(1), klasser.group(1) if klasser else ""))
+    handling = ""
+    for match in TOKEN_RE.finditer(region):
+        link, form, lukket, knap = match.groups()
+        if form is not None:
+            action = ACTION_RE.search(form)
+            handling = action.group(1) if action else ""
+        elif lukket is not None:
+            handling = ""
+        elif link is not None:
+            href = HREF_RE.search(link)
+            if href is None:
+                continue
+            klasser = CLASS_RE.search(link)
+            fund.append((href.group(1), klasser.group(1) if klasser else ""))
+        else:
+            type_ = TYPE_RE.search(knap)
+            # `type="button"` er en kontol i et script, ikke en handling, og en
+            # knap uden `<form>` omkring sig har ingen destination at dømme mod.
+            if not handling or (type_ and type_.group(1).lower() != "submit"):
+                continue
+            klasser = CLASS_RE.search(knap)
+            fund.append((handling, klasser.group(1) if klasser else ""))
     return fund
 
 
@@ -398,6 +426,42 @@ def self_test() -> int:
          str(fejl_for(med_mål, "#tool-heading")))
     # 6. En side uden hero kan ikke dømmes, og porten skal sige det.
     tjek("manglende hero er rød", bool(fejl_for("<p>ingen hero</p>", "/tool")))
+    # 6c. 8/10: folden på fire forsider blev `<div class="hero" id="check">` da
+    #     tjekket flyttede op i heroen, og `HERO_RE` krævede en *nøgne* `class`,
+    #     så porten meldte «foldregionen findes ikke» på en side der havde en
+    #     fold. 32 andre sider har en `style=` på heroen og var usynlige på
+    #     samme måde. En attribut må ikke gøre en hero usynlig.
+    med_attribut = hero.format(a="/tool").replace('<header class="hero">',
+                                                  '<header class="hero" id="check">')
+    fund = fejl_for(med_attribut, "/tool")
+    tjek("hero med attribut er grøn", not fund, str(fund))
+    tjek("hero med attribut er stadig dømt",
+         bool(fejl_for(med_attribut, "/scan")), "mutationen slap igennem")
+    # 6d. Samme fejlform med `<div>`: en URL-felt i heroen med knappen «Tjek
+    #     nu» er læserens første handling. Destinationen er formularet `action`,
+    #     så porten dømmer knappen mod ratchetets rute ligesom et link.
+    formular = ('<div class="hero" id="check">\n'
+                '  <form action="/api/url-inspect"><input name="url">'
+                '<button type="submit" class="btn-primary">Tjek nu</button></form>\n'
+                '  <div class="hero-cta"><a href="#install" class="btn-secondary">'
+                'Installér</a></div>\n</div>')
+    fund = fejl_for(formular, "/api/url-inspect")
+    tjek("send-knap er foldens primære", not fund, str(fund))
+    fund = fejl_for(formular, "/scan")
+    tjek("send-knap mod forkert rute er rød",
+         any("/api/url-inspect" in f for f in fund), str(fund))
+    tjek("send-knap og link er to valg, ikke én handling",
+         any("2 btn-primary" in f for f in fejl_for(
+             formular.replace("</form>",
+                              '<a href="/scan" class="btn-primary">Scanner</a></form>'),
+             "/api/url-inspect")))
+    kontrol = formular.replace('<button type="submit"', '<button type="button"')
+    tjek("kontrolknap er ikke en handling",
+         not any(h == "/api/url-inspect" for h, _ in handlinger(kontrol)),
+         str(handlinger(kontrol)))
+    tjek("knap uden formular har ingen destination",
+         not any(h == "" for h, _ in handlinger(
+             formular.replace('<form action="/api/url-inspect">', "").replace("</form>", ""))))
     # 6b. Prisreglen skal dømme en side *uden* `<section>` foran tabellen.
     #     5/10: `/clean-copy-tool` har sin gratis-mod-Pro-tabel under
     #     `<h2 id="free-vs-pro">`, og `pristabel()` returnerede `None` for den —

@@ -1,4 +1,14 @@
 # STATUS
+- **CI var rød på `main` og er grøn igen 8/10.** `check_first_action.py` krævede
+  en nøgne `<div class="hero">` og læste kun `<a>`; da tjekket flyttede op i heroen
+  (`id="check"` + formular), sagde porten «foldregionen findes ikke» på fire sider og
+  holdt alle efterfølgende deploys tilbage. Rettet i `ceo/first-action-form-hero`:
+  attributter er tillladt, og `<button type="submit">` tæller som foldens handling med
+  formularet `action` som destination. 6 nye selftest-kontroller (35/35), mutation mod
+  den gamle parser: RØD 29/35.
+- **Derfor er feature 29 ikke live endnu** (målt 8/10 mod mahope.tools: 0 forekomster
+  af `text-on-image-share.js` på begge sprogversioner). Deploys med dette pushes gate.
+- **PR-TJEK 8/10:** ingen åbne PR'er i repoet.
 - **DeskUptime-tjekket flyttet til heroen 8/10** (`ae08878a`): URL-feltet står
   nu direkte i heroen på begge sprogversioner, så første handling er et svar,
   ikke et køb. Gate grøn. Baseline: 8 besøgende/28 dage, bounce 100% (Plausible
@@ -8,8 +18,6 @@
   Gate grøn. Baseline: 16 besøgende/28 dage, bounce 79% (Plausible 7/10).
 - **Review-fund (deskuptime licenssandhed) allerede rettet** i `7e101213` —
   verified i koden 8/10.
-- **Alle VERIFICÉR DEPLOY-noter fra 6–8/10 er live og lukket** (målt 8/10 mod
-  mahope.tools og deskuptime.com — se `docs/plan-arkiv.md`).
 - **CEO-kø #0 er færdig og merged** (url-inspect + `env`, 202 på tak-siden, 429
   endelig, AI-kvote, SSRF pr. hop). Verificeret i koden 8/10; intet åbent.
 - **Sentry er sat op og testet** (worker 149-246, test 1748-1833): DSN i kode,
@@ -26,10 +34,12 @@ Ingen.
 - **VERIFICÉR DEPLOY OK 8/10:** Clean Copy-konverteren i heroen `2085f465` — live
   `cleancopy.tools` og `cleancopy.tools/da/` viser konverteringsformularen i
   heroen, konvertering virker.
-- **VERIFICÉR DEPLOY:** text-on-image-checker del-link `2613639a` — næste batch
-  deploy. Tjek at `https://mahope.tools/text-on-image-checker` og
-  `https://mahope.tools/text-on-image-checker-da` viser del-knap i resultatet,
+- **VERIFICÉR DEPLOY:** text-on-image-checker del-link `2613639a` — ligger fast
+  på en rød gate (se STATUS). Tjek at `https://mahope.tools/text-on-image-checker`
+  og `https://mahope.tools/text-on-image-checker-da` viser del-knap i resultatet,
   og at et kopieret link gendanner gradient/tekst/farve/placering.
+- **VERIFICÉR DEPLOY:** gate-rettelsen `ceo/first-action-form-hero` — påvirker
+  intet i markup, så intet at se live; CI skal være grøn på `main`.
 
 ## Åbne opgaver
 
@@ -98,3 +108,19 @@ side; tallene er ikke vores egen trafik. Alt det leverede (1–26) står i
     på `/text-on-image-checker` og 9 på den tilhørende artikel. Tal: besøgende på
     værktøjet. Accept: et del-link gendanner billede/tekst/placering, ligesom
     paletgeneratorens `#c=`-link. Datagrund: top-side i Plausible. **LEVERET** — ny `text-on-image-share.js` modul, integreret på EN/DA, tester grønne.
+
+30. **`/url-inspector/`: folden har ingen handling og ingen vej til Pro-kortet.**
+    Hvem: de læsere der kommer fra deskuptime-forsiden, hvis tjek-formular
+    sender dem videre til URL-værktøjet. Tal: konvertering til DeskUptime Pro
+    ($19). Accept: folden har én primær handling (tjekket) og ét link til den
+    synlige pro-tabels sektion, så `check_first_action.py --list` viser siden
+    grøn. Datagrund: portens egen `pristabel()` målt 8/10 — tabellen er synlig,
+    men dens sektion har intet id, og folden har nul `btn-primary`.
+
+31. **`/free-tools`: hubben sender alle læsere til ét værktøj.** Hvem: de 7
+    besøgende på `/` plus læsere af «Site»-kolonnen i footeren på alle 270
+    byggede sider. Tal: brug af et gratis værktøj — den vej, Pro sælges på.
+    Accept: foldens primære er en værktøjsrække med synlige kategorier
+    (e-mail, kontrast, GDPR, tabel, skærmbillede), ikke ét anker, og `/`
+    peger på samme rute. Datagrund: portens egen `handlinger()` målt 8/10 —
+    foldens eneste primære er `#gdpr-heading`.
