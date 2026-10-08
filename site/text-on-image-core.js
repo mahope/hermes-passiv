@@ -1284,16 +1284,67 @@
         + (demoBillede && s.verdictDemo ? '<br><span class="ti-verdict-note">' + s.verdictDemo + '</span>' : '');
     }
 
+    function getShareState() {
+      var st = {
+        bg: gradientAktiv() ? 'gradient' : 'image',
+        g1: $('gfrom') ? $('gfrom').value : '#1e3a5f',
+        g2: $('gto') ? $('gto').value : '#c9d8e4',
+        ga: $('gang') ? Number($('gang').value) : 45,
+        t1: txtFelt(0).value,
+        c1: farveFelt(0).value,
+        fs1: $('fontsize') ? $('fontsize').value : 'large',
+        x1: laegX(0),
+        y1: laegY(0),
+        s1: laegScrim(0),
+        t2: txtFelt(1).value,
+        c2: farveFelt(1).value,
+        fs2: $('fontsize') ? $('fontsize').value : 'large',
+        x2: laegX(1),
+        y2: laegY(1),
+        s2: laegScrim(1),
+        a: aktiv
+      };
+      return st;
+    }
+
+    function applyShareState(share) {
+      if (!share) return;
+      if (share.bg === 'gradient' && gradientFindes()) {
+        if (share.g1 && $('gfrom')) $('gfrom').value = share.g1;
+        if (share.g2 && $('gto')) $('gto').value = share.g2;
+        if (typeof share.ga === 'number' && $('gang')) $('gang').value = share.ga;
+        if ($('bgmode')) $('bgmode').value = 'gradient';
+        vaerlGradient();
+      } else if (share.bg === 'image') {
+        if ($('bgmode')) $('bgmode').value = 'image';
+        vaerlBillede();
+      }
+      if (share.t1 && txtFelt(0)) txtFelt(0).value = share.t1;
+      if (share.c1 && farveFelt(0)) farveFelt(0).value = share.c1;
+      if (share.fs1 && $('fontsize')) $('fontsize').value = share.fs1;
+      if (typeof share.x1 === 'number') saetX(0, share.x1);
+      if (typeof share.y1 === 'number') saetY(0, share.y1);
+      if (share.s1 && share.s1.hex) saetScrim(0, { hex: share.s1.hex, alpha: share.s1.alpha });
+      if (share.t2 && txtFelt(1)) txtFelt(1).value = share.t2;
+      if (share.c2 && farveFelt(1)) farveFelt(1).value = share.c2;
+      if (typeof share.x2 === 'number') saetX(1, share.x2);
+      if (typeof share.y2 === 'number') saetY(1, share.y2);
+      if (share.s2 && share.s2.hex) saetScrim(1, { hex: share.s2.hex, alpha: share.s2.alpha });
+      if (share.a === 0 || share.a === 1) aktivere(share.a);
+      updateAll();
+    }
+
     // Synlig for testene i `tests/scan-clients.test.mjs`, der dømmer den her
     // kode i en sandkasse i stedet for at tro på markup. `suggestFix` er med,
     // fordi rettelsens *matematik* skal kunne dømmes uden en browser: et tal
     // påstanden ikke kan efterprøve på er en påstand.
     return { sampleContrast: sampleContrast, updateAll: updateAll, applyFix: applyFix, suggestFix: suggestFix, findSpot: findSpot,
       blokAntal: blokAntal, aktivere: aktivere, blok: function (i) { return { x: laegX(i), y: laegY(i), hex: farveFelt(i).value, text: txtFelt(i).value }; },
-      aktiv: function () { return aktiv; } };
+      aktiv: function () { return aktiv; }, getShareState: getShareState, applyShareState: applyShareState };
   }
 
   global.TiContrast = { mount: mount, lum: lum, ratio: ratio, hexToRgb: hexToRgb,
                       lumToChannel: lumToChannel, suggestFix: suggestFix,
-                      cssFix: cssFix };
+                      cssFix: cssFix, getShareState: function () { return null; },
+                      applyShareState: function () {} };
 })(typeof globalThis !== 'undefined' ? globalThis : this);

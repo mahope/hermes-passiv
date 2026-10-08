@@ -21,14 +21,11 @@ Ingen.
 
 ## Verificér deploy
 
-- **VERIFICÉR DEPLOY:** DeskUptime-tjekket i heroen `ae08878a` 8/10 — tjek at
-  live `https://deskuptime.com/` og `https://deskuptime.com/da/` viser
-  URL-feltet (`#oc-check-form`) i heroen over folden, og at et tjek af
-  `example.com` giver et svar.
-- **VERIFICÉR DEPLOY:** Clean Copy-konverteren i heroen `2085f465` 8/10 — tjek at
-  live `https://cleancopy.tools/` og `https://cleancopy.tools/da/` viser
-  konverteringsformularen (`#cc-check-form`) i heroen over folden, og at en
-  konvertering af `example.com` giver et svar.
+- **VERIFICÉR DEPLOY OK 8/10:** DeskUptime-tjekket i heroen `ae08878a` — live
+  `deskuptime.com` og `deskuptime.com/da/` viser URL-feltet i heroen, tjek virker.
+- **VERIFICÉR DEPLOY OK 8/10:** Clean Copy-konverteren i heroen `2085f465` — live
+  `cleancopy.tools` og `cleancopy.tools/da/` viser konverteringsformularen i
+  heroen, konvertering virker.
 
 ## Åbne opgaver
 
@@ -82,7 +79,6 @@ Ingen.
 - **Search Console:** tilføj de fem domæner som properties.
 - **Plugin-version:** kunder på Clean Copy 1.1.0 henter ikke den rettede zip —
   kræver en release, som er din.
-
 ## Feature-kø
 
 Prioriteret efter hvor tæt den er på penge. Baseline er målt på den **byggede**
@@ -92,8 +88,9 @@ side; tallene er ikke vores egen trafik. Alt det leverede (1–26) står i
 27. **deskuptime.com: giv forsiden et værktøj i stedet for et pitch.** Hvem: de
     8 besøgende/28 dage, der alle forlader forsiden (bounce 100%). Tal: bounce på
     `/`. Accept: forsiden viser ét URL-felt der kører det gratis tjek uden login,
-    så første handling er et svar, ikke et køb. Datagrund: Plausible 7/10.
+    så første handling er et svar, ikke et køb. Datagrund: Plausible 7/10. **LEVERET** `ae08878a` — verificeret live 8/10.
+
 29. **text-on-image-checker: del resultatet som et link.** Hvem: de 6 besøgende
     på `/text-on-image-checker` og 9 på den tilhørende artikel. Tal: besøgende på
     værktøjet. Accept: et del-link gendanner billede/tekst/placering, ligesom
-    paletgeneratorens `#c=`-link. Datagrund: top-side i Plausible.
+    paletgeneratorens `#c=`-link. Datagrund: top-side i Plausible. **LEVERET** — ny `text-on-image-share.js` modul, integreret på EN/DA, tester grønne.

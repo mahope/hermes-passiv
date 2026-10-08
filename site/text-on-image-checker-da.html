@@ -108,6 +108,7 @@
 
   <div id="result" class="ti-result ti-fail" role="status" aria-live="polite" hidden></div>
   <div id="result2" class="ti-result ti-fail" role="status" aria-live="polite" hidden></div>
+  <button type="button" id="ti-share" class="btn-secondary ti-share" hidden>Del dette tjek</button>
 
   <p class="ti-note">Sådan virker det: hvert bogstav samples på sine faktiske pixels —
   vi aflæser baggrundens farver direkte under bogstaverne (tekstens egne pixels udeladt)
@@ -161,6 +162,7 @@
 </footer>
 
 <script src="/text-on-image-core.js"></script>
+<script src="/text-on-image-share.js"></script>
 <script>
 /* Kort: kernen ligger i `/text-on-image-core.js`, og denne side giver den sin
    egen tekst og sit eget pro-kort. Prisen og perioden står her i HTML, fordi
@@ -174,7 +176,7 @@
     +'<p><a class="btn" href="https://buy.stripe.com/eVq00i4YH6UG69g0ObbMQ03" rel="nofollow noopener">Køb EUComply Pro — $79/år pr. website</a></p>'
     +'<p class="pro-card-note">Én licens pr. website. <a href="/da/compliance-report">Se hvad Pro tilføjer, før du køber</a>.</p>'
     +'</div>';
-  window.TiContrast.mount({
+  var instance = window.TiContrast.mount({
     prefix: '',
     strings: {
       dec: ',',
@@ -188,7 +190,7 @@
       copiedHex: 'Kopieret',
       copyManual: 'Markeret — tryk Ctrl+C',
       cssLabel: 'Sæt dette ind i din egen CSS — det er præcis hvad rettelsen ovenfor lavede:',
-      copyCss: 'Kopiér CSS’en',
+      copyCss: 'Kopiér CSS\'en',
       copiedCss: 'CSS kopieret',
       fixBtn: 'Fiks det — sæt tekstfarven for mig',
       fixed: 'Jeg satte tekstfarven til %s og målte igen. Du kan altid ændre den tilbage med farvefeltet ovenfor.',
@@ -210,9 +212,66 @@
       errNotImage: 'Vælg venligst en billedfil.',
       errUnreadable: 'Kunne ikke læse den billedfil.',
       proCard: PRO_CARD,
-      note: 'Tjekket er gratis og kører i din browser. Hvis det sparede dig en ombygning, holder en lille <a href="https://donate.stripe.com/7sYeVcbn50wieFM8gDbMQ0c" rel="nofollow noopener">donation</a> det kørende.'
+      note: 'Tjekket er gratis og kører i din browser. Hvis det sparede dig en ombygning, holder en lille <a href="https://donate.stripe.com/7sYeVcbn50wieFM8gDbMQ0c" rel="nofollow noopener">donation</a> det kørende.',
+      shareBtn: 'Del dette tjek',
+      shareCopied: 'Link kopieret',
+      shareNote: 'Gradient-indstillinger og tekstpositioner deles. For billeder skal modtageren uploade deres eget.'
     }
   });
+
+  // Share link handling
+  if (instance && window.TEXT_ON_IMAGE_SHARE) {
+    // Apply share state from URL fragment on load
+    var loadedFromShare = false;
+    if (location.hash && location.hash.indexOf('#ti=') === 0) {
+      var share = window.TEXT_ON_IMAGE_SHARE.decode(location.hash);
+      instance.applyShareState(share);
+      // Don't set loadedFromShare yet - we want the first updateAll to sync the URL
+    }
+
+    // Wire up share button from markup
+    var shareBtn = document.getElementById('ti-share');
+    if (shareBtn) {
+      shareBtn.addEventListener('click', function () {
+        var state = instance.getShareState();
+        if (!state) return;
+        var link = location.origin + location.pathname + window.TEXT_ON_IMAGE_SHARE.encode(state);
+        if (navigator.clipboard) {
+          navigator.clipboard.writeText(link).then(function () {
+            var old = shareBtn.textContent;
+            shareBtn.textContent = instance.strings && instance.strings.shareCopied ? instance.strings.shareCopied : 'Link kopieret';
+            setTimeout(function () { shareBtn.textContent = old; }, 2000);
+          }).catch(function () {
+            prompt('Kopiér dette link:', link);
+          });
+        } else {
+          prompt('Kopiér dette link:', link);
+        }
+      });
+    }
+
+    // Update URL fragment when state changes (after user interaction, not on initial share load)
+    var origUpdateAll = instance.updateAll;
+    instance.updateAll = function () {
+      origUpdateAll();
+      var res = document.getElementById('result');
+      if (res && shareBtn) {
+        shareBtn.hidden = false;
+      }
+      // Update URL with current state (like palette generator does)
+      if (!loadedFromShare && window.history && history.replaceState) {
+        var state = instance.getShareState();
+        if (state) {
+          try { history.replaceState(null, '', window.TEXT_ON_IMAGE_SHARE.encode(state)); } catch (e) {}
+        }
+      }
+      // After first updateAll (which syncs the shared state to URL), allow future updates
+      loadedFromShare = true;
+    };
+
+    // Sync URL with shared state on initial load
+    instance.updateAll();
+  }
 })();
 </script>
 <script>
