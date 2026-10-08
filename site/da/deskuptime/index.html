@@ -33,23 +33,10 @@
 <body>
 <main id="main">
 
-<div class="hero">
+<div class="hero" id="check">
   <div class="container">
     <h1>Er siden oppe, er certifikatet stadig gyldigt, er indholdet ændret?</h1>
     <p>DeskUptime besvarer de tre spørgsmål fra din egen computer. Et gratis kommandolinjeværktøj til engangskontroller og CI, og en lille desktop-app der fortsætter med at tjekke i baggrunden. Intet hostet dashboard, ingen månedlig gebyr. Din URL-liste og tjekresultater bliver på din maskine; Pro-licensaktivering tjekker op over HTTPS når du indtaster nøglen.</p>
-    <div class="hero-cta">
-      <a href="#check" class="btn-primary">Tjek et site nu</a>
-      <a href="#install" class="btn-secondary">Installér CLI'en</a>
-      <a href="#desktop" class="btn-secondary">Desktop-app — med Pro</a>
-    </div>
-    <span class="hero-note">Tjekket herunder kræver ingen installation. For at holde øje med et site skal du bruge CLI'en og desktop-appen. CLI'en er gratis og MIT-licenseret; desktop-appen er en del af Pro: 19 USD engangsbetaling, 3 maskiner. <a href="#pro">Se hvad Pro tilføjer, side om side</a>.</span>
-  </div>
-</div>
-
-<section id="check">
-  <div class="container">
-    <h2>Tjek ét site lige nu</h2>
-    <p>De to første spørgsmål besvaret uden at installere noget. Indtast en URL og vi henter den fra vores egen server: statuskoden, hvor mange omdirigeringer det tog, det live TLS-certifikat med dage tilbage, og hvilke af de otte sikkerheds-headere der kom retur. Ét tjek, ca. et sekund, og intet om URL'en gemmes.</p>
     <form class="oc-form" id="oc-check-form" method="get" action="/api/url-inspect">
       <label for="oc-check-url">Website-adresse</label>
       <div class="oc-row-wrap">
@@ -61,8 +48,13 @@
     </form>
     <p class="oc-status" id="oc-check-status" role="status" aria-live="polite"></p>
     <div id="oc-check-result" hidden></div>
+    <div class="hero-cta">
+      <a href="#install" class="btn-secondary">Installér CLI'en</a>
+      <a href="#desktop" class="btn-secondary">Desktop-app — med Pro</a>
+    </div>
+    <span class="hero-note">Tjekket kræver ingen installation. For at holde øje med et site skal du bruge CLI'en og desktop-appen. CLI'en er gratis og MIT-licenseret; desktop-appen er en del af Pro: 19 USD engangsbetaling, 3 maskiner. <a href="#pro">Se hvad Pro tilføjer, side om side</a>.</span>
   </div>
-</section>
+</div>
 
 <section>
   <div class="container">

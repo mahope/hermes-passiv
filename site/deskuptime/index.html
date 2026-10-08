@@ -33,26 +33,10 @@
 <body>
 <main id="main">
 
-<div class="hero">
+<div class="hero" id="check">
   <div class="container">
     <h1>Is the site up, is the certificate still valid, did the page change?</h1>
     <p>DeskUptime answers those three questions from your own computer. A free command-line tool for one-off checks and CI, and a small desktop app that keeps checking in the background. No hosted dashboard, no monthly fee. Your URL list and check results stay on your machine; the Pro licence activation checks in over HTTPS when you enter the key.</p>
-    <div class="hero-cta">
-      <a href="#check" class="btn-primary">Check a site now</a>
-      <a href="#install" class="btn-secondary">Install the CLI</a>
-      <a href="#desktop" class="btn-secondary">Desktop app — with Pro</a>
-    </div>
-    <span class="hero-note">The check below needs nothing installed. To keep watching a site, that is the CLI and the desktop app. The CLI is free and MIT-licensed; the desktop app is part of Pro: 19 USD one-time, 3 machines. <a href="#pro">See what Pro adds, side by side</a>.</span>
-  </div>
-</div>
-
-<section id="check">
-  <div class="container">
-    <h2>Check one site right now</h2>
-    <p>The first two questions, answered without installing anything. Type a URL and we
-    fetch it from our own server: the status it answers with, how many redirects it took,
-    the live TLS certificate with the days left on it, and which of the eight security
-    headers came back. One check, about a second, and nothing about the URL is stored.</p>
     <form class="oc-form" id="oc-check-form" method="get" action="/api/url-inspect">
       <label for="oc-check-url">Website address</label>
       <div class="oc-row-wrap">
@@ -66,8 +50,13 @@
     </form>
     <p class="oc-status" id="oc-check-status" role="status" aria-live="polite"></p>
     <div id="oc-check-result" hidden></div>
+    <div class="hero-cta">
+      <a href="#install" class="btn-secondary">Install the CLI</a>
+      <a href="#desktop" class="btn-secondary">Desktop app — with Pro</a>
+    </div>
+    <span class="hero-note">The check needs nothing installed. To keep watching a site, that is the CLI and the desktop app. The CLI is free and MIT-licensed; the desktop app is part of Pro: 19 USD one-time, 3 machines. <a href="#pro">See what Pro adds, side by side</a>.</span>
   </div>
-</section>
+</div>
 
 <section>
   <div class="container">
