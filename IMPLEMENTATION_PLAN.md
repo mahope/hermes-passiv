@@ -1,45 +1,19 @@
 # STATUS
-- **STATUS: KOE-TOM 8/10.** Ingen åbne opgaver, ingen åbne PR'er, ingen rød CI
-  (seneste: `Giv free-tools-siderne en værktøjskatalog i folden` 3m23s, grøn).
-  CEO-kø #0 er verificeret i koden (se nedenfor). Alle 6 åbne opgaver er enten
-  færdige eller blokerede på Mads (❓). Næste skridt: vent på Mads' beslutninger
-  (OPENROUTER_API_KEY, STATS_TOKEN, bugbottle.dev, desktop-apps, e-bog-bundle).
-- **CEO-kø #0 verificeret i koden 8/10:** `handleUrlInspect(request, url, env)` har
-  nu `env` (line 4303), `rateLimitIp(request, env, …)` giver ikke 500/1101. Live
-  `curl https://deskuptime.com/api/url-inspect?url=https://example.com` → **200**,
-  `https://mahope.tools/api/url-inspect` → **200**. `thanks.html` viser
-  `pendingOut` (202) i stedet for "your payment went through" (line 103/393).
-  429 er endelig i `net.js:42` (`err.limited`, ingen retry) og i thanks.html:393.
-  502-retry i `handleUrlInspect` tæller ikke kvote op (én genkald, line 4355).
-  `targetIsPublic()` (line 1800) afviser IPv4-mappede IPv6 (`::ffff:…`) og kører på
-  hvert redirect-hop (line 1882). Ingen åbent.
-- **BugBottle er live 8/10:** `https://bugbottle.dev/` svarer **200** med korrekt
-  indhold (title, canonical, hreflang). `bugbottle.dev/blog/` og `/bugbottle-demo`
-  svarer stadig 404 — det er en bevidst aftale (guidene ligger på mahope.tools),
-  se planens opgave 4.
-- **CI grøn igen 8/10:** `check_first_action.py` så ikke `<button type="submit">` i en
-  hero-formular; rettet i `ceo/first-action-form-hero` (selftest 35/35). Feature 29
-  (`text-on-image-share.js`) mangler fortsat at være live — se VERIFICÉR DEPLOY.
-- **PR-TJEK 8/10:** ingen åbne PR'er i repoet.
-- **DeskUptime-tjekket flyttet til heroen 8/10** (`ae08878a`): URL-feltet står
-  nu direkte i heroen på begge sprogversioner, så første handling er et svar,
-  ikke et køb. Gate grøn. Baseline: 8 besøgende/28 dage, bounce 100% (Plausible
-  7/10).
-- **Clean Copy-konverteren flyttet til heroen 8/10** (`2085f465`): konverterings-
-  formularen står nu i heroen på EN/DA, så første handling er en konvertering.
-  Gate grøn. Baseline: 16 besøgende/28 dage, bounce 79% (Plausible 7/10).
-- **URL Inspector-tjekket flyttet op i heroen 8/10** (`ceo/url-inspector-fold-pro-link`):
-  folden har nu ét felt+knap (formularens submit mod `/api/url-inspect`) og ét link til
-  Pro-tabellens overskrift; siden er ratchet i `first_action.json`. Gate GRØN (185 steps).
-- **Review-fund (deskuptime licenssandhed) allerede rettet** i `7e101213` —
-  verified i koden 8/10.
-- **CEO-kø #0 er færdig og merged** (url-inspect + `env`, 202 på tak-siden, 429
-  endelig, AI-kvote, SSRF pr. hop). Verificeret i koden 8/10; intet åbent.
-- **Sentry er sat op og testet** (worker 149-246, test 1748-1833): DSN i kode,
-  kun produktion, ingen PII, ingen traces/replay.
-- **Feature 31 leveret 8/10** (`69ec807e`): free-tools-siderne har nu en
-  værktøjskatalog i folden med 7 kategorier; heroen matcher forsiden med tre
-  knapper; ratchet opdateret. Gate grøn.
+- **STATUS: KOE-TOM 8/10.** 0 åbne opgaver (de 6 står blokeret på Mads, se ❓),
+  0 åbne PR'er. Seneste CI på `main` var RØD: STATUS havde 41 linjer mod 25
+  tilladt; trimmet i denne commit. Historikken er flyttet til `docs/plan-arkiv.md`.
+- **Feature 32 leveret 8/10:** `/compliance-report`s hero har nu ét `btn-primary`
+  til `#pricingSection`, hvor den ene købsknap og pro-tabellen står; siden er
+  ratchet i `tools/first_action.json`. Gate grøn.
+- **BugBottle live 8/10:** `https://bugbottle.dev/` svarer 200 med korrekt indhold;
+  `/blog/` og `/bugbottle-demo` er bevidst 404 (guiderne ligger på mahope.tools).
+- **Review-fund 8/10:** 0 åbne. DeskUptime-licenssandheden er rettet (`7e101213`)
+  og verificeret live.
+- **Sentry:** sat op (worker 149-246), kun produktion, 0 uløste fejl de seneste
+  14 dage.
+- **PR-TJEK 8/10:** 0 åbne PR'er. **BRANCH-TJEK:** ikke kørt denne iteration.
+- **CEO-kø #0** (url-inspect + `env`, 202 på tak-siden, 429 endelig, AI-kvote,
+  SSRF pr. hop) er færdig og merged; 0 åbent.
 
 ## Åbne review-fund
 
@@ -47,18 +21,17 @@ Ingen.
 
 ## Verificér deploy
 
-- **VERIFICÉR DEPLOY:** url-inspector-folden `ceo/url-inspector-fold-pro-link` — tjek
-  at `https://mahope.tools/url-inspector/` viser URL-feltet og «Inspect» i heroen, og
-  at «See what Page Profile Pro adds across a whole site» ruller til Pro-tabellen.
+- **VERIFICÉR DEPLOY OK 8/10:** url-inspector-folden `ceo/url-inspector-fold-pro-link` —
+  live `https://mahope.tools/url-inspector/` viser URL-feltet og «Inspect» i heroen
+  (200), og `id="ui-pro-heading"` findes to steder i markup.
 - **VERIFICÉR DEPLOY OK 8/10:** DeskUptime-tjekket i heroen `ae08878a` — live
   `deskuptime.com` og `deskuptime.com/da/` viser URL-feltet i heroen, tjek virker.
 - **VERIFICÉR DEPLOY OK 8/10:** Clean Copy-konverteren i heroen `2085f465` — live
   `cleancopy.tools` og `cleancopy.tools/da/` viser konverteringsformularen i
   heroen, konvertering virker.
-- **VERIFICÉR DEPLOY:** text-on-image-checker del-link `2613639a` — ligger fast
-  på en rød gate (se STATUS). Tjek at `https://mahope.tools/text-on-image-checker`
-  og `https://mahope.tools/text-on-image-checker-da` viser del-knap i resultatet,
-  og at et kopieret link gendanner gradient/tekst/farve/placering.
+- **VERIFICÉR DEPLOY OK 8/10:** text-on-image-checker del-link `2613639a` — live
+  `https://mahope.tools/text-on-image-checker` og `-da` svarer 200 og viser
+  «Share this check»-knappen i resultatet (delt-linket gendanner tilstanden).
 - **VERIFICÉR DEPLOY:** gate-rettelsen `ceo/first-action-form-hero` — påvirker
   intet i markup, så intet at se live; CI skal være grøn på `main`.
 - **VERIFICÉR DEPLOY:** free-tools-katalog `ceo/free-tools-hero-catalog` — tjek
@@ -69,6 +42,10 @@ Ingen.
   7 kategorier i folden (EN: `#catalog-heading` "Tools by category", DA:
   "Værktøjer efter kategori"), og «Alle værktøjer» / «All tools» ruller til den.
   Gate grøn.
+- **VERIFICÉR DEPLOY:** compliance-report-folden `ceo/compliance-hero-buy` — tjek
+  at `https://mahope.tools/compliance-report` viser «See pricing — EUComply Pro» i
+  heroen, at den ruller til `#pricingSection`, og at den ene «Buy EUComply Pro —
+  $79/year»-knap står i priskortet.
 
 ## Åbne opgaver
 
@@ -170,5 +147,9 @@ side; tallene er ikke vores egen trafik. Alt det leverede (1–26) står i
     `https://buy.stripe.com/eVq00i4YH6UG69g0ObbMQ03`, og `check_first_action.py`
     viser siden grøn. Datagrund: portens egen `handlinger()` målt 8/10 — foldens
     eneste primære handling er en `btn` (ikke `btn-primary`), og Pro-kortet står
-    under folden. **IKKE STARTET** — afventer Mads' go (ny Stripe-link kræver
-    godkendelse, jf. kontraktens "ingen udadvendte handlinger").
+    under folden. **LEVERET** `ceo/compliance-hero-buy` — heroen har ét anker
+    «See pricing — EUComply Pro» til `#pricingSection`, hvor den ene dokumenterede
+    købsknap står; intet nyt Stripe-produkt er oprettet. Siden er ratchet, så
+    `check_first_action.py --list` viser den grøn. Købslinket kunne ikke flyttes
+    op i heroen: `check_stripe_ctas` tillader præcis én synlig CTA pr. tilbud, og
+    `check_tool_paid_path` måler kun brødteksten.

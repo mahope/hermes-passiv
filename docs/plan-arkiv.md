@@ -9431,3 +9431,10 @@ C. ~~**En Pro-holder der kommer fra scanneren skal finde PDF'en selv.**~~
   findes ikke» og holdt deploys tilbage. Nu tillades attributter på heroen, og
   `<button type="submit">` tæller som foldens handling med formularens `action` som
   destination. 6 nye selftest-kontroller (35/35); mutation mod den gamle parser RØD 29/35.
+- **STATUS trimmet 8/10** (`ceo/compliance-hero-buy`): STATUS var vokset til 41
+  linjer mod portens 25, så `check_plan_status.py` var RØD på `main`. De 41 linjer
+  (CEO-kø #0-verifikationen, de fire hero-flyt, feature 31, review-fund og
+  Sentry-opsætningen) er flyttet hertil; planen bærer nu kun den aktuelle status.
+- **Deploy-noter lukket 8/10** (målt mod live): url-inspector-folden (200,
+  URL-felt + «Inspect», `id="ui-pro-heading"` ×2) og text-on-image-checker
+  del-link (EN/DA 200, «Share this check» i resultatet).
