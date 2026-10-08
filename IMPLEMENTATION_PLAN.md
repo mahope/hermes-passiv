@@ -168,6 +168,10 @@ side; tallene er ikke vores egen trafik. Alt det leverede (1–32) står i
      privatlivsskabeloner på mahope.tools. Tal: downloads og konvertering til
      EUComply Pro ($79). Accept: en guide der stiller spørgsmål og genererer en
      tilpasset politik. Datagrund: skabelonerne er top-downloads, men er statiske.
+     **LEVERED** *Privacy notice generator* kører client-side i begge sprog
+     (`/privacy-notice-generator` og `/privacy-notice-generator-da`), er linket
+     fra forsiden og `free-tools`, og matcher acceptkriteriet om at stille spørgsmål
+     og generere en tilpasset politik.
 
 40. **GitHub Action for eaa-scanner.** Hvem: udviklere der vil scanne i CI. Tal:
      adoption. Accept: en `action.yml` der kører scanneren og uploader SARIF.
