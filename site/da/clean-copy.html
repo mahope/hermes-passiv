@@ -35,27 +35,10 @@
 <body>
 <main id="main">
 
-<div class="hero">
+<div class="hero" id="check">
   <div class="container">
     <h1>Kopiér enhver webside som ren Markdown eller ren tekst.</h1>
     <p>Clean Copy tager det, du markerer i browseren — eller en hel side, eller en HTML-fil — og giver dig Markdown, der kan sættes direkte ind i Obsidian, en README, en ticket eller en mail. Typografiske anførselstegn, usynlige tegn og layout-støj fjernes undervejs.</p>
-    <div class="hero-cta">
-      <a href="#check" class="btn-primary">Konvertér en side</a>
-      <a href="#install" class="btn-secondary">Installér</a>
-      <a href="https://github.com/mahope/clean-copy" class="btn-secondary">Kildekode på GitHub</a>
-    </div>
-    <span class="hero-note">Gratis og MIT-licenseret. Din tekst konverteres på din egen maskine — ingen konto, ingen server, ingen tekst sendes nogen steder hen. En Pro-licensnøgle tjekkes online mod mahope.tools.</span>
-    <p class="hero-note">Den gratis version er komplet, ikke en prøveversion. <a href="#priser">Se hvad Clean Copy Pro — $19/år tilføjer, side om side</a>.</p>
-  </div>
-</div>
-
-<section id="check">
-  <div class="container">
-    <h2>Se den konvertere en side</h2>
-    <p>Clean Copy er en konverter, så her er den — på vores egen forside. Skriv en
-    adresse, så henter vi siden én gang fra vores server, konverterer den til
-    Markdown her i din browser og viser resultatet. Ingen konto, intet gemt, og
-    konverteringen forlader aldrig denne fane.</p>
     <form class="oc-form" id="cc-check-form" method="get" action="/da/url-til-markdown">
       <label for="cc-check-url">Adresse på den side, der skal konverteres</label>
       <div class="oc-row-wrap">
@@ -70,8 +53,14 @@
     </form>
     <p class="oc-status" id="cc-check-status" role="status" aria-live="polite"></p>
     <div id="cc-check-result" hidden></div>
+    <div class="hero-cta">
+      <a href="#install" class="btn-secondary">Installér</a>
+      <a href="https://github.com/mahope/clean-copy" class="btn-secondary">Kildekode på GitHub</a>
+    </div>
+    <span class="hero-note">Gratis og MIT-licenseret. Din tekst konverteres på din egen maskine — ingen konto, ingen server, ingen tekst sendes nogen steder hen. En Pro-licensnøgle tjekkes online mod mahope.tools.</span>
+    <p class="hero-note">Den gratis version er komplet, ikke en prøveversion. <a href="#priser">Se hvad Clean Copy Pro — $19/år tilføjer, side om side</a>.</p>
   </div>
-</section>
+</div>
 
 <section>
   <div class="container">

@@ -35,27 +35,10 @@
 <body>
 <main id="main">
 
-<div class="hero">
+<div class="hero" id="check">
   <div class="container">
     <h1>Copy any web page as clean Markdown or plain text.</h1>
     <p>Clean Copy takes what you select in the browser — or a whole page, or an HTML file — and gives you Markdown that pastes correctly into Obsidian, a README, a ticket or an email. Smart quotes, zero-width characters and layout junk are removed on the way.</p>
-    <div class="hero-cta">
-      <a href="#check" class="btn-primary">Convert a page</a>
-      <a href="#install" class="btn-secondary">Install</a>
-      <a href="https://github.com/mahope/clean-copy" class="btn-secondary">Source on GitHub</a>
-    </div>
-    <span class="hero-note">Free and MIT-licensed. Your text is converted on your own machine — no account, no server, no text sent anywhere. A Pro license key is checked online against mahope.tools.</span>
-    <p class="hero-note">The free version is complete, not a trial. <a href="#price">See what Clean Copy Pro — $19/year adds, side by side</a>.</p>
-  </div>
-</div>
-
-<section id="check">
-  <div class="container">
-    <h2>See it convert a page</h2>
-    <p>Clean Copy is a converter, so here it is — on our own front page. Type an
-    address, and we fetch that page once from our server, convert it to Markdown
-    here in your browser, and show you the result. No account, nothing stored,
-    and the conversion never leaves this tab.</p>
     <form class="oc-form" id="cc-check-form" method="get" action="/url-to-markdown">
       <label for="cc-check-url">Address of the page to convert</label>
       <div class="oc-row-wrap">
@@ -70,8 +53,14 @@
     </form>
     <p class="oc-status" id="cc-check-status" role="status" aria-live="polite"></p>
     <div id="cc-check-result" hidden></div>
+    <div class="hero-cta">
+      <a href="#install" class="btn-secondary">Install</a>
+      <a href="https://github.com/mahope/clean-copy" class="btn-secondary">Source on GitHub</a>
+    </div>
+    <span class="hero-note">Free and MIT-licensed. Your text is converted on your own machine — no account, no server, no text sent anywhere. A Pro license key is checked online against mahope.tools.</span>
+    <p class="hero-note">The free version is complete, not a trial. <a href="#price">See what Clean Copy Pro — $19/year adds, side by side</a>.</p>
   </div>
-</section>
+</div>
 
 <section>
   <div class="container">
