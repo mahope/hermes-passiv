@@ -1,4 +1,10 @@
 # STATUS
+- **8/10:** feature 35 (GDPR-brudsgenerator) leveret på
+  `ceo/gdpr-breach-report-generator`: EN/DA-side der laver en Artikel 33-melding
+  med 72-timers-fristen beregnet live, og en Artikel 34-kommunikation, helt i
+  browseren. Linket fra `/free-tools`, forsiden, `track.js` og
+  `route_inventory.json`; betalt vej til `/paid-templates`, ratchet opdateret.
+  Gate GRØN — 185 steps.
 - **8/10:** `/compliance-report` havde en død købsvej. Første rettelse (`bdf5f4fa`)
   fjernede kun ét af to `display:none` på `#pricingSection`: `generateReport()`
   skjulte den stadig ved hver scanning og genskabte den aldrig, så hero-knappen
@@ -16,6 +22,10 @@ Ingen.
 
 ## Verificér deploy
 
+- **VERIFICÉR DEPLOY:** GDPR-brudsgenerator `ceo/gdpr-breach-report-generator` —
+  tjek at `https://mahope.tools/gdpr-breach-report-generator` og `-da` svarer 200,
+  at 72-timers-fristen vises når `#awareAt` udfyldes, og at «Generate report»/
+  «Lav rapport» viser rapporten med vejen til `/paid-templates`.
 - **VERIFICÉR DEPLOY OK 8/10:** url-inspector-folden `ceo/url-inspector-fold-pro-link` —
   live `https://mahope.tools/url-inspector/` viser URL-feltet og «Inspect» i heroen
   (200), og `id="ui-pro-heading"` findes to steder i markup.
@@ -124,12 +134,6 @@ side; tallene er ikke vores egen trafik. Alt det leverede (1–32) står i
     kundes sider. Tal: scans (`health.scans=51`/uge) og konvertering til EUComply
     Pro ($79). Accept: indsæt op til 5 URL'er, få ét samlet scorekort og én delt
     rapport. Datagrund: flerside-tjekket findes kun bag Pro.
-
-35. **GDPR-hændelsesrapport-generator (art. 33/34).** Hvem: SMV'er med et
-    databrud. Tal: afsendte rapporter. Accept: en gratis generator i
-    GDPR-dokumentkategorien med 72-timers-tidslinje. Datagrund: NIS2-incident-
-    generatoren findes, men GDPR-brudet gør ikke; konkurrenternes gratis-sæt har
-    den.
 
 36. **`/text-on-image-checker`: eksportér det markerede tjek som billede.** Hvem:
     de 6 besøgende på værktøjet (top-værktøjsside i ugerapporten). Tal:

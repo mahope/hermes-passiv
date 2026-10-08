@@ -1,0 +1,372 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Free GDPR Breach Report Generator (Art. 33/34)</title>
+<meta name="description" content="Fill in the details of a personal data breach and generate a GDPR Article 33 notification to the supervisory authority, with the 72-hour deadline calculated, plus an Article 34 data-subject communication. Free, no signup, runs entirely in your browser.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Free GDPR Breach Report Generator">
+<meta property="og:description" content="Generate a GDPR Article 33 breach notification with the 72-hour deadline, and an Article 34 data-subject communication. Free, no signup, nothing leaves your browser.">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/gdpr-breach-report-generator">
+<meta property="og:image" content="https://hermes-passiv.pages.dev/gdpr-cover.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/gdpr-breach-report-generator">
+<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/gdpr-breach-report-generator">
+<link rel="alternate" hreflang="en" href="https://hermes-passiv.pages.dev/gdpr-breach-report-generator">
+<link rel="alternate" hreflang="da" href="https://hermes-passiv.pages.dev/gdpr-breach-report-generator-da">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"What is the GDPR breach notification deadline?","acceptedAnswer":{"@type":"Answer","text":"Under Article 33 of Regulation (EU) 2016/679, the controller must notify the supervisory authority of a personal data breach without undue delay and, where feasible, not later than 72 hours after having become aware of it — unless the breach is unlikely to result in a risk to the rights and freedoms of natural persons."}},{"@type":"Question","name":"When must you tell the affected people?","acceptedAnswer":{"@type":"Answer","text":"Under Article 34, when a breach is likely to result in a high risk to the rights and freedoms of natural persons, the controller must communicate the breach to the affected data subjects without undue delay. If the data was rendered unintelligible (e.g. encrypted), or subsequent measures ensure the high risk is no longer likely, communication is not required."}},{"@type":"Question","name":"What must the Article 33 notification contain?","acceptedAnswer":{"@type":"Answer","text":"Article 33(3) requires: the nature of the breach including categories and approximate number of data subjects and personal data records concerned; the likely consequences; the measures taken or proposed to address the breach; and the name and contact details of the data protection officer or other contact point."}},{"@type":"Question","name":"Is this legal advice?","acceptedAnswer":{"@type":"Answer","text":"No. The generator structures your information according to Articles 33 and 34 of Regulation (EU) 2016/679, but national supervisory authorities may require additional fields or a specific portal. Confirm with your national authority's guidance."}},{"@type":"Question","name":"Does anything I enter leave my browser?","acceptedAnswer":{"@type":"Answer","text":"No. The generator runs entirely client-side. Nothing is sent to any server, nothing is stored, there are no cookies. You copy or download the finished report yourself."}}]}
+</script>
+<script defer src="/net.js"></script>
+<script defer src="/track.js"></script>
+<link rel="stylesheet" href="/style.css">
+<style>
+  .gen { max-width: 720px; margin: 0 auto; }
+  .gen fieldset { border: 1px solid var(--color-border); border-radius: 12px;
+                  padding: 18px 20px 14px; margin: 16px 0; background: var(--color-surface-2); }
+  .gen legend { font-weight: 700; padding: 0 8px; }
+  .gen label { display: block; margin-top: 12px; font-size: 14px; font-weight: 600; }
+  .gen input[type=text], .gen input[type=email], .gen input[type=datetime-local],
+  .gen select, .gen textarea { width: 100%; padding: 10px 12px; margin-top: 4px;
+      border: 1px solid #b9cdd8; border-radius: 8px; font-size: 15px;
+      font-family: inherit; box-sizing: border-box; }
+  .gen textarea { min-height: 80px; resize: vertical; }
+  .hint { font-size: 13px; color: #667; margin-top: 4px; }
+  .actions { display: flex; gap: 10px; flex-wrap: wrap; margin: 20px 0; }
+  button.btn { background: #0b6e8f; color: #fff; border: 0; padding: 11px 24px;
+               border-radius: 8px; cursor: pointer; font-size: 15px; }
+  button.btn:hover { background: #095a77; }
+  button.btn.secondary { background: var(--color-surface-2); color: inherit;
+                         border: 1px solid var(--color-border); }
+  #reportWrap[hidden] { display: none; }
+  #report { max-width: 780px; margin: 24px auto; padding: 30px 36px;
+               border: 1px solid var(--color-border); border-radius: 12px;
+               background: #fff; color: #1c2733; font-size: 14px; line-height: 1.6; }
+  #report h2 { color: #12283a; font-size: 18px; }
+  #report h3 { color: #12283a; font-size: 15px; margin-top: 20px; }
+  .deadline { background: #fff6e6; border-left: 4px solid #d99a06; padding: 10px 14px;
+              border-radius: 6px; margin: 12px 0; font-size: 13.5px; }
+  .sr-only { position:absolute; width:1px; height:1px; overflow:hidden;
+             clip:rect(0 0 0 0); white-space:nowrap; }
+  @media print {
+    header.hero, .gen, .actions, footer.site-footer, .no-print { display: none !important; }
+    #report { border: none; margin: 0; padding: 0; }
+  }
+</style>
+</head>
+<body>
+<header class="hero" style="padding:48px 0 40px">
+  <div class="container">
+    <div class="badge">FREE TOOL</div>
+    <h1>GDPR Breach Report Generator</h1>
+    <p class="tagline">Article 33 requires you to notify the supervisory authority
+    <strong>within 72 hours</strong> of becoming aware of a personal data breach.
+    Fill in what you know — get a structured notification and a data-subject
+    communication.</p>
+  </div>
+</header>
+
+<main class="container">
+
+<form class="gen" id="genForm">
+  <fieldset>
+    <legend>1. The controller</legend>
+    <label for="entityName">Company / organisation name</label>
+    <input type="text" id="entityName" required placeholder="Nordic Logistics ApS">
+    <label for="entityRole">Role</label>
+    <select id="entityRole">
+      <option value="controller">Controller</option>
+      <option value="processor">Processor</option>
+    </select>
+    <label for="contactName">Contact person</label>
+    <input type="text" id="contactName" required placeholder="Jane Doe, DPO">
+    <label for="contactEmail">Contact e-mail</label>
+    <input type="email" id="contactEmail" required placeholder="dpo@example.com">
+    <label for="contactPhone">Contact phone</label>
+    <input type="text" id="contactPhone" placeholder="+45 12 34 56 78">
+  </fieldset>
+
+  <fieldset>
+    <legend>2. Timeline</legend>
+    <label for="awareAt">When did you become aware of the breach?</label>
+    <input type="datetime-local" id="awareAt" required>
+    <div class="deadline" id="deadlineBox">The 72-hour deadline is calculated when you fill in this field —
+      counted from the moment the controller became aware of the breach.</div>
+    <label for="status">Which document are you preparing now?</label>
+    <select id="status">
+      <option value="authority">Article 33 — notification to the supervisory authority</option>
+      <option value="subjects">Article 34 — communication to affected data subjects</option>
+      <option value="both">Both, as one combined record</option>
+    </select>
+    <label for="ongoing">Is the breach contained?</label>
+    <select id="ongoing">
+      <option value="no">No — ongoing</option>
+      <option value="yes">Yes — contained</option>
+    </select>
+    <label for="resolvedAt">If contained: when was it contained?</label>
+    <input type="datetime-local" id="resolvedAt">
+  </fieldset>
+
+  <fieldset>
+    <legend>3. The breach</legend>
+    <label for="summary">Short summary of what happened</label>
+    <textarea id="summary" required placeholder="Example: An unauthorised person gained access to a customer database exported to a spreadsheet. The file contained names, e-mail addresses and order histories for approximately 1,200 customers."></textarea>
+    <label for="cause">Cause (as far as known)</label>
+    <textarea id="cause" placeholder="Example: A phishing e-mail led to an employee's credentials being reused. Investigation continues."></textarea>
+    <label for="dataCategories">Categories of personal data concerned</label>
+    <input type="text" id="dataCategories" placeholder="Example: Names, e-mail addresses, order history">
+    <label for="subjectCount">Approximate number of data subjects concerned</label>
+    <input type="text" id="subjectCount" placeholder="Example: 1,200">
+    <label for="recordCount">Approximate number of personal data records concerned</label>
+    <input type="text" id="recordCount" placeholder="Example: 1,200">
+    <label for="consequences">Likely consequences for the data subjects</label>
+    <textarea id="consequences" placeholder="Example: Risk of phishing and identity fraud. No payment or health data was involved."></textarea>
+    <label for="measures">Measures taken or proposed to address the breach</label>
+    <textarea id="measures" placeholder="Example: Access revoked, credentials reset, affected customers notified, phishing infrastructure reported."></textarea>
+    <label for="crossBorder">Does the breach affect data subjects in other EU/EEA countries?</label>
+    <select id="crossBorder">
+      <option value="no" selected>No — only national</option>
+      <option value="yes">Yes — described below</option>
+      <option value="unknown">Unknown at this stage</option>
+    </select>
+    <label for="crossDesc">If yes, which countries are affected?</label>
+    <input type="text" id="crossDesc" placeholder="Example: Customers in Sweden and Germany.">
+  </fieldset>
+
+  <fieldset>
+    <legend>4. Receiving authority</legend>
+    <label for="authority">Supervisory authority receiving this notification</label>
+    <input type="text" id="authority" placeholder="Datatilsynet, Denmark">
+    <p class="hint">Submit through your national authority's portal. In Denmark: datatilsynet.dk.
+    The generator only produces the document — submission happens on the official portal.</p>
+  </fieldset>
+
+  <div class="actions">
+    <button type="submit" class="btn">Generate report</button>
+    <button type="reset" class="btn secondary">Reset form</button>
+  </div>
+</form>
+
+<div id="reportWrap" hidden>
+  <div class="actions no-print">
+    <button type="button" class="btn secondary" id="copyBtn">Copy as text</button>
+    <button type="button" class="btn secondary" id="printBtn">Download / print</button>
+  </div>
+  <article id="report" aria-live="polite"></article>
+</div>
+
+<section aria-labelledby="why-heading">
+  <h2 id="why-heading">The two obligations</h2>
+  <ul>
+    <li><strong>Article 33 — notify the authority, within 72 hours.</strong>
+    The controller must notify the supervisory authority of a personal data breach
+    without undue delay and, where feasible, not later than 72 hours after becoming
+    aware of it — unless the breach is unlikely to result in a risk to the rights
+    and freedoms of natural persons. If notification is not made within 72 hours,
+    it must be accompanied by reasons for the delay.</li>
+    <li><strong>Article 34 — tell the affected people, when the risk is high.</strong>
+    When a breach is likely to result in a <strong>high risk</strong> to the rights
+    and freedoms of natural persons, the controller must communicate the breach to
+    the affected data subjects without undue delay. Communication is not required
+    if the data was rendered unintelligible (e.g. encrypted), if subsequent measures
+    ensure the high risk is no longer likely, or if it would involve disproportionate
+    effort (a public communication may be used instead).</li>
+  </ul>
+  <p><strong>Honest limitation:</strong> National supervisory authorities vary in
+  portal, format and extra fields. This generator follows Articles 33 and 34 of
+  Regulation (EU) 2016/679; always check your national authority's own guidance
+  before submitting.</p>
+  <p><strong>Related:</strong> free <a href="/privacy-notice-generator">privacy notice generator</a> ·
+  <a href="/dpa-generator">DPA generator</a> ·
+  <a href="/ropa-generator">RoPA generator</a> ·
+  <a href="/blog/gdpr-fines-2026">GDPR fines in 2026</a> ·
+  <a href="/paid-templates">paid EU compliance templates</a></p>
+</section>
+
+</main>
+
+<footer class="site-footer"><div class="container">
+  <p><a href="/">← Back to Compliance Guides</a> · © 2026 Mahope</p>
+  <p class="footer-small">Based on Articles 33 and 34 of Regulation (EU) 2016/679 (GDPR).
+  Everything runs locally in your browser — nothing you type leaves this page. Not legal advice.</p>
+</div></footer>
+
+<script>
+(function () {
+  'use strict';
+  function $(id) { return document.getElementById(id); }
+  function esc(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;')
+                    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+  function v(id) { return $(id).value.trim(); }
+  function fmt(dt) {
+    if (!dt) return '—';
+    var d = new Date(dt);
+    return isNaN(d) ? esc(dt) : d.toISOString().replace('T',' ').slice(0,16) + ' UTC';
+  }
+
+  $('awareAt').addEventListener('change', function () {
+    var box = $('deadlineBox');
+    if (!this.value) return;
+    var aware = new Date(this.value);
+    function f(d) { return d.toISOString().slice(0,16).replace('T',' ') + ' UTC'; }
+    box.innerHTML = 'Awareness registered at ' + f(aware) +
+      '<br>Article 33 notification due by <strong>' + f(new Date(aware.getTime() + 72*3600*1000)) + '</strong>' +
+      ' — 72 hours after the controller became aware.';
+  });
+
+  function buildData() {
+    var d = {};
+    d.entity = v('entityName'); d.role = $('entityRole').value;
+    d.contact = v('contactName'); d.email = v('contactEmail'); d.phone = v('contactPhone') || '—';
+    d.aware = v('awareAt'); d.stage = $('status').value; d.ongoing = $('ongoing').value;
+    d.resolved = v('resolvedAt');
+    d.summary = v('summary'); d.cause = v('cause') || 'Not yet determined — investigation ongoing.';
+    d.dataCategories = v('dataCategories') || '—';
+    d.subjectCount = v('subjectCount') || '—';
+    d.recordCount = v('recordCount') || '—';
+    d.consequences = v('consequences') || '—';
+    d.measures = v('measures') || 'Assessment in progress.';
+    d.cross = $('crossBorder').value; d.crossDesc = v('crossDesc');
+    d.authority = v('authority') || '[national supervisory authority]';
+    d.now = new Date().toISOString().slice(0,10);
+    return d;
+  }
+
+  var STAGE_LABEL = {
+    authority: 'ARTICLE 33 — NOTIFICATION TO THE SUPERVISORY AUTHORITY',
+    subjects: 'ARTICLE 34 — COMMUNICATION TO AFFECTED DATA SUBJECTS',
+    both: 'ARTICLE 33 AND 34 — BREACH NOTIFICATION RECORD'
+  };
+  var ROLE_LABEL = { controller: 'Controller', processor: 'Processor' };
+  var CROSS_LABEL = { no: 'No cross-border impact identified.', yes: 'Yes — ', unknown: 'Unknown at the time of this report.' };
+
+  function renderHTML(d) {
+    var h = '';
+    h += '<h2>GDPR — ' + STAGE_LABEL[d.stage] + '</h2>';
+    h += '<p><strong>Controller:</strong> ' + esc(d.entity) + ' (' + ROLE_LABEL[d.role] + ')<br>' +
+         '<strong>Date of report:</strong> ' + esc(d.now) + '<br>' +
+         '<strong>Submitted to:</strong> ' + esc(d.authority) + '</p>';
+    h += '<h3>1. Contact point</h3><ul>' +
+         '<li>Name / role: ' + esc(d.contact) + '</li>' +
+         '<li>E-mail: ' + esc(d.email) + '</li>' +
+         '<li>Phone: ' + esc(d.phone) + '</li></ul>';
+    h += '<h3>2. Timeline</h3><ul>' +
+         '<li>Controller became aware of the breach: ' + fmt(d.aware) + '</li>' +
+         '<li>Status: ' + (d.ongoing === 'yes' ? 'Contained' : 'Ongoing') +
+         (d.resolved ? ' — contained ' + fmt(d.resolved) : '') + '</li>' +
+         '<li>Article 33 notification due within 72 hours of awareness.</li></ul>';
+    h += '<h3>3. Nature of the breach</h3><p>' + esc(d.summary) + '</p>';
+    h += '<h3>4. Cause</h3><p>' + esc(d.cause) + '</p>';
+    h += '<h3>5. Data and subjects concerned</h3><ul>' +
+         '<li>Categories of personal data: ' + esc(d.dataCategories) + '</li>' +
+         '<li>Approximate number of data subjects: ' + esc(d.subjectCount) + '</li>' +
+         '<li>Approximate number of personal data records: ' + esc(d.recordCount) + '</li></ul>';
+    h += '<h3>6. Likely consequences</h3><p>' + esc(d.consequences) + '</p>';
+    h += '<h3>7. Measures taken or proposed</h3><p>' + esc(d.measures) + '</p>';
+    var crossText = CROSS_LABEL[d.cross] + (d.cross === 'yes' && d.crossDesc ? esc(d.crossDesc) : '');
+    h += '<h3>8. Cross-border impact</h3><p>' + crossText + '</p>';
+    h += '<hr><p style="font-size:12px;color:#667">This report was created with the free mahope.dk GDPR Breach Report Generator, following Articles 33 and 34 of Regulation (EU) 2016/679. It does not constitute legal advice. National supervisory authorities may require additional fields or formats — confirm against your national authority\'s guidance before submitting.</p>';
+    return h;
+  }
+
+  function renderText(d) {
+    var el = document.createElement('div');
+    el.innerHTML = renderHTML(d);
+    return el.textContent.replace(/\n{3,}/g, '\n\n').trim();
+  }
+
+  var current = null;
+  var UPSELL = '<div class="upsell-card no-print" style="margin:16px 0 0;padding:16px;border:1px solid var(--color-border);border-radius:10px;background:var(--color-surface-2)">';
+  UPSELL += '<h2 class="sub" style="margin:0 0 4px;font-size:16px">This generator writes the report. The clauses are what you sign.</h2>';
+  UPSELL += '<p style="margin:0 0 8px;font-size:13px;color:var(--color-text-muted)">What the free version cannot hand you:</p>';
+  UPSELL += '<ul style="margin:0;padding-left:18px;font-size:13px">';
+  UPSELL += '<li style="margin:4px 0"><strong>Breach-response clauses.</strong> What your supplier must do — and tell you — when it has a breach on its side of the contract.</li>';
+  UPSELL += '<li style="margin:4px 0"><strong>Subcontractor approval.</strong> What your supplier must ask you for before it passes work further down the chain.</li>';
+  UPSELL += '<li style="margin:4px 0"><strong>Exit terms.</strong> What happens to your data when the contract ends.</li>';
+  UPSELL += '</ul>';
+  UPSELL += '<p style="margin:12px 0 0"><a class="btn" style="display:inline-block;padding:12px 24px;text-decoration:none" href="https://buy.stripe.com/4gM4gydvd92OapwgN9bMQ06" rel="nofollow noopener">Buy the NIS2 / DORA Vendor Clause Set &mdash; $49 once</a></p>';
+  UPSELL += '<p style="margin:8px 0 0;font-size:13px;color:var(--color-text-muted)">The clause groups, delivered right after payment. <a href="/paid-templates">See what the templates include</a>.</p>';
+  UPSELL += '</div>';
+
+  var DONATION = '<p class="no-print" style="font-size:13px;color:var(--color-text-muted);margin:16px 0 0">This generator is free and needs no account. If it saved you time, a small <a href="https://donate.stripe.com/7sYeVcbn50wieFM8gDbMQ0c" rel="nofollow noopener">donation</a> keeps it running.</p>';
+
+  $('genForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    if (window.trackEvent) window.trackEvent('gdpr-breach-generate');
+    current = buildData();
+    $('report').innerHTML = renderHTML(current) + UPSELL + DONATION;
+    $('reportWrap').hidden = false;
+    $('reportWrap').scrollIntoView({ behavior: 'smooth' });
+  });
+
+  $('copyBtn').addEventListener('click', function () {
+    if (!current) return;
+    navigator.clipboard.writeText(renderText(current)).then(function () {
+      $('copyBtn').textContent = 'Copied ✓';
+      setTimeout(function () { $('copyBtn').textContent = 'Copy as text'; }, 2000);
+    }).catch(function () {
+      alert('Copying failed — use Download / print instead.');
+    });
+  });
+
+  $('printBtn').addEventListener('click', function () { window.print(); });
+
+  $('genForm').addEventListener('submit', function () {
+    setTimeout(function () {
+      var wrap = $('reportWrap');
+      var leadBox = document.getElementById('leadBox');
+      if (!leadBox) {
+        leadBox = document.createElement('div');
+        leadBox.id = 'leadBox';
+        leadBox.className = 'no-print';
+        leadBox.style.cssText = 'margin-top:20px;padding:16px;border-radius:10px;border:1px solid var(--color-border);background:var(--color-surface-2)';
+        leadBox.innerHTML =
+          '<h3 style="margin:0 0 6px;font-size:16px">📥 Save your report</h3>' +
+          '<p style="font-size:14px;color:var(--color-text-muted);margin-bottom:12px">Enter your email to save your report and get notified when paid GDPR tools launch. No spam, unsubscribe anytime.</p>' +
+          '<form id="leadForm" style="display:flex;gap:8px;flex-wrap:wrap">' +
+          '<input type="email" id="leadEmail" aria-label="Your email address" placeholder="Your email address" required style="flex:1;min-width:200px;padding:10px 14px;border-radius:8px;border:1px solid var(--color-border);background:var(--color-bg);color:var(--color-text);font-size:14px">' +
+          '<button type="submit" style="background:#0b6e8f;color:#fff;border:0;padding:10px 22px;border-radius:8px;cursor:pointer;font-size:14px;font-weight:600">Save my report →</button>' +
+          '</form><div id="leadStatus" style="font-size:13px;margin-top:8px"></div>';
+        wrap.parentNode.insertBefore(leadBox, wrap.nextSibling);
+
+        document.getElementById('leadForm').addEventListener('submit', function (e) {
+          e.preventDefault();
+          var email = document.getElementById('leadEmail').value.trim();
+          var status = document.getElementById('leadStatus');
+          if (!email || !/^[^\s@]{1,64}@[^\s@]+\.[^\s@]{2,}$/.test(email)) {
+            status.innerHTML = '<span style="color:var(--color-red)">Enter a valid email address.</span>';
+            return;
+          }
+          status.innerHTML = '<span style="color:var(--color-text-muted)">Sending…</span>';
+          var send = document.querySelector('#leadForm button[type=submit]');
+          if (send.disabled) return;
+          send.disabled = true;
+          NET.ask('/api/waitlist', { email: email }, 2).then(function (d) {
+            if (d.ok) {
+              if(window.trackEvent)window.trackEvent('lead-gdpr-breach-generator');
+              status.innerHTML = '<span style="color:var(--color-green)">✓ Saved! You\'ll be notified when paid GDPR tools launch.</span>';
+              document.getElementById('leadForm').innerHTML = '<p style="color:var(--color-green);font-weight:600">✓ You\'re on the list!</p>';
+            } else {
+              status.innerHTML = '<span style="color:var(--color-red)">' + esc(d.error || 'Error') + '</span>';
+            }
+          }).catch(function (e) {
+            send.disabled = false;
+            status.innerHTML = '<span style="color:var(--color-red)">' + esc(e && e.message ? e.message : 'Network error. Try again.') + '</span>';
+          });
+        });
+      }
+    }, 100);
+  });
+})();
+</script>
+<script>
+(function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';document.addEventListener('click',function(ev){var a=ev.target&&ev.target.closest?ev.target.closest('a[href]'):null;if(!a)return;var h=a.getAttribute('href')||'';var m=h.match(/^\/(?:da\/)?(gdpr-breach-report-generator|nis2-incident-generator|scan|clean-copy-tool|page-profile|site-icons|text-diff|url-to-markdown|free-tools|compliance-report)(\.html)?(#[^#]*)?$/);if(!m)return;try{navigator.sendBeacon('/api/track',new Blob([JSON.stringify({path:p,event:'cta-'+m[1]})],{type:'application/json'}));}catch(e){}},true);}catch(e){}})();
+</script>
+<script>
+(function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';fetch('/api/track',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:p}),keepalive:true}).catch(function(){});}catch(e){}})();
+</script>
+</body>
+</html>

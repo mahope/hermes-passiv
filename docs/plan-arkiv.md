@@ -9455,3 +9455,13 @@ C. ~~**En Pro-holder der kommer fra scanneren skal finde PDF'en selv.**~~
 - **32. `/compliance-report`: købsvej i heroen** (`ceo/compliance-hero-buy`).
   Heroen har ét anker «See pricing — EUComply Pro» til `#pricingSection`.
   Verificeret live 8/10.
+
+## Feature 35 (leveret, flyttet hertil 8/10)
+
+- **35. GDPR-hændelsesrapport-generator (art. 33/34)**
+  (`ceo/gdpr-breach-report-generator`). Gratis EN/DA-generator i
+  GDPR-dokumentkategorien: en Artikel 33-melding til tilsynsmyndigheden med
+  72-timers-fristen beregnet live fra «hvornår blev du opmærksom», og en Artikel
+  34-kommunikation til de berørte. Alt kører i browseren. Linket fra
+  `/free-tools`, forsiden, `track.js` og `route_inventory.json`; betalt vej til
+  `/paid-templates` og ratchet opdateret. Gate GRØN — 185 steps.

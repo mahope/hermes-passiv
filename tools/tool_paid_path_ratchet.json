@@ -1,7 +1,7 @@
 {
  "note": "Hvert betalt anker på hver dømt værktøjsside, målt af check_tool_paid_path.py. Ratchet: et par der står her og ikke længere findes på siden er rød, fordi en side der mister den vej den lå på er en tilbagefaldet side — også når der stadig står en anden vej på den. Den dømmer OGSÅ et anker der peger på en anden destination end den blev målt med, altså en ombytning: en liste destinationer kan ikke se den, fordi sættet er uændret. `blind` i tool_paid_path_blind.json er det modsatte: sider der MÅLSLIGE ikke har nogen. Begge skrives med `--write --force`.",
  "source": "python3 tools/check_tool_paid_path.py --write  · Parrene er de rå href'er A.paid_anchors() målte i sidens egen tekst, nøglet på ankerets `id` (ellers dets synlige tekst)",
- "measured": "2026-10-07",
+ "measured": "2026-10-08",
  "paths": {
   "/accessibility-statement-generator": {
    "the compliance report": "/compliance-report"
@@ -133,6 +133,7 @@
   "/da/free-tools": {
    "Betalt compliance-rapport": "/da/compliance-report",
    "Betalt skabeloner og klausulsæt": "/da/paid-templates",
+   "Farveblindhedssimulator": "/color-blindness-simulator-da",
    "Generator til tilgængelig farvepalet": "/palette-generator-da",
    "Se de syv dokumenter →": "/da/paid-templates",
    "Se hvad rapporten dækker →": "/da/compliance-report",
@@ -140,6 +141,7 @@
    "Sådan bruger du den på din egen hjemmeside →": "/da/blog/tilgaengelighedsscanner-cli",
    "Sådan kører du det i din pipeline →": "/da/blog/compliance-tjek-github-action",
    "Sådan opbygger du samtykke korrekt →": "/da/blog/cookie-consent-gdpr-2026",
+   "Tilgængelig farvepalette": "/palette-generator-da",
    "compliance-rapporter": "/da/compliance-report",
    "dokumentskabeloner": "/da/paid-templates",
    "donationer": "/da/support",
@@ -222,10 +224,12 @@
   },
   "/free-tools": {
    "Accessible Color Palette Generator": "/palette-generator",
+   "Accessible Palette Generator": "/palette-generator",
    "Blog →": "/blog/compliance-check-github-action",
    "Clean Copy Web": "/clean-copy-tool",
    "Clean Copy Web →": "/clean-copy-tool",
    "Color Blindness Simulator": "/color-blindness-simulator",
+   "Colour Blindness Simulator": "/color-blindness-simulator",
    "Full page →": "/page-profile",
    "NIS2 Readiness Guide": "/blog/nis2-readiness-guide",
    "Paid templates & clause sets": "/paid-templates",
@@ -235,6 +239,12 @@
    "da-color-blindness-simulator": "/color-blindness-simulator-da",
    "da-palette-generator": "/palette-generator-da",
    "page-profile": "/page-profile"
+  },
+  "/gdpr-breach-report-generator": {
+   "paid EU compliance templates": "/paid-templates"
+  },
+  "/gdpr-breach-report-generator-da": {
+   "betalte EU-compliance-skabeloner": "/da/paid-templates"
   },
   "/guides": {
    "Automate Your EU Compliance Checks with a GitHub Action — 9 checks in v2": "/blog/compliance-check-github-action",

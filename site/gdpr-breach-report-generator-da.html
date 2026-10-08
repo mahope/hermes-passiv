@@ -1,0 +1,374 @@
+<!doctype html>
+<html lang="da">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gratis GDPR-brudsgenerator (Art. 33/34)</title>
+<meta name="description" content="Udfyld oplysningerne om et brud på persondata og lav en GDPR Artikel 33-melding til tilsynsmyndigheden med 72-timers-fristen beregnet, plus en Artikel 34-kommunikation til de berørte. Gratis, ingen tilmelding, kører helt i din browser.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Gratis GDPR-brudsgenerator">
+<meta property="og:description" content="Lav en GDPR Artikel 33-brudsmelding med 72-timers-fristen, og en Artikel 34-kommunikation til de berørte. Gratis, ingen tilmelding, intet forlader din browser.">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/gdpr-breach-report-generator-da">
+<meta property="og:image" content="https://hermes-passiv.pages.dev/gdpr-cover.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/gdpr-breach-report-generator-da">
+<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/gdpr-breach-report-generator">
+<link rel="alternate" hreflang="en" href="https://hermes-passiv.pages.dev/gdpr-breach-report-generator">
+<link rel="alternate" hreflang="da" href="https://hermes-passiv.pages.dev/gdpr-breach-report-generator-da">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Hvad er fristen for GDPR-brudsmelding?","acceptedAnswer":{"@type":"Answer","text":"I henhold til Artikel 33 i Forordning (EU) 2016/679 skal den dataansvarlige underrette tilsynsmyndigheden om et brud på persondata uden unødig forsinkelse og, hvor det er muligt, senest 72 timer efter at være blevet opmærksom på det — medmindre bruddet sandsynligvis ikke indebærer en risiko for fysiske personers rettigheder og frihedsrettigheder."}},{"@type":"Question","name":"Hvornår skal de berørte personer underrettes?","acceptedAnswer":{"@type":"Answer","text":"I henhold til Artikel 34 skal den dataansvarlige, når et brud sandsynligvis indebærer en høj risiko for fysiske personers rettigheder og frihedsrettigheder, kommunikere bruddet til de berørte registrerede uden unødig forsinkelse. Underrettelse er ikke påkrævet, hvis dataene er gjort uforståelige (f.eks. krypterede), eller hvis efterfølgende foranstaltninger sikrer, at den høje risiko ikke længere er sandsynlig."}},{"@type":"Question","name":"Hvad skal en Artikel 33-melding indeholde?","acceptedAnswer":{"@type":"Answer","text":"Artikel 33, stk. 3, kræver: arten af bruddet herunder kategorier og cirka antal af berørte registrerede og personregistre; de sandsynlige konsekvenser; de foranstaltninger der er truffet eller foreslået; samt navn og kontaktoplysninger for den databeskyttelsesansvarlige eller andet kontaktpunkt."}},{"@type":"Question","name":"Er dette juridisk rådgivning?","acceptedAnswer":{"@type":"Answer","text":"Nej. Generatoren strukturerer dine oplysninger i henhold til Artikel 33 og 34 i Forordning (EU) 2016/679, men nationale tilsynsmyndigheder kan kræve yderligere felter eller en bestemt portal. Bekræft med din nationale myndigheds vejledning."}},{"@type":"Question","name":"Forlader noget jeg indtaster min browser?","acceptedAnswer":{"@type":"Answer","text":"Nej. Generatoren kører helt i din browser. Intet sendes til nogen server, intet gemmes, der er ingen cookies. Du kopierer eller downloader den færdig rapport selv."}}]}
+</script>
+<script defer src="/net.js"></script>
+<script defer src="/track.js"></script>
+<link rel="stylesheet" href="/style.css">
+<style>
+  .gen { max-width: 720px; margin: 0 auto; }
+  .gen fieldset { border: 1px solid var(--color-border); border-radius: 12px;
+                  padding: 18px 20px 14px; margin: 16px 0; background: var(--color-surface-2); }
+  .gen legend { font-weight: 700; padding: 0 8px; }
+  .gen label { display: block; margin-top: 12px; font-size: 14px; font-weight: 600; }
+  .gen input[type=text], .gen input[type=email], .gen input[type=datetime-local],
+  .gen select, .gen textarea { width: 100%; padding: 10px 12px; margin-top: 4px;
+      border: 1px solid #b9cdd8; border-radius: 8px; font-size: 15px;
+      font-family: inherit; box-sizing: border-box; }
+  .gen textarea { min-height: 80px; resize: vertical; }
+  .hint { font-size: 13px; color: #667; margin-top: 4px; }
+  .actions { display: flex; gap: 10px; flex-wrap: wrap; margin: 20px 0; }
+  button.btn { background: #0b6e8f; color: #fff; border: 0; padding: 11px 24px;
+               border-radius: 8px; cursor: pointer; font-size: 15px; }
+  button.btn:hover { background: #095a77; }
+  button.btn.secondary { background: var(--color-surface-2); color: inherit;
+                         border: 1px solid var(--color-border); }
+  #reportWrap[hidden] { display: none; }
+  #report { max-width: 780px; margin: 24px auto; padding: 30px 36px;
+               border: 1px solid var(--color-border); border-radius: 12px;
+               background: #fff; color: #1c2733; font-size: 14px; line-height: 1.6; }
+  #report h2 { color: #12283a; font-size: 18px; }
+  #report h3 { color: #12283a; font-size: 15px; margin-top: 20px; }
+  .deadline { background: #fff6e6; border-left: 4px solid #d99a06; padding: 10px 14px;
+              border-radius: 6px; margin: 12px 0; font-size: 13.5px; }
+  .sr-only { position:absolute; width:1px; height:1px; overflow:hidden;
+             clip:rect(0 0 0 0); white-space:nowrap; }
+  @media print {
+    header.hero, .gen, .actions, footer.site-footer, .no-print { display: none !important; }
+    #report { border: none; margin: 0; padding: 0; }
+  }
+</style>
+</head>
+<body>
+<header class="hero" style="padding:48px 0 40px">
+  <div class="container">
+    <div class="badge">GRATIS VÆRKTØJ</div>
+    <h1>GDPR-brudsgenerator</h1>
+    <p class="tagline">Artikel 33 kræver, at du underretter tilsynsmyndigheden
+    <strong>inden for 72 timer</strong> efter at være blevet opmærksom på et brud på
+    persondata. Udfyld hvad du ved — få en struktureret melding og en
+    kommunikation til de berørte.</p>
+  </div>
+</header>
+
+<main class="container">
+
+<form class="gen" id="genForm">
+  <fieldset>
+    <legend>1. Den dataansvarlige</legend>
+    <label for="entityName">Virksomhed / organisation</label>
+    <input type="text" id="entityName" required placeholder="Nordic Logistics ApS">
+    <label for="entityRole">Rolle</label>
+    <select id="entityRole">
+      <option value="controller">Dataansvarlig</option>
+      <option value="processor">Databehandler</option>
+    </select>
+    <label for="contactName">Kontaktperson</label>
+    <input type="text" id="contactName" required placeholder="Jane Doe, DPO">
+    <label for="contactEmail">Kontakt-e-mail</label>
+    <input type="email" id="contactEmail" required placeholder="dpo@example.com">
+    <label for="contactPhone">Kontakttelefon</label>
+    <input type="text" id="contactPhone" placeholder="+45 12 34 56 78">
+  </fieldset>
+
+  <fieldset>
+    <legend>2. Tidslinje</legend>
+    <label for="awareAt">Hvornår blev du opmærksom på bruddet?</label>
+    <input type="datetime-local" id="awareAt" required>
+    <div class="deadline" id="deadlineBox">72-timers-fristen beregnes når du udfylder dette felt —
+      talt fra det tidspunkt den dataansvarlige blev opmærksom på bruddet.</div>
+    <label for="status">Hvilket dokument laver du nu?</label>
+    <select id="status">
+      <option value="authority">Artikel 33 — melding til tilsynsmyndigheden</option>
+      <option value="subjects">Artikel 34 — kommunikation til berørte registrerede</option>
+      <option value="both">Begge, som én samlet sag</option>
+    </select>
+    <label for="ongoing">Er bruddet inddæmmet?</label>
+    <select id="ongoing">
+      <option value="no">Nej — igangværende</option>
+      <option value="yes">Ja — inddæmmet</option>
+    </select>
+    <label for="resolvedAt">Hvis inddæmmet: hvornår blev det inddæmmet?</label>
+    <input type="datetime-local" id="resolvedAt">
+  </fieldset>
+
+  <fieldset>
+    <legend>3. Bruddet</legend>
+    <label for="summary">Kort beskrivelse af hvad der skete</label>
+    <textarea id="summary" required placeholder="Eksempel: En uautoriseret person fik adgang til en kundedatabase, der var eksporteret til et regneark. Filen indeholdt navne, e-mailadresser og ordrehistorik for cirka 1.200 kunder."></textarea>
+    <label for="cause">Årsag (så vidt den er kendt)</label>
+    <textarea id="cause" placeholder="Eksempel: En phishing-e-mail førte til, at en medarbejders legitimationsoplysninger blev genbrugt. Efterforskningen er i gang."></textarea>
+    <label for="dataCategories">Kategorier af persondata der er berørt</label>
+    <input type="text" id="dataCategories" placeholder="Eksempel: Navne, e-mailadresser, ordrehistorik">
+    <label for="subjectCount">Cirka antal berørte registrerede</label>
+    <input type="text" id="subjectCount" placeholder="Eksempel: 1.200">
+    <label for="recordCount">Cirka antal berørte personregistre</label>
+    <input type="text" id="recordCount" placeholder="Eksempel: 1.200">
+    <label for="consequences">Sandsynlige konsekvenser for de registrerede</label>
+    <textarea id="consequences" placeholder="Eksempel: Risiko for phishing og identitetstyveri. Ingen betalings- eller sundhedsdata var involveret."></textarea>
+    <label for="measures">Foranstaltninger der er truffet eller foreslået</label>
+    <textarea id="measures" placeholder="Eksempel: Adgang tilbagekaldt, legitimationsoplysninger nulstillet, berørte kunder underrettet, phishing-infrastruktur anmeldt."></textarea>
+    <label for="crossBorder">Berører bruddet registrerede i andre EU/EØS-lande?</label>
+    <select id="crossBorder">
+      <option value="no" selected>Nej — kun nationalt</option>
+      <option value="yes">Ja — beskrevet nedenfor</option>
+      <option value="unknown">Ukendt på dette tidspunkt</option>
+    </select>
+    <label for="crossDesc">Hvis ja: hvilke lande berøres?</label>
+    <input type="text" id="crossDesc" placeholder="Eksempel: Kunder i Sverige og Tyskland.">
+  </fieldset>
+
+  <fieldset>
+    <legend>4. Modtagende myndighed</legend>
+    <label for="authority">Tilsynsmyndighed der modtager meldingen</label>
+    <input type="text" id="authority" placeholder="Datatilsynet">
+    <p class="hint">Indsend via din nationale myndigheds portal. I Danmark: datatilsynet.dk.
+    Generatoren laver kun dokumentet — indsendelse sker på den officielle portal.</p>
+  </fieldset>
+
+  <div class="actions">
+    <button type="submit" class="btn">Lav rapport</button>
+    <button type="reset" class="btn secondary">Nulstil formular</button>
+  </div>
+</form>
+
+<div id="reportWrap" hidden>
+  <div class="actions no-print">
+    <button type="button" class="btn secondary" id="copyBtn">Kopiér som tekst</button>
+    <button type="button" class="btn secondary" id="printBtn">Download / print</button>
+  </div>
+  <article id="report" aria-live="polite"></article>
+</div>
+
+<section aria-labelledby="why-heading">
+  <h2 id="why-heading">De to forpligtelser</h2>
+  <ul>
+    <li><strong>Artikel 33 — underret tilsynsmyndigheden, inden for 72 timer.</strong>
+    Den dataansvarlige skal underrette tilsynsmyndigheden om et brud på persondata
+    uden unødig forsinkelse og, hvor det er muligt, senest 72 timer efter at er
+    blevet opmærksom på det — medmindre bruddet sandsynligvis ikke indebærer en
+    risiko for fysiske personers rettigheder og frihedsrettigheder. Hvis
+    underrettelse ikke sker inden for 72 timer, skal den ledsages af en begrundelse
+    for forsinkelsen.</li>
+    <li><strong>Artikel 34 — underret de berørte, når risikoen er høj.</strong>
+    Når et brud sandsynligvis indebærer en <strong>høj risiko</strong> for fysiske
+    personers rettigheder og frihedsrettigheder, skal den dataansvarlige
+    kommunikere bruddet til de berørte registrerede uden unødig forsinkelse.
+    Underrettelse er ikke påkrævet, hvis dataene er gjort uforståelige (f.eks.
+    krypterede), hvis efterfølgende foranstaltninger sikrer at den høje risiko
+    ikke længere er sandsynlig, eller hvis det ville medføre uforholdsmæssigt
+    stor indsats (en offentlig kommunikation kan bruges i stedet).</li>
+  </ul>
+  <p><strong>Ærlig begrænsning:</strong> Nationale tilsynsmyndigheder varierer i
+  portal, format og ekstra felter. Denne generator følger Artikel 33 og 34 i
+  Forordning (EU) 2016/679; tjek altid din nationale myndigheds egen vejledning
+  før du indsender.</p>
+  <p><strong>Relateret:</strong> gratis <a href="/privacy-notice-generator-da">privatlivsmeddelelse-generator</a> ·
+  <a href="/dpa-generator-da">DPA-generator</a> ·
+  <a href="/ropa-generator-da">RoPA-generator</a> ·
+  <a href="/da/blog/gdpr-boeder-2026">GDPR-bøder i 2026</a> ·
+  <a href="/da/paid-templates">betalte EU-compliance-skabeloner</a></p>
+</section>
+
+</main>
+
+<footer class="site-footer"><div class="container">
+  <p><a href="/da/">← Tilbage til compliance-vejledninger</a> · © 2026 Mahope</p>
+  <p class="footer-small">Baseret på Artikel 33 og 34 i Forordning (EU) 2016/679 (GDPR).
+  Alt kører lokalt i din browser — intet du indtaster forlader denne side. Ikke juridisk rådgivning.</p>
+</div></footer>
+
+<script>
+(function () {
+  'use strict';
+  function $(id) { return document.getElementById(id); }
+  function esc(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;')
+                    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+  function v(id) { return $(id).value.trim(); }
+  function fmt(dt) {
+    if (!dt) return '—';
+    var d = new Date(dt);
+    return isNaN(d) ? esc(dt) : d.toISOString().replace('T',' ').slice(0,16) + ' UTC';
+  }
+
+  $('awareAt').addEventListener('change', function () {
+    var box = $('deadlineBox');
+    if (!this.value) return;
+    var aware = new Date(this.value);
+    function f(d) { return d.toISOString().slice(0,16).replace('T',' ') + ' UTC'; }
+    box.innerHTML = 'Opmærksomhed registreret ' + f(aware) +
+      '<br>Artikel 33-melding senest <strong>' + f(new Date(aware.getTime() + 72*3600*1000)) + '</strong>' +
+      ' — 72 timer efter at den dataansvarlige blev opmærksom.';
+  });
+
+  function buildData() {
+    var d = {};
+    d.entity = v('entityName'); d.role = $('entityRole').value;
+    d.contact = v('contactName'); d.email = v('contactEmail'); d.phone = v('contactPhone') || '—';
+    d.aware = v('awareAt'); d.stage = $('status').value; d.ongoing = $('ongoing').value;
+    d.resolved = v('resolvedAt');
+    d.summary = v('summary'); d.cause = v('cause') || 'Endnu ikke fastsat — efterforskning i gang.';
+    d.dataCategories = v('dataCategories') || '—';
+    d.subjectCount = v('subjectCount') || '—';
+    d.recordCount = v('recordCount') || '—';
+    d.consequences = v('consequences') || '—';
+    d.measures = v('measures') || 'Vurdering i gang.';
+    d.cross = $('crossBorder').value; d.crossDesc = v('crossDesc');
+    d.authority = v('authority') || '[national tilsynsmyndighed]';
+    d.now = new Date().toISOString().slice(0,10);
+    return d;
+  }
+
+  var STAGE_LABEL = {
+    authority: 'ARTIKEL 33 — MELDING TIL TILSYNSMYNDIGHEDEN',
+    subjects: 'ARTIKEL 34 — KOMMUNIKATION TIL BERØRTE REGISTREREDE',
+    both: 'ARTIKEL 33 OG 34 — BRUDSSAG'
+  };
+  var ROLE_LABEL = { controller: 'Dataansvarlig', processor: 'Databehandler' };
+  var CROSS_LABEL = { no: 'Ingen grænseoverskridende påvirkning konstateret.', yes: 'Ja — ', unknown: 'Ukendt på tidspunktet for denne rapport.' };
+
+  function renderHTML(d) {
+    var h = '';
+    h += '<h2>GDPR — ' + STAGE_LABEL[d.stage] + '</h2>';
+    h += '<p><strong>Dataansvarlig:</strong> ' + esc(d.entity) + ' (' + ROLE_LABEL[d.role] + ')<br>' +
+         '<strong>Dato for rapport:</strong> ' + esc(d.now) + '<br>' +
+         '<strong>Indsendes til:</strong> ' + esc(d.authority) + '</p>';
+    h += '<h3>1. Kontaktpunkt</h3><ul>' +
+         '<li>Navn / rolle: ' + esc(d.contact) + '</li>' +
+         '<li>E-mail: ' + esc(d.email) + '</li>' +
+         '<li>Telefon: ' + esc(d.phone) + '</li></ul>';
+    h += '<h3>2. Tidslinje</h3><ul>' +
+         '<li>Den dataansvarlige blev opmærksom på bruddet: ' + fmt(d.aware) + '</li>' +
+         '<li>Status: ' + (d.ongoing === 'yes' ? 'Inddæmmet' : 'Igangværende') +
+         (d.resolved ? ' — inddæmmet ' + fmt(d.resolved) : '') + '</li>' +
+         '<li>Artikel 33-melding senest 72 timer efter opmærksomhed.</li></ul>';
+    h += '<h3>3. Arten af bruddet</h3><p>' + esc(d.summary) + '</p>';
+    h += '<h3>4. Årsag</h3><p>' + esc(d.cause) + '</p>';
+    h += '<h3>5. Berørte data og registrerede</h3><ul>' +
+         '<li>Kategorier af persondata: ' + esc(d.dataCategories) + '</li>' +
+         '<li>Cirka antal berørte registrerede: ' + esc(d.subjectCount) + '</li>' +
+         '<li>Cirka antal berørte personregistre: ' + esc(d.recordCount) + '</li></ul>';
+    h += '<h3>6. Sandsynlige konsekvenser</h3><p>' + esc(d.consequences) + '</p>';
+    h += '<h3>7. Foranstaltninger der er truffet eller foreslået</h3><p>' + esc(d.measures) + '</p>';
+    var crossText = CROSS_LABEL[d.cross] + (d.cross === 'yes' && d.crossDesc ? esc(d.crossDesc) : '');
+    h += '<h3>8. Grænseoverskridende påvirkning</h3><p>' + crossText + '</p>';
+    h += '<hr><p style="font-size:12px;color:#667">Denne rapport blev lavet med den gratis mahope.dk GDPR-brudsgenerator, i henhold til Artikel 33 og 34 i Forordning (EU) 2016/679. Den udgør ikke juridisk rådgivning. Nationale tilsynsmyndigheder kan kræve yderligere felter eller formater — bekræft mod din nationale myndigheds vejledning før indsendelse.</p>';
+    return h;
+  }
+
+  function renderText(d) {
+    var el = document.createElement('div');
+    el.innerHTML = renderHTML(d);
+    return el.textContent.replace(/\n{3,}/g, '\n\n').trim();
+  }
+
+  var current = null;
+  var UPSELL = '<div class="upsell-card no-print" style="margin:16px 0 0;padding:16px;border:1px solid var(--color-border);border-radius:10px;background:var(--color-surface-2)">';
+  UPSELL += '<h2 class="sub" style="margin:0 0 4px;font-size:16px">Denne generator skriver rapporten. Klausulerne er det du underskriver.</h2>';
+  UPSELL += '<p style="margin:0 0 8px;font-size:13px;color:var(--color-text-muted)">Hvad den gratis udgave ikke kan give dig:</p>';
+  UPSELL += '<ul style="margin:0;padding-left:18px;font-size:13px">';
+  UPSELL += '<li style="margin:4px 0"><strong>Brudshåndteringsklausuler.</strong> Hvad din leverandør skal gøre — og fortælle dig — når den har et brud på sin side af kontrakten.</li>';
+  UPSELL += '<li style="margin:4px 0"><strong>Underleverandørgodkendelse.</strong> Hvad din leverandør skal spørge dig om, før den videresender arbejde ned ad kæden.</li>';
+  UPSELL += '<li style="margin:4px 0"><strong>Exit-vilkår.</strong> Hvad der sker med dine data, når kontrakten ophører.</li>';
+  UPSELL += '</ul>';
+  UPSELL += '<p style="margin:12px 0 0"><a class="btn" style="display:inline-block;padding:12px 24px;text-decoration:none" href="https://buy.stripe.com/4gM4gydvd92OapwgN9bMQ06" rel="nofollow noopener">Køb NIS2 / DORA Vendor Clause Set &mdash; $49 engang</a></p>';
+  UPSELL += '<p style="margin:8px 0 0;font-size:13px;color:var(--color-text-muted)">Klausulgrupperne, leveres direkte efter betaling. <a href="/da/paid-templates">Se hvad skabelonerne indeholder</a>.</p>';
+  UPSELL += '</div>';
+
+  var DONATION = '<p class="no-print" style="font-size:13px;color:var(--color-text-muted);margin:16px 0 0">Denne generator er gratis og kræver ingen konto. Hvis den sparede dig tid, holder en lille <a href="https://donate.stripe.com/7sYeVcbn50wieFM8gDbMQ0c" rel="nofollow noopener">donation</a> den kørende.</p>';
+
+  $('genForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    if (window.trackEvent) window.trackEvent('gdpr-breach-generate');
+    current = buildData();
+    $('report').innerHTML = renderHTML(current) + UPSELL + DONATION;
+    $('reportWrap').hidden = false;
+    $('reportWrap').scrollIntoView({ behavior: 'smooth' });
+  });
+
+  $('copyBtn').addEventListener('click', function () {
+    if (!current) return;
+    navigator.clipboard.writeText(renderText(current)).then(function () {
+      $('copyBtn').textContent = 'Kopieret ✓';
+      setTimeout(function () { $('copyBtn').textContent = 'Kopiér som tekst'; }, 2000);
+    }).catch(function () {
+      alert('Kopiering mislykkedes — brug Download / print i stedet.');
+    });
+  });
+
+  $('printBtn').addEventListener('click', function () { window.print(); });
+
+  $('genForm').addEventListener('submit', function () {
+    setTimeout(function () {
+      var wrap = $('reportWrap');
+      var leadBox = document.getElementById('leadBox');
+      if (!leadBox) {
+        leadBox = document.createElement('div');
+        leadBox.id = 'leadBox';
+        leadBox.className = 'no-print';
+        leadBox.style.cssText = 'margin-top:20px;padding:16px;border-radius:10px;border:1px solid var(--color-border);background:var(--color-surface-2)';
+        leadBox.innerHTML =
+          '<h3 style="margin:0 0 6px;font-size:16px">📥 Gem din rapport</h3>' +
+          '<p style="font-size:14px;color:var(--color-text-muted);margin-bottom:12px">Indtast din e-mail for at gemme din rapport og få besked når betalte GDPR-værktøjer lanceres. Ingen spam, afmeld når som helst.</p>' +
+          '<form id="leadForm" style="display:flex;gap:8px;flex-wrap:wrap">' +
+          '<input type="email" id="leadEmail" aria-label="Din e-mailadresse" placeholder="Din e-mailadresse" required style="flex:1;min-width:200px;padding:10px 14px;border-radius:8px;border:1px solid var(--color-border);background:var(--color-bg);color:var(--color-text);font-size:14px">' +
+          '<button type="submit" style="background:#0b6e8f;color:#fff;border:0;padding:10px 22px;border-radius:8px;cursor:pointer;font-size:14px;font-weight:600">Gem min rapport →</button>' +
+          '</form><div id="leadStatus" style="font-size:13px;margin-top:8px"></div>';
+        wrap.parentNode.insertBefore(leadBox, wrap.nextSibling);
+
+        document.getElementById('leadForm').addEventListener('submit', function (e) {
+          e.preventDefault();
+          var email = document.getElementById('leadEmail').value.trim();
+          var status = document.getElementById('leadStatus');
+          if (!email || !/^[^\s@]{1,64}@[^\s@]+\.[^\s@]{2,}$/.test(email)) {
+            status.innerHTML = '<span style="color:var(--color-red)">Indtast en gyldig e-mailadresse.</span>';
+            return;
+          }
+          status.innerHTML = '<span style="color:var(--color-text-muted)">Sender…</span>';
+          var send = document.querySelector('#leadForm button[type=submit]');
+          if (send.disabled) return;
+          send.disabled = true;
+          NET.ask('/api/waitlist', { email: email }, 2).then(function (d) {
+            if (d.ok) {
+              if(window.trackEvent)window.trackEvent('lead-gdpr-breach-generator');
+              status.innerHTML = '<span style="color:var(--color-green)">✓ Gemt! Du får besked når betalte GDPR-værktøjer lanceres.</span>';
+              document.getElementById('leadForm').innerHTML = '<p style="color:var(--color-green);font-weight:600">✓ Du er på listen!</p>';
+            } else {
+              status.innerHTML = '<span style="color:var(--color-red)">' + esc(d.error || 'Fejl') + '</span>';
+            }
+          }).catch(function (e) {
+            send.disabled = false;
+            status.innerHTML = '<span style="color:var(--color-red)">' + esc(e && e.message ? e.message : 'Netværksfejl. Prøv igen.') + '</span>';
+          });
+        });
+      }
+    }, 100);
+  });
+})();
+</script>
+<script>
+(function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';document.addEventListener('click',function(ev){var a=ev.target&&ev.target.closest?ev.target.closest('a[href]'):null;if(!a)return;var h=a.getAttribute('href')||'';var m=h.match(/^\/(?:da\/)?(gdpr-breach-report-generator|nis2-incident-generator|scan|clean-copy-tool|page-profile|site-icons|text-diff|url-to-markdown|free-tools|compliance-report)(\.html)?(#[^#]*)?$/);if(!m)return;try{navigator.sendBeacon('/api/track',new Blob([JSON.stringify({path:p,event:'cta-'+m[1]})],{type:'application/json'}));}catch(e){}},true);}catch(e){}})();
+</script>
+<script>
+(function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';fetch('/api/track',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:p}),keepalive:true}).catch(function(){});}catch(e){}})();
+</script>
+</body>
+</html>
