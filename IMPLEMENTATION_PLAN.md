@@ -26,6 +26,10 @@ Ingen.
 - **VERIFICÉR DEPLOY OK 8/10:** Clean Copy-konverteren i heroen `2085f465` — live
   `cleancopy.tools` og `cleancopy.tools/da/` viser konverteringsformularen i
   heroen, konvertering virker.
+- **VERIFICÉR DEPLOY:** text-on-image-checker del-link `2613639a` — næste batch
+  deploy. Tjek at `https://mahope.tools/text-on-image-checker` og
+  `https://mahope.tools/text-on-image-checker-da` viser del-knap i resultatet,
+  og at et kopieret link gendanner gradient/tekst/farve/placering.
 
 ## Åbne opgaver
 
