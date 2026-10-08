@@ -3,6 +3,9 @@
   nu direkte i heroen på begge sprogversioner, så første handling er et svar,
   ikke et køb. Gate grøn. Baseline: 8 besøgende/28 dage, bounce 100% (Plausible
   7/10).
+- **Clean Copy-konverteren flyttet til heroen 8/10** (`2085f465`): konverterings-
+  formularen står nu i heroen på EN/DA, så første handling er en konvertering.
+  Gate grøn. Baseline: 16 besøgende/28 dage, bounce 79% (Plausible 7/10).
 - **Review-fund (deskuptime licenssandhed) allerede rettet** i `7e101213` —
   verified i koden 8/10.
 - **Alle VERIFICÉR DEPLOY-noter fra 6–8/10 er live og lukket** (målt 8/10 mod
@@ -22,6 +25,10 @@ Ingen.
   live `https://deskuptime.com/` og `https://deskuptime.com/da/` viser
   URL-feltet (`#oc-check-form`) i heroen over folden, og at et tjek af
   `example.com` giver et svar.
+- **VERIFICÉR DEPLOY:** Clean Copy-konverteren i heroen `2085f465` 8/10 — tjek at
+  live `https://cleancopy.tools/` og `https://cleancopy.tools/da/` viser
+  konverteringsformularen (`#cc-check-form`) i heroen over folden, og at en
+  konvertering af `example.com` giver et svar.
 
 ## Åbne opgaver
 
@@ -86,10 +93,6 @@ side; tallene er ikke vores egen trafik. Alt det leverede (1–26) står i
     8 besøgende/28 dage, der alle forlader forsiden (bounce 100%). Tal: bounce på
     `/`. Accept: forsiden viser ét URL-felt der kører det gratis tjek uden login,
     så første handling er et svar, ikke et køb. Datagrund: Plausible 7/10.
-28. **cleancopy.tools: «prøv med din egen tekst» over folden.** Hvem: de 16
-    besøgende/28 dage på `/` (bounce 79%). Tal: bounce på `/`. Accept: forsidens
-    første handling konverterer indsat tekst i browseren og viser markdown.
-    Datagrund: Plausible 7/10.
 29. **text-on-image-checker: del resultatet som et link.** Hvem: de 6 besøgende
     på `/text-on-image-checker` og 9 på den tilhørende artikel. Tal: besøgende på
     værktøjet. Accept: et del-link gendanner billede/tekst/placering, ligesom
