@@ -1,13 +1,7 @@
 # STATUS
-- **CI var rød på `main` og er grøn igen 8/10.** `check_first_action.py` krævede
-  en nøgne `<div class="hero">` og læste kun `<a>`; da tjekket flyttede op i heroen
-  (`id="check"` + formular), sagde porten «foldregionen findes ikke» på fire sider og
-  holdt alle efterfølgende deploys tilbage. Rettet i `ceo/first-action-form-hero`:
-  attributter er tillladt, og `<button type="submit">` tæller som foldens handling med
-  formularet `action` som destination. 6 nye selftest-kontroller (35/35), mutation mod
-  den gamle parser: RØD 29/35.
-- **Derfor er feature 29 ikke live endnu** (målt 8/10 mod mahope.tools: 0 forekomster
-  af `text-on-image-share.js` på begge sprogversioner). Deploys med dette pushes gate.
+- **CI grøn igen 8/10:** `check_first_action.py` så ikke `<button type="submit">` i en
+  hero-formular; rettet i `ceo/first-action-form-hero` (selftest 35/35). Feature 29
+  (`text-on-image-share.js`) mangler fortsat at være live — se VERIFICÉR DEPLOY.
 - **PR-TJEK 8/10:** ingen åbne PR'er i repoet.
 - **DeskUptime-tjekket flyttet til heroen 8/10** (`ae08878a`): URL-feltet står
   nu direkte i heroen på begge sprogversioner, så første handling er et svar,
@@ -16,6 +10,9 @@
 - **Clean Copy-konverteren flyttet til heroen 8/10** (`2085f465`): konverterings-
   formularen står nu i heroen på EN/DA, så første handling er en konvertering.
   Gate grøn. Baseline: 16 besøgende/28 dage, bounce 79% (Plausible 7/10).
+- **URL Inspector-tjekket flyttet op i heroen 8/10** (`ceo/url-inspector-fold-pro-link`):
+  folden har nu ét felt+knap (formularens submit mod `/api/url-inspect`) og ét link til
+  Pro-tabellens overskrift; siden er ratchet i `first_action.json`. Gate GRØN (185 steps).
 - **Review-fund (deskuptime licenssandhed) allerede rettet** i `7e101213` —
   verified i koden 8/10.
 - **CEO-kø #0 er færdig og merged** (url-inspect + `env`, 202 på tak-siden, 429
@@ -29,6 +26,9 @@ Ingen.
 
 ## Verificér deploy
 
+- **VERIFICÉR DEPLOY:** url-inspector-folden `ceo/url-inspector-fold-pro-link` — tjek
+  at `https://mahope.tools/url-inspector/` viser URL-feltet og «Inspect» i heroen, og
+  at «See what Page Profile Pro adds across a whole site» ruller til Pro-tabellen.
 - **VERIFICÉR DEPLOY OK 8/10:** DeskUptime-tjekket i heroen `ae08878a` — live
   `deskuptime.com` og `deskuptime.com/da/` viser URL-feltet i heroen, tjek virker.
 - **VERIFICÉR DEPLOY OK 8/10:** Clean Copy-konverteren i heroen `2085f465` — live
@@ -116,6 +116,8 @@ side; tallene er ikke vores egen trafik. Alt det leverede (1–26) står i
     synlige pro-tabels sektion, så `check_first_action.py --list` viser siden
     grøn. Datagrund: portens egen `pristabel()` målt 8/10 — tabellen er synlig,
     men dens sektion har intet id, og folden har nul `btn-primary`.
+    **LEVERET** `ceo/url-inspector-fold-pro-link` — tjek-formularen står nu i
+    heroen, Pro-tabellens overskrift har `id="ui-pro-heading"`, siden er ratchet.
 
 31. **`/free-tools`: hubben sender alle læsere til ét værktøj.** Hvem: de 7
     besøgende på `/` plus læsere af «Site»-kolonnen i footeren på alle 270

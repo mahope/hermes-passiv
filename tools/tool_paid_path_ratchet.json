@@ -457,8 +457,8 @@
    "say thanks": "/support"
   },
   "/url-inspector": {
-   "#0": "https://buy.stripe.com/9B6eVcgHp7YK69ggN9bMQ04",
-   "#1": "/page-profile",
+   "#1": "https://buy.stripe.com/9B6eVcgHp7YK69ggN9bMQ04",
+   "#2": "/page-profile",
    "Page Profile Pro": "/page-profile"
   },
   "/url-to-markdown": {

@@ -411,8 +411,8 @@ async function runScan(path, list) {
 }
 
 // `/url-inspector` kører en eksempel-URL ved sidevisning (`setTimeout(..., 300)`).
-// Den tælles ikke med: målingen starter efter at den er faldt, og klikket på
-// knappen er den vej en besøger faktisk tager. Men siden har et `value=` i
+// Den tælles ikke med: målingen starter efter at den er faldt, og formularens
+// submit er den vej en besøger faktisk tager. Men siden har et `value=` i
 // markup, så den kørte URL'en *kun* fordi sandkassens felt var tomt før —
 // altså bruger det første svar i listen på den og klikket får det anden.
 // Derfor præfiksér listen med ét svar, der kun den auto-kørsel kan nå.
@@ -427,7 +427,9 @@ async function runInspect(list) {
   await sleep(30);
   const base = state.calls;
   nodes.get('url-input').value = 'https://example.com';
-  nodes.get('inspect-btn').click();
+  // Tjekket er foldens formularknap, så en besøger udløser `submit` — klikket
+  // på en `<button type="submit">` er bare den vej, browseren gør det samme.
+  nodes.get('inspect-form').submit();
   await sleep(30);
   return {
     calls: state.calls - base,
@@ -1570,7 +1572,7 @@ function mutated(path, from, to) {
     const { nodes } = loadPage('site/url-inspector/index.html', responses([OK_INSPECT]).fetchImpl);
     await sleep(30);
     nodes.get('url-input').value = 'https://example.com';
-    nodes.get('inspect-btn').click();
+    nodes.get('inspect-form').submit();
     await sleep(30);
     const src = readFileSync(join(root, 'site/url-inspector/index.html'), 'utf8');
     const markup = statisk(src, 'ui-pro');

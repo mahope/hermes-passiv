@@ -25,15 +25,14 @@
      præcis som `.pro-note` gør på de øvrige værktøjssider. */
   .wrap{max-width:960px;margin:0 auto;padding:0 var(--gutter)}
 
-  .input-section{padding:0 0 40px}
-  .input-wrap{display:flex;gap:10px;max-width:640px;margin:0 auto}
+  .input-wrap{display:flex;gap:10px;max-width:640px;margin:0}
   .input-wrap input{flex:1;padding:14px 18px;border:2px solid var(--color-border);border-radius:var(--radius);font-size:16px;outline:none;transition:border-color .15s}
   .input-wrap input:focus{border-color:var(--color-accent)}
   .input-wrap input::placeholder{color:var(--color-text-muted)}
   .input-wrap .btn{white-space:nowrap;padding:14px 28px;font-size:16px}
   .input-wrap .btn:disabled{opacity:.6;cursor:not-allowed}
 
-  #status-bar{margin-top:14px;text-align:center;font-size:14px;color:var(--color-text-muted)}
+  #status-bar{margin-top:14px;font-size:14px;color:var(--color-text-muted)}
 
   #results{display:none}
   #results.show{display:block}
@@ -104,21 +103,22 @@
 </div>
 </header>
 
-<div class="hero">
+<div class="hero" id="check">
 <div class="wrap">
   <h1>URL Inspector</h1>
   <p>Trace the full redirect chain, inspect HTTP security headers, and check SSL details for any URL. Free developer tool.</p>
-</div>
-</div>
-
-<div class="input-section">
-<div class="wrap">
-  <div class="input-wrap">
+  <!-- The check is the fold's one primary action: the form's own submit, not a
+       link on top of it. The port reads the form `action` as the destination
+       and the `<button type="submit">` as the action, so the fold is judged
+       like any other tool page. `type="text"` + `inputmode="url"` keeps
+       scheme-less input working (the script adds https://). -->
+  <form class="input-wrap" id="inspect-form" method="get" action="/api/url-inspect">
     <label for="url-input" class="sr-only">URL to inspect</label>
-        <input type="url" id="url-input" placeholder="https://example.com" value="https://httpbin.org/redirect/3" autofocus>
-    <button id="inspect-btn" class="btn btn-primary">Inspect</button>
-  </div>
+    <input type="text" id="url-input" name="url" inputmode="url" autocomplete="url" spellcheck="false" placeholder="https://example.com" value="https://httpbin.org/redirect/3" autofocus>
+    <button id="inspect-btn" type="submit" class="btn btn-primary">Inspect</button>
+  </form>
   <div id="status-bar"></div>
+  <p class="hero-note">This checks one URL at a time. <a href="#ui-pro-heading">See what Page Profile Pro adds across a whole site</a>.</p>
 </div>
 </div>
 
@@ -158,7 +158,7 @@
     </div>
     <p id="ui-donate" style="font-size:13px;color:var(--color-text-muted);margin:14px 0 0" hidden></p>
     <div id="ui-pro" class="pro-card" hidden>
-      <h3>This read one URL. A site is every URL.</h3>
+      <h3 id="ui-pro-heading">This read one URL. A site is every URL.</h3>
       <p class="pro-lead">What a single inspection cannot do:</p>
 <!-- pro-table:start -->
 <div class="table-wrap">
@@ -215,6 +215,7 @@ Built by <a href="https://github.com/mahope">Mahope</a> &middot;
 (function() {
   var input = document.getElementById('url-input');
   var btn = document.getElementById('inspect-btn');
+  var form = document.getElementById('inspect-form');
   var statusBar = document.getElementById('status-bar');
   var results = document.getElementById('results');
   var errorPlaceholder = document.getElementById('error-placeholder');
@@ -401,9 +402,9 @@ Built by <a href="https://github.com/mahope">Mahope</a> &middot;
     }
 
     // The paid path, revealed only once a result exists — the same moment the
-    // donation line appears. Stating it as a section above would put a price
-    // in front of someone who has not used the tool yet, and the box is
-    // markup here precisely so it can be read out of the result.
+    // donation line appears. The fold links straight to its heading, so a
+    // reader who wants the whole-site answer can jump there, but the price is
+    // not put in front of someone who has not used the tool yet.
     var pro = document.getElementById('ui-pro');
     if (pro) pro.hidden = false;
   }
@@ -417,20 +418,24 @@ Built by <a href="https://github.com/mahope">Mahope</a> &middot;
     return s.substring(0, max) + '…';
   }
 
-  btn.addEventListener('click', function() {
+  // The form's own submit is the fold's primary action. We stop the browser
+  // from navigating to `/api/url-inspect?url=…` and run the same inspection
+  // instead; with JavaScript off the GET still reaches the endpoint.
+  function runInspect() {
     var url = input.value.trim();
     if (!url) { statusBar.textContent = 'Please enter a URL.'; return; }
     // Add https:// if no protocol
     if (!/^https?:\/\//i.test(url)) { url = 'https://' + url; input.value = url; }
     inspect(url);
-  });
+  }
 
-  input.addEventListener('keydown', function(e) {
-    if (e.key === 'Enter') btn.click();
+  form.addEventListener('submit', function(e) {
+    e.preventDefault();
+    runInspect();
   });
 
   // Auto-run with the default example
-  setTimeout(function() { btn.click(); }, 300);
+  setTimeout(runInspect, 300);
 })();
 </script>
 

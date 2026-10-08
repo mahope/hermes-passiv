@@ -9416,3 +9416,18 @@ C. ~~**En Pro-holder der kommer fra scanneren skal finde PDF'en selv.**~~
   `/api/url-inspect` tager `env` og har `targetIsPublic()` pr. redirect-hop,
   tak-siden skelner 202/429, 429 er endelig i `/net.js` og alle kaldere,
   AI-slot'en refunderes ved 502, og IPv4-mappede IPv6-adresser afvises.
+- **URL Inspector-folden leveret 8/10** (`ceo/url-inspector-fold-pro-link`, feature 30):
+  Tjek-formularen flyttede op i heroen (felt + `<button type="submit">` mod
+  `/api/url-inspect`), og pro-kortets overskrift fik `id="ui-pro-heading"`, så
+  `check_first_action.py` kan dømme folden og `pristabel()` finde et mål. Pro-kortet
+  er fortsat `hidden` og afsløres med resultatet, som de øvrige værktøjssider, så det
+  ikke bliver et udokumenteret synligt købslink. `check_tool_paid_path.py` fik sin
+  ratchet-linje flyttet (`#0/#1` → `#1/#2`), fordi det nye fold-link skubber de
+  positionsnøglede ankre — samme destinationer, kun nye indeks. Målt i Chromium
+  390/1280 px: 0 overflow, formen står i folden. Gate **GRØN — 185 steps**.
+- **CI-rettelsen 8/10** (`ceo/first-action-form-hero`): `check_first_action.py`
+  krævede en nøgen `<div class="hero">` og læste kun `<a>`; da de fire forsider
+  flyttede tjekket op i heroen (`id="check"` + formular), sagde porten «foldregionen
+  findes ikke» og holdt deploys tilbage. Nu tillades attributter på heroen, og
+  `<button type="submit">` tæller som foldens handling med formularens `action` som
+  destination. 6 nye selftest-kontroller (35/35); mutation mod den gamle parser RØD 29/35.
