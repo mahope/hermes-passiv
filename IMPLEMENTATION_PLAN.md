@@ -35,6 +35,9 @@ Ingen.
 
 ## Verificér deploy
 
+- **VERIFICÉR DEPLOY:** compliance-score-simulator `ceo/compliance-score-simulator`
+  — tjek at `https://mahope.tools/compliance-report` viser score-simulatoren
+  (score-bar med «Nu» vs «Fixed» og point-værdier per fix).
 - **VERIFICÉR DEPLOY OK 8/10:** GDPR-brudsgenerator `ceo/gdpr-breach-report-generator` —
   live EN/DA svarer 200, 72-timers-fristen vises, «Generate report»/«Lav rapport»
   viser rapporten med link til `/paid-templates`.
