@@ -84,6 +84,9 @@
 .license-area { text-align: center; padding: 24px; margin: 24px 0; border-radius: 12px; background: var(--color-surface-2); border: 1px dashed var(--color-border); }
 .license-area input { padding: 10px 14px; border: 1px solid #b9cdd8; border-radius: 8px; font-size: 14px; font-family: monospace; width: 280px; max-width: 100%; }
 .license-area .btn { margin-left: 8px; }
+.upgrade-area { text-align: center; padding: 24px; margin: 24px 0; border-radius: 12px; background: var(--color-surface-2); border: 1px solid #0b6e8f; box-shadow: 0 0 0 1px #0b6e8f; }
+.upgrade-area h3 { margin: 0 0 6px; }
+.upgrade-area .btn { display: inline-block; padding: 10px 24px; margin-top: 4px; text-decoration: none; }
 .license-status { margin-top: 10px; font-size: 14px; }
 .license-status.ok { color: #157a3c; }
 .license-status.err { color: #a31515; }
@@ -554,15 +557,28 @@ function renderReport(data, url) {
   h += '<button id="verifyBtn" class="btn" onclick="verifyAndDownload()">Unlock & Download</button>';
   h += '</div>';
   h += '<div id="licenseStatus" class="license-status"></div>';
-  h += '<p style="font-size:12px;color:#94a3b8;margin-top:12px">No license yet? <a href="#pricingSection">View pricing →</a></p>';
   h += '</div>';
+
+  // The reader has just seen what the free scan found. That is the moment the
+  // paid report is worth explaining, so the offer sits here — not behind a
+  // link to a pricing section the scan used to hide.
+  if (!data.pro) {
+    h += '<div class="upgrade-area no-print">';
+    h += '<h3>No licence yet? Here is what the paid report adds.</h3>';
+    h += '<p style="font-size:14px;color:#667">This free scan ran the 15 accessibility rules. EUComply Pro adds the 18 server-side GDPR/cookie, security and metadata checks and a PDF you can hand a client.</p>';
+    h += '<p style="font-size:15px"><strong>$79/year per website</strong> <span style="color:#94a3b8">· $149 once (lifetime, first 100 purchases)</span></p>';
+    h += '<a class="btn" href="https://buy.stripe.com/eVq00i4YH6UG69g0ObbMQ03" rel="nofollow noopener" onclick="window.trackEvent&&window.trackEvent(\'upgrade-buy-click\')">Buy EUComply Pro — $79/year per website</a>';
+    h += '<p style="font-size:12px;color:#94a3b8;margin-top:10px">One website per licence. <a href="#pricingSection">Compare free and Pro</a>.</p>';
+    h += '</div>';
+  }
 
   h += '<p style="text-align:center;font-size:13px;color:#94a3b8;margin-top:16px" class="no-print">Automated checks catch ~30-40% of issues. Always pair with a manual audit.</p>';
 
   document.getElementById('reportOutput').innerHTML = h;
   document.getElementById('reportOutput').style.display = 'block';
   document.getElementById('loading').style.display = 'none';
-  document.getElementById('pricingSection').style.display = 'none';
+  // Pricing stays on the page after a scan: the report and the hero both link
+  // to #pricingSection, and hiding it left the only buy path unreachable.
   // A customer who paid $79/year should not have to find the key again to get
   // the report a second time. Prefilled, never submitted automatically.
   var cachedKey = readStore(CACHE_KEY);

@@ -1,19 +1,13 @@
 # STATUS
-- **STATUS: KOE-TOM 8/10.** 0 åbne opgaver (de 6 står blokeret på Mads, se ❓),
-  0 åbne PR'er. Seneste CI på `main` var RØD: STATUS havde 41 linjer mod 25
-  tilladt; trimmet i denne commit. Historikken er flyttet til `docs/plan-arkiv.md`.
-- **Feature 32 leveret 8/10:** `/compliance-report`s hero har nu ét `btn-primary`
-  til `#pricingSection`, hvor den ene købsknap og pro-tabellen står; siden er
-  ratchet i `tools/first_action.json`. Gate grøn.
-- **BugBottle live 8/10:** `https://bugbottle.dev/` svarer 200 med korrekt indhold;
-  `/blog/` og `/bugbottle-demo` er bevidst 404 (guiderne ligger på mahope.tools).
-- **Review-fund 8/10:** 0 åbne. DeskUptime-licenssandheden er rettet (`7e101213`)
-  og verificeret live.
-- **Sentry:** sat op (worker 149-246), kun produktion, 0 uløste fejl de seneste
-  14 dage.
+- **8/10:** `/compliance-report` havde en død købsvej. Efter en scanning skjulte
+  `renderReport()` `#pricingSection`, men både hero-knappen og rapportens egen
+  «View pricing →» pegede på den — så en ny kunde havde ingen virkende købsknap
+  netop da fundene var set. Prissektionen er nu synlig igen, og rapporten slutter
+  med et opgraderingskort (15 gratis-regler mod 18 server-side tjek + PDF, pris og
+  købsknap) på det sted hvor læseren lige har set sine fund. Gate GRØN — 185 steps.
+- 0 åbne review-fund. Sentry: 0 uløste fejl (14 dage). 0 åbne PR'er.
 - **PR-TJEK 8/10:** 0 åbne PR'er. **BRANCH-TJEK:** ikke kørt denne iteration.
-- **CEO-kø #0** (url-inspect + `env`, 202 på tak-siden, 429 endelig, AI-kvote,
-  SSRF pr. hop) er færdig og merged; 0 åbent.
+- **CEO-kø #0** er færdig og merged; 0 åbent.
 
 ## Åbne review-fund
 
@@ -42,10 +36,16 @@ Ingen.
   7 kategorier i folden (EN: `#catalog-heading` "Tools by category", DA:
   "Værktøjer efter kategori"), og «Alle værktøjer» / «All tools» ruller til den.
   Gate grøn.
-- **VERIFICÉR DEPLOY:** compliance-report-folden `ceo/compliance-hero-buy` — tjek
-  at `https://mahope.tools/compliance-report` viser «See pricing — EUComply Pro» i
-  heroen, at den ruller til `#pricingSection`, og at den ene «Buy EUComply Pro —
-  $79/year»-knap står i priskortet.
+- **VERIFICÉR DEPLOY OK 8/10:** compliance-report-folden `ceo/compliance-hero-buy`
+  — live `https://mahope.tools/compliance-report` (200) viser «See pricing —
+  EUComply Pro» i heroen, og `id="pricingSection"` findes med den ene «Buy
+  EUComply Pro — $79/year»-knap.
+- **VERIFICÉR DEPLOY:** compliance-report-opgraderingskortet
+  `ceo/compliance-report-upgrade-path` — kør en scanning på
+  `https://mahope.tools/compliance-report`, og tjek at `#pricingSection` ikke
+  længere skjules (prissektionen står under rapporten), at rapporten slutter med
+  et «No licence yet?»-kort med «Buy EUComply Pro — $79/year per website», og at
+  hero-knappen «See pricing — EUComply Pro» ruller til prissektionen.
 
 ## Åbne opgaver
 
@@ -106,50 +106,34 @@ Ingen.
 ## Feature-kø
 
 Prioriteret efter hvor tæt den er på penge. Baseline er målt på den **byggede**
-side; tallene er ikke vores egen trafik. Alt det leverede (1–26) står i
+side; tallene er ikke vores egen trafik. Alt det leverede (1–32) står i
 `docs/plan-arkiv.md`.
 
-27. **deskuptime.com: giv forsiden et værktøj i stedet for et pitch.** Hvem: de
-    8 besøgende/28 dage, der alle forlader forsiden (bounce 100%). Tal: bounce på
-    `/`. Accept: forsiden viser ét URL-felt der kører det gratis tjek uden login,
-    så første handling er et svar, ikke et køb. Datagrund: Plausible 7/10. **LEVERET** `ae08878a` — verificeret live 8/10.
+33. **`/compliance-report`: virkende vej fra den frie rapport til Pro.** Hvem: de
+    besøgende der kører det gratis tjek. Tal: `checkout.pages` i
+    `reports/weekly/2026-41.json` — kun `/compliance-report` har et købstal (1).
+    Accept: efter en scanning er `#pricingSection` synlig, og rapporten slutter
+    med et opgraderingskort med pris og købsknap. Datagrund: `renderReport()`
+    skjulte prissektionen, så hero- og rapportlinket var døde.
+    **LEVERET** `ceo/compliance-report-upgrade-path`.
 
-29. **text-on-image-checker: del resultatet som et link.** Hvem: de 6 besøgende
-    på `/text-on-image-checker` og 9 på den tilhørende artikel. Tal: besøgende på
-    værktøjet. Accept: et del-link gendanner billede/tekst/placering, ligesom
-    paletgeneratorens `#c=`-link. Datagrund: top-side i Plausible. **LEVERET** — ny `text-on-image-share.js` modul, integreret på EN/DA, tester grønne.
+34. **`/scan`: kør et helt sitemap i én scanning.** Hvem: bureauer der tjekker en
+    kundes sider. Tal: scans (`health.scans=51`/uge) og konvertering til EUComply
+    Pro ($79). Accept: indsæt op til 5 URL'er, få ét samlet scorekort og én delt
+    rapport. Datagrund: flerside-tjekket findes kun bag Pro.
 
-30. **`/url-inspector/`: folden har ingen handling og ingen vej til Pro-kortet.**
-    Hvem: de læsere der kommer fra deskuptime-forsiden, hvis tjek-formular
-    sender dem videre til URL-værktøjet. Tal: konvertering til DeskUptime Pro
-    ($19). Accept: folden har én primær handling (tjekket) og ét link til den
-    synlige pro-tabels sektion, så `check_first_action.py --list` viser siden
-    grøn. Datagrund: portens egen `pristabel()` målt 8/10 — tabellen er synlig,
-    men dens sektion har intet id, og folden har nul `btn-primary`.
-    **LEVERET** `ceo/url-inspector-fold-pro-link` — tjek-formularen står nu i
-    heroen, Pro-tabellens overskrift har `id="ui-pro-heading"`, siden er ratchet.
+35. **GDPR-hændelsesrapport-generator (art. 33/34).** Hvem: SMV'er med et
+    databrud. Tal: afsendte rapporter. Accept: en gratis generator i
+    GDPR-dokumentkategorien med 72-timers-tidslinje. Datagrund: NIS2-incident-
+    generatoren findes, men GDPR-brudet gør ikke; konkurrenternes gratis-sæt har
+    den.
 
-31. **`/free-tools`: hubben sender alle læsere til ét værktøj.** Hvem: de 7
-    besøgende på `/` plus læsere af «Site»-kolonnen i footeren på alle 270
-    byggede sider. Tal: brug af et gratis værktøj — den vej, Pro sælges på.
-    Accept: foldens primære er en værktøjsrække med synlige kategorier
-    (e-mail, kontrast, GDPR, tabel, skærmbillede), ikke ét anker, og `/`
-    peger på samme rute. Datagrund: portens egen `handlinger()` målt 8/10 —
-    foldens eneste primære er `#gdpr-heading`.
-    **LEVERET** `69ec807e` — heroen matcher forsiden (tre knapper), katalog
-    med 7 kategorier vises i folden, ratchet opdateret til `#catalog-heading`.
+36. **`/text-on-image-checker`: eksportér det markerede tjek som billede.** Hvem:
+    de 6 besøgende på værktøjet (top-værktøjsside i ugerapporten). Tal:
+    besøgende/brug. Accept: en «Download the marked check»-fil med dommen
+    indbrændt. Datagrund: del-linket findes, men billedet gør ikke.
 
-32. **`/compliance-report`: giv den en `$79`-knap i heroen.** Hvem: de besøgende der
-    kommer til den eneste side med EUComply Pro-årsabonnementet (1 checkout-klik
-    i uge 41, den eneste af alle fire domæner). Tal: `reports/weekly/2026-41.json`,
-    `checkout.pages` — kun `/compliance-report` har et købstal. Accept: heroen har
-    én primær `btn-primary`-knap der linker til
-    `https://buy.stripe.com/eVq00i4YH6UG69g0ObbMQ03`, og `check_first_action.py`
-    viser siden grøn. Datagrund: portens egen `handlinger()` målt 8/10 — foldens
-    eneste primære handling er en `btn` (ikke `btn-primary`), og Pro-kortet står
-    under folden. **LEVERET** `ceo/compliance-hero-buy` — heroen har ét anker
-    «See pricing — EUComply Pro» til `#pricingSection`, hvor den ene dokumenterede
-    købsknap står; intet nyt Stripe-produkt er oprettet. Siden er ratchet, så
-    `check_first_action.py --list` viser den grøn. Købslinket kunne ikke flyttes
-    op i heroen: `check_stripe_ctas` tillader præcis én synlig CTA pr. tilbud, og
-    `check_tool_paid_path` måler kun brødteksten.
+37. **`/deskuptime`: vis Pro-forskellen i selve tjekresultatet.** Hvem: de 8
+    besøgende/28 dage, der alle forlader forsiden (bounce 100%). Tal: bounce på
+    `/` og konvertering til DeskUptime Pro ($19). Accept: resultatet viser hvad
+    online-overvågning tilføjer. Datagrund: Plausible 7/10.

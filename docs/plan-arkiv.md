@@ -9438,3 +9438,20 @@ C. ~~**En Pro-holder der kommer fra scanneren skal finde PDF'en selv.**~~
 - **Deploy-noter lukket 8/10** (målt mod live): url-inspector-folden (200,
   URL-felt + «Inspect», `id="ui-pro-heading"` ×2) og text-on-image-checker
   del-link (EN/DA 200, «Share this check» i resultatet).
+
+## Feature-kø 27–32 (leveret, flyttet hertil 8/10)
+
+- **27. deskuptime.com: forsiden fik et værktøj i stedet for et pitch** (`ae08878a`).
+  Forsiden viser ét URL-felt der kører det gratis tjek uden login, så første
+  handling er et svar. Verificeret live 8/10.
+- **29. text-on-image-checker: del resultatet som et link** (`2613639a`-familien).
+  Et `#ti=`-link gendanner billede/tekst/placering via `text-on-image-share.js`
+  på EN/DA; del-linket er verificeret live 8/10.
+- **30. `/url-inspector/`: folden fik en handling og en vej til Pro-kortet**
+  (`ceo/url-inspector-fold-pro-link`). Tjek-formularen står i heroen, Pro-tabellens
+  overskrift har `id="ui-pro-heading"`, siden er ratchet.
+- **31. `/free-tools`: katalog i folden** (`69ec807e`). Heroen matcher forsiden,
+  kataloget med 7 kategorier vises i folden, ratchet opdateret til `#catalog-heading`.
+- **32. `/compliance-report`: købsvej i heroen** (`ceo/compliance-hero-buy`).
+  Heroen har ét anker «See pricing — EUComply Pro» til `#pricingSection`.
+  Verificeret live 8/10.
