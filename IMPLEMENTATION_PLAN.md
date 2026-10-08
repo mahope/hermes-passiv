@@ -1,4 +1,12 @@
 # STATUS
+- **8/10:** feature 44 (DA blog hero-demo) leveret på `ceo/da-blog-hero-demo`:
+  den danske kontrast-artikel får nu samme live-demo i heroen som den
+  engelske (feature 43 leverede kun EN). Gate GRØN.
+- **8/10:** CI rød rettet på `ceo/fix-blog-hero-scan-test`: feature 43's
+  hero-demo brød scan-clients-testen (dobbelt mount på EN-bloggen). Regexet
+  kræver nu `prefix: 'art-'` eller `''`. 594/594. Gate GRØN.
+- **8/10:** tre features venter på 17:30-deployen (committeret efter 12:30):
+  score-simulator, sitemap-scan, blog hero-demo. Ikke DEPLOY-MISSING.
 - **8/10:** feature 43 (blog hero-demo) leveret på `ceo/blog-hero-demo`:
   kontrast-bloggen har nu en live-demo i heroen, så besøgende kan prøve
   værktøjet med det samme. Forventet at reducere bounce-rate (100% → lavere).
@@ -145,8 +153,24 @@ Ingen.
 ## Feature-kø
 
 Prioriteret efter hvor tæt den er på penge. Baseline er målt på den **byggede**
-side; tallene er ikke vores egen trafik. Alt det leverede (1–32) står i
+side; tallene er ikke vores egen trafik. Alt det leverede (1–44) står i
 `docs/plan-arkiv.md`.
+
+45. **e-bøger: læs kapitel 1 gratis i browseren.** Hvem: dem der laster de seks
+    EPUB'er (top-downloads). Tal: downloads og konvertering til $29-bundlet.
+    Accept: en prøveside der viser det første kapitel og linker til bundlet.
+    Datagrund: `/books/` er top-download, men der er ingen vej fra læsning til køb.
+46. **cleancopy.tools: batch-konverter i web-værktøjet.** Hvem: de 18 besøgende/28d
+    (bounce 81%). Tal: konvertering til Clean Copy Pro ($19/år). Accept: indsæt
+    flere HTML-bidder, få flere Markdown-bagter. Datagrund: Pro-funktion bag
+    licenskontrol (open-core), web-værktøjet er den gratis indgang.
+47. **GitHub Action for eaa-scanner.** Hvem: de 91 npm-downloads/uge. Tal:
+    adoption. Accept: `action.yml` der scanner og uploader SARIF. Datagrund:
+    SARIF-outputet (feature 38) findes; kræver Marketplace-publicering (❓).
+48. **/page-profile: sammenlign to URL'er.** Hvem: SEO-bureauer. Tal: konvertering
+    til Page Profile Pro ($19/år). Accept: `page-profile --compare A B` giver
+    en diff. Datagrund: Pro-funktionen findes ikke endnu; CLI'en har allerede
+    score og grade.
 
 33. **`/compliance-report`: virkende vej fra den frie rapport til Pro.** Hvem: de
     besøgende der kører det gratis tjek. Tal: `checkout.pages` i
