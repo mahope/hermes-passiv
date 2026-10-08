@@ -2554,7 +2554,7 @@ for (const [path, lang] of [['site/scan.html', 'EN'], ['site/scan-da.html', 'DA'
   // Polaritet: samme dom på den gamle kode. Mutationen fjerner præcis det `esc`-
   // kald rettelsen tilføjede, i den rigtige fil — ikke en håndskrevet kopi.
   const egen = readFileSync(join(root, path), 'utf8');
-  const gammel = egen.replace(`esc(e.message)`, `e.message`);
+  const gammel = egen.replaceAll(`esc(e.message)`, `e.message`);
   ok(`scan ${lang}: mutationen (uden esc) er fanget`,
     gammel !== egen && /<img/i.test(await scanFejlHtml(path, gammel)),
     'mutationen gav ikke den gamle kode, så dommen kan ikke se forskellen');

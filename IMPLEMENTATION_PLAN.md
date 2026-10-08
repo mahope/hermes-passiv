@@ -1,4 +1,9 @@
 # STATUS
+- **8/10:** CI rød rettet på `ceo/fix-scan-mutation-test`: `scan-clients.test.mjs`
+  muterede kun den første af to `esc(e.message)`-forekomster i `scan.html`/
+  `scan-da.html` (sitemap-stigen), mens testen kører pages-stigen. `replace` →
+  `replaceAll`. Testen verificeret: fejler på gammel kode, grøn efter fix.
+  Gate GRØN (build, seo_check, 519/519 worker-tests, check_inline_js 0).
 - **8/10:** feature 38 (eaa-scanner SARIF) leveret på `ceo/eaa-sarif`:
   `eaa-scan --sarif` giver et SARIF 2.1.0-dokument med regler, fund og
   side-URL'er til GitHub code scanning. Testet med self-test + SARIF-test.
