@@ -90,6 +90,12 @@
 .license-status { margin-top: 10px; font-size: 14px; }
 .license-status.ok { color: #157a3c; }
 .license-status.err { color: #a31515; }
+.score-simulator { padding: 20px; margin: 20px 0; border-radius: 12px; background: var(--color-surface-2); border: 1px solid var(--color-border); }
+.score-bar-container { margin: 12px 0; }
+.score-bar { position: relative; height: 32px; background: #e5e7eb; border-radius: 16px; overflow: hidden; }
+.score-bar-current { position: absolute; left: 0; top: 0; height: 100%; background: #a31515; border-radius: 16px; }
+.score-bar-potential { position: absolute; left: 0; top: 0; height: 100%; background: #157a3c; border-radius: 16px; opacity: 0.4; }
+.score-bar-labels { display: flex; justify-content: space-between; font-size: 13px; color: #667; margin-top: 6px; }
 /* The paid deliverable used to be reachable with Ctrl+P, because the whole
    report sat in the DOM before the key was typed. The NIS2/GDPR findings now
    come from /api/report after the server accepted the key, so a print made
@@ -532,6 +538,36 @@ function renderReport(data, url) {
   h += '<div class="metric-card"><div class="metric-value" style="color:#a35a10">' + data.warnings + '</div><div class="metric-label">Warnings</div></div>';
   h += '<div class="metric-card"><div class="metric-value" style="color:#0369a1">' + data.notices + '</div><div class="metric-label">Notices</div></div>';
   h += '</div>';
+
+  // Score improvement simulator — shows what fixing issues would do
+  const potentialScore = Math.max(0, 100 - data.notices * 2);
+  const errorPoints = data.errors * 12;
+  const warningPoints = data.warnings * 5;
+  if (data.errors > 0 || data.warnings > 0) {
+    h += '<div class="score-simulator">';
+    h += '<h3 style="margin:0 0 12px">What fixing these would do</h3>';
+    h += '<div class="score-bar-container">';
+    h += '<div class="score-bar">';
+    h += '<div class="score-bar-current" style="width:' + Math.min(100, data.score) + '%"></div>';
+    if (potentialScore > data.score) {
+      h += '<div class="score-bar-potential" style="width:' + Math.min(100, potentialScore) + '%"></div>';
+    }
+    h += '</div>';
+    h += '<div class="score-bar-labels">';
+    h += '<span>Now: ' + data.score + '</span>';
+    if (potentialScore > data.score) {
+      h += '<span>Fixed: ' + potentialScore + '</span>';
+    }
+    h += '</div>';
+    h += '</div>';
+    if (errorPoints > 0) {
+      h += '<p style="font-size:14px;margin:12px 0 4px"><strong>Fix all ' + data.errors + ' error(s) → +' + errorPoints + ' points</strong> (score: ' + data.score + ' → ' + Math.min(100, data.score + errorPoints) + ')</p>';
+    }
+    if (warningPoints > 0) {
+      h += '<p style="font-size:14px;margin:4px 0"><strong>Fix all ' + data.warnings + ' warning(s) → +' + warningPoints + ' points</strong> (score: ' + data.score + ' → ' + Math.min(100, data.score + errorPoints + warningPoints) + ')</p>';
+    }
+    h += '</div>';
+  }
 
   // Findings by severity
   ['error', 'warning', 'notice'].forEach(sev => {

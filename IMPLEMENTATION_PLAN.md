@@ -1,4 +1,9 @@
 # STATUS
+- **8/10:** feature 42 (compliance score-simulator) leveret på
+  `ceo/compliance-score-simulator`: rapporten viser nu en visuel score-bar
+  med «Nu» vs «Fixed» og beregner hvert fixs point-værdi (+12 pr. error,
+  +5 pr. warning). Giver brugeren en konkret handlingsplan og viser hvad
+  kostbar Pro-rapporten er værd. Gate GRØN.
 - **8/10:** CI rød rettet på `ceo/fix-scan-mutation-test`: `scan-clients.test.mjs`
   muterede kun den første af to `esc(e.message)`-forekomster i `scan.html`/
   `scan-da.html` (sitemap-stigen), mens testen kører pages-stigen. `replace` →
