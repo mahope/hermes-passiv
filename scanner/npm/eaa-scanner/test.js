@@ -30,3 +30,26 @@ for (const e of expect) {
 console.log(`score=${r.score} grade=${r.grade} errors=${r.summary.errors}`);
 if (!r.ok || fail || r.score >= 40) { console.log('SELF-TEST FAILED'); process.exit(1); }
 console.log('SELF-TEST OK');
+
+// SARIF-output: --sarif skal give et gyldigt SARIF 2.1.0-dokument.
+const { execFileSync } = require('child_process');
+const os = require('os');
+const path = require('path');
+const tmp = path.join(os.tmpdir(), 'eaa-sarif-test.html');
+require('fs').writeFileSync(tmp, bad);
+const sarifOut = execFileSync('node', [__dirname + '/cli.js', tmp, '--sarif'], {
+  encoding: 'utf8',
+  cwd: __dirname,
+});
+require('fs').unlinkSync(tmp);
+const sarif = JSON.parse(sarifOut);
+const sarifOk = sarif.version === '2.1.0'
+  && sarif.runs?.[0]?.tool?.driver?.name === 'eaa-scanner'
+  && Array.isArray(sarif.runs[0].results)
+  && sarif.runs[0].results.length > 0
+  && sarif.runs[0].results.every(res =>
+    res.ruleId && res.level && res.message?.text
+    && res.locations?.[0]?.physicalLocation?.artifactLocation?.uri);
+console.log(sarifOk ? 'PASS SARIF' : 'FAIL SARIF');
+if (!sarifOk) { console.log('SARIF-TEST FAILED'); process.exit(1); }
+console.log('SARIF-TEST OK');

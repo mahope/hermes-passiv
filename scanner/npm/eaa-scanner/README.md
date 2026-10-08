@@ -25,12 +25,25 @@ eaa-scan https://example.com
 ## Usage
 
 ```bash
-eaa-scan <url-or-file>... [--json] [--fail-on error|warning] [--crawl N]
+eaa-scan <url-or-file>... [--json] [--sarif] [--fail-on error|warning] [--crawl N]
 
 eaa-scan https://example.com            # human-readable report
 eaa-scan https://example.com --json     # machine-readable (pipe to jq)
 eaa-scan page.html --fail-on warning    # CI mode: exit 1 if warnings found
 eaa-scan https://example.com --crawl 15 # whole-site audit: crawl up to 15 pages
+eaa-scan https://example.com --sarif    # SARIF 2.1.0 for GitHub code scanning
+```
+
+### SARIF output (`--sarif`)
+
+Outputs a SARIF 2.1.0 document for GitHub code scanning. Upload with
+`github/codeql-action/upload-sarif` to see accessibility findings directly in
+the Security tab:
+
+```yaml
+- run: npx @mahope/eaa-scanner https://example.com --sarif > results.sarif
+- uses: github/codeql-action/upload-sarif@v3
+  with: { sarif_file: results.sarif }
 ```
 
 ### Site crawl (`--crawl N`)

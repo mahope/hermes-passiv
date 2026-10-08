@@ -1,4 +1,7 @@
 # STATUS
+- **8/10:** feature 38 (eaa-scanner SARIF) leveret på `ceo/eaa-sarif`:
+  `eaa-scan --sarif` giver et SARIF 2.1.0-dokument med regler, fund og
+  side-URL'er til GitHub code scanning. Testet med self-test + SARIF-test.
 - **8/10:** feature 34 (sitemap-scanning) leveret på `ceo/sitemap-scan`:
   `/scan` har nu en Pages/Sitemap-skifter i heroen (EN/DA). Sitemap-tilstanden
   kalder `/scan-proxy?sitemap=`, som henter sitemappen (inkl. indeks-sitemapper
@@ -147,7 +150,27 @@ side; tallene er ikke vores egen trafik. Alt det leverede (1–32) står i
     **LEVERET** `ceo/text-on-image-export`.
 
 37. **`/deskuptime`: vis Pro-forskellen i selve tjekresultatet.** Hvem: de 8
-    besøgende/28 dage, der alle forlader forsiden (bounce 100%). Tal: bounce på
-    `/` og konvertering til DeskUptime Pro ($19). Accept: resultatet viser hvad
-    online-overvågning tilføjer. Datagrund: Plausible 7/10. **LEVERET** JavaScript-iend
-    `site/one-off-check.js` og note i `site/deskuptime/index.html`.
+     besøgende/28 dage, der alle forlader forsiden (bounce 100%). Tal: bounce på
+     `/` og konvertering til DeskUptime Pro ($19). Accept: resultatet viser hvad
+     online-overvågning tilføjer. Datagrund: Plausible 7/10. **LEVERET** JavaScript-iend
+     `site/one-off-check.js` og note i `site/deskuptime/index.html`.
+
+38. **eaa-scanner: SARIF-output til GitHub code scanning.** Hvem: de 91
+     npm-downloads/uge — stærkeste adoption. Tal: downloads og CI-integration.
+     Accept: `--sarif` giver et gyldigt SARIF 2.1.0-dokument med regler og fund.
+     Datagrund: udviklere bruger allerede CLI'en, men resultatet kunne ikke vises
+     i GitHubs Security-tab. **LEVERET** `ceo/eaa-sarif`.
+
+39. **Privatlivspolitik-generator.** Hvem: de 9 downloads/uge af
+     privatlivsskabeloner på mahope.tools. Tal: downloads og konvertering til
+     EUComply Pro ($79). Accept: en guide der stiller spørgsmål og genererer en
+     tilpasset politik. Datagrund: skabelonerne er top-downloads, men er statiske.
+
+40. **GitHub Action for eaa-scanner.** Hvem: udviklere der vil scanne i CI. Tal:
+     adoption. Accept: en `action.yml` der kører scanneren og uploader SARIF.
+     Datagrund: SARIF-outputet (feature 38) gør det muligt. *(Kræver publicering
+     på GitHub Marketplace — ❓ Til Mads.)*
+
+41. **DeskUptime forside: 100 % bounce.** Hvem: de 11 besøgende/28 dage. Tal:
+     bounce og konvertering til Pro ($19). Accept: forsiden får en klar værdi og
+     én købsknap. Datagrund: Plausible 8/10 — alle forlader uden at handle.
