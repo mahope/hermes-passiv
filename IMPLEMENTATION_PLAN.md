@@ -1,10 +1,11 @@
 # STATUS
-- **8/10:** `/compliance-report` havde en død købsvej. Efter en scanning skjulte
-  `renderReport()` `#pricingSection`, men både hero-knappen og rapportens egen
-  «View pricing →» pegede på den — så en ny kunde havde ingen virkende købsknap
-  netop da fundene var set. Prissektionen er nu synlig igen, og rapporten slutter
-  med et opgraderingskort (15 gratis-regler mod 18 server-side tjek + PDF, pris og
-  købsknap) på det sted hvor læseren lige har set sine fund. Gate GRØN — 185 steps.
+- **8/10:** `/compliance-report` havde en død købsvej. Første rettelse (`bdf5f4fa`)
+  fjernede kun ét af to `display:none` på `#pricingSection`: `generateReport()`
+  skjulte den stadig ved hver scanning og genskabte den aldrig, så hero-knappen
+  «See pricing — EUComply Pro» og rapportens «Compare free and Pro» pegede på et
+  skjult afsnit. Nu skjules prissektionen aldrig; opgraderingskortet (15
+  gratis-regler mod 18 server-side tjek + PDF, pris og købsknap) står fortsat efter
+  rapporten. Gate GRØN — 185 steps.
 - 0 åbne review-fund. Sentry: 0 uløste fejl (14 dage). 0 åbne PR'er.
 - **PR-TJEK 8/10:** 0 åbne PR'er. **BRANCH-TJEK:** ikke kørt denne iteration.
 - **CEO-kø #0** er færdig og merged; 0 åbent.
@@ -40,12 +41,13 @@ Ingen.
   — live `https://mahope.tools/compliance-report` (200) viser «See pricing —
   EUComply Pro» i heroen, og `id="pricingSection"` findes med den ene «Buy
   EUComply Pro — $79/year»-knap.
-- **VERIFICÉR DEPLOY:** compliance-report-opgraderingskortet
-  `ceo/compliance-report-upgrade-path` — kør en scanning på
-  `https://mahope.tools/compliance-report`, og tjek at `#pricingSection` ikke
-  længere skjules (prissektionen står under rapporten), at rapporten slutter med
-  et «No licence yet?»-kort med «Buy EUComply Pro — $79/year per website», og at
-  hero-knappen «See pricing — EUComply Pro» ruller til prissektionen.
+- **VERIFICÉR DEPLOY:** compliance-report-prissektionen
+  `ceo/compliance-report-pricing-visible` — kør en scanning på
+  `https://mahope.tools/compliance-report`, og tjek at `#pricingSection` bliver
+  stående synlig efter rapporten (hero-knappen «See pricing — EUComply Pro» og
+  «Compare free and Pro» ruller til den), og at rapporten slutter med et
+  «No licence yet?»-kort med «Buy EUComply Pro — $79/year per website». Den
+  forrige rettelse fjernede kun ét af to `display:none`.
 
 ## Åbne opgaver
 
@@ -115,7 +117,8 @@ side; tallene er ikke vores egen trafik. Alt det leverede (1–32) står i
     Accept: efter en scanning er `#pricingSection` synlig, og rapporten slutter
     med et opgraderingskort med pris og købsknap. Datagrund: `renderReport()`
     skjulte prissektionen, så hero- og rapportlinket var døde.
-    **LEVERET** `ceo/compliance-report-upgrade-path`.
+    **LEVERET** `ceo/compliance-report-upgrade-path`; JS-skjulningen fuldført
+    `ceo/compliance-report-pricing-visible`.
 
 34. **`/scan`: kør et helt sitemap i én scanning.** Hvem: bureauer der tjekker en
     kundes sider. Tal: scans (`health.scans=51`/uge) og konvertering til EUComply

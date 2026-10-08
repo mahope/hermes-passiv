@@ -601,7 +601,10 @@ async function generateReport(url) {
 
   document.getElementById('loading').style.display = 'block';
   document.getElementById('reportOutput').style.display = 'none';
-  document.getElementById('pricingSection').style.display = 'none';
+  // The pricing section must never be hidden by a scan: the hero button and the
+  // report's own "Compare free and Pro" link both point at #pricingSection, so
+  // hiding it here (and never restoring it) left both links dead right after a
+  // scan. renderReport() only removes the report output, never the offer.
   if (window.trackEvent) window.trackEvent('compliance-report');
 
   try {
