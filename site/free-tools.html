@@ -17,17 +17,29 @@
 <link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/free-tools">
 <script type="application/ld+json">{"@context": "https://schema.org", "@type": "CollectionPage", "name": "mahoje.dk Free Tools", "description": "Eight free browser-based compliance tools for small EU web agencies: privacy notice generator, DPA generator, RoPA generator, EAA accessibility scanner and AI compliance assistant.", "hasPart": [{"@type": "WebApplication", "name": "Privacy Notice Generator (EN)", "applicationCategory": "BusinessApplication", "operatingSystem": "Any", "url": "https://hermes-passiv.pages.dev/privacy-notice-generator", "offers": {"@type": "Offer", "price": "0", "priceCurrency": "EUR"}}, {"@type": "WebApplication", "name": "Privatlivspolitik-generator (DA)", "applicationCategory": "BusinessApplication", "operatingSystem": "Any", "url": "https://hermes-passiv.pages.dev/privacy-notice-generator-da", "offers": {"@type": "Offer", "price": "0", "priceCurrency": "EUR"}}, {"@type": "WebApplication", "name": "DPA Generator (EN)", "applicationCategory": "BusinessApplication", "operatingSystem": "Any", "url": "https://hermes-passiv.pages.dev/dpa-generator", "offers": {"@type": "Offer", "price": "0", "priceCurrency": "EUR"}}, {"@type": "WebApplication", "name": "DPA Generator (DA)", "applicationCategory": "BusinessApplication", "operatingSystem": "Any", "url": "https://hermes-passiv.pages.dev/dpa-generator-da", "offers": {"@type": "Offer", "price": "0", "priceCurrency": "EUR"}}, {"@type": "WebApplication", "name": "RoPA Generator (EN)", "applicationCategory": "BusinessApplication", "operatingSystem": "Any", "url": "https://hermes-passiv.pages.dev/ropa-generator", "offers": {"@type": "Offer", "price": "0", "priceCurrency": "EUR"}}, {"@type": "WebApplication", "name": "RoPA Generator (DA)", "applicationCategory": "BusinessApplication", "operatingSystem": "Any", "url": "https://hermes-passiv.pages.dev/ropa-generator-da", "offers": {"@type": "Offer", "price": "0", "priceCurrency": "EUR"}}, {"@type": "WebApplication", "name": "NIS2 Self-Assessment", "applicationCategory": "BusinessApplication", "operatingSystem": "Any", "url": "https://hermes-passiv.pages.dev/nis2-check", "offers": {"@type": "Offer", "price": "0", "priceCurrency": "EUR"}}, {"@type": "WebApplication", "name": "WCAG Color Contrast Checker", "applicationCategory": "DeveloperApplication", "operatingSystem": "Any", "url": "https://hermes-passiv.pages.dev/contrast-checker", "offers": {"@type": "Offer", "price": "0", "priceCurrency": "EUR"}}, {"@type": "WebApplication", "name": "EAA / Accessibility Scanner", "applicationCategory": "DeveloperApplication", "operatingSystem": "Any", "url": "https://hermes-passiv.pages.dev/scan", "offers": {"@type": "Offer", "price": "0", "priceCurrency": "EUR"}}, {"@type": "WebPage", "name": "Privacy Policy Template (download)", "url": "https://hermes-passiv.pages.dev/privacy-policy-template"}, {"@type": "WebPage", "name": "RoPA Template (download)", "url": "https://hermes-passiv.pages.dev/ropa-template"}, {"@type": "WebApplication", "name": "AI Compliance Assistant", "applicationCategory": "BusinessApplication", "operatingSystem": "Any", "url": "https://hermes-passiv.pages.dev/compliance-ai", "offers": {"@type": "Offer", "price": "0", "priceCurrency": "EUR"}}, {"@type": "WebApplication", "name": "Clean Copy Web", "applicationCategory": "UtilitiesApplication", "operatingSystem": "Any", "url": "https://hermes-passiv.pages.dev/clean-copy-tool", "offers": {"@type": "Offer", "price": "0", "priceCurrency": "EUR"}}, {"@type": "WebApplication", "name": "NIS2 Gap Assessment", "applicationCategory": "BusinessApplication", "operatingSystem": "Any", "url": "https://hermes-passiv.pages.dev/nis2-gap-assessment", "offers": {"@type": "Offer", "price": "0", "priceCurrency": "EUR"}}]}</script>
 <script defer src="/track.js"></script>
+<style>
+  .catalog { display: grid; gap: 2rem 2.5rem; }
+  @media (min-width: 720px) { .catalog { grid-template-columns: 1fr 1fr; } }
+  @media (min-width: 1100px) { .catalog { grid-template-columns: repeat(3, 1fr); } }
+  @media (min-width: 1400px) { .catalog { grid-template-columns: repeat(4, 1fr); } }
+  .catalog h3 { margin-bottom: 0.4rem; }
+  .catalog ul { list-style: none; padding: 0; margin: 0; }
+  .catalog li { border-top: 1px solid var(--color-border); padding: 0.45rem 0; margin: 0; display: flex; justify-content: space-between; gap: 1rem; }
+  .catalog li span { color: var(--color-text-muted); font-size: 0.85rem; white-space: nowrap; }
+</style>
 </head>
 <body>
 <header class="hero">
   <div class="container">
     <div class="badge">FREE TOOLS</div>
-    <h1>GDPR &amp; Accessibility Tools That Respect You</h1>
+    <h1>GDPR & Accessibility Tools That Respect You</h1>
     <p class="tagline">Every tool below runs entirely <strong>in your
     browser</strong>. No account, no e-mail address, no data sent to any
     server. Fill in a form, get a document you own.</p>
     <div class="hero-cta">
-      <a href="#gdpr-heading" class="btn-primary">Pick a tool</a>
+      <a href="#catalog-heading" class="btn-primary">All tools</a>
+      <a href="/blog/" class="btn-secondary">Guides</a>
+      <a href="/books/" class="btn-secondary">E-books</a>
     </div>
   </div>
 </header>
@@ -35,6 +47,70 @@
 <main class="container">
 
 <p style="margin-bottom:1.5rem">Looking for downloadable files? Every template, e-book and CLI tool is collected on <a href="/free-downloads">Free Downloads</a>.</p>
+
+<section aria-labelledby="catalog-heading">
+  <h2 id="catalog-heading" style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0">Tools by category</h2>
+  <div class="catalog">
+    <div>
+      <h3>GDPR documents</h3>
+      <ul>
+        <li><a href="/privacy-notice-generator">Privacy Notice Generator</a><span>Art. 13/14</span></li>
+        <li><a href="/dpa-generator">Data Processing Agreement Generator</a><span>Art. 28</span></li>
+        <li><a href="/ropa-generator">Record of Processing Activities</a><span>Art. 30</span></li>
+        <li><a href="/cookie-check">Cookie Check</a><span>cookies before consent</span></li>
+        <li><a href="/privacy-policy-template">Privacy Policy Template</a><span>Markdown</span></li>
+      </ul>
+    </div>
+    <div>
+      <h3>Accessibility and colour</h3>
+      <ul>
+        <li><a href="/contrast-checker">WCAG Contrast Checker</a><span>AA / AAA</span></li>
+        <li><a href="/palette-generator">Accessible Palette Generator</a><span></span></li>
+        <li><a href="/color-blindness-simulator">Colour Blindness Simulator</a><span></span></li>
+        <li><a href="/text-on-image-checker">Text-on-Image Contrast</a><span>real pixels</span></li>
+        <li><a href="/scan">Accessibility Scanner</a><span>WCAG 2.2 / EAA</span></li>
+        <li><a href="/accessibility-statement-generator">Accessibility Statement Generator</a><span></span></li>
+      </ul>
+    </div>
+    <div>
+      <h3>NIS2</h3>
+      <ul>
+        <li><a href="/nis2-check">Am I Covered by NIS2?</a><span>12 questions</span></li>
+        <li><a href="/nis2-gap-assessment">Gap Assessment</a><span>Art. 21 measures</span></li>
+        <li><a href="/nis2-incident-generator">Incident Report Generator</a><span>Art. 23</span></li>
+      </ul>
+    </div>
+    <div>
+      <h3>Site checks</h3>
+      <ul>
+        <li><a href="/compliance-site-check">Website Compliance Check</a><span>9 points</span></li>
+        <li><a href="/security-headers-check">Security Headers</a><span>CSP, HSTS, …</span></li>
+        <li><a href="/url-inspector/">URL Inspector</a><span>redirects, headers, TLS</span></li>
+        <li><a href="/page-profile">page-profile</a><span>CLI</span></li>
+        <li><a href="/site-icons">site-icons</a><span>CLI</span></li>
+      </ul>
+    </div>
+    <div>
+      <h3>Text and developer utilities</h3>
+      <ul>
+        <li><a href="/word-counter">Word Counter</a><span></span></li>
+        <li><a href="/json-formatter">JSON Formatter and Validator</a><span></span></li>
+        <li><a href="/text-diff">Text Diff</a><span></span></li>
+        <li><a href="/case-converter">Case Converter</a><span></span></li>
+        <li><a href="/markdown-table-generator">Markdown Table Generator</a><span>CSV / TSV</span></li>
+        <li><a href="/base64-encoder-decoder">Base64</a>, <a href="/url-encoder-decoder">URL Encoding</a>, <a href="/hash-generator">Hashes</a>, <a href="/uuid-generator">UUIDs</a><span></span></li>
+      </ul>
+    </div>
+    <div>
+      <h3>CI and GitHub Actions</h3>
+      <ul>
+        <li><a href="https://github.com/mahope/compliance-site-check">compliance-site-check</a><span>after every deploy</span></li>
+        <li><a href="https://github.com/mahope/deskuptime">deskuptime</a><span>uptime and SSL in CI</span></li>
+        <li><a href="https://github.com/mahope/clean-copy-cli">clean-copy-cli</a><span>HTML to Markdown</span></li>
+      </ul>
+    </div>
+  </div>
+</section>
 
 <section aria-labelledby="gdpr-heading">
   <h2 id="gdpr-heading">GDPR document generators</h2>
