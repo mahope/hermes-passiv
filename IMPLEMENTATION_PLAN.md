@@ -1,17 +1,16 @@
 # STATUS
-- **Farvenavn i paletgeneratoren leveret 8/10** (`ceo/farvenavn`): hver
-  paletrække viser nu nærmeste CSS-navn under hex'en (`crimson`, `slateblue`),
-  og billed-prøverne viser navnet under farven. Navnene kommer fra én tabel i
-  `site/color-names.js` (139 forskellige CSS-farver), delt af EN/DA og
-  billedværktøjet. Gate **GRØN — 185 steps**. Baseline: **0** besøgende/28 dage
-  på `/palette-generator` (Plausible 7/10).
+- **DeskUptime-tjekket flyttet til heroen 8/10** (`ae08878a`): URL-feltet står
+  nu direkte i heroen på begge sprogversioner, så første handling er et svar,
+  ikke et køb. Gate grøn. Baseline: 8 besøgende/28 dage, bounce 100% (Plausible
+  7/10).
+- **Review-fund (deskuptime licenssandhed) allerede rettet** i `7e101213` —
+  verified i koden 8/10.
 - **Alle VERIFICÉR DEPLOY-noter fra 6–8/10 er live og lukket** (målt 8/10 mod
   mahope.tools og deskuptime.com — se `docs/plan-arkiv.md`).
 - **CEO-kø #0 er færdig og merged** (url-inspect + `env`, 202 på tak-siden, 429
   endelig, AI-kvote, SSRF pr. hop). Verificeret i koden 8/10; intet åbent.
 - **Sentry er sat op og testet** (worker 149-246, test 1748-1833): DSN i kode,
   kun produktion, ingen PII, ingen traces/replay.
-- **Rød CI fra 7/10 rettet** (`d5baf6aa`), og planen er skåret til under 40 KB.
 
 ## Åbne review-fund
 
@@ -19,10 +18,10 @@ Ingen.
 
 ## Verificér deploy
 
-- **VERIFICÉR DEPLOY:** farvenavn `ceo/farvenavn` 8/10 — tjek at live
-  `/palette-generator` og `/palette-generator-da` indlæser `/color-names.js`, at
-  hver paletrække bærer et `.pg-name` med et CSS-navn (fx `red`, `crimson`), og
-  at en billed-prøve viser navnet i `.pg-img-name`.
+- **VERIFICÉR DEPLOY:** DeskUptime-tjekket i heroen `ae08878a` 8/10 — tjek at
+  live `https://deskuptime.com/` og `https://deskuptime.com/da/` viser
+  URL-feltet (`#oc-check-form`) i heroen over folden, og at et tjek af
+  `example.com` giver et svar.
 
 ## Åbne opgaver
 
