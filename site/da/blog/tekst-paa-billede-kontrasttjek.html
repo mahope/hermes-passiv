@@ -35,6 +35,45 @@
       <a href="#hvordan" class="btn-secondary">Sådan virker det</a>
     </div>
     <p class="hero-note">Opdateret august 2026 &middot; 4 minutters læsning</p>
+    <div class="hero-demo" id="hero-demo" style="margin-top:32px;max-width:640px">
+      <div class="ti-card" style="padding:20px">
+        <div class="ti-row" style="flex-wrap:wrap">
+          <div class="ti-field" style="flex:1;min-width:200px">
+            <label for="hero-bgmode">Baggrund</label>
+            <select id="hero-bgmode" class="ti-input">
+              <option value="gradient" selected>En farveovergang</option>
+              <option value="image">Et billede</option>
+            </select>
+          </div>
+          <div class="ti-field" style="flex:1;min-width:200px">
+            <label for="hero-text">Tekst</label>
+            <input type="text" id="hero-text" class="ti-input" value="Din overskrift her">
+          </div>
+          <div class="ti-field" style="flex:1;min-width:200px">
+            <label for="hero-fg">Tekstfarve</label>
+            <input type="color" class="ti-color" id="hero-fg" value="#ffffff">
+          </div>
+        </div>
+        <div class="ti-row" id="hero-tigrad" style="margin-top:14px">
+          <div class="ti-field" style="flex:1;min-width:140px">
+            <label for="hero-gfrom">Fra</label>
+            <input type="color" class="ti-color" id="hero-gfrom" value="#1e3a5f">
+          </div>
+          <div class="ti-field" style="flex:1;min-width:140px">
+            <label for="hero-gto">Til</label>
+            <input type="color" class="ti-color" id="hero-gto" value="#c9d8e4">
+          </div>
+          <div class="ti-field" style="flex:1;min-width:140px">
+            <label for="hero-gang">Vinkel</label>
+            <input type="range" id="hero-gang" class="ti-input" min="0" max="360" step="15" value="45">
+          </div>
+        </div>
+        <div class="ti-canvas-wrap" style="margin-top:14px">
+          <canvas id="hero-cv" role="img" aria-label="Demo: tekst på farveovergang med kontrastmåling"></canvas>
+        </div>
+        <div id="hero-result" class="ti-result ti-fail" role="status" aria-live="polite" hidden></div>
+      </div>
+    </div>
   </div>
 </header>
 
@@ -209,6 +248,48 @@
 </div>
 </footer>
 <script src="/text-on-image-core.js"></script>
+<script>
+/* Hero-demo: en lille live-demo i heroen, så besøgende kan prøve værktøjet
+   med det samme uden at rulle ned. Samme kern som resten af siden. */
+(function () {
+  window.TiContrast.mount({
+    prefix: 'hero-',
+    strings: {
+      pass: 'BESTÅET', fail: 'IKKE BESTÅET',
+      worstCase: '(værste tilfælde bag din tekst)',
+      needs: 'kræver', forAA: 'for WCAG AA',
+      largeText: '(stor tekst)', normalText: '(normal tekst)',
+      aaNotAAA: 'Består AA men ikke AAA', alsoAAA: 'Består også AAA.',
+      tryFix: 'Prøv en mørkere/lysere tekstfarve.',
+      copyHex: 'Kopiér den målte tekstfarve',
+      copiedHex: 'Kopieret',
+      copyManual: 'Markeret — tryk Ctrl+C',
+      cssLabel: 'Sæt dette ind i din egen CSS:',
+      copyCss: 'Kopiér CSS’en',
+      copiedCss: 'CSS kopieret',
+      fixBtn: 'Fiks det — sæt tekstfarven for mig',
+      fixed: 'Jeg satte tekstfarven til %s og målte igen.',
+      fixedScrimDark: 'Jeg lagde et %s % mørkt lag bag teksten og målte igen.',
+      fixedScrimLight: 'Jeg lagde et %s % lyst lag bag teksten og målte igen.',
+      downloadBtn: 'Hent billedet',
+      markBtn: 'Hent med det dårligste sted markeret',
+      markTitle: 'Tegner en rød ramme om det pixel bag dine bogstaver, der koster mest kontrast',
+      findSpot: 'Find det bedste sted',
+      pick: 'Flyt denne tekst',
+      movedSpot: 'Jeg flyttede din tekst til det sted der læses bedst, hvor den måles til %s.',
+      delta: 'Før dette målte den %s. Nu måler den %s.',
+      keptSpot: 'Det her er allerede det bedste sted på billedet: %s.',
+      fileStem: 'hero-demo',
+      measured: 'Målt mod de lyseste og mørkeste billedpixels under dine bogstaver.',
+      demoNote: 'Demo — rul ned for at prøve det på dit eget billede.',
+      errNotImage: 'Vælg venligst en billedfil.',
+      errUnreadable: 'Kunne ikke læse den billedfil.',
+      proCard: '',
+      note: ''
+    }
+  });
+})();
+</script>
 <script>
 /* Tjekkeren i artiklen. Samme kern som `/text-on-image-checker-da` og den
    engelske udgave, så en rettelse i WCAG-formlen slår alle steder igennem på
