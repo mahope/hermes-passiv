@@ -78,12 +78,25 @@
          Samme mønster som på `/text-on-image-checker`, hvor dommen flyttede fra
          1739 px til 601 px. -->
     <form id="scanForm" class="scanbox">
-      <label for="url" class="scanbox-label">Sidens URL — én pr. linje, op til 5 sider</label>
-      <textarea id="url" name="url" rows="2" required
-             placeholder="https://din-hjemmeside.dk&#10;https://din-hjemmeside.dk/kontakt"
-             inputmode="url" spellcheck="false"></textarea>
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;flex-wrap:wrap">
+        <button type="button" id="modePages" class="btn-secondary" aria-pressed="true" style="padding:6px 14px;font-size:13px">Sider</button>
+        <button type="button" id="modeSitemap" class="btn-secondary" aria-pressed="false" style="padding:6px 14px;font-size:13px">Sitemap</button>
+      </div>
+      <div id="pagesMode">
+        <label for="url" class="scanbox-label">Sidens URL — én pr. linje, op til 5 sider</label>
+        <textarea id="url" name="url" rows="2" required
+               placeholder="https://din-hjemmeside.dk&#10;https://din-hjemmeside.dk/kontakt"
+               inputmode="url" spellcheck="false"></textarea>
+      </div>
+      <div id="sitemapMode" hidden>
+        <label for="sitemapUrl" class="scanbox-label">Sitemap-URL — vi læser den og scanner alle sider</label>
+        <input type="url" id="sitemapUrl" name="sitemapUrl"
+               placeholder="https://din-hjemmeside.dk/sitemap.xml"
+               inputmode="url" spellcheck="false"
+               style="width:100%;padding:12px 14px;border:1px solid var(--color-border);border-radius:8px;font-size:15px">
+      </div>
       <button type="submit" class="btn-primary">Scan nu</button>
-      <p class="scanbox-hint">Sæt en URL pr. linje for at se hvor et helt site står. Hver side får sin egen score, og du får de sider du navngiver — op til fem pr. kørsel. En licens læser siden igen på serveren, hvor den kan se de svarheadere din browser aldrig viser.</p>
+      <p class="scanbox-hint" id="scanHint">Sæt en URL pr. linje for at se hvor et helt site står. Hver side får sin egen score, og du får de sider du navngiver — op til fem pr. kørsel. En licens læser siden igen på serveren, hvor den kan se de svarheadere din browser aldrig viser.</p>
     </form>
   </div>
 </header>
@@ -538,6 +551,26 @@ function splitUrls(raw){
   });
   return settes;
 }
+// Sitemap-tilstand. To knapper skifter mellem «indsæt URL'er» og «indsæt en
+// sitemap». Samme formular, to indgange — så en læser der har en sitemap ikke
+// skal kopiere 20 URL'er ind i et textarea for at scanne sin egen side.
+let sitemapMode = false;
+function setSitemapMode(on){
+  sitemapMode = on;
+  const pages = document.getElementById('pagesMode');
+  const sitemap = document.getElementById('sitemapMode');
+  const hint = document.getElementById('scanHint');
+  const bPages = document.getElementById('modePages');
+  const bSitemap = document.getElementById('modeSitemap');
+  if(!pages||!sitemap||!bPages||!bSitemap)return;
+  pages.hidden = on; sitemap.hidden = !on;
+  bPages.setAttribute('aria-pressed', String(!on));
+  bSitemap.setAttribute('aria-pressed', String(on));
+  if(hint) hint.textContent = on
+    ? 'Indsæt din sitemap-URL — vi læser den og scanner alle sider den lister, op til 20. Én kørsel dækker et helt site.'
+    : 'Sæt en URL pr. linje for at se hvor et helt site står. Hver side får sin egen score, og du får de sider du navngiver — op til fem pr. kørsel. En licens læser siden igen på serveren, hvor den kan se de svarheadere din browser aldrig viser.';
+}
+window.setSitemapMode = setSitemapMode;
 // Ét kald ad gangen. `rateLimitIp` tæller **én** kvoteslot pr. side, så et
 // dobbeltklik på «Scan nu» med fem URL'er brænder ti af de 60 timer i timen —
 // og `revealResult` skriver det andet resultat oven i det første, så læseren
@@ -559,7 +592,6 @@ async function scan(raw){
   return scanILuft;
 }
 async function scanKør(raw){
-  const urls=splitUrls(raw);
   const out = document.getElementById('result');
   // Ingen `scan-failed` her: et tomt felt og for mange URL'er er **klientens**
   // egen forudsætning, ikke en fejl der fik serveren til at svare noget. Hændelsen
@@ -570,11 +602,38 @@ async function scanKør(raw){
       +'<p style="color:#667;font-size:14px">'+esc(msg)+'</p>';
     revealResult(out);
   };
+  // Sitemap-tilstand: én URL der er en sitemap, ikke en side.
+  if(sitemapMode){
+    const sitemapUrl = (document.getElementById('sitemapUrl')||{}).value||'';
+    const trimmed = sitemapUrl.trim();
+    if(!trimmed){ fejl('Indsæt din sitemap-URL i feltet ovenfor.'); return; }
+    if (window.trackEvent) window.trackEvent('scan');
+    out.innerHTML = '<p>Læser sitemap <code>'+esc(trimmed)+'</code> …</p>';
+    revealResult(out);
+    let data;
+    try {
+      const r = await fetch('/scan-proxy?sitemap='+encodeURIComponent(trimmed));
+      data = await r.json();
+      if (!data.ok) throw new Error(data.error || 'Proxy returnerede fejl');
+    } catch(e) {
+      if (window.trackEvent) window.trackEvent('scan-failed');
+      out.innerHTML = '<p><strong>Scan fejlede.</strong></p>'
+        +'<p style="color:#667;font-size:14px">'+esc(e.message)+'</p>'
+        +'<p style="font-size:13px;color:#667;margin-top:16px">'
+        +HINTTAIL;
+      revealResult(out);
+      return;
+    }
+    if(!data.multi){ fejl("Sitemappede returnerede kun én side — tilføj flere sider, eller indsæt URL'er direkte."); return; }
+    visFlere(data.pages||[], data.pages.map(p=>p.url).filter(Boolean));
+    return;
+  }
+  const urls=splitUrls(raw);
   if(!urls.length){ fejl('Sæt mindst én sidens URL i feltet ovenfor.'); return; }
   // Serveren svarer 400 med sin egen sætning, så her må vi kun sige fra
   // **før** den hænger på, og det er den eneste grund til at klienten kender
   // loftet: ellers ville den sende ni sider og få «Scan up to 5 pages» tilbage.
-  if(urls.length>MAX_URLS){ fejl('Du indsatte %d URL’er. Den gratis scanner læser 5 sider pr. kørsel — kør resten som en scanning til.'.replace('%d',urls.length)); return; }
+  if(urls.length>MAX_URLS){ fejl('Du indsatte %d URL\'er. Den gratis scanner læser 5 sider pr. kørsel — kør resten som en scanning til.'.replace('%d',urls.length)); return; }
   if (window.trackEvent) window.trackEvent('scan');
   out.innerHTML = urls.length>1
     ? 'Scanner %d sider: <code>%s</code> …'.replace('%d',urls.length).replace('%s',esc(urls.join('\n')))
@@ -590,7 +649,8 @@ async function scanKør(raw){
     out.innerHTML = '<p><strong>Scan fejlede.</strong></p>'
       +'<p style="color:#667;font-size:14px">'+esc(e.message)+'</p>'
       +'<p style="font-size:13px;color:#667;margin-top:16px">'
-      +HINTTAIL +    revealResult(out);
+      +HINTTAIL;
+      revealResult(out);
     return;
   }
 
@@ -696,8 +756,16 @@ function visFlere(pages, urls){
 }
 document.getElementById('scanForm').addEventListener('submit',e=>{
   e.preventDefault();
-  scan(document.getElementById('url').value.trim());
+  if(sitemapMode){
+    scan('');
+  } else {
+    scan(document.getElementById('url').value.trim());
+  }
 });
+const bPages = document.getElementById('modePages');
+const bSitemap = document.getElementById('modeSitemap');
+if(bPages) bPages.addEventListener('click',function(){setSitemapMode(false);});
+if(bSitemap) bSitemap.addEventListener('click',function(){setSitemapMode(true);});
 // `#url=` — fragmentet kan skrives i hånden, og `decodeURIComponent('%')`
 // kaster `URIError`. Uden `try` dør hele denne IIFE, så en note, et gammelt
 // bookmark eller et dobbeltkodet link giver læseren en tom side og en rød

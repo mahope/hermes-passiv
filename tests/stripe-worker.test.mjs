@@ -115,6 +115,11 @@ globalThis.fetch = async (url, opts = {}) => {
   // /cookie|consent|gdpr|cmp/ -tjek passerede, fordi ordet "cookie" stod i
   // href'en. Se de fire GDPR-fixtures nede for sig selv.
   if (url.startsWith('https://scan.example/')) { scanFetches++; return new Response('<html lang="en"><head><title>Test</title><script async src="https://www.googletagmanager.com/gtag/js?id=G-1"></script></head><body><form action="http://insecure.example/send"></form><footer><a href="/cookie-policy">Cookie policy</a></footer></body></html>', { status: 200, headers: { 'content-type': 'text/html; charset=utf-8' } }); }
+  // Sitemap-stubber. `sitemap.example/sitemap.xml` er en sitemap med to sider,
+  // `nonexistent.xml` giver 404, og `big-sitemap.xml` har 25 URL'er.
+  if (url.startsWith('https://sitemap.example/sitemap.xml')) return new Response('<?xml version="1.0" encoding="UTF-8"?><urlset><url><loc>https://scan.example/</loc></url><url><loc>https://to.example/</loc></url></urlset>', { status: 200, headers: { 'content-type': 'application/xml' } });
+  if (url.startsWith('https://sitemap.example/nonexistent.xml')) return new Response('Not Found', { status: 404 });
+  if (url.startsWith('https://sitemap.example/big-sitemap.xml')) { const urls = Array.from({length: 25}, (_, i) => `<url><loc>https://scan.example/page${i}</loc></url>`).join(''); return new Response(`<?xml version="1.0" encoding="UTF-8"?><urlset>${urls}</urlset>`, { status: 200, headers: { 'content-type': 'application/xml' } }); }
   // Et mål der sender sin egen `Content-Type` som markup. `/scan-proxy`
   // skrev den rå header ind i `error`, og den lander i `/scan`s resultatside —
   // så et fjendtligt site kunne skrive sit eget tag ind i mahope.tools' origin
@@ -995,6 +1000,36 @@ const tømFejle = TØM_NØGLE.map(([t]) => call('/scan-proxy?url=' + encodeURICo
 ok('scan-proxy: ingen af fejlene er tom eller "undefined"',
   (await Promise.all(tømFejle)).every(b => typeof b.error === 'string' && b.error.trim() && !/undefined/.test(b.error)),
   JSON.stringify(await Promise.all(tømFejle)).slice(0, 160));
+
+// ── Sitemap-scanning ────────────────────────────────────────────────
+// Et sitemap-kald henter en sitemap, udtrækker URL'er og scanner dem.
+// Det er den indgang bureauer bruger, og den skal derfor have egne tests.
+const sitemapGet = (sitemapUrl, init) => call('/scan-proxy?sitemap=' + encodeURIComponent(sitemapUrl), init);
+
+// En sitemap med to sider giver et multi-svar med begge sider.
+r = await sitemapGet('https://sitemap.example/sitemap.xml', ip(40));
+const sitemapBody = await r.json().catch(() => ({}));
+ok('sitemap: en sitemap med to sider giver multi-svar',
+  r.status === 200 && sitemapBody.ok === true && sitemapBody.multi === true && sitemapBody.scanned === 2,
+  `${r.status} ${JSON.stringify(sitemapBody).slice(0, 140)}`);
+
+// En sitemap der ikke findes giver en fejl, ikke en tom succes.
+r = await sitemapGet('https://sitemap.example/nonexistent.xml', ip(41));
+ok('sitemap: en sitemap der ikke findes giver en fejl',
+  r.status === 400 && /No page URLs/.test((await r.json().catch(() => ({}))).error || ''),
+  `${r.status}`);
+
+// En privat sitemap-vært afvises på samme måde som en privat side.
+r = await sitemapGet('http://192.168.1.10/sitemap.xml', ip(42));
+ok('sitemap: en privat sitemap-vært afvises',
+  r.status === 400 && /cannot be scanned/i.test((await r.json().catch(() => ({}))).error || ''),
+  `${r.status}`);
+
+// En sitemap med mange URL'er begrænses til SITEMAP_MAX_URLS.
+r = await sitemapGet('https://sitemap.example/big-sitemap.xml', ip(43));
+ok('sitemap: en sitemap med mange URL\'er begrænses',
+  r.status === 400 && /only the first/.test((await r.json().catch(() => ({}))).error || ''),
+  `${r.status}`);
 
 // ── /api/url-inspect var død på hvert eneste kald ────────────────────
 // Målt 30/9 på den live udgivelse: GET /api/url-inspect svarede 500 med

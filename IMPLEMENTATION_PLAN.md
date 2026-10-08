@@ -1,4 +1,9 @@
 # STATUS
+- **8/10:** feature 34 (sitemap-scanning) leveret på `ceo/sitemap-scan`:
+  `/scan` har nu en Pages/Sitemap-skifter i heroen (EN/DA). Sitemap-tilstanden
+  kalder `/scan-proxy?sitemap=`, som henter sitemappen (inkl. indeks-sitemapper
+  to niveauer dyb), afviser private værter via `targetIsPublic()` og scanner
+  op til 20 sider i én kørsel. Gate GRØN (519/519 worker-tests).
 - **8/10:** feature 36 (text-on-image-checker eksport) leveret på
   `ceo/text-on-image-export`: «Download the marked check»-knappen brænder nu
   dommen (PASS/FAIL + ratio) ind i det eksporterede billede, sammen med den
@@ -51,10 +56,12 @@ Ingen.
   `ceo/compliance-report-pricing-visible` — live `https://mahope.tools/compliance-report`
   (200) viser `#pricingSection` med «See pricing — EUComply Pro», «No licence
   yet?»-kortet og «Buy EUComply Pro — $79/year per website»-knappen.
-- **VERIFICÉR DEPLOY:** text-on-image-eksport `ceo/text-on-image-export` — tjek
-  at `https://mahope.tools/text-on-image-checker` og `-da` viser «Download the
-  marked check»/«Hent det markerede tjek»-knappen i resultatet, og at den
-  eksporterede PNG indeholder dommen (PASS/FAIL + ratio) og den røde ramme.
+- **VERIFICÉR DEPLOY OK 8/10:** text-on-image-eksport `ceo/text-on-image-export` —
+  live `https://mahope.tools/text-on-image-checker` viser «Download the marked
+  check» og `/text-on-image-checker-da` viser «Hent det markerede tjek».
+- **VERIFICÉR DEPLOY:** sitemap-scanning `ceo/sitemap-scan` — tjek at
+  `https://mahope.tools/scan` og `/da/scan` viser Pages/Sitemap-skifteren i
+  heroen, og at en sitemap-URL giver et multi-resultat med alle sider.
 
 ## Åbne opgaver
 
@@ -129,8 +136,9 @@ side; tallene er ikke vores egen trafik. Alt det leverede (1–32) står i
 
 34. **`/scan`: kør et helt sitemap i én scanning.** Hvem: bureauer der tjekker en
     kundes sider. Tal: scans (`health.scans=51`/uge) og konvertering til EUComply
-    Pro ($79). Accept: indsæt op til 5 URL'er, få ét samlet scorekort og én delt
+    Pro ($79). Accept: indsæt en sitemap-URL, få ét samlet scorekort og én delt
     rapport. Datagrund: flerside-tjekket findes kun bag Pro.
+    **LEVERET** `ceo/sitemap-scan`.
 
 36. **`/text-on-image-checker`: eksportér det markerede tjek som billede.** Hvem:
     de 6 besøgende på værktøjet (top-værktøjsside i ugerapporten). Tal:

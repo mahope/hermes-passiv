@@ -687,6 +687,11 @@ function safeContentType(value) {
 // loft er `CSC_MAX_PAGES = 12` pr. kald. `tools/check_scan_page_claims.py`
 // dømmer at de to tal ikke kan glide fra hinanden — eller fra klientens tekst.
 const SCAN_PROXY_MAX_URLS = 5;
+// Et sitemap-kald må læse flere sider end et manuelt kald, fordi bureauet ikke
+// selv har valgt dem en ad gangen — de kommer fra sidens egen sitemap. 20 sider
+// er nok til at dække de fleste kundesider, og stort nok til at en fejl ikke
+// tager hele kvoten.
+const SITEMAP_MAX_URLS = 20;
 // Ét kald må ikke hente fem sider hver med sin egen fulde timeout: runtime'en
 // dræber en arbejdsløs anmodning, og kunden ville få en 502 uden at vide hvor
 // langt den nåede. 25 s er rigeligt til fem sider der svarer normalt, og
@@ -694,6 +699,76 @@ const SCAN_PROXY_MAX_URLS = 5;
 // timeout runtime'en dræber under sig.
 const SCAN_PROXY_BATCH_MS = 25000;
 const SCAN_PROXY_ONE_MS = 10000;
+
+/**
+ * Hent en sitemap og udtræk alle side-URL'er. Følger sitemap-indekser
+ * (sitemap der peger på andre sitemaps) op til 2 niveau dyb, og afviser
+ * alt der ikke er en offentlig http(s)-adresse.
+ */
+async function fetchSitemapUrls(sitemapUrl, request, env) {
+  const parsed = parseTargetUrl(sitemapUrl);
+  if (!parsed) {
+    return { error: 'Invalid sitemap URL — pass a full http:// or https:// address.', status: 400 };
+  }
+  if (!targetIsPublic(parsed)) {
+    return { error: 'That host cannot be scanned. Only public websites can be scanned — local and private network addresses are not reachable from here.', status: 400 };
+  }
+  const limited = await rateLimitIp(request, env, 'scan-proxy', SCAN_PROXY_RATE_LIMIT);
+  if (limited) {
+    return { error: 'Too many scans this hour. Try again later.', status: 429 };
+  }
+  const allUrls = [];
+  const queue = [{ url: parsed.toString(), depth: 0 }];
+  const seen = new Set();
+  while (queue.length > 0 && allUrls.length < SITEMAP_MAX_URLS) {
+    const { url: currentUrl, depth } = queue.shift();
+    if (seen.has(currentUrl)) continue;
+    seen.add(currentUrl);
+    let response;
+    try {
+      const { response: res } = await followChecked(currentUrl, {
+        method: 'GET',
+        headers: {
+          'User-Agent': 'HermesPassiv-Scanner/1.0 (compliance scanner; +https://mahope.tools)',
+          'Accept': 'application/xml,text/xml,*/*',
+        },
+      });
+      response = res;
+    } catch (err) {
+      continue;
+    }
+    const text = await response.text();
+    const locRegex = /<loc>\s*([^<]+?)\s*<\/loc>/gi;
+    let match;
+    const childSitemaps = [];
+    while ((match = locRegex.exec(text)) !== null) {
+      const u = match[1].trim();
+      if (!u || !/^https?:\/\//i.test(u)) continue;
+      if (/\.xml($|\?)/i.test(u) || /sitemap/i.test(u)) {
+        if (depth < 2 && !seen.has(u)) childSitemaps.push(u);
+      } else {
+        allUrls.push(u);
+      }
+    }
+    for (const child of childSitemaps) queue.push({ url: child, depth: depth + 1 });
+  }
+  if (allUrls.length === 0) {
+    return { error: 'No page URLs found in the sitemap. Make sure it is a valid XML sitemap.', status: 400 };
+  }
+  const unique = [];
+  const seenUrls = new Set();
+  for (const u of allUrls) {
+    const key = cscNormalizeUrl(u) || u;
+    if (!seenUrls.has(key)) {
+      seenUrls.add(key);
+      unique.push(u);
+    }
+  }
+  if (unique.length > SITEMAP_MAX_URLS) {
+    return { error: `Sitemap has ${unique.length} pages — only the first ${SITEMAP_MAX_URLS} were scanned.`, status: 400, urls: unique.slice(0, SITEMAP_MAX_URLS) };
+  }
+  return { urls: unique };
+}
 
 /**
  * Læs én side. Samme fejlsvar som den gamle rute gav, pr. side, så et kald med
@@ -735,8 +810,6 @@ async function scanProxyReadPage(targetUrl, signal) {
  * virke. Flere URL'er svarer i `multi`-formen med én rapport pr. side.
  */
 async function handleScanProxy(request, url, env) {
-  const targetUrlParam = url.searchParams.get('url');
-
   const headers = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'GET, OPTIONS',
@@ -749,10 +822,24 @@ async function handleScanProxy(request, url, env) {
     return new Response(null, { status: 204, headers });
   }
 
+  let targetUrlParam = url.searchParams.get('url');
+
+  // Sitemap support: ?sitemap=<url> fetches the sitemap and scans all pages
+  const sitemapParam = url.searchParams.get('sitemap');
+  const isSitemap = !!sitemapParam;
+  const maxUrls = isSitemap ? SITEMAP_MAX_URLS : SCAN_PROXY_MAX_URLS;
+  if (sitemapParam) {
+    const sitemapResult = await fetchSitemapUrls(sitemapParam, request, env);
+    if (sitemapResult.error) {
+      return new Response(JSON.stringify({ ok: false, error: sitemapResult.error }), { status: sitemapResult.status || 400, headers });
+    }
+    targetUrlParam = sitemapResult.urls.join('\n');
+  }
+
   // Validate URL parameter
   if (!targetUrlParam) {
     return new Response(
-      JSON.stringify({ ok: false, error: 'Missing ?url= parameter' }),
+      JSON.stringify({ ok: false, error: 'Missing ?url= or ?sitemap= parameter' }),
       { status: 400, headers }
     );
   }
@@ -773,9 +860,9 @@ async function handleScanProxy(request, url, env) {
     const nøgle = cscNormalizeUrl(r);
     if (!settes.some(x => (cscNormalizeUrl(x) || x) === (nøgle || r))) settes.push(r);
   }
-  if (settes.length > SCAN_PROXY_MAX_URLS) {
+  if (settes.length > maxUrls) {
     return new Response(JSON.stringify({ ok: false,
-      error: 'Scan up to ' + SCAN_PROXY_MAX_URLS + ' pages at a time — you sent ' + settes.length + '. Run them in batches.' }),
+      error: 'Scan up to ' + maxUrls + ' pages at a time — you sent ' + settes.length + '. Run them in batches.' }),
       { status: 400, headers });
   }
 
