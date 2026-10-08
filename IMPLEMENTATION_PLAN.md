@@ -143,4 +143,5 @@ side; tallene er ikke vores egen trafik. Alt det leverede (1–32) står i
 37. **`/deskuptime`: vis Pro-forskellen i selve tjekresultatet.** Hvem: de 8
     besøgende/28 dage, der alle forlader forsiden (bounce 100%). Tal: bounce på
     `/` og konvertering til DeskUptime Pro ($19). Accept: resultatet viser hvad
-    online-overvågning tilføjer. Datagrund: Plausible 7/10.
+    online-overvågning tilføjer. Datagrund: Plausible 7/10. **LEVERET** JavaScript-iend
+    `site/one-off-check.js` og note i `site/deskuptime/index.html`.

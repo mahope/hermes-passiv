@@ -267,6 +267,16 @@
       if (row2.childNodes.length) card.appendChild(row2);
     }
 
+    // A page can declare a Pro note that appears in the check result,
+    // showing what DeskUptime Pro adds (continuous monitoring, webhooks,
+    // client-ready reports, unlimited sites). The note is placed after the
+    // verdict card and before any "next step" links.
+    if (window.ONE_OFF_CHECK_PRO) {
+      var proNote = el('div', 'oc-pro-note');
+      proNote.innerHTML = String(window.ONE_OFF_CHECK_PRO);
+      card.appendChild(proNote);
+    }
+
     // The donation line is declared by the page itself (see `OC_DONATE` in the
     // HTML) because `tools/check_donation_paths.py` judges the page file: the
     // href must be the one in the catalog, it must sit in a `<script>` so it

@@ -221,6 +221,9 @@ window.ONE_OFF_CHECK = {
   then: 'That was one check, just now. It says nothing about whether the site was down five minutes ago or will be down tomorrow, and it cannot tell that the page content changed. The CLI and the desktop app can.',
   next: [{label: 'Install the CLI', href: '#install'}, {label: 'See the desktop app', href: '#desktop'}]
 };</script>
+
+<script>/* What DeskUptime Pro adds, shown in the check result: */
+window.ONE_OFF_CHECK_PRO = 'Pro: Continuous monitoring every 30 seconds (free: every 60), webhook alerts when site goes down or SSL changes, client-ready reports in Markdown and JSON, unlimited sites (free: 3 machines).';</script>
 <script>/* The donation line lives in the page, not in one-off-check.js: it has to reach
   tools/check_donation_paths.py, which judges the page file, and it must not appear before
   the visitor has an answer. Same shape as /scan and /url-inspector: a sentence, never a
