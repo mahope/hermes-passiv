@@ -1,46 +1,25 @@
 # STATUS
-- **8/10:** feature 44 (DA blog hero-demo) leveret på `ceo/da-blog-hero-demo`:
-  den danske kontrast-artikel får nu samme live-demo i heroen som den
-  engelske (feature 43 leverede kun EN). Gate GRØN.
-- **8/10:** CI rød rettet på `ceo/fix-blog-hero-scan-test`: feature 43's
-  hero-demo brød scan-clients-testen (dobbelt mount på EN-bloggen). Regexet
-  kræver nu `prefix: 'art-'` eller `''`. 594/594. Gate GRØN.
-- **8/10:** tre features venter på 17:30-deployen (committeret efter 12:30):
-  score-simulator, sitemap-scan, blog hero-demo. Ikke DEPLOY-MISSING.
-- **8/10:** feature 43 (blog hero-demo) leveret på `ceo/blog-hero-demo`:
-  kontrast-bloggen har nu en live-demo i heroen, så besøgende kan prøve
-  værktøjet med det samme. Forventet at reducere bounce-rate (100% → lavere).
-  Gate GRØN.
-- **8/10:** feature 42 (compliance score-simulator) leveret på
-  `ceo/compliance-score-simulator`: rapporten viser nu en visuel score-bar
-  med «Nu» vs «Fixed» og beregner hvert fixs point-værdi (+12 pr. error,
-  +5 pr. warning). Giver brugeren en konkret handlingsplan og viser hvad
-  kostbar Pro-rapporten er værd. Gate GRØN.
-- **8/10:** CI rød rettet på `ceo/fix-scan-mutation-test`: `scan-clients.test.mjs`
-  muterede kun den første af to `esc(e.message)`-forekomster i `scan.html`/
-  `scan-da.html` (sitemap-stigen), mens testen kører pages-stigen. `replace` →
-  `replaceAll`. Testen verificeret: fejler på gammel kode, grøn efter fix.
-  Gate GRØN (build, seo_check, 519/519 worker-tests, check_inline_js 0).
-- **8/10:** feature 38 (eaa-scanner SARIF) leveret på `ceo/eaa-sarif`:
-  `eaa-scan --sarif` giver et SARIF 2.1.0-dokument med regler, fund og
-  side-URL'er til GitHub code scanning. Testet med self-test + SARIF-test.
-- **8/10:** feature 34 (sitemap-scanning) leveret på `ceo/sitemap-scan`:
-  `/scan` har nu en Pages/Sitemap-skifter i heroen (EN/DA). Sitemap-tilstanden
-  kalder `/scan-proxy?sitemap=`, som henter sitemappen (inkl. indeks-sitemapper
-  to niveauer dyb), afviser private værter via `targetIsPublic()` og scanner
-  op til 20 sider i én kørsel. Gate GRØN (519/519 worker-tests).
-- **8/10:** feature 36 (text-on-image-checker eksport) leveret på
-  `ceo/text-on-image-export`: «Download the marked check»-knappen brænder nu
-  dommen (PASS/FAIL + ratio) ind i det eksporterede billede, sammen med den
-  røde ramme om det dårligste sted. Begge sider (EN/DA) opdateret. Gate GRØN.
-- **8/10:** Verificeret tre åbne deploy-noter: GDPR-brudsgenerator (EN/DA 200,
-  72-timer vises, Generate report + paid-templates link), compliance-report
-  (#pricingSection synlig, No licence yet? + Buy EUComply Pro), gate-rettelsen
-  (CI grøn på main).
-- 0 åbne review-fund. Sentry: 0 uløste fejl (14 dage). 0 åbne PR'er.
-- **PR-TJEK 8/10:** 0 åbne PR'er. **BRANCH-TJEK:** ikke kørt denne iteration.
-- **CEO-kø #0** er færdig og merged; 0 åbent.
 
+- **8/10:** CI på `main` var rød i fem gate-steps, alle rettet på
+  `ceo/eaa-github-action`: `storage-claims`-selftesten ramte det forkerte
+  `rateLimitIp`-kald efter sitemap-featuren; `first-action` fandt to
+  primærknapper i DeskUptime-folden (købslinket er nu sekundært mod `#pro`);
+  `contrast-sampling` dømte artikel-demoens `mount()` som værktøj;
+  `catalog-where` havde forældede linjenumre; `scan-events` talte ét scan som
+  to. Gate grøn (alle steps).
+- **8/10:** feature 47 (GitHub Action for eaa-scanner) leveret: `action.yml`
+  scanner og uploader SARIF; CLI'en skriver nu rapporten før fail-on-dommen, og
+  `--fail-on never` afvises ikke længere. Testen dømmer action, workflow-skabelon
+  og salgsside og kører CLI'en for rigtigt.
+- **8/10:** `bugbottle.dev` er bevidst ude af deploy-matrixen igen — vores
+  7 ruter ville overskrive den rigtige produktside. Afventer Mads' ja (❓).
+- **8/10:** planens STATUS skåret til ≤25 linjer; historik i `docs/plan-arkiv.md`.
+- 0 åbne review-fund. Sentry: 0 uløste fejl (14 dage). 0 åbne PR'er.
+- **PR-TJEK 8/10:** 0 åbne PR'er. **BRANCH-TJEK:** ikke kørt.
+- **CEO-kø #0** er færdig og merged; 0 åbent.
+- **VERIFICÉR DEPLOY:** eaa-action `ceo/eaa-github-action` — tjek at
+  `https://mahope.tools/downloads` viser GitHub Action-skabelonen med
+  `--sarif` og `--fail-on`, og at siden stadig svarer 200.
 ## Åbne review-fund
 
 Ingen.
@@ -93,9 +72,6 @@ Ingen.
 - **VERIFICÉR DEPLOY:** sitemap-scanning `ceo/sitemap-scan` — tjek at
   `https://mahope.tools/scan` og `/da/scan` viser Pages/Sitemap-skifteren i
   heroen, og at en sitemap-URL giver et multi-resultat med alle sider.
-- **VERIFICÉR DEPLOY:** bugbottle.dev matrix `ceo/bugbottle-deploy` — tilføjet
-  bugbottle.domænet til deploy-sites.yml build-matrix, så siderne kan buildes
-  og deployes sammen med de andre fire produktsites.
 
 ## Åbne opgaver
 
@@ -104,9 +80,9 @@ Ingen.
    Accept: `GET /api/stats` med token svarer 200. *BLOCKED: Venter på Mads til
    STATS_TOKEN — uden token returnerer endpointet 401.*
 
-4. **`bugbottle.dev` deployes nu.** Kort: tilføjet `bugbottle.dev` til
-   `deploy-sites.yml`-matrixen (se commit). Siderne bygges og kan verificeres
-   live efter deploy-vindue. *(Løst i denne iteration.)*
+4. **`bugbottle.dev` er ude af deploy-matrixen igen.** Hvorfor: vores 7 ruter
+   ville overskrive den rigtige produktside (61 ruter) og gav tre røde porte.
+   Accept: Mads siger ja til at udgive vores landing. *(❓ Til Mads.)*
 
 6. **Bogen har ingen DA-udgave.** Hvorfor: de seks bøger er på engelsk, og der
    findes ingen `/da/books/*`-ruter, så bogsiders hreflang har intet dansk par.
@@ -131,9 +107,9 @@ Ingen.
   og kør `python3 tools/check_ai_cta_honesty.py --apply`.
 - **🔴 `STATS_TOKEN` på workeren.** Én secret, og så kan konvertering måles i
   stedet for gættes. Uden den er `/api/stats` 401.
-- **🟢 `bugbottle.dev` deployes nu.** Kort: tilføjet `bugbottle.dev` til
-  `deploy-sites.yml`-matrixen (se commit). Siderne bygges og kan verificeres
-  live efter deploy-vindue.
+- **🟡 `bugbottle.dev` er ikke med i deploy-matrixen.** Domænet serveres af den
+  rigtige produktside; vores 7-ruters landing ville overskrive den. Sig til,
+  hvis den skal med i stedet.
 - **🔴 To betalte desktop-apps kan ikke aktiveres.** De shippede binære
   (`transmute` v0.2.1, `deskuptime` desktop-v0.2.7) har Lemon Squeezy indbygget,
   og kilderne ligger i private repos, hvor du selv laver releases.

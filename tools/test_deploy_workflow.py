@@ -300,8 +300,8 @@ TRACKING_DOMAINS_RE = re.compile(
 # Domæner vi ikke selv deployer. Hvert indgang har en grund, fordi det er
 # grunden der skal overleve næste persons genlæsning — ikke navnet.
 #
-# Målt 27. september 2026: `bugbottle.dev` ligger i `TRACKING_DOMAINS`, men
-# deploy-matrixen deployer kun tre domæner, så `dist/bugbottle.dev/` bliver
+# Målt 27. september 2026: `bugbottle.dev` lå i `TRACKING_DOMAINS`, men
+# deploy-matrixen deployer kun tre domæner, så `dist/bugbottle.dev/` blev
 # bygget hver eneste kørsel og aldrig lagt noget sted. Domænet serveres i
 # virkeligheden af en nginx, ingen Cloudflare: `https://bugbottle.dev/track.js`
 # svarer 404, og `/build-info.json` svarer 404 fra nginx, mens de tre andre
@@ -312,13 +312,22 @@ TRACKING_DOMAINS_RE = re.compile(
 # `/api/health` svarede `traffic_status: partial` hver time, og **hvert
 # ugental i `reports/weekly/` var strukturelt manglende et helt domæne**. Et
 # måltal uden sit eget domæne er ikke et lille tab — det er et tal, der ser
-# komplet ud og ikke er det. Derfor ligger domænet her, synligt, i stedet for
-# at blive reddet væk i `TRACKING_DOMAINS` hvor ingen ville have fundet det.
+# komplet ud og ikke er det.
+# 8/10: domænet kom tilbage i matrixen af 4b9406a7, uden at undtagelsen her
+# blev fjernet. Følgen var tre røde porte (`article-paid-path` fandt en død
+# bekræftelse, en rute uden købsknap og to forsider uden købsknap — alle tre
+# fordi gaten pludselig troede domænet blev udgivet af os) og dermed rød CI.
+# Matrix-indgangen er derfor fjernet igen: den ville udgive vores syv ruter over
+# den rigtige produktside, og det er stadig en udgivelse i Mads' navn. Når han
+# siger ja, fjernes indgangen her og bekræftelsen i
+# `article_paid_path_published.json` — og marker det i PLANEN, så næste
+# iteration ikke står med den samme røde gate.
 UNMANAGED_DOMAINS: dict[str, str] = {
     "bugbottle.dev": (
-        "serveres af en nginx, ikke af Cloudflare Pages; deploy-matrixen "
-        "deployer den ikke, så den skal enten flyttes på Pages eller fjernes "
-        "fra TRACKING_DOMAINS — afklares med Mads, se ❓ i IMPLEMENTATION_PLAN.md"
+        "serveres af en anden udgivelse (den rigtige produktside, 61 ruter); "
+        "deploy-matrixen deployer den bevidst ikke, så vores 7 ruter ikke "
+        "overskriver den. Målt 30/9 og bekræftet 8/10 — afventer Mads' ja, se "
+        "❓ i IMPLEMENTATION_PLAN.md"
     ),
 }
 

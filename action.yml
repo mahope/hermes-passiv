@@ -1,0 +1,83 @@
+# eaa-scanner — GitHub Action for EAA / WCAG 2.1 AA checks
+#
+# One line in a workflow instead of a copied file:
+#
+#   jobs:
+#     scan:
+#       runs-on: ubuntu-latest
+#       permissions:
+#         security-events: write   # so findings can reach the Security tab
+#       steps:
+#         - uses: actions/checkout@v4
+#         - uses: mahope/hermes-passiv@main
+#           with:
+#             pages: "https://your-site.com https://your-site.com/pricing"
+#
+# Every finding lands in GitHub code scanning (Security tab) as SARIF 2.1.0, and
+# the job goes red when findings exist at or above `fail-on`. The report is
+# written before the verdict, so a failing run still fills the Security tab.
+
+name: "eaa-scanner"
+description: "Scan pages for EAA / WCAG 2.1 AA issues and post every finding to GitHub code scanning"
+branding:
+  icon: "check-circle"
+  color: "blue"
+
+inputs:
+  pages:
+    description: "Space-separated http(s) URLs to scan."
+    required: false
+    default: ""
+  paths:
+    description: "Space-separated local HTML files to scan."
+    required: false
+    default: ""
+  fail-on:
+    description: "Fail the job when findings exist at this severity: error, warning or never."
+    required: false
+    default: "warning"
+  tarball:
+    description: "Where the scanner is installed from."
+    required: false
+    default: "https://mahope.tools/downloads/mahope-eaa-scanner-1.2.0.tgz"
+  sarif-file:
+    description: "Where the SARIF 2.1.0 report is written."
+    required: false
+    default: "eaa-scan.sarif"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Install eaa-scanner (zero dependencies)
+      shell: bash
+      run: npm install --global "${{ inputs.tarball }}"
+
+    - name: Scan pages
+      id: scan
+      shell: bash
+      # Fortsætter ved fund, så rapporten altid skrives. Dommen kommer i det
+      # sidste step, når Security-taben allerede har fundene.
+      continue-on-error: true
+      run: |
+        set -euo pipefail
+        args=()
+        for url in ${{ inputs.pages }}; do args+=("$url"); done
+        for file in ${{ inputs.paths }}; do args+=("$file"); done
+        if [ "${#args[@]}" -eq 0 ]; then
+          echo "::error::eaa-scanner: set the 'pages' or 'paths' input - there is nothing to scan"
+          exit 1
+        fi
+        npx eaa-scan --fail-on "${{ inputs.fail-on }}" --sarif "${args[@]}" > "${{ inputs.sarif-file }}"
+
+    - name: Upload findings to code scanning
+      if: always()
+      uses: github/codeql-action/upload-sarif@v3
+      with:
+        sarif_file: ${{ inputs.sarif-file }}
+
+    - name: Fail on findings
+      if: steps.scan.outcome == 'failure'
+      shell: bash
+      run: |
+        echo "::error::eaa-scanner found issues at or above '${{ inputs.fail-on }}' - see the Security tab"
+        exit 1

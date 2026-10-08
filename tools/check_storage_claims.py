@@ -810,22 +810,29 @@ def self_test() -> int:
                 f"linker til noget gemmende — {problems[0]}"
             )
 
-    # 4. Ruten kommer fra koden: en `rateLimitIp(…, 'scan-proxy', …)` der
-    #    forsvinder fra `handleScanProxy` skal gøre siderne grønne igen.
-    #    Beviser at porten ikke har en håndskrevet ruteliste. Siderne vælges
-    #    blandt dem der *kun* kalder den rute, så mutationen ikke efterlader
-    #    dem med en anden gemmende kald — ellers ville de blive røde af en
-    #    grund der ikke var mutationen.
+    # 4. Ruten kommer fra koden: et `rateLimitIp(…, 'scan-proxy', …)` der
+    #    forsvinder fra workeren skal gøre siderne grønne igen. Beviser at
+    #    porten ikke har en håndskrevet ruteliste. Siderne vælges blandt dem
+    #    der *kun* kalder den rute, så mutationen ikke efterlader dem med en
+    #    anden gemmende kald — ellers ville de blive røde af en grund der ikke
+    #    var mutationen.
     kun = sorted(rel for rel, raw in pages.items()
                  if called_storing_routes(raw, routes) == ["/scan-proxy"])
     if not kun:
         failures.append("målingen: ingen side kalder kun /scan-proxy")
     worker = worker_text()
-    mutated_worker = worker.replace(
-        "rateLimitIp(request, env, 'scan-proxy', SCAN_PROXY_RATE_LIMIT)", "null", 1
+    # **Alle** kald med det scope fjernes, ikke det første. Feature 34
+    # (sitemap-scan, 8/10) gav workeren et andet
+    # `rateLimitIp(request, env, 'scan-proxy', …)` i `fetchSitemapUrls`, og
+    # mutationen ramte kun det første: ruten var stadig gemmende bagefter, ikke
+    # fordi porten læste en håndskrevet liste, men fordi halvdelen af kravet
+    # stod tilbage. Portens påstand er at ruten findes i koden — så at fjerne
+    # påstanden er at fjerne alle dets kald. Målt 8/10: to forekomster.
+    mutated_worker = re.sub(
+        r"rateLimitIp\(request, env, 'scan-proxy', SCAN_PROXY_RATE_LIMIT\)", "null", worker
     )
     if mutated_worker == worker:
-        failures.append("mutationsanker: rateLimitIp-kaldet i handleScanProxy blev ikke fundet")
+        failures.append("mutationsanker: rateLimitIp-kaldet med 'scan-proxy' blev ikke fundet")
     else:
         without = storing_routes(mutated_worker)
         if "/scan-proxy" in without:

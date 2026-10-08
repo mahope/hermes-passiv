@@ -611,55 +611,60 @@ async function scanKør(raw){
       +'<p style="color:#667;font-size:14px">'+esc(msg)+'</p>';
     revealResult(out);
   };
-  // Sitemap-tilstand: én URL der er en sitemap, ikke en side.
-  if(sitemapMode){
-    const sitemapUrl = (document.getElementById('sitemapUrl')||{}).value||'';
-    const trimmed = sitemapUrl.trim();
-    if(!trimmed){ fejl('Paste your sitemap URL above.'); return; }
-    if (window.trackEvent) window.trackEvent('scan');
-    out.innerHTML = '<p>Reading sitemap <code>'+esc(trimmed)+'</code> …</p>';
-    revealResult(out);
-    let data;
-    try {
-      const r = await fetch('/scan-proxy?sitemap='+encodeURIComponent(trimmed));
-      data = await r.json();
-      if (!data.ok) throw new Error(data.error || 'Proxy returned error');
-    } catch(e) {
-      if (window.trackEvent) window.trackEvent('scan-failed');
-      out.innerHTML = '<p><strong>Scan failed.</strong></p>'
-        +'<p style="color:#667;font-size:14px">'+esc(e.message)+'</p>'
-        +'<p style="font-size:13px;color:#667;margin-top:16px">'
-        +HINTTAIL;
-      revealResult(out);
-      return;
-    }
-    if(!data.multi){ fejl('The sitemap returned only one page — add more pages to it, or paste URLs directly.'); return; }
-    visFlere(data.pages||[], data.pages.map(p=>p.url).filter(Boolean));
-    return;
-  }
-  const urls=splitUrls(raw);
-  if(!urls.length){ fejl('Paste at least one page URL above.'); return; }
-  // Serveren svarer 400 med sin egen sætning, så her må vi kun sige fra
-  // **før** den hænger på, og det er den eneste grund til at klienten kender
-  // loftet: ellers ville den sende ni sider og få «Scan up to 5 pages» tilbage.
-  if(urls.length>MAX_URLS){ fejl('You pasted %d URLs. This free scanner reads 5 pages per run — run the rest as a second scan.'.replace('%d',urls.length)); return; }
-  if (window.trackEvent) window.trackEvent('scan');
-  out.innerHTML = urls.length>1
-    ? 'Scanning %d pages: <code>%s</code> …'.replace('%d',urls.length).replace('%s',esc(urls.join('\n')))
-    : '<p>Scanning <code>'+esc(urls[0])+'</code> …</p>';
-  revealResult(out);
-  let data;
-  try {
-    const r = await fetch('/scan-proxy?url='+encodeURIComponent(urls.join('\n')));
-    data = await r.json();
-    if (!data.ok) throw new Error(data.error || 'Proxy returned error');
-  } catch(e) {
+  // Ét scan-forsøg er ét forsøg, uanset om det er en side-URL eller en sitemap.
+  // Begge veje deler derfor **ét** `scan`- og **ét** `scan-failed`-kald, så
+  // tragten ikke tælles dobbelt — porten `check_scan_events` dømmer netop at
+  // hver fil sender hver begivenhed præcis én gang.
+  const scanFejl = function(e){
     if (window.trackEvent) window.trackEvent('scan-failed');
     out.innerHTML = '<p><strong>Scan failed.</strong></p>'
       +'<p style="color:#667;font-size:14px">'+esc(e.message)+'</p>'
       +'<p style="font-size:13px;color:#667;margin-top:16px">'
       +HINTTAIL;
     revealResult(out);
+  };
+  // Validér først: et tomt felt eller for mange URL'er er klientens egen
+  // forudsætning og tæller ikke som et forsøg.
+  let sitemapUrl = '';
+  let urls = null;
+  if(sitemapMode){
+    sitemapUrl = ((document.getElementById('sitemapUrl')||{}).value||'').trim();
+    if(!sitemapUrl){ fejl('Paste your sitemap URL above.'); return; }
+  } else {
+    urls = splitUrls(raw);
+    if(!urls.length){ fejl('Paste at least one page URL above.'); return; }
+    // Serveren svarer 400 med sin egen sætning, så her må vi kun sige fra
+    // **før** den hænger på, og det er den eneste grund til at klienten kender
+    // loftet: ellers ville den sende ni sider og få «Scan up to 5 pages» tilbage.
+    if(urls.length>MAX_URLS){ fejl('You pasted %d URLs. This free scanner reads 5 pages per run — run the rest as a second scan.'.replace('%d',urls.length)); return; }
+  }
+  if (window.trackEvent) window.trackEvent('scan');
+  let data;
+  if(sitemapMode){
+    out.innerHTML = '<p>Reading sitemap <code>'+esc(sitemapUrl)+'</code> …</p>';
+    revealResult(out);
+    try {
+      const r = await fetch('/scan-proxy?sitemap='+encodeURIComponent(sitemapUrl));
+      data = await r.json();
+      if (!data.ok) throw new Error(data.error || 'Proxy returned error');
+    } catch(e) {
+      scanFejl(e);
+      return;
+    }
+    if(!data.multi){ fejl('The sitemap returned only one page — add more pages to it, or paste URLs directly.'); return; }
+    visFlere(data.pages||[], data.pages.map(p=>p.url).filter(Boolean));
+    return;
+  }
+  out.innerHTML = urls.length>1
+    ? 'Scanning %d pages: <code>%s</code> …'.replace('%d',urls.length).replace('%s',esc(urls.join('\n')))
+    : '<p>Scanning <code>'+esc(urls[0])+'</code> …</p>';
+  revealResult(out);
+  try {
+    const r = await fetch('/scan-proxy?url='+encodeURIComponent(urls.join('\n')));
+    data = await r.json();
+    if (!data.ok) throw new Error(data.error || 'Proxy returned error');
+  } catch(e) {
+    scanFejl(e);
     return;
   }
 

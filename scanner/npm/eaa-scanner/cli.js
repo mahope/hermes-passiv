@@ -29,7 +29,7 @@ const RULE_DESCRIPTIONS = {
 };
 
 function usage() {
-  console.error(`Usage: eaa-scan <url-or-file>... [--json] [--sarif] [--fail-on error|warning] [--crawl N]
+  console.error(`Usage: eaa-scan <url-or-file>... [--json] [--sarif] [--fail-on error|warning|never] [--crawl N]
 
 Scan web pages or HTML files for EAA / WCAG 2.1 AA issues.
 Works on any CMS — no plugins, no server access.
@@ -41,7 +41,6 @@ Examples:
   eaa-scan https://example.com --crawl 15           # crawl up to 15 pages, site report
   eaa-scan https://example.com --sarif              # SARIF 2.1.0 for GitHub code scanning`);
 }
-
 async function main() {
   const args = process.argv.slice(2);
   const json = args.includes('--json');
@@ -50,8 +49,13 @@ async function main() {
   let failOn = null;
   if (failIdx !== -1) {
     failOn = args[failIdx + 1];
-    if (!['error', 'warning'].includes(failOn)) {
-      console.error('--fail-on must be "error" or "warning"'); process.exit(2);
+    // `never` er dokumenteret i det workflow vi sender ud til kunderne
+    // (`FAIL_ON warning | error | never`), men CLI'en afviste det med exit 2 —
+    // en indstilling der ser gyldig ud og fejler med det samme. Den betyder
+    // "rapportér, men døm ikke", hvilket er præcis hvad SARIF-kørsler i CI vil
+    // have: fundene skal i Security-taben, jobbet skal ikke være rødt.
+    if (!['error', 'warning', 'never'].includes(failOn)) {
+      console.error('--fail-on must be "error", "warning" or "never"'); process.exit(2);
     }
     args.splice(failIdx, 2);
   }
@@ -134,11 +138,15 @@ async function main() {
         });
       }
     }
+    // En side der ikke kunne hentes er en fejl i begge udgaver — også når
+    // rapporten skal være SARIF, hvor konsol-linjen er skjult. Uden denne
+    // linje forlod `--sarif`-kørslen med 0 på en URL den aldrig nåede.
+    if (!rep.ok) exitCode = 2;
     if (json) { console.log(JSON.stringify(rep, null, 2)); continue; }
     if (sarif) continue;
     if (!rep.ok) {
       console.log(`✖ ${t}: ERROR ${rep.error}`);
-      exitCode = 2; continue;
+      continue;
     }
     console.log(`\n${t}`);
     console.log(`  Score: ${rep.score}/100 (${rep.grade}) — ${rep.summary.errors} errors, ${rep.summary.warnings} warnings, ${rep.summary.notices} notices`);
@@ -148,14 +156,24 @@ async function main() {
       for (const ex of f.examples.slice(0, 3)) console.log(`      e.g. ${ex}`);
     }
   }
-  if (!failOn && exitCode === 0) {
-    // non-CI default: exit 1 only on scan failures
+  // En side der ikke kunne hentes er et fund, ikke en mangel på fund: uden
+  // denne linje står en død URL i Security-taben som "ingen resultater", og et
+  // CI-job der ikke kunne nå kundens vigtigste side ser grønt ud.
+  if (sarif) {
+    for (const r of reports) {
+      if (r.ok) continue;
+      sarifRules.set('SCAN_ERROR', 'The page could not be fetched or parsed');
+      sarifResults.push({
+        ruleId: 'SCAN_ERROR',
+        level: 'error',
+        message: { text: `Could not scan ${r.target}: ${r.error || 'unknown error'}` },
+        locations: [{ physicalLocation: { artifactLocation: { uri: String(r.target) } } }],
+      });
+    }
   }
-  if (failOn) {
-    const bad = reports.some(r => r.ok &&
-      (r.summary.errors > 0 || (failOn === 'warning' && r.summary.warnings > 0)));
-    if (bad || reports.some(r => !r.ok)) process.exit(1);
-  }
+  // Rapporten skrives FØR dømmen. Modsatte rækkefølge (dom først) betød, at en
+  // CI-kørsel med fund forlod jobbet uden at skrive SARIF'et — altså præcis de
+  // kørsler hvor Security-taben har mest brug for at se fundene.
   if (sarif) {
     const sarifDoc = {
       '$schema': 'https://raw.githubusercontent.com/oasis-tcs/sarif-spec/master/Schemata/sarif-schema-2.1.0.json',
@@ -175,6 +193,11 @@ async function main() {
       }],
     };
     console.log(JSON.stringify(sarifDoc, null, 2));
+  }
+  if (failOn && failOn !== 'never') {
+    const bad = reports.some(r => r.ok &&
+      (r.summary.errors > 0 || (failOn === 'warning' && r.summary.warnings > 0)));
+    if (bad || reports.some(r => !r.ok)) process.exit(1);
   }
   process.exit(exitCode);
 }

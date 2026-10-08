@@ -127,6 +127,15 @@
     <code>.github/workflows/eaa-scan.yml</code>, and edit the page list:</p>
     <code><a href="/downloads/eaa-scan-github-action.yml" download>eaa-scan-github-action.yml</a> &mdash; fails the build on errors or warnings (<code>--fail-on</code>)</code>
     <p style="font-size:13px;color:var(--color-text-muted);margin-top:8px">Runs on every push, pull request and a weekly schedule. The template also ships an optional <strong>crawl-audit</strong> job that runs <code>eaa-scan --crawl 25</code> for a whole-site report (average score + most frequent issue types) without failing the build.</p>
+    <h3>Or use the action — one line instead of a file</h3>
+    <p>Every finding is written as SARIF 2.1.0 and uploaded to GitHub code
+    scanning, so it shows up in the repository&rsquo;s Security tab and in the
+    pull request that caused it &mdash; no runner configuration beyond
+    <code>security-events: write</code>:</p>
+    <code>- uses: mahope/hermes-passiv@main<br>&nbsp;&nbsp;with:<br>&nbsp;&nbsp;&nbsp;&nbsp;pages: "https://your-site.com https://your-site.com/pricing"<br>&nbsp;&nbsp;&nbsp;&nbsp;fail-on: warning&nbsp;&nbsp;# error | warning | never</code>
+    <p style="font-size:13px;color:var(--color-text-muted);margin-top:8px">The report is written before the verdict, so a run that fails on findings
+    still fills the Security tab. Prefer a file you can read? The template above
+    contains the same steps, spelled out.</p>
   </section>
 
   <section class="dl-card">
@@ -143,7 +152,7 @@
 
   <section class="dl-card">
     <h2>Quick start</h2>
-    <code>eaa-scan https://your-site.com<br>eaa-scan --json https://your-site.com &gt; report.json<br>eaa-scan https://your-site.com --crawl 15&nbsp;&nbsp;# whole-site audit (average score + issue ranking)<br>eaa-scan --fail-on warning https://your-site.com&nbsp;&nbsp;# CI mode: non-zero exit on warnings</code>
+    <code>eaa-scan https://your-site.com<br>eaa-scan --json https://your-site.com &gt; report.json<br>eaa-scan https://your-site.com --crawl 15&nbsp;&nbsp;# whole-site audit (average score + issue ranking)<br>eaa-scan --fail-on warning https://your-site.com&nbsp;&nbsp;# CI mode: non-zero exit on warnings<br>eaa-scan --sarif https://your-site.com &gt; eaa-scan.sarif&nbsp;&nbsp;# SARIF 2.1.0 for GitHub code scanning</code>
     <p>Exit code is <strong>0</strong> when clean and <strong>1</strong> when findings exist at
     the chosen severity, so it drops straight into CI pipelines.</p>
   </section>

@@ -5,6 +5,9 @@
 # from its published tarball and runs with --fail-on warning, so the job
 # fails when findings exist at that severity or above.
 #
+# Every finding is also written as SARIF and uploaded to GitHub code
+# scanning, so it shows up in the Security tab and in pull requests.
+#
 # Options:
 #   PAGES   space-separated list of URLs to scan (default below)
 #   FAIL_ON warning | error | never   (default: warning)
@@ -18,6 +21,9 @@ on:
   schedule:
     - cron: "0 6 * * 1" # weekly, Mondays 06:00 UTC
   workflow_dispatch:
+
+permissions:
+  security-events: write   # upload-sarif needs it; nothing else is granted
 
 jobs:
   scan:
@@ -38,6 +44,20 @@ jobs:
             echo "::endgroup::"
           done
           exit ${FAILED:-0}
+
+      # `never` her: jobbet har allerede dømt ovenfor. Denne kørsel skriver
+      # rapporten, og den skrives også når kørslen ovenfor er gået i stykker.
+      - name: SARIF report for code scanning
+        if: always()
+        run: |
+          set -- $PAGES
+          npx eaa-scan --fail-on never --sarif "$@" > eaa-scan.sarif
+
+      - name: Upload findings to the Security tab
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: eaa-scan.sarif
 
       - name: Summary
         if: always()

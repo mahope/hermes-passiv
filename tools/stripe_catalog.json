@@ -2205,7 +2205,7 @@
         },
         {
           "id": "basics",
-          "where": "site/scan.html:478-481 «DOC_TITLE», «HTML_LANG», «VIEWPORT» og «HEADING_H1» lægges direkte i fundlisten, ingen af dem kræver en nøgle",
+          "where": "site/scan.html:491-494 «DOC_TITLE», «HTML_LANG», «VIEWPORT» og «HEADING_H1» lægges direkte i fundlisten, ingen af dem kræver en nøgle",
           "labels": {
             "en": [
               "Page title, language attribute, viewport and h1 checked too"
@@ -2216,7 +2216,7 @@
       "pro_features": [
         {
           "id": "crawl",
-          "where": "site/scan.html:419 «It reads the page from the server too» — påstanden står i kortet; om den er sand afgør `tools/check_scan_page_claims.py`, der tæller `cscFetch(`-kaldene i `handleReport`",
+          "where": "site/scan.html:432 «It reads the page from the server too» — påstanden står i kortet; om den er sand afgør `tools/check_scan_page_claims.py`, der tæller `cscFetch(`-kaldene i `handleReport`",
           "labels": {
             "en": [
               "It reads the page from the server too — response headers included, which a browser check cannot see"
@@ -2228,7 +2228,7 @@
         },
         {
           "id": "server-checks",
-          "where": "site/scan.html:419 «18 server-side GDPR, cookie, security and metadata checks» — de 18 fund-typer kommer fra `reportProFindings(page.html, page.headers)` i `_worker.js`, som ogsa ser svarheaderne",
+          "where": "site/scan.html:432 «18 server-side GDPR, cookie, security and metadata checks» — de 18 fund-typer kommer fra `reportProFindings(page.html, page.headers)` i `_worker.js`, som ogsa ser svarheaderne",
           "labels": {
             "en": [
               "18 server-side GDPR, cookie, security and metadata checks"
@@ -2240,7 +2240,7 @@
         },
         {
           "id": "pdf",
-          "where": "site/scan.html:146-148 «The report itself is free and needs no licence. A EUComply Pro licence unlocks the PDF download»",
+          "where": "site/scan.html:159-161 «The report itself is free and needs no licence. A EUComply Pro licence unlocks the PDF download»",
           "labels": {
             "en": [
               "The findings as a PDF report you can hand a client"
@@ -2271,7 +2271,7 @@
         },
         {
           "id": "basics",
-          "where": "site/scan-da.html:469-472 «DOC_TITLE», «HTML_LANG», «VIEWPORT» og «HEADING_H1» lægges direkte i fundlisten, ingen af dem kræver en nøgle",
+          "where": "site/scan-da.html:482-485 «DOC_TITLE», «HTML_LANG», «VIEWPORT» og «HEADING_H1» lægges direkte i fundlisten, ingen af dem kræver en nøgle",
           "labels": {
             "da": [
               "Sides titel, sprogattribut, viewport og h1 tjekket med"
@@ -2282,7 +2282,7 @@
       "pro_features": [
         {
           "id": "crawl",
-          "where": "site/scan-da.html:401 «Den læser siden fra serveren også» — påstanden står i kortet; om den er sand afgør `tools/check_scan_page_claims.py`, der tæller `cscFetch(`-kaldene i `handleReport`",
+          "where": "site/scan-da.html:414 «Den læser siden fra serveren også» — påstanden står i kortet; om den er sand afgør `tools/check_scan_page_claims.py`, der tæller `cscFetch(`-kaldene i `handleReport`",
           "labels": {
             "en": [
               "It reads the page from the server too — response headers included, which a browser check cannot see"
@@ -2294,7 +2294,7 @@
         },
         {
           "id": "server-checks",
-          "where": "site/scan-da.html:401 «18 server-side GDPR-, cookie-, sikkerheds- og metatjek» — de 18 fund-typer kommer fra `reportProFindings(page.html, page.headers)` i `_worker.js`, som ogsa ser svarheaderne",
+          "where": "site/scan-da.html:414 «18 server-side GDPR-, cookie-, sikkerheds- og metatjek» — de 18 fund-typer kommer fra `reportProFindings(page.html, page.headers)` i `_worker.js`, som ogsa ser svarheaderne",
           "labels": {
             "en": [
               "18 server-side GDPR, cookie, security and metadata checks"
@@ -2306,7 +2306,7 @@
         },
         {
           "id": "pdf",
-          "where": "site/scan-da.html:143-145 «En licens til EUComply Pro låser PDF-download»",
+          "where": "site/scan-da.html:156-157 «En licens til EUComply Pro låser PDF-download»",
           "labels": {
             "en": [
               "The findings as a PDF report you can hand a client"

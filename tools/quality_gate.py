@@ -2187,6 +2187,35 @@ STEPS: tuple[Step, ...] = (
         argv=("python3", "tools/check_ai_cta_honesty.py", "--self-test"),
         inputs=("tools/check_ai_cta_honesty.py", "tools/ai_cta.json"),
     ),
+    # Opgave 47 (8/10): udviklere installerer scanneren allerede selv i CI
+    # (91 npm-downloads/uge), men der var ingen action — kunden kopierede et
+    # workflow fra /downloads. Handlen afslørede desuden to reelle CLI-fejl:
+    # `--sarif` skriv rapporten EFTER fail-on-dommen (en rød CI-kørsel efterlod
+    # en tom Security-tab), og `--fail-on never`, som shippede workflow
+    # dokumenterer, blev afvist med exit 2. Testen dømmer action.yml, workflow-
+    # skabelonen og salgssiden, kører CLI'en for rigtigt, og er rød på tre
+    # mutationer — derfor separate steps: kørslen uden mutationerne skal ikke
+    # kunne reddes ved at slette mutationerne.
+    Step(
+        id="eaa-action",
+        argv=("node", "tests/eaa-action.test.mjs"),
+        inputs=(
+            "tests/eaa-action.test.mjs",
+            "action.yml",
+            "site/downloads/eaa-scan-github-action.yml",
+            "site/downloads.html",
+            "scanner/npm/eaa-scanner/cli.js",
+            "scanner/npm/eaa-scanner/index.js",
+        ),
+    ),
+    Step(
+        id="eaa-action-selftest",
+        argv=("node", "tests/eaa-action.test.mjs", "--self-test"),
+        inputs=(
+            "tests/eaa-action.test.mjs",
+            "scanner/npm/eaa-scanner/cli.js",
+        ),
+    ),
 )
 
 

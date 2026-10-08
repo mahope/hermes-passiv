@@ -146,7 +146,7 @@ KERNE = SITE / "text-on-image-core.js"
 ID_RE = re.compile(r'<[^>]*\bid="([^"]+)"')
 
 
-def felter_i(html: str) -> dict:
+def felter_i(html: str, præfiks: str | None = None) -> dict:
     """De felter **denne sides markup** har, som `{"art-gfrom": "#1e3a5f"}`.
 
     Kernen slår sidens eget præfiks på hvert id (`mount({prefix: 'art-'})`),
@@ -160,6 +160,12 @@ def felter_i(html: str) -> dict:
     målevilkår porten har valgt — ikke noget markup'en siger — så de er de
     samme på alle fire sider, og de domme der er tunet på dem fortsætter med at
     gælde.
+
+    `præfiks` filtrerer til én mount'ets felter. Feature 43/44 (8/10) gav de to
+    artikler en hero-demo med præfikset `hero-` ved siden af den eksisterende
+    `art-`-demo, og en port der læste alle felter på én side dømte heroens
+    markup i artikelens navne: to mount-kald, to præfiks, én dom. Siden 8/10
+    returnerer `felter_i` kun den pågældende montages egne felter.
     """
     fund: dict = {}
     for rå in ID_RE.findall(html):
@@ -168,17 +174,26 @@ def felter_i(html: str) -> dict:
         # hvert id, så det skal væk for at finde startværdien.
         for navn, værdi in FELTVAERDIER.items():
             if rå == navn or rå.endswith("-" + navn):
+                if præfiks is not None:
+                    if præfiks:
+                        if not rå.startswith(præfiks):
+                            break
+                    elif "-" in rå:
+                        break
                 fund[rå] = værdi
                 break
     return fund
 
 
-def hent_kode(fil: str, html: str | None = None) -> str:
-    """Kernen + sidens egen `mount()`-kald, eller en fejl der siger hvorfor ikke.
+def hent_kode(fil: str, html: str | None = None, kode: str | None = None) -> str:
+    """Kernen + sidens eget `mount()`-kald, eller en fejl der siger hvorfor ikke.
 
     `html` giver en mutation mulighed for at køre en *ændret* side (en der
     mangler et felt) uden at røre filen på disk — ellers kunne selftesten
     ikke vise, at porten kan se den fejl, den er skrevet til.
+
+    `kode` vælger hvilket mount-kald der skal med. En side med to dem (hero +
+    artikel) har to montager at dømme, og hver skal køres med sine egne felter.
     """
     if not KERNE.is_file():
         raise SystemExit(
@@ -200,7 +215,9 @@ def hent_kode(fil: str, html: str | None = None) -> str:
         raise SystemExit(
             f"FEJL: {fil} indlæser ikke /text-on-image-core.js. Uden den kalder "
             "siden mount() på en global der aldrig findes.")
-    return kerne + "\n\n" + sidekode(fil, html)
+    if kode is None:
+        kode = sidekode(fil, html)
+    return kerne + "\n\n" + kode
 
 
 def sidekode(fil: str, html: str | None = None) -> str:
@@ -221,6 +238,24 @@ def sidekode(fil: str, html: str | None = None) -> str:
     raise SystemExit(
         f"FEJL: {fil} har ingen inline-<script> der kalder TiContrast.mount(). "
         "Er værktøjet flyttet, eller kalder siden kernen på en anden måde?")
+
+
+def sidekoder(fil: str, html: str | None = None) -> list[str]:
+    """Alle sidens `TiContrast.mount()`-kald, ikke bare det første.
+
+    Feature 43/44 (8/10) lagde en live-demo i heroen på de to artikler, så en
+    side nu kan have to montager med hvert sit præfiks. En port der kun læste
+    det første kald dømte heroen i artikelens navne (eller omvendt) — og den
+    anden montage slet ikke. Derfor returneres dem alle, i rækkefølge.
+    """
+    if html is None:
+        html = (SITE / fil).read_text(encoding="utf-8")
+    kald = [m.group(1) for m in IIFE_RE.finditer(html) if "TiContrast.mount" in m.group(1)]
+    if not kald:
+        raise SystemExit(
+            f"FEJL: {fil} har ingen inline-<script> der kalder TiContrast.mount(). "
+            "Er værktøjet flyttet, eller kalder siden kernen på en anden måde?")
+    return kald
 
 
 # --------------------------------------------------------------------------
@@ -2200,7 +2235,7 @@ def dom_gradient_markup(fil: str, html: str, præfiks: str) -> list[str]:
     # dødt for bruteren, og grønt for en dom der læser felterne i sin egen
     # opskrift. Derfor dømmes de to imod hinanden — og målingen i harnessen
     # bruger *markup'ens* præfiks, fordi det er dem bruteren har.
-    i_markup = præfiks_fra(felter_i(html))
+    i_markup = præfiks_fra(felter_i(html, præfiks))
     if i_markup != præfiks:
         fund.append(f"{fil}: `mount()` sætter prefix {præfiks!r}, men felterne i "
                     f"markup'en hedder {i_markup!r}* — kernen spørger om "
@@ -3010,15 +3045,34 @@ def self_test() -> int:
     # 15: **gradient-ruten på artiklerne.** Feature-kø punkt 4 lagde den på de
     # to værktøjssider 3/10; artiklerne indlejrer samme kerne og får den derfor
     # kørt i harnessen *på deres egne felter* (`koer(…, felter=felter_i())`).
-    # Beviset er tre mutationer i den rigtige markup — en for hver fejlform:
+    # Beviset er tre mutationer i den rigtige markup — en for hver fejlform.
+    # Siden 43/44 har artiklen to montager (heroen `hero-` og tjekkeren
+    # `art-`), så dommen går igennem dem alle: markup'en dømmes pr. montage,
+    # og målingen køres for dem der har et upload-felt — det er de bruteren
+    # sender et billede gennem.
     ART = ARTIKLER[0]
     art_html = (SITE / ART).read_text(encoding="utf-8")
-    art_kode = hent_kode(ART)
-    tjek("artiklen har gradient-ruten i markup'en",
-         dom_gradient_markup(ART, art_html, præfiks_i(sidekode(ART))) == [],
-         "; ".join(dom_gradient_markup(ART, art_html,
-                                       præfiks_i(sidekode(ART)))))
-    art_grad = koer(art_kode, hele=True, felter=felter_i(art_html)).get("gradient")
+    montager = [(præfiks_i(kode), kode) for kode in sidekoder(ART, art_html)]
+    for præfiks, kode in montager:
+        tjek(f"artiklen har gradient-ruten i markup'en ({præfiks or 'ingen'} præfiks)",
+             dom_gradient_markup(ART, art_html, præfiks) == [],
+             "; ".join(dom_gradient_markup(ART, art_html, præfiks)))
+    # Feltets *tilstedeværelse*, ikke dets værdi: et upload-felt har ingen
+    # value-attribut i markup'en, så `felter_i` giver det en tom streng. En
+    # dom der spurgte efter en sand værdi frasorterede netop den montage, der
+    # sender et billede gennem kernen, og selftesten døde på `med_upload[0]`.
+    med_upload = [(p, k) for p, k in montager if p + "file" in felter_i(art_html, p)]
+    if not med_upload:
+        fejl.append("målingen: ingen montage på artiklen har et upload-felt "
+                    "— porten har ikke den montage at dømme, mutationerne rammer")
+    art_præfiks, art_kode = med_upload[0]
+    # Hvilken montage det er i rækkeføkken, så en mutation kan dømmes på den
+    # montages egne kode: mutationen «mount() taber felt-præfikset» ændrer
+    # netop mount-kaldet, og en dom der altid læste det gamle præfiks ville
+    # være grøn over en side der har mistet det.
+    art_nr = next(i for i, (_p, k) in enumerate(montager) if k is art_kode)
+    art_grad = koer(hent_kode(ART, art_html, art_kode), hele=True,
+                    felter=felter_i(art_html, art_præfiks)).get("gradient")
     tjek("gradient-dommen er grøn på artiklen", dom_gradient(art_grad) == [],
          "; ".join(dom_gradient(art_grad)))
 
@@ -3026,7 +3080,8 @@ def self_test() -> int:
         tjek(f"mutationen findes i markup'en: {navn}", gammel in art_html,
              repr(gammel[:60]))
         html = art_html.replace(gammel, ny, 1)
-        fund_markup = dom_gradient_markup(ART, html, præfiks_i(sidekode(ART, html)))
+        fund_markup = dom_gradient_markup(ART, html,
+                                         præfiks_i(sidekoder(ART, html)[art_nr]))
         tjek(f"mutationen gør markup-dommen rød: {navn}", bool(fund_markup),
              str(fund_markup)[:300])
         if not adfærd:
@@ -3035,8 +3090,8 @@ def self_test() -> int:
         # står i markup'en, men kernen ikke kan finde — fordi dommen så læste
         # et *felt den selv har lavet* i stedet for det bruteren har.
         fund_adfærd = dom_gradient(
-            koer(hent_kode(ART, html), hele=True,
-                 felter=felter_i(html)).get("gradient"))
+            koer(hent_kode(ART, html, art_kode), hele=True,
+                 felter=felter_i(html, art_præfiks)).get("gradient"))
         tjek(f"mutationen gør målingen rød: {navn}", bool(fund_adfærd),
              str(fund_adfærd)[:300])
 
@@ -3174,13 +3229,27 @@ def main(argv: list[str] | None = None) -> int:
     # `koer()` nu bygger harnessen af sidens *egne* felter: en artikel hvor
     # `art-gfrom` ikke findes i markup'en får en tom stub, gradienten males
     # sort, og dommen går rød på en side der lover bruteren en gradient.
+    # Hvert mount-kald dømmes for sig, med sine egne felter: siden 43/44 har
+    # artiklerne en hero-montage ved siden af deres egen, og en samlet dom
+    # ville dømme den ene montages felter i den andens navne.
     for fil in ARTIKLER:
         html = (SITE / fil).read_text(encoding="utf-8")
-        kode = hent_kode(fil)
-        grad = koer(kode, hele=True, felter=felter_i(html)).get("gradient")
-        antal += 4
-        for linje in dom_gradient(grad):
-            fund.append(f"{fil}: {linje}")
+        for kode in sidekoder(fil, html):
+            præfiks = præfiks_i(kode)
+            felter = felter_i(html, præfiks)
+            if felter.get(præfiks + "file") is None:
+                # Hero-demoen (feature 43/44) har intet upload-felt: bruteren
+                # vælger baggrund og farve, men sender intet billede. De fire
+                # måle-løfter stilles via et upload, så de tælles ikke for
+                # denne montage — den dømmes på sin markup i kæden nedenfor.
+                # En måling uden billede ville dømme en egenskab, bruteren ikke
+                # kan få styrket.
+                continue
+            grad = koer(hent_kode(fil, html, kode), hele=True,
+                        felter=felter).get("gradient")
+            antal += 4
+            for linje in dom_gradient(grad):
+                fund.append(f"{fil} ({præfiks or 'ingen'} præfiks): {linje}")
 
     # Ratchet på den tekst kernen *skriver til læseren*. `suggestFix()`
     # prøver slør i begge retninger og vælger den mindste dækning, så på et
@@ -3230,12 +3299,15 @@ def main(argv: list[str] | None = None) -> int:
         # tekst der kun findes på værktøjssiden er en halv rettelse.
         antal += 2
         fund.extend(dom_knapetekst(fil, html))
-        # Gradient-rutens *markup* dømmes på alle fire. Kernen slår præfikset fra
-        # sidens eget `mount()`-kald på hvert id, så porten læser præfikset der
-        # — ellers ville den dømme artiklens felter i værktøjssidens navne og være
-        # grøn på en artikel, hvis gradientfelt kernen aldrig finder.
-        antal += 9   # fem felter + gradientmulighed + fire labels + præfiks
-        fund.extend(dom_gradient_markup(fil, html, præfiks_i(sidekode(fil))))
+        # Gradient-rutens *markup* dømmes på alle fire, én gang pr. mount-kald.
+        # Kernen slår præfikset fra sidens eget `mount()`-kald på hvert id, så
+        # porten læser præfikset der — ellers ville den dømme artiklens felter i
+        # værktøjssidens navne og være grøn på en artikel, hvis gradientfelt
+        # kernen aldrig kan finde.
+        for kode in sidekoder(fil, html):
+            præfiks = præfiks_i(kode)
+            antal += 9   # fem felter + gradientmulighed + fire labels + præfiks
+            fund.extend(dom_gradient_markup(fil, html, præfiks))
 
     if args.list:
         for linje in fund:

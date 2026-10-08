@@ -283,6 +283,12 @@ on:
       - 'tools/test_weekly_report.py'
       - 'tools/test_deploy_workflow.py'
       - 'tests/stripe-worker.test.mjs'
+      # Gatestrækket `eaa-action` dømmer `action.yml`, workflow-skabelonen og
+      # salgssiden, og kører CLI'en for rigtigt. Ude af filteret kunne en push,
+      # der kun laver actionen om — altså præcis den push der ændrer på hvad
+      # 91 udviklere/uge installerer i deres CI — springe gaten over.
+      - 'action.yml'
+      - 'tests/eaa-action.test.mjs'
       # Gatestrækket `stripe-worker-ur` kører samme suite under et ur der
       # springer en time pr. kald, så tællertestene ikke kan blive afhængige
       # af klokken igen. Uden denne linje ville kun rettelsen i
@@ -373,8 +379,11 @@ jobs:
             project: deskuptime
           - domain: mahope.tools
             project: mahope-tools
-          - domain: bugbottle.dev
-            project: bugbottle
+          # `bugbottle.dev` er bevidst ikke her. Se UNMANAGED_DOMAINS i
+          # `tools/test_deploy_workflow.py`: det domæne serveres af en anden
+          # udgivelse (den rigtige produktside, 61 ruter), så vores
+          # `bugbottle-landing/` (7 ruter) ville overskrive den. Det er en
+          # udgivelse i Mads' navn og afventer hans ja.
     concurrency:
       group: pages-${{ matrix.project }}
       cancel-in-progress: false
