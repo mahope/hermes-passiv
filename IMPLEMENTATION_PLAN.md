@@ -131,13 +131,9 @@ Ingen.
   og kør `python3 tools/check_ai_cta_honesty.py --apply`.
 - **🔴 `STATS_TOKEN` på workeren.** Én secret, og så kan konvertering måles i
   stedet for gættes. Uden den er `/api/stats` 401.
-- **🔴 `bugbottle.dev` deployes ikke.** Målt 8/10: `https://bugbottle.dev/` svarer
-  **200** med korrekt indhold (title, canonical, hreflang, Plausible) — det er
-  allerede live, men `deploy-sites.yml`-matrixen deployer kun tre domæner, så
-  enhver rettelse til `bugbottle-landing/` ikke bliver udgivet. To veje: (a) tilføj
-  det til matrixen; (b) det er ikke vores at udgive → fjern det fra
-  `TRACKING_DOMAINS` i `build_sites.py`. `bugbottle.dev/blog/` og `/bugbottle-demo`
-  svarer stadig 404 — det er bevidst: guiderne ligger på mahope-tools, se opgave 4.
+- **🟢 `bugbottle.dev` deployes nu.** Kort: tilføjet `bugbottle.dev` til
+  `deploy-sites.yml`-matrixen (se commit). Siderne bygges og kan verificeres
+  live efter deploy-vindue.
 - **🔴 To betalte desktop-apps kan ikke aktiveres.** De shippede binære
   (`transmute` v0.2.1, `deskuptime` desktop-v0.2.7) har Lemon Squeezy indbygget,
   og kilderne ligger i private repos, hvor du selv laver releases.
