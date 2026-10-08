@@ -1,4 +1,22 @@
 # STATUS
+- **STATUS: KOE-TOM 8/10.** Ingen åbne opgaver, ingen åbne PR'er, ingen rød CI
+  (seneste: `Giv free-tools-siderne en værktøjskatalog i folden` 3m23s, grøn).
+  CEO-kø #0 er verificeret i koden (se nedenfor). Alle 6 åbne opgaver er enten
+  færdige eller blokerede på Mads (❓). Næste skridt: vent på Mads' beslutninger
+  (OPENROUTER_API_KEY, STATS_TOKEN, bugbottle.dev, desktop-apps, e-bog-bundle).
+- **CEO-kø #0 verificeret i koden 8/10:** `handleUrlInspect(request, url, env)` har
+  nu `env` (line 4303), `rateLimitIp(request, env, …)` giver ikke 500/1101. Live
+  `curl https://deskuptime.com/api/url-inspect?url=https://example.com` → **200**,
+  `https://mahope.tools/api/url-inspect` → **200**. `thanks.html` viser
+  `pendingOut` (202) i stedet for "your payment went through" (line 103/393).
+  429 er endelig i `net.js:42` (`err.limited`, ingen retry) og i thanks.html:393.
+  502-retry i `handleUrlInspect` tæller ikke kvote op (én genkald, line 4355).
+  `targetIsPublic()` (line 1800) afviser IPv4-mappede IPv6 (`::ffff:…`) og kører på
+  hvert redirect-hop (line 1882). Ingen åbent.
+- **BugBottle er live 8/10:** `https://bugbottle.dev/` svarer **200** med korrekt
+  indhold (title, canonical, hreflang). `bugbottle.dev/blog/` og `/bugbottle-demo`
+  svarer stadig 404 — det er en bevidst aftale (guidene ligger på mahope.tools),
+  se planens opgave 4.
 - **CI grøn igen 8/10:** `check_first_action.py` så ikke `<button type="submit">` i en
   hero-formular; rettet i `ceo/first-action-form-hero` (selftest 35/35). Feature 29
   (`text-on-image-share.js`) mangler fortsat at være live — se VERIFICÉR DEPLOY.
@@ -46,6 +64,11 @@ Ingen.
 - **VERIFICÉR DEPLOY:** free-tools-katalog `ceo/free-tools-hero-catalog` — tjek
   at `https://mahope.tools/free-tools` og `https://mahope.tools/da/free-tools`
   viser katalogen med 7 kategorier i folden, og at «Alle værktøjer» ruller til den.
+- **VERIFICÉR DEPLOY OK 8/10:** free-tools-katalog `ceo/free-tools-hero-catalog` —
+  live `https://mahope.tools/free-tools` og `/da/free-tools` viser kataloget med
+  7 kategorier i folden (EN: `#catalog-heading` "Tools by category", DA:
+  "Værktøjer efter kategori"), og «Alle værktøjer» / «All tools» ruller til den.
+  Gate grøn.
 
 ## Åbne opgaver
 
@@ -80,9 +103,13 @@ Ingen.
   og kør `python3 tools/check_ai_cta_honesty.py --apply`.
 - **🔴 `STATS_TOKEN` på workeren.** Én secret, og så kan konvertering måles i
   stedet for gættes. Uden den er `/api/stats` 401.
-- **🔴 `bugbottle.dev` ligger på en server, vi ikke deployer.** Live svarer 404
-  fra `nginx`. To veje: (a) på Cloudflare Pages → jeg tilføjer det til matrixen;
-  (b) ikke vores at udgive → det ud af `TRACKING_DOMAINS`.
+- **🔴 `bugbottle.dev` deployes ikke.** Målt 8/10: `https://bugbottle.dev/` svarer
+  **200** med korrekt indhold (title, canonical, hreflang, Plausible) — det er
+  allerede live, men `deploy-sites.yml`-matrixen deployer kun tre domæner, så
+  enhver rettelse til `bugbottle-landing/` ikke bliver udgivet. To veje: (a) tilføj
+  det til matrixen; (b) det er ikke vores at udgive → fjern det fra
+  `TRACKING_DOMAINS` i `build_sites.py`. `bugbottle.dev/blog/` og `/bugbottle-demo`
+  svarer stadig 404 — det er bevidst: guiderne ligger på mahope-tools, se opgave 4.
 - **🔴 To betalte desktop-apps kan ikke aktiveres.** De shippede binære
   (`transmute` v0.2.1, `deskuptime` desktop-v0.2.7) har Lemon Squeezy indbygget,
   og kilderne ligger i private repos, hvor du selv laver releases.
@@ -134,3 +161,14 @@ side; tallene er ikke vores egen trafik. Alt det leverede (1–26) står i
     foldens eneste primære er `#gdpr-heading`.
     **LEVERET** `69ec807e` — heroen matcher forsiden (tre knapper), katalog
     med 7 kategorier vises i folden, ratchet opdateret til `#catalog-heading`.
+
+32. **`/compliance-report`: giv den en `$79`-knap i heroen.** Hvem: de besøgende der
+    kommer til den eneste side med EUComply Pro-årsabonnementet (1 checkout-klik
+    i uge 41, den eneste af alle fire domæner). Tal: `reports/weekly/2026-41.json`,
+    `checkout.pages` — kun `/compliance-report` har et købstal. Accept: heroen har
+    én primær `btn-primary`-knap der linker til
+    `https://buy.stripe.com/eVq00i4YH6UG69g0ObbMQ03`, og `check_first_action.py`
+    viser siden grøn. Datagrund: portens egen `handlinger()` målt 8/10 — foldens
+    eneste primære handling er en `btn` (ikke `btn-primary`), og Pro-kortet står
+    under folden. **IKKE STARTET** — afventer Mads' go (ny Stripe-link kræver
+    godkendelse, jf. kontraktens "ingen udadvendte handlinger").
