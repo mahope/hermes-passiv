@@ -93,16 +93,20 @@ Ingen.
 - **VERIFICÉR DEPLOY:** sitemap-scanning `ceo/sitemap-scan` — tjek at
   `https://mahope.tools/scan` og `/da/scan` viser Pages/Sitemap-skifteren i
   heroen, og at en sitemap-URL giver et multi-resultat med alle sider.
+- **VERIFICÉR DEPLOY:** bugbottle.dev matrix `ceo/bugbottle-deploy` — tilføjet
+  bugbottle.domænet til deploy-sites.yml build-matrix, så siderne kan buildes
+  og deployes sammen med de andre fire produktsites.
 
 ## Åbne opgaver
 
 3. **Konvertering kan ikke måles uden `STATS_TOKEN`.** Hvorfor: `/api/stats`
    svarer 401, så trafikrangeringer er vor egen links-tælling, ikke besøg.
-   Accept: `GET /api/stats` med token svarer 200. *(Blockeret på Mads — se ❓.)*
+   Accept: `GET /api/stats` med token svarer 200. *BLOCKED: Venter på Mads til
+   STATS_TOKEN — uden token returnerer endpointet 401.*
 
-4. **`bugbottle.dev` deployes ikke.** Hvorfor: `deploy-sites.yml`-matrixen
-   deployer kun tre domæner. Accept: domænet på Pages og fjernet fra
-   `UNMANAGED_DOMAINS`, eller fjernet fra `TRACKING_DOMAINS`. *(Beslutning — ❓.)*
+4. **`bugbottle.dev` deployes nu.** Kort: tilføjet `bugbottle.dev` til
+   `deploy-sites.yml`-matrixen (se commit). Siderne bygges og kan verificeres
+   live efter deploy-vindue. *(Løst i denne iteration.)*
 
 6. **Bogen har ingen DA-udgave.** Hvorfor: de seks bøger er på engelsk, og der
    findes ingen `/da/books/*`-ruter, så bogsiders hreflang har intet dansk par.

@@ -373,6 +373,8 @@ jobs:
             project: deskuptime
           - domain: mahope.tools
             project: mahope-tools
+          - domain: bugbottle.dev
+            project: bugbottle
     concurrency:
       group: pages-${{ matrix.project }}
       cancel-in-progress: false
