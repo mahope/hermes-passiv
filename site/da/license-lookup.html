@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Find din licensnøgle | Mahope-værktøjer</title>
+  <meta name="description" content="Har du mistet licensnøglen til Clean Copy Pro, DeskUptime Pro eller et andet Mahope-værktøj? Find den selv med din ordrehenvisning og e-mail — ingen ventetid på support.">
+  <meta property="og:title" content="Find din licensnøgle">
+  <meta property="og:description" content="Find din Mahope-værktøj-licensnøgle selv, med din ordrehenvisning og den e-mail du betalte med.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://mahope.tools/da/license-lookup">
+  <link rel="canonical" href="https://mahope.tools/da/license-lookup">
+  <link rel="alternate" hreflang="en" href="https://mahope.tools/license-lookup">
+  <link rel="alternate" hreflang="da" href="https://mahope.tools/da/license-lookup">
+  <link rel="alternate" hreflang="x-default" href="https://mahope.tools/license-lookup">
+  <link rel="stylesheet" href="/style.css">
+  <style>
+    .lookup-wrap { max-width: 620px; margin: 0 auto; padding: 2rem 1rem; }
+    .lookup-card {
+      background: var(--color-surface-2, #f8fafc);
+      border: 1px solid var(--color-border);
+      border-radius: 12px;
+      padding: 1.4rem 1.6rem;
+      margin-top: 1.5rem;
+    }
+    .lookup-card ol { padding-left: 1.2rem; margin: 0; }
+    .lookup-card li { margin: 0.6rem 0; }
+    .hint { color: var(--color-text-muted); font-size: 0.9rem; }
+    .lookup-form { display: grid; gap: 0.9rem; margin-top: 1.4rem; }
+    .lookup-form label { font-weight: 600; display: block; margin-bottom: 0.3rem; }
+    .lookup-form input {
+      width: 100%; padding: 0.65rem 0.75rem; font-size: 1rem;
+      border: 1px solid var(--color-border); border-radius: 8px;
+      background: var(--color-surface); color: var(--color-text);
+      min-height: 44px;
+    }
+    .lookup-form input:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
+    .lookup-form .btn-primary, .lookup-form .btn-secondary { justify-self: start; min-height: 44px; }
+    .lookup-status { margin: 1rem 0 0; }
+    .lookup-status[data-state="error"] { color: #b42318; }
+    .key-box {
+      font: 1rem/1.4 ui-monospace, SFMono-Regular, Menlo, monospace;
+      background: var(--color-surface-2); border: 1px solid var(--color-border);
+      border-radius: 8px; padding: 0.8rem 0.9rem; overflow-wrap: anywhere;
+    }
+    .key-actions { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-top: 0.9rem; }
+    .seat-list { list-style: none; margin: 1rem 0 0; padding: 0; display: grid; gap: 0.7rem; }
+    .seat-list li {
+      margin: 0; padding: 0.8rem 0.9rem; border: 1px solid var(--color-border);
+      border-radius: 8px; background: var(--color-surface);
+      display: flex; flex-wrap: wrap; gap: 0.6rem 1rem; align-items: center; justify-content: space-between;
+    }
+    .seat-meta { min-width: 0; }
+    .seat-meta code { font-size: 0.85rem; overflow-wrap: anywhere; }
+    .seat-when { display: block; }
+    .seat-list button { min-height: 44px; }
+  </style>
+</head>
+<body>
+  <main class="lookup-wrap">
+    <h1>Find din licensnøgle</h1>
+    <p>Ethvert køb af et Mahope-værktøj (Clean Copy Pro, DeskUptime Pro, Page Profile Pro,
+    Transmute Desktop, EUComply Pro) kommer med en licensnøgle. Du får den to steder
+    lige efter købet:</p>
+
+    <h2>Find den selv</h2>
+    <p>Din nøgle er gemt på din ordre. Indtast ordrehenvisningen fra din Stripe-kvittering
+    og den e-mailadresse du betalte med, så kommer nøglen tilbage med det samme —
+    der er intet at vente på og ingen at skrive til.</p>
+    <form class="lookup-form" id="lookupForm" novalidate>
+      <div>
+        <label for="orderId">Ordrehenvisning</label>
+        <input id="orderId" name="order_id" type="text" inputmode="text"
+               autocomplete="off" spellcheck="false" required
+               placeholder="cs_live_a1B2c3D4e5F6g7H8"
+               aria-describedby="orderIdHelp">
+        <p class="hint" id="orderIdHelp">Begynder med <code>cs_</code>. Den står på
+        <em>Ordrehenvisning</em>-linjen i din Mahope-kvitteringsmail og i linket på din
+        takkeside. Kopier hele den, inklusive <code>cs_</code>-delen.</p>
+      </div>
+      <div>
+        <label for="lookupEmail">E-mail du betalte med</label>
+        <input id="lookupEmail" name="email" type="email" autocomplete="email"
+               spellcheck="false" required placeholder="dig@virksomhed.dk">
+      </div>
+      <button type="submit" class="btn-primary" id="lookupBtn">Vis min licensnøgle</button>
+      <p class="lookup-status hint" id="lookupStatus" role="status" aria-live="polite"></p>
+    </form>
+    <div id="lookupResult" hidden></div>
+
+    <div class="lookup-card">
+      <h2>Hvor nøglen normalt står</h2>
+      <ol>
+        <li><strong>Din ordremail.</strong> Søg i din indbakke efter mail fra
+        <code>orders@mahoje.dk</code>. Den indeholder nøglen og et link til aktiveringsguiden.
+        Intet der? Tjek spam- eller kampagnemappen.</li>
+        <li><strong>Takkesiden.</strong> Efter betaling lander du på en side der viser
+        nøglen. Hvis du beholdt den fane eller gemte den som bogmærke, står nøglen stadig der.</li>
+        <li><strong>Stripe-kvitteringen.</strong> Den mail Stripe sender har din
+        ordrehenvisning øverst — det er det første felt ovenfor.</li>
+        <li><strong>Stadig intet?</strong> Skriv til
+        <a href="mailto:support@mahope.tools"><strong>support@mahope.tools</strong></a>
+        med den e-mailadresse du betalte med (og Stripe-kvitteringen hvis du har den).</li>
+      </ol>
+    </div>
+
+    <h2>Frigør en maskine</h2>
+    <p>Din nøgle virker på et fast antal maskiner —
+    <span class="seat-limit" data-seat-product="clean-copy-pro">5 på Clean Copy Pro</span>,
+    <span class="seat-limit" data-seat-product="deskuptime-pro">3 på DeskUptime Pro</span>,
+    <span class="seat-limit" data-seat-product="transmute-desktop">3 på Transmute Desktop</span>,
+    <span class="seat-limit" data-seat-product="page-profile-pro">3 på Page Profile Pro</span>,
+    og <span class="seat-limit" data-seat-product="eucomply-pro">1 pr. website på EUComply Pro</span>.
+    Hvis du får «Device limit reached» på en ny computer, skal nøglen frigøre en
+    maskine du ikke længere bruger. Det kan du gøre her, uden at vente på svar.</p>
+    <form class="lookup-form" id="seatForm" novalidate>
+      <div>
+        <label for="seatKey">Licensnøgle</label>
+        <input id="seatKey" name="license_key" type="text" inputmode="text"
+               autocomplete="off" spellcheck="false" required
+               placeholder="32 tegn, a–f og 0–9"
+               aria-describedby="seatKeyHelp">
+        <p class="hint" id="seatKeyHelp">Den 32-tegns nøgle fra din kvitteringsmail.
+        Det er hele nøglen — kopier den hele.</p>
+      </div>
+      <button type="submit" class="btn-secondary" id="seatListBtn">Vis maskinerne på denne nøgle</button>
+      <p class="lookup-status hint" id="seatStatus" role="status" aria-live="polite"></p>
+    </form>
+    <ul class="seat-list" id="seatList" hidden></ul>
+
+    <p class="hint" style="margin-top:1.2rem;">En maskine der stadig er i brug fortsætter med at virke
+    efter du frigør en anden. Hvis du frigør den maskine du er på lige nu,
+    aktiverer den sig selv igen næste gang du åbner appen.</p>
+
+    <p style="margin-top:1.5rem;">
+      Har du allerede din nøgle? <a href="/clean-copy-tool#pro-activate-details">Aktivér Clean Copy Pro her →</a>
+    </p>
+  </main>
+<script>
+(function () {
+  var form = document.getElementById('lookupForm');
+  var btn = document.getElementById('lookupBtn');
+  var statusEl = document.getElementById('lookupStatus');
+  var out = document.getElementById('lookupResult');
+  var seatForm = document.getElementById('seatForm');
+  var seatBtn = document.getElementById('seatListBtn');
+  var seatStatus = document.getElementById('seatStatus');
+  var seatList = document.getElementById('seatList');
+  var seatKey = document.getElementById('seatKey');
+  if (!form && !seatForm) return;
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+  function say(msg, state) {
+    statusEl.textContent = msg;
+    statusEl.setAttribute('data-state', state);
+    out.hidden = true;
+    out.innerHTML = '';
+  }
+  function seatSay(msg, state) {
+    seatStatus.textContent = msg;
+    if (state) seatStatus.setAttribute('data-state', state);
+    else seatStatus.removeAttribute('data-state');
+  }
+  function svarSætning(x, fallback) {
+    var e = x.data && typeof x.data.error === 'string' ? x.data.error : '';
+    if (x.status === 429) {
+      if (!e) return 'For mange forsøg. Prøv igen senere.';
+      return /prøv igen senere/i.test(e)
+        ? e + ' Grænsen nulstilles når klokken skifter.'
+        : e + ' Prøv igen senere — grænsen nulstilles når klokken skifter.';
+    }
+    if (x.status >= 500) return 'Vi kunne ikke nå licensserveren. Genindlæs siden om et minut.';
+    return e || fallback;
+  }
+  function hent(url, payload) {
+    return fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    }).then(function (r) {
+      return r.json().catch(function () { return {}; }).then(function (d) {
+        return { status: r.status, data: d };
+      });
+    });
+  }
+  var DATO = new Intl.DateTimeFormat('da-DK', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/Copenhagen' });
+  function dato(iso) {
+    if (!iso) return null;
+    var d = new Date(iso);
+    return isNaN(d.getTime()) ? null : DATO.format(d);
+  }
+  function rydSeat() {
+    seatList.innerHTML = '';
+    seatList.hidden = true;
+  }
+  form.addEventListener('submit', function (ev) {
+    ev.preventDefault();
+    var orderId = document.getElementById('orderId').value.trim();
+    var email = document.getElementById('lookupEmail').value.trim();
+    if (!orderId || !email) {
+      say('Udfyld begge felter.', 'error');
+      return;
+    }
+    btn.disabled = true;
+    statusEl.removeAttribute('data-state');
+    statusEl.textContent = 'Leder efter din ordre…';
+    hent('/api/license/lookup', { order_id: orderId, email: email }).then(function (x) {
+      btn.disabled = false;
+      if (x.status === 429 || x.status >= 500) {
+        say(svarSætning(x, (x.data && x.data.error) || 'Ingen licens fundet for den ordrehenvisning og e-mail.'), 'error');
+        return;
+      }
+      if (!x.data || x.data.ok !== true || !x.data.license_key) {
+        say(svarSætning(x, (x.data && x.data.error) || 'Ingen licens fundet for den ordrehenvisning og e-mail.'), 'error');
+        return;
+      }
+      var lifetime = x.data.lifetime === true;
+      var expiry = lifetime
+        ? 'Lifetime-licens — den udløber aldrig.'
+        : (x.data.expires_at
+          ? 'Gyldig til ' + String(x.data.expires_at).slice(0, 10) + '.'
+          : 'Ingen udløbsdato på denne licens.');
+      var activate = String(x.data.activate_url || '');
+      if (!/^https?:\/\//i.test(activate)) activate = '/';
+      out.innerHTML =
+        '<h2>Din licensnøgle</h2>'
+        + '<p class="key-box"><code id="foundKey">' + esc(x.data.license_key) + '</code></p>'
+        + '<p class="hint">' + esc(expiry) + '</p>'
+        + '<p class="hint">At finde din nøgle er gratis. Hvis det sparede dig et svar fra '
+        + 'support, så en lille <a href="https://donate.stripe.com/7sYeVcbn50wieFM8gDbMQ0c" '
+        + 'rel="nofollow noopener">donation</a> holder de gratis værktøjer kørende.</p>'
+        + '<div class="key-actions">'
+        + '<button type="button" class="btn-secondary" id="copyKey">Kopier nøgle</button>'
+        + '<a class="btn-primary" href="' + esc(activate)
+        + '" rel="noopener">Hvor du aktiverer den</a></div>'
+        + (x.data.activate_hint
+          ? '<p class="hint">' + esc(x.data.activate_hint) + '</p>' : '')
+        + '<p class="hint">Gem denne side, eller skriv nøglen ned. Du kan køre opslaget '
+        + 'igen med samme ordrehenvisning og e-mail når som helst du har brug for det.</p>';
+      out.hidden = false;
+      statusEl.textContent = '';
+      statusEl.removeAttribute('data-state');
+      var copy = document.getElementById('copyKey');
+      if (copy) {
+        copy.addEventListener('click', function () {
+          var k = document.getElementById('foundKey').textContent;
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(k).then(function () { copy.textContent = 'Kopieret'; },
+              function () { copy.textContent = 'Vælg nøglen og kopier den'; });
+          } else {
+            copy.textContent = 'Vælg nøglen og kopier den';
+          }
+        });
+      }
+    }).catch(function () {
+      btn.disabled = false;
+      say('Ingen forbindelse. Genindlæs siden om et minut og prøv igen.', 'error');
+    });
+  });
+
+  if (!seatForm) return;
+  function normalisér(k) {
+    return String(k || '').trim().toLowerCase();
+  }
+  function tegnMaskiner(j, bekræftelse) {
+    var maskiner = Array.isArray(j.devices) ? j.devices : [];
+    var fri = j.max_devices - j.devices_in_use;
+    rydSeat();
+    if (!maskiner.length) {
+      seatList.innerHTML = '<li><span class="seat-meta">Denne nøgle er ikke på nogen '
+        + 'maskine endnu. Åbn appen eller pluginet og indtast nøglen der — den '
+        + 'aktiverer sig selv.</span></li>';
+      seatList.hidden = false;
+      return;
+    }
+    seatList.innerHTML = maskiner.map(function (d, i) {
+      var sidste = dato(d.last_seen);
+      var foerste = dato(d.first_seen);
+      var da = sidste ? 'Sidst brugt ' + sidste : 'Sidste brug ikke registreret';
+      if (foerste) da += ' · først aktiveret ' + foerste;
+      return '<li><span class="seat-meta"><strong>Maskine ' + (i + 1) + '</strong>'
+        + '<code class="seat-when">' + esc(da) + '</code>'
+        + '<code>' + esc(d.device_id) + '</code></span>'
+        + '<button type="button" class="btn-secondary" data-device="' + esc(d.device_id) + '">'
+        + 'Frigør maskine ' + (i + 1) + '</button></li>';
+    }).join('');
+    seatList.hidden = false;
+    Array.prototype.forEach.call(seatList.querySelectorAll('button[data-device]'), function (b) {
+      b.addEventListener('click', function () { frigør(b.getAttribute('data-device'), b); });
+    });
+    seatSay((bekræftelse ? bekræftelse + ' ' : '')
+      + maskiner.length + ' af ' + j.max_devices + ' maskiner i brug. '
+      + (fri > 0
+        ? fri + (fri === 1 ? ' plads er fri.' : ' pladser er frie.')
+        : 'Alle pladser er i brug — frigør en for at flytte nøglen til en ny maskine.'), null);
+  }
+  function frigør(deviceId, knap) {
+    var nøgle = normalisér(seatKey.value);
+    var bygning = seatList.querySelectorAll('button[data-device]');
+    Array.prototype.forEach.call(bygning, function (b) { b.disabled = true; });
+    seatSay('Frigør maskinen…', null);
+    hent('/api/license/deactivate', { license_key: nøgle, device_id: deviceId }).then(function (x) {
+      Array.prototype.forEach.call(bygning, function (b) { b.disabled = false; });
+      if (x.status !== 200 || !x.data || x.data.deactivated !== true) {
+        seatSay(svarSætning(x, 'Den maskine var ikke på denne nøgle, så intet blev frigjort.'), 'error');
+        return;
+      }
+      var tilbage = x.data.devices_in_use;
+      var bekræftelse = 'Maskine frigjort. ' + tilbage + ' maskine'
+        + (tilbage === 1 ? ' er' : 'r er') + ' stadig på denne nøgle.';
+      seatSay(bekræftelse, null);
+      hent('/api/license/devices', { license_key: nøgle }).then(function (y) {
+        if (y.status === 200 && y.data && y.data.ok === true) tegnMaskiner(y.data, bekræftelse);
+        else seatSay(bekræftelse, null);
+      }).catch(function () {});
+    }).catch(function () {
+      Array.prototype.forEach.call(bygning, function (b) { b.disabled = false; });
+      seatSay('Ingen forbindelse. Genindlæs siden om et minut og prøv igen.', 'error');
+    });
+  }
+  seatForm.addEventListener('submit', function (ev) {
+    ev.preventDefault();
+    var nøgle = normalisér(seatKey.value);
+    if (!nøgle) {
+      rydSeat();
+      seatSay('Indtast din licensnøgle.', 'error');
+      return;
+    }
+    seatBtn.disabled = true;
+    rydSeat();
+    seatSay('Leder efter maskinerne på denne nøgle…', null);
+    hent('/api/license/devices', { license_key: nøgle }).then(function (x) {
+      seatBtn.disabled = false;
+      if (x.status === 429 || x.status >= 500 || !x.data || x.data.ok !== true) {
+        seatSay(svarSætning(x, (x.data && x.data.error) || 'Ingen licens fundet for den nøgle.'), 'error');
+        return;
+      }
+      tegnMaskiner(x.data);
+    }).catch(function () {
+      seatBtn.disabled = false;
+      seatSay('Ingen forbindelse. Genindlæs siden om et minut og prøv igen.', 'error');
+    });
+  });
+  if (form) {
+    form.addEventListener('submit', function () {
+      setTimeout(function () {
+        var fundet = document.getElementById('foundKey');
+        if (fundet && seatKey && !normalisér(seatKey.value)) seatKey.value = fundet.textContent.trim();
+      }, 0);
+    });
+  }
+})();
+</script>
+<script defer src="/track.js"></script>
+<script>
+(function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';document.addEventListener('click',function(ev){var a=ev.target&&ev.target.closest?ev.target.closest('a[href]'):null;if(!a)return;var h=a.getAttribute('href')||'';var m=h.match(/^\/(?:da\/)?(scan|clean-copy-tool|page-profile|site-icons|text-diff|url-to-markdown|free-tools|compliance-report)(\.html)?(#[^#]*)?$/);if(!m)return;try{navigator.sendBeacon('/api/track',new Blob([JSON.stringify({path:p,event:'cta-'+m[1]})],{type:'application/json'}));}catch(e){}},true);}catch(e){}})();
+</script>
+<script>
+(function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';fetch('/api/track',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:p}),keepalive:true}).catch(function(){});}catch(e){}})();
+</script>
+</body>
+</html>
