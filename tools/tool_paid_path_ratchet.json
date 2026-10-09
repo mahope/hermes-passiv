@@ -39,7 +39,22 @@
    "EUComply Pro": "/compliance-report"
   },
   "/books/preview-build-your-first-chrome-extension": {
-   "Clean Copy": "/clean-copy-tool"
+    "Clean Copy": "/clean-copy-tool"
+  },
+  "/books/preview-nis2-for-agencies": {
+    "EUComply Pro": "/compliance-report"
+  },
+  "/books/preview-gdpr-for-agencies": {
+    "EUComply Pro": "/compliance-report"
+  },
+  "/books/preview-eaa-checklist": {
+    "EUComply Pro": "/compliance-report"
+  },
+  "/books/preview-eaa-shopify": {
+    "EUComply Pro": "/compliance-report"
+  },
+  "/books/preview-cookie-consent-guide": {
+    "EUComply Pro": "/compliance-report"
   },
   "/case-converter": {
    "say thanks": "/support"

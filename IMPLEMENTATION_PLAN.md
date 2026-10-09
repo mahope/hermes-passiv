@@ -15,6 +15,11 @@
   (`ceo/clean-copy-da-tool`): `/da/clean-copy-tool` med batch-konvertering,
   licensaktivering og Pro-kort på dansk. Gaten grøn (build, seo_check,
   519/519 tests, inline-js). hreflang begge veje, ratchet 13→14.
+- **9/10:** forhåndsvisninger af de fem øvrige EPUB'er leveret
+  (`ceo/bog-forhaandsvisning`): `/books/preview-{nis2,gdpr,eaa-checklist,
+  eaa-shopify,cookie-consent-guide}` med rigtige kapitler fra hver EPUB,
+  linket fra `/books`-kortene. Gaten grøn (build, seo_check, 519/519 tests,
+  inline-js). route_inventory + ratchet opdateret med 5 nye ruter.
 - **9/10:** deploy-verifikation af de fire ude-blivere pushes: bog-prøvesiden
   viser «Preface» + Clean Copy-sætningen ✓, color-blindness-simulatoren
   linker til bloggen ✓, men page-profile har kun ét URL-felt live — deploy-
@@ -147,14 +152,10 @@ Prioriteret efter hvor tæt den er på penge. Baseline er målt på den **bygged
 side; tallene er ikke vores egen trafik. Alt det leverede (1–44) står i
 `docs/plan-arkiv.md`.
 
-50. **Forhåndsvisning af de øvrige fem EPUB'er.** Hvem: dem der lander på
-    `/books/` uden en EPUB-læser. Tal: epub-downloads (9/uge på mahope.tools,
-    feature 45s mønster). Accept: hver bog på `/books` har en «Læs de første
-    kapitler»-knap. Datagrund: kun én bog kan læses i browseren endnu.
 51. **`/page-profile`: sammenlign to URL'er i browseren.** Hvem: SEO-bureauer.
-    Tal: konvertering til Page Profile Pro ($19/år). Accept: to URL-felter, én
-    diff med score-forskel pr. kontrollpunkt, Pro-funktionen bag licenskontrol.
-    Datagrund: CLI'en har allerede `--compare`; web-siden profilerer én URL.
+     Tal: konvertering til Page Profile Pro ($19/år). Accept: to URL-felter, én
+     diff med score-forskel pr. kontrollpunkt, Pro-funktionen bag licenskontrol.
+     Datagrund: CLI'en har allerede `--compare`; web-siden profilerer én URL.
 52. **Skabelon-hub for de mest hentede filer.** Hvem: de 25 downloadbesøg/uge på
     mahope.tools. Tal: downloads og konvertering til EUComply Pro ($79/år).
     Accept: én side med hver gratis skabelon, hvad den dækker, og én købsknap.
