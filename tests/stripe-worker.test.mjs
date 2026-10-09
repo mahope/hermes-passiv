@@ -835,7 +835,7 @@ ok('print uden licens er mærket som gratis', /print-only/.test(reportHtml));
 //     Hver test bruger sin egen cf-connecting-ip, så tællerne ikke smitter
 //     ind i den 'unknown'-spand som resten af suiten deler.
 const ip = (n) => ({ headers: { 'cf-connecting-ip': `203.0.113.${n}` } });
-const scanGet = (init) => call('/scan-proxy?url=https%3A%2F%2Fscan.example%2F', init);
+const scanPost = (init) => call('/scan-proxy', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url: 'https://scan.example/' }), ...init });
 
 // Fast ur gennem hele timegrænses-afsnittet. `rateLimitIp` i _worker.js tæller
 // i hele time-bøtter (`Math.floor(Date.now() / 3600000)`), så en kørsel der
@@ -855,14 +855,14 @@ const stopFastUr = (() => {
 
 // Under grænsen: kaldet går igennem og henter stadig. Beviser at tælleren
 // ikke har brudt scanneren, som er den offentlige indgang.
-r = await scanGet(ip(1));
+r = await scanPost(ip(1));
 ok('scan-proxy under grænsen henter stadig siden', r.status === 200, r.status);
 
 // Over grænsen: 429, og — det der adskiller det fra en låst ude-kunde — med
 // CORS-headers, så browseren kan læse fejlen. Uden dem ser siden en uoplys
 // netværksfejl, som er præcis den følelse en 429 aldrig må give.
-for (let i = 1; i < 60; i++) await scanGet(ip(1));
-r = await scanGet(ip(1));
+for (let i = 1; i < 60; i++) await scanPost(ip(1));
+r = await scanPost(ip(1));
 const overBody = await r.json().catch(() => null);
 ok('scan-proxy over grænsen giver 429', r.status === 429, r.status);
 ok('429 kan læses i browseren (CORS med)', r.headers.get('Access-Control-Allow-Origin') === '*', r.headers.get('Access-Control-Allow-Origin'));
@@ -871,7 +871,7 @@ ok('429 siger det er timegrænsen, ikke noget andet', /hour/i.test(overBody && o
 // Det vigtigste: en 429 skal spare arbejdet, ikke bare svare hurtigt. Før
 // kaldet må der ikke være sket en eneste ude-fetch.
 const fetchesBefore = scanFetches;
-for (let i = 0; i < 5; i++) await scanGet(ip(1));
+for (let i = 0; i < 5; i++) await scanPost(ip(1));
 ok('en 429 henter ikke den url igen', scanFetches === fetchesBefore, `${scanFetches - fetchesBefore} fetch`);
 
 // Scoperne er adskilte. Et bureau der scanner mange kunders sider må ikke brænde
@@ -883,7 +883,7 @@ ok('en låst scan-proxy låser ikke header-check', r.status !== 429, r.status);
 // modsatte fejlretning af den vi lukker her, og den er den der låser kunder ude.
 const rlGet = VISITS.get;
 VISITS.get = async (k) => { if (String(k).startsWith('rl:')) throw new Error('rate-KV nede'); return rlGet(k); };
-r = await scanGet(ip(2));
+r = await scanPost(ip(2));
 ok('en nede tæller-KV låser ikke scanneren ude', r.status === 200, r.status);
 VISITS.get = rlGet;
 
@@ -915,7 +915,7 @@ const PRIVATE_TARGETS = [
   ['http://100.64.0.1/', 'CGNAT'],
 ];
 for (const [target, why] of PRIVATE_TARGETS) {
-  r = await call('/scan-proxy?url=' + encodeURIComponent(target), ip(4));
+  r = await call('/scan-proxy', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url: target }), ...ip(4) });
   const body = await r.json().catch(() => ({}));
   ok(`scan-proxy afviser ${why}`, r.status === 400 && /cannot be scanned/i.test(body.error || ''), `${target} -> ${r.status} ${JSON.stringify(body).slice(0, 90)}`);
   // Samme afvisning på den betalte rute. De to skal være enige, ellers opstår
@@ -931,7 +931,7 @@ ok('ingen privat vært blev hentet overhovedet', privFetches === 0, `${privFetch
 
 // Den offentlige rute skal stadig virke. Uden denne ville porten være grøn fordi
 // den afviser alt — det er den fejlretning, der låser et virkende værktøj ude.
-r = await call('/scan-proxy?url=https%3A%2F%2Fscan.example%2F', ip(4));
+r = await call('/scan-proxy', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url: 'https://scan.example/' }), ...ip(4) });
 ok('en offentlig side scanner stadig', r.status === 200 && (await r.json()).ok === true, r.status);
 
 // Fejlteksten må ikke bære målets markup med videre. `handleScanProxy` lægger
@@ -941,7 +941,7 @@ ok('en offentlig side scanner stadig', r.status === 200 && (await r.json()).ok =
 // et mål med `Content-Type: application/json<img src=x onerror=…>` fik
 // `<title>FIRET</title>` i DOM'en. To domme: markup er væk, og typen er stadig
 // noget læseren kan se (ellers er beskeden tom).
-const ondtBody = await (await call('/scan-proxy?url=' + encodeURIComponent('https://ondt.example/'), ip(4))).json();
+const ondtBody = await (await call('/scan-proxy', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url: 'https://ondt.example/' }), ...ip(4) })).json();
 ok('scan-proxy: målets egen Content-Type leverer intet markup videre',
   !/[<>]/.test(ondtBody.error || ''), JSON.stringify(ondtBody).slice(0, 120));
 ok('scan-proxy: typen er stadig navngivet i fejlen',
@@ -953,7 +953,7 @@ ok('scan-proxy: typen er stadig navngivet i fejlen',
 // DNS-rebinding: kun den bogstavelige IP og de fire suffikser afvises.
 // Beviset på at porten ikke er grøn af vilje: en URL med en offentlig vært
 // men ugyldigt protokol er stadig afvist med dens egen tekst.
-r = await call('/scan-proxy?url=' + encodeURIComponent('file:///etc/passwd'), ip(4));
+r = await call('/scan-proxy', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url: 'file:///etc/passwd' }), ...ip(4) });
 ok('file:// er afvist med protokol-teksten', r.status === 400 && /http/i.test((await r.json().catch(() => ({}))).error || ''), r.status);
 
 // ── En linje der normaliserer til tom streng må ikke forsvinde ─────────
@@ -974,7 +974,7 @@ const TØM_NØGLE = [
   ['https:///', 'scheme og skråstreger'],
 ];
 for (const [tegnfejl, why] of TØM_NØGLE) {
-  r = await call('/scan-proxy?url=' + encodeURIComponent(tegnfejl), ip(31));
+  r = await call('/scan-proxy', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url: tegnfejl }), ...ip(31) });
   const tømBody = await r.json().catch(() => ({}));
   ok(`scan-proxy: ${why} er et 400, ikke en 500`, r.status === 400, `${tegnfejl} -> ${r.status} ${JSON.stringify(tømBody).slice(0, 90)}`);
   ok(`scan-proxy: ${why} giver hele linjen i fejlen`,
@@ -983,7 +983,7 @@ for (const [tegnfejl, why] of TØM_NØGLE) {
 }
 // Den anden halvdel af fundet: linjen forsvandt stille, fordi den var *ved
 // siden af* en gyldig. Før rettelsen svarede denne 200 med den ene side.
-r = await call('/scan-proxy?url=' + encodeURIComponent('https://to.example/\nhttps://'), ip(31));
+r = await call('/scan-proxy', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url: 'https://to.example/\nhttps://' }), ...ip(31) });
 const sideVedTegnfejl = await r.json().catch(() => ({}));
 ok('scan-proxy: en tegnsfejl ved siden af en gyldig side er et 400 med DEN linje',
   r.status === 400 && (sideVedTegnfejl.error || '').includes('https://')
@@ -991,12 +991,12 @@ ok('scan-proxy: en tegnsfejl ved siden af en gyldig side er et 400 med DEN linje
   `${r.status} ${JSON.stringify(sideVedTegnfejl).slice(0, 140)}`);
 // Beviset på at rettelsen ikke har slået dedup'en i stykker: de fem linjer skal
 // stadig give én side, ellers er fem sider pr. kald blevet til én pr. gentaget.
-r = await call('/scan-proxy?url=' + encodeURIComponent('https://scan.example/\nhttps://SCAN.example/'), ip(31));
+r = await call('/scan-proxy', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url: 'https://scan.example/\nhttps://SCAN.example/' }), ...ip(31) });
 const dedupet = await r.json().catch(() => ({}));
 ok('scan-proxy: to skrivelser af samme side er stadig én side',
   r.status === 200 && dedupet.ok === true && !('multi' in dedupet), `${r.status} ${JSON.stringify(dedupet).slice(0, 120)}`);
 // Og ingen 400 må bære `undefined` eller tom tekst — det var den anden fejlmode.
-const tømFejle = TØM_NØGLE.map(([t]) => call('/scan-proxy?url=' + encodeURIComponent(t), ip(31)).then(x => x.json().catch(() => ({}))));
+const tømFejle = TØM_NØGLE.map(([t]) => call('/scan-proxy', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url: t }), ...ip(31) }).then(x => x.json().catch(() => ({}))));
 ok('scan-proxy: ingen af fejlene er tom eller "undefined"',
   (await Promise.all(tømFejle)).every(b => typeof b.error === 'string' && b.error.trim() && !/undefined/.test(b.error)),
   JSON.stringify(await Promise.all(tømFejle)).slice(0, 160));
@@ -1004,7 +1004,7 @@ ok('scan-proxy: ingen af fejlene er tom eller "undefined"',
 // ── Sitemap-scanning ────────────────────────────────────────────────
 // Et sitemap-kald henter en sitemap, udtrækker URL'er og scanner dem.
 // Det er den indgang bureauer bruger, og den skal derfor have egne tests.
-const sitemapGet = (sitemapUrl, init) => call('/scan-proxy?sitemap=' + encodeURIComponent(sitemapUrl), init);
+const sitemapGet = (sitemapUrl, init) => call('/scan-proxy', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sitemap: sitemapUrl }), ...init });
 
 // En sitemap med to sider giver et multi-svar med begge sider.
 r = await sitemapGet('https://sitemap.example/sitemap.xml', ip(40));
@@ -1242,7 +1242,7 @@ ok('alle fire ruter svarer 200 på den samme vært — ét input, ét svar',
 // seks. Især på den betalte: en 400 på `example.com` i /api/report er en kunde
 // der har betalt $79 og ikke får sin rapport, fordi han skrev vært i stedet for
 // adresse — mens den gratis scanner på samme streng svarer.
-r = await call('/scan-proxy?url=' + encodeURIComponent('scan.example'), ip(31));
+r = await call('/scan-proxy', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url: 'scan.example' }), ...ip(31) });
 const spBare = await r.json().catch(() => ({}));
 ok('scan-proxy læser en bare vært, som de fem andre ruter gør',
   r.status === 200 && spBare.ok === true, `${r.status} ${JSON.stringify(spBare).slice(0, 100)}`);
@@ -1355,7 +1355,7 @@ for (const [target, why] of MAPPED) {
 // Hop-værnet på de to der fulgte redirects førhen. Uden dette er mål-værnet
 // kosmetik: 302'en sker inde i runtime'en, som porten aldrig ser.
 if (privFetches === privBefore) {
-  r = await call('/scan-proxy?url=' + encodeURIComponent('https://scan.example/'), ip(4));
+  r = await call('/scan-proxy', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url: 'https://scan.example/' }), ...ip(4) });
   ok('scan-proxy på en offentlig side virker stadig', r.status === 200, r.status);
 }
 // Hop-værnet på /api/profile måles adfærd, ikke navn. Review 29/9 fandt at

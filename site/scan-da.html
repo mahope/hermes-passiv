@@ -609,7 +609,7 @@ async function scanKør(raw){
   const scanFejl = function(e){
     if (window.trackEvent) window.trackEvent('scan-failed');
     out.innerHTML = '<p><strong>Scan fejlede.</strong></p>'
-      +'<p style="color:#667;font-size:14px">'+esc(e.message)+'</p>'
+      +'<p style="color:#667;font-size:14px">'+esc(String(e))+'</p>'
       +'<p style="font-size:13px;color:#667;margin-top:16px">'
       +HINTTAIL;
     revealResult(out);
@@ -635,7 +635,7 @@ async function scanKør(raw){
     out.innerHTML = '<p>Læser sitemap <code>'+esc(sitemapUrl)+'</code> …</p>';
     revealResult(out);
     try {
-      const r = await fetch('/scan-proxy?sitemap='+encodeURIComponent(sitemapUrl));
+      const r = await fetch('/scan-proxy', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sitemap:sitemapUrl})});
       data = await r.json();
       if (!data.ok) throw new Error(data.error || 'Proxy returnerede fejl');
     } catch(e) {
@@ -651,7 +651,7 @@ async function scanKør(raw){
     : '<p>Scanner <code>'+esc(urls[0])+'</code> …</p>';
   revealResult(out);
   try {
-    const r = await fetch('/scan-proxy?url='+encodeURIComponent(urls.join('\n')));
+    const r = await fetch('/scan-proxy', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url:urls.join('\n')})});
     data = await r.json();
     if (!data.ok) throw new Error(data.error || 'Proxy returnerede en fejl');
   } catch(e) {

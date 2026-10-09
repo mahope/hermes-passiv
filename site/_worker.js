@@ -812,7 +812,7 @@ async function scanProxyReadPage(targetUrl, signal) {
 async function handleScanProxy(request, url, env) {
   const headers = {
     'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'GET, OPTIONS',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type',
     'Content-Type': 'application/json',
   };
@@ -822,10 +822,22 @@ async function handleScanProxy(request, url, env) {
     return new Response(null, { status: 204, headers });
   }
 
-  let targetUrlParam = url.searchParams.get('url');
+  let targetUrlParam;
+  let sitemapParam;
 
-  // Sitemap support: ?sitemap=<url> fetches the sitemap and scans all pages
-  const sitemapParam = url.searchParams.get('sitemap');
+  if (request.method === 'POST') {
+    try {
+      const body = await request.json();
+      targetUrlParam = body.url || null;
+      sitemapParam = body.sitemap || null;
+    } catch {
+      return new Response(JSON.stringify({ ok: false, error: 'Invalid JSON body' }), { status: 400, headers });
+    }
+  } else {
+    targetUrlParam = url.searchParams.get('url');
+    sitemapParam = url.searchParams.get('sitemap');
+  }
+
   const isSitemap = !!sitemapParam;
   const maxUrls = isSitemap ? SITEMAP_MAX_URLS : SCAN_PROXY_MAX_URLS;
   if (sitemapParam) {
