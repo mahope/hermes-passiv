@@ -185,6 +185,25 @@
       </div>
     </section>
 
+    <!-- Compare two URLs -->
+    <section id="compare">
+      <h2>Compare two pages</h2>
+      <p>Paste two URLs to see their scores side by side — the same 21-point audit, diffed check by check.</p>
+      <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:1rem;">
+        <label for="compare-url-a" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);">First URL to compare</label>
+        <input type="url" id="compare-url-a" placeholder="https://yoursite.com" required
+          style="flex:1;min-width:200px;padding:0.7rem 1rem;border-radius:8px;border:1px solid var(--color-border);background:var(--color-surface-2);color:var(--color-text);font-size:1rem;">
+        <label for="compare-url-b" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);">Second URL to compare</label>
+        <input type="url" id="compare-url-b" placeholder="https://competitor.com" required
+          style="flex:1;min-width:200px;padding:0.7rem 1rem;border-radius:8px;border:1px solid var(--color-border);background:var(--color-surface-2);color:var(--color-text);font-size:1rem;">
+        <button id="compare-btn" class="btn btn-primary" style="text-decoration:none;">Compare →</button>
+      </div>
+      <div id="compare-status" role="status" aria-live="polite" style="min-height:1.5rem;color:#94a3b8;"></div>
+      <div id="compare-result" class="cli-demo" hidden></div>
+      <p style="margin-top:1rem;font-size:0.85rem;color:#94a3b8;"><strong>Pro tip:</strong> <a href="https://buy.stripe.com/9B6eVcgHp7YK69ggN9bMQ04" rel="nofollow noopener">Page Profile Pro</a> adds batch mode and client-ready HTML reports.</p>
+      <noscript><p>The comparison needs JavaScript. Use the CLI instead — see quick start below.</p></noscript>
+    </section>
+
     <!-- Quick start -->
     <!-- Live profiler -->
     <section id="try">
@@ -495,6 +514,79 @@
         else if (navigator.sendBeacon) navigator.sendBeacon('/api/track', new Blob([JSON.stringify({ path: '/page-profile', event: 'profile' })], { type: 'application/json' }));
       } catch (e) { /* never break the tool over analytics */ }
     }
+
+    // Compare two URLs
+    var cForm = document.getElementById('compare-form');
+    var cUrlA = document.getElementById('compare-url-a');
+    var cUrlB = document.getElementById('compare-url-b');
+    var cStatus = document.getElementById('compare-status');
+    var cResult = document.getElementById('compare-result');
+    var cBtn = document.getElementById('compare-btn');
+
+    function escC(s) {
+      var d = document.createElement('div');
+      d.textContent = s == null ? '' : String(s);
+      return d.innerHTML;
+    }
+    function lineC(html) { return html + '\n'; }
+
+    function scoreDiff(a, b) {
+      var diff = b.score - a.score;
+      if (diff > 0) return '+' + diff.toFixed(1) + ' vs ' + a.url;
+      if (diff < 0) return diff.toFixed(1) + ' vs ' + b.url;
+      return 'tied';
+    }
+
+    function checkLine(label, aVal, bVal, fmt) {
+      var a = fmt ? fmt(aVal) : aVal;
+      var b = fmt ? fmt(bVal) : bVal;
+      var better = aVal === bVal ? '' : (bVal > aVal ? ' ← B better' : ' ← A better');
+      return lineC('  ' + label + ': A=' + a + '  B=' + b + better);
+    }
+
+    cBtn.addEventListener('click', function () {
+      var urlA = cUrlA.value.trim();
+      var urlB = cUrlB.value.trim();
+      if (!urlA || !urlB) return;
+      cStatus.textContent = 'Fetching and comparing ' + urlA + ' vs ' + urlB + ' …';
+      cResult.hidden = true;
+      Promise.all([fetchProfile(urlA), fetchProfile(urlB)])
+        .then(function (arr) {
+          var a = arr[0], b = arr[1];
+          var out = '';
+          out += lineC('<span class="highlight">page-profile compare</span>  —  ' + escC(a.url) + ' vs ' + escC(b.url));
+          out += lineC('──────────────────────────────────────────────');
+          out += checkLine('Status', a.status, b.status);
+          out += checkLine('Title', a.title_length, b.title_length, function(v) { return v + ' chars'; });
+          out += checkLine('Description', a.meta_description_length, b.meta_description_length, function(v) { return v + ' chars'; });
+          out += checkLine('Canonical', a.canonical ? 1 : 0, b.canonical ? 1 : 0, function(v) { return v ? 'yes' : 'no'; });
+          out += checkLine('Language', a.language ? 1 : 0, b.language ? 1 : 0, function(v) { return v ? 'yes' : 'no'; });
+          out += checkLine('OG complete', (a.og && a.og.title && a.og.description && a.og.image) ? 1 : 0, (b.og && b.og.title && b.og.description && b.og.image) ? 1 : 0, function(v) { return v ? 'yes' : 'no'; });
+          out += checkLine('Twitter card', a.twitter && a.twitter.card ? 1 : 0, b.twitter && b.twitter.card ? 1 : 0, function(v) { return v ? 'yes' : 'no'; });
+          out += checkLine('JSON-LD blocks', a.json_ld_count, b.json_ld_count);
+          var aH1 = a.headings && a.headings.h1 ? a.headings.h1.length : 0;
+          var bH1 = b.headings && b.headings.h1 ? b.headings.h1.length : 0;
+          out += checkLine('H1 count', aH1, bH1);
+          var aAlt = a.images ? a.images.with_alt : 0, aTot = a.images ? a.images.total : 0;
+          var bAlt = b.images ? b.images.with_alt : 0, bTot = b.images ? b.images.total : 0;
+          out += checkLine('Alt text', aTot ? aAlt / aTot : 0, bTot ? bAlt / bTot : 0, function(v) { return Math.round(v * 100) + '%'; });
+          out += checkLine('HSTS', a.security.hsts ? 1 : 0, b.security.hsts ? 1 : 0, function(v) { return v ? 'yes' : 'no'; });
+          out += checkLine('CSP', a.security.csp ? 1 : 0, b.security.csp ? 1 : 0, function(v) { return v ? 'yes' : 'no'; });
+          out += checkLine('X-Frame-Options', a.security.xfo ? 1 : 0, b.security.xfo ? 1 : 0, function(v) { return v ? 'yes' : 'no'; });
+          out += lineC('──────────────────────────────────────────────');
+          out += lineC('  Score:  A=' + a.score + '/' + a.max_score + ' (' + a.grade + ')  B=' + b.score + '/' + b.max_score + ' (' + b.grade + ')');
+          out += lineC('  ' + scoreDiff(a, b));
+          out += '<p style="font-size:13px;color:#94a3b8;margin:16px 0 0">This comparison is free and needs no account. If it saved you time, a small <a href="https://donate.stripe.com/7sYeVcbn50wieFM8gDbMQ0c" rel="nofollow noopener">donation</a> keeps it running.</p>';
+          cStatus.textContent = '';
+          cResult.hidden = false;
+          cResult.innerHTML = out;
+        })
+        .catch(function (err) {
+          cStatus.textContent = '';
+          cResult.hidden = false;
+          cResult.innerHTML = lineC('<span class="fail">Error:</span> ' + escC(err.message || 'Request failed.'));
+        });
+    });
   })();
   </script>
 <script>
