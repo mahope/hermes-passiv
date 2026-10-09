@@ -9,7 +9,8 @@
   `route_inventory.json` — ingen af dem var en åben fejl.
 - **9/10:** page-profiles Pro-kort og fire guides siger nu at sammenligning i
   browseren er gratis (`ceo/page-profile-cta`) — de loved Pro for noget
-  8d30d989 gjorde gratis.
+  8d30d989 gjorde gratis. De to forsiders værktøjsliste samme rettelse
+  (`ceo/forsider-pro-prajs`).
 - **9/10:** review-fond [MIDDEL] rettet: hero-gradient-måling dømmes nu på
   alle montager med `gfrom`/`gto`, ikke kun dem med upload-felt.
 - **9/10:** review-fond [HØJ] rettet: scanFejl bruger `String(e)`, scan-proxy
@@ -28,7 +29,11 @@
 - **9/10:** simulatoren (`ceo/farveblindhed-cta`) linker nu til farveblindhedsguiden,
   så de 5 besøgende på værktøjet kan nå guiden (9 besøgende).
 - 0 åbne review-fund. Sentry: 0 uløste fejl (14 dage). 0 åbne PR'er.
-- **PR-TJEK 8/10:** 0 åbne PR'er. **BRANCH-TJEK:** ikke kørt.
+- **PR-TJEK 9/10:** 0 åbne PR'er. **BRANCH-TJEK 9/10:** `origin/ceo/hub-readme-note`
+  (2 uger) er helt landet i `main` og kan slettes — men `git push --delete`
+  er spærret af miljøet, så ❓ til Mads. `origin/lifetime-founding` er 12 dage
+  og uden for vinduet. `ceo/clean-copy-da-tool` (lokal) har to wip-commits med
+  `site/da/clean-copy-tool.html` — det er feature 53, ikke startet forfra.
 - **CEO-kø #0** er færdig og merged; 0 åbent.
 ## Åbne review-fund
 
