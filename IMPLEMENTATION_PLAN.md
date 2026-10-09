@@ -9,6 +9,9 @@
   separate $69-kit. Fem sider lover nu en PDF, man kan udlevere.
 - **10/10:** STATUS kogt ned fra 33 til 14 linjer (plan-status-porten); de
   ældste punkter er flyttet til `docs/plan-arkiv.md`.
+- **10/10:** dependabot-PR #3 (undici 7.29.0 → 7.30.0 i `desktop/`) landet:
+  2 høje + 8 moderate sårbarheder i lockfilen lukket (`npm audit` 10 → 9,
+  ingen undici-advisories mere). PR #3 lukkes.
 - 0 åbne review-fund. Sentry: 0 uløste fejl (14 dage). 0 åbne PR'er.
 - **PR-TJEK 10/10:** 0 åbne PR'er (undici-PR landet, se næste punkt).
   **BRANCH-TJEK 9/10:** `origin/ceo/hub-readme-note` kan slettes, men
@@ -20,6 +23,10 @@ Ingen.
 
 ## Verificér deploy
 
+- **VERIFICÉR DEPLOY:** undici 7.30.0 i `desktop/package-lock.json` +
+  download-zip `ceo/undici-sikkerhedsopdatering` 10/10-2026 — tjek at
+  `https://mahope.tools/downloads/eaa-scanner-desktop-src-1.3.4.zip` indeholder
+  undici 7.30.0.
 - **VERIFICÉR DEPLOY:** købsanker på gratis-downloads
   `ceo/free-downloads-paid-path` 9/10-2026 22:50 — **DEPLOY OK 10/10:** live
   `https://mahope.tools/free-downloads` viser sektionen «When the free files are
@@ -96,26 +103,35 @@ Ingen.
    (`gh run list`: success på `7154b50a`; alle 11 commits siden `74963e5c`
    verificeret live — se STATUS).
 
-3. **Konvertering kan ikke måles uden `STATS_TOKEN`.** Hvorfor: `/api/stats`
+3. **Desktop-lockfilen har 9 resterende sårbarheder.** Hvorfor:
+   `npm audit --package-lock-only` i `desktop/` viser `http-cache-semantics`
+   (HØJ, fix uden major) og electron-builder-kæden (`@electron/get`,
+   `app-builder-lib`, `dmg-builder`, `electron-builder`,
+   `electron-builder-squirrel-windows`, `global-agent`, `roarr`,
+   `sprintf-js` — kræver electron-builder 26.5.0, semver-major). Accept:
+   `http-cache-semantics` løftet og audit under 5 fund; ellers ❓ til Mads om
+   en ny electron-builder, der bygger til tre platforme.
+
+4. **Konvertering kan ikke måles uden `STATS_TOKEN`.** Hvorfor: `/api/stats`
    svarer 401, så trafikrangeringer er vor egen links-tælling, ikke besøg.
    Accept: `GET /api/stats` med token svarer 200. *BLOCKED: Venter på Mads til
    STATS_TOKEN — uden token returnerer endpointet 401.*
 
-4. **`bugbottle.dev` er ude af deploy-matrixen igen.** Hvorfor: vores 7 ruter
+5. **`bugbottle.dev` er ude af deploy-matrixen igen.** Hvorfor: vores 7 ruter
    ville overskrive den rigtige produktside (61 ruter) og gav tre røde porte.
    Accept: Mads siger ja til at udgive vores landing. *(❓ Til Mads.)*
 
-6. **Bogen har ingen DA-udgave.** Hvorfor: de seks bøger er på engelsk, og der
+7. **Bogen har ingen DA-udgave.** Hvorfor: de seks bøger er på engelsk, og der
    findes ingen `/da/books/*`-ruter, så bogsiders hreflang har intet dansk par.
    Accept: en DA-udgave af de to vigtigste som EPUB, eller en synlig dansk note.
    *(Beslutning — ❓.)*
 
-8. **En sitemap-rute må ikke have en død eneste handling.** Hvorfor: porten
+9. **En sitemap-rute må ikke have en død eneste handling.** Hvorfor: porten
    dømmer kun de to ruter i `tools/unavailable_routes.json`. Accept: porten
    finder den, hvis den skrives i manifestet. *(Kun relevant ved nye sådanne
    sider — ikke en opgave i sig selv.)*
 
-21. **En `ceo/*`-gren er ikke arbejde, fordi den ligger uden for `main`.** Hvorfor:
+22. **En `ceo/*`-gren er ikke arbejde, fordi den ligger uden for `main`.** Hvorfor:
    alle fire målte 5/10 var dubletter. Accept: før en gren nævnes i planen skal
    `git cherry main <gren>` være læst, og dens rørte filer sammenlignet
    fil-for-fil med `main`.
