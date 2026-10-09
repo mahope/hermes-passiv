@@ -1,27 +1,18 @@
 # STATUS
 
-- **9/10:** gratis-downloads-hubben har ét købsanker (`ceo/free-downloads-paid-path`):
-  kortet siger pr. gratis fil hvad den dækker, at browser-tjekket på
-  `/compliance-report` er gratis, og at Pro tilføjer de 18 server-side tjek
-  plus en PDF. Gaten grøn (187 steps).
-- **9/10:** rød CI rettet og de danske sider peger nu på det danske
-  webværktøj (`ceo/da-vaerktoej-links`): `license-clients` kendte ikke den
-  nye `/da/license-lookup`, og `catalog-where` lå skjult bag den (506 → 508).
-  20 danske sider sendte læseren til det engelske `/clean-copy-tool`.
-  Gaten grøn (187 steps).
-- **9/10:** dansk udgave af licensøgningen leveret (`ceo/da-license-lookup`):
-  `/da/license-lookup` med opslag af nøgle, frigørelse af maskiner,
-  kopier-knap. Al tekst på dansk, hreflang begge veje.
-- **9/10:** bog-prøvesider fik betalt vej (`ceo/bogproeve-betalt-vej`), og
-  page-profiles to-URL-sammenligning er verificeret live (feature 51 LEVERET).
-- **9/10:** Clean Copy-webværktøjet på dansk (`ceo/clean-copy-da-tool`) og
-  prøvesider for de fem øvrige EPUB'er leveret; review-fonds to [LAV]
-  gennemgået uden åbne fejl.
-- **9/10:** page-profiles Pro-kort og fire guides siger nu at sammenligning i
-  browseren er gratis (`ceo/page-profile-cta`, `ceo/forsider-pro-prajs`).
+- **10/10:** deployet er aktuelt igen. CI blev grøn (`bfd9889`/`7154b50a`), og
+  alt siden live-stand `74963e5c` er verificeret live: gratis-downloads-knappen,
+  `/da/license-lookup`, det danske webværktøj og de fem bog-prøvesider. De tre
+  ældre VERIFICÉR-noter står nu `DEPLOY OK`.
+- **10/10:** bog-prøvesiderne lovede en «client-ready report» (`ceo/bogproeve-kopi`).
+  Pro skriver et PDF-funddokument, ikke en færdig kunderapport — det er det
+  separate $69-kit. Fem sider lover nu en PDF, man kan udlevere.
+- **10/10:** STATUS kogt ned fra 33 til 14 linjer (plan-status-porten); de
+  ældste punkter er flyttet til `docs/plan-arkiv.md`.
 - 0 åbne review-fund. Sentry: 0 uløste fejl (14 dage). 0 åbne PR'er.
-- **PR-TJEK 9/10:** 0 åbne PR'er. **BRANCH-TJEK 9/10:**
-  `origin/ceo/hub-readme-note` kan slettes, men push --delete er spærret (❓).
+- **PR-TJEK 10/10:** 0 åbne PR'er (undici-PR landet, se næste punkt).
+  **BRANCH-TJEK 9/10:** `origin/ceo/hub-readme-note` kan slettes, men
+  push --delete er spærret (❓).
 - **CEO-kø #0** er færdig og merged; 0 åbent.
 ## Åbne review-fund
 
@@ -30,20 +21,24 @@ Ingen.
 ## Verificér deploy
 
 - **VERIFICÉR DEPLOY:** købsanker på gratis-downloads
-  `ceo/free-downloads-paid-path` 9/10-2026 22:50 — tjek at
+  `ceo/free-downloads-paid-path` 9/10-2026 22:50 — **DEPLOY OK 10/10:** live
   `https://mahope.tools/free-downloads` viser sektionen «When the free files are
-  not enough» med knappen «Buy EUComply Pro — $79/year per website», og at
-  `https://mahope.tools/paid-templates` samt `/compliance-report` stadig er
-  tilgængelige fra siden.
+  not enough» med knappen «Buy EUComply Pro — $79/year per website», og både
+  `/paid-templates` og `/compliance-report` svarer 200.
+- **VERIFICÉR DEPLOY:** bog-kopi «client-ready report» `ceo/bogproeve-kopi`
+  10/10-2026 — tjek at `https://mahope.tools/books/preview-{nis2-for-agencies,
+  gdpr-for-agencies, eaa-checklist, eaa-shopify, cookie-consent-guide}` ikke
+  længere skriver «client-ready report», men en PDF-man-udlevere-formulering
+  («PDF report you can hand to a client») med prisen `$79/year per website`.
 - **VERIFICÉR DEPLOY:** danske lenker + rød CI `ceo/da-vaerktoej-links`
-  9/10-2026 20:50 — tjek at `https://mahope.tools/da/license-lookup` (200)
-  viser «Find din licensnøgle», at `/da/clean-copy-tool` (200) viser
-  webværktøjet på dansk, og at f.eks. `/da/blog/kopier-tabel-til-excel`
-  linker til `/da/clean-copy-tool` (ikke `/clean-copy-tool`).
+  9/10-2026 20:50 — **DEPLOY OK 10/10:** `https://cleancopy.tools/da/clean-copy-tool`
+  (200) viser konverteren på dansk, `https://mahope.tools/da/license-lookup`
+  (200) viser «Find din licensnøgle» og er koblet til `/api/license/lookup` +
+  `/api/license/deactivate`, og `/da/blog/kopier-tabel-til-excel` linker til
+  `https://cleancopy.tools/da/clean-copy-tool`.
 - **VERIFICÉR DEPLOY:** dansk licensøgning `ceo/da-license-lookup` 9/10-2026
-  15:00 — tjek at `https://mahope.tools/da/license-lookup` (200) viser
-  «Find din licensnøgle» og at formularen virker. Filen er i `dist/` lokalt,
-  men live-sitet gav 404 ved tjek — deploy endnu ikke gået igennem.
+  15:00 — **DEPLOY OK 10/10:** `https://mahope.tools/da/license-lookup` (200)
+  viser «Find din licensnøgle» og formularens to API-kald findes i live-HTML.
 - **VERIFICÉR DEPLOY OK 9/10:** scan-proxy POST + scanFejl fix `ceo/scan-fejl-post` — live `https://mahope.tools/scan-proxy` svarer 400 på POST med ugyldig URL (ruten er live og fungerer).
 - **VERIFICÉR DEPLOY OK 9/10:** fire pushes `ceo/page-profile-compare`,
   `ceo/kontrast-selvtage-hero`, `ceo/page-profile-cta`, `ceo/plan-status-laengde`
@@ -55,10 +50,11 @@ Ingen.
   Fire ude-blivere pushes er nu live.
 
 - **VERIFICÉR DEPLOY:** bog-prøvesider med betalt vej `ceo/bogproeve-betalt-vej`
-  9/10-2026 14:3x — tjek at `https://mahope.tools/books/preview-{nis2-for-agencies,
-  gdpr-for-agencies, eaa-checklist, eaa-shopify, cookie-consent-guide}` (200)
-  viser den nye sætning med «EUComply Pro» og $79 pr. website pr. år, og at
-  `/compliance-report` stadig viser «Buy EUComply Pro — $79/year».
+  9/10-2026 14:3x — **DEPLOY OK 10/10:** live
+  `https://mahope.tools/books/preview-{nis2-for-agencies,gdpr-for-agencies,
+  eaa-checklist,eaa-shopify,cookie-consent-guide}` (200) viser
+  EUComply Pro-sætningen med $79 pr. website pr. år, og `/compliance-report`
+  viser «Buy EUComply Pro — $79/year».
 
 - **VERIFICÉR DEPLOY OK 9/10:** eaa-action `ceo/eaa-github-action` — live
   `https://mahope.tools/downloads` (200) viser GitHub Action-skabelonen med
@@ -95,6 +91,10 @@ Ingen.
   heroen, konvertering er tydelig.
 
 ## Åbne opgaver
+
+1. ✅ **Tjek CI-kørsel for `bfd9889` og live-deployet** — AFKRYSET 10/10
+   (`gh run list`: success på `7154b50a`; alle 11 commits siden `74963e5c`
+   verificeret live — se STATUS).
 
 3. **Konvertering kan ikke måles uden `STATS_TOKEN`.** Hvorfor: `/api/stats`
    svarer 401, så trafikrangeringer er vor egen links-tælling, ikke besøg.

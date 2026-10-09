@@ -9623,6 +9623,35 @@ Planen listede dem som åbne, men arbejdet fandtes:
 - **9/10:** simulatoren (`ceo/farveblindhed-cta`) linker nu til farveblindhedsguiden,
   så de 5 besøgende på værktøjet kan nå guiden (9 besøgende).
 
+## Arkiveret fra STATUS 10/10 (plan-status-porten kræver højst 25 linjer)
+
+- **10/10:** deploy-stand verificeret live efter grøn CI: CI-kørslen for
+  `bfd9889`/`7154b50a` lykkes, og alle 11 commits siden live-stand `74963e5c`
+  er nu live — gratis-downloads-hubbens købsanker, `/da/license-lookup`,
+  det danske Clean Copy-webværktøj på cleancopy.tools og de fem
+  bog-prøvesider med betalt vej er tjekket på indhold, ikke kun HTTP 200.
+- **10/10:** bog-prøvesiderne lovede en «client-ready report» — Pro skriver et
+  PDF-funddokument, ikke en færdig kunderapport (det $69-kit). Fem sider
+  (`ceo/bogproeve-kopi`) lover nu en PDF, man kan udlevere, i husets
+  prisform `$79/year per website`.
+- **9/10:** gratis-downloads-hubben har ét købsanker (`ceo/free-downloads-paid-path`):
+  kortet siger pr. gratis fil hvad den dækker, at browser-tjekket på
+  `/compliance-report` er gratis, og at Pro tilføjer de 18 server-side tjek
+  plus en PDF. Gaten grøn (187 steps).
+- **9/10:** rød CI rettet og de danske sider peger nu på det danske
+  webværktøj (`ceo/da-vaerktoej-links`): `license-clients` kendte ikke den
+  nye `/da/license-lookup`, og `catalog-where` lå skjult bag den (506 → 508).
+  20 danske sider sendte læseren til det engelske `/clean-copy-tool`.
+- **9/10:** dansk udgave af licensøgningen leveret (`ceo/da-license-lookup`):
+  `/da/license-lookup` med opslag af nøgle, frigørelse af maskiner,
+  kopier-knap. Al tekst på dansk, hreflang begge veje.
+- **9/10:** bog-prøvesider fik betalt vej (`ceo/bogproeve-betalt-vej`), og
+  page-profiles to-URL-sammenligning er verificeret live (feature 51 LEVERET).
+- **9/10:** Clean Copy-webværktøjet på dansk (`ceo/clean-copy-da-tool`) og
+  prøvesider for de fem øvrige EPUB'er leveret; review-fonds to [LAV]
+  gennemgået uden åbne fejl.
 - **9/10:** rød CI rettet i tre runder (`ceo/kontrast-selvtage-hero`,
   `ceo/page-profile-cta`, `ceo/plan-status-laengde`): hero-montage,
   dobbelt-donation på page-profile, STATUS 35 linjer.
+- **9/10:** page-profiles Pro-kort og fire guides siger nu at sammenligning i
+  browseren er gratis (`ceo/page-profile-cta`, `ceo/forsider-pro-prajs`).
