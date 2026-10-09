@@ -4,6 +4,11 @@
   `/blog/color-blindness-simulation-check` + `/da/blog/farveblindhed-tjek`, med
   en målende kontrasttabel pr. synstype — alle 24 tal beregnet med simulatorens
   egen Machado-model, ikke estimeret. Gate GRØN.
+- **9/10:** feature 45 leveret (`ceo/bog-proeveside`): «Læs de første kapitler i
+  browseren» for Build Your First Chrome Extension — ny side
+  `/books/preview-build-your-first-chrome-extension` med bogens tre første
+  afsnit (præcis teksten fra EPUB'en) og EPUB-download til slut. Bog-siden
+  har nu en sekundær knap til forhåndsvisningen. Gate GRØN.
 - **9/10:** to deploy-noter lukket på live-indhold (eaa-action, sitemap-scan,
   score-simulator).
 - **9/10:** simulatoren (`ceo/farveblindhed-cta`) linker nu til farveblindhedsguiden,
@@ -110,10 +115,31 @@ Prioriteret efter hvor tæt den er på penge. Baseline er målt på den **bygged
 side; tallene er ikke vores egen trafik. Alt det leverede (1–44) står i
 `docs/plan-arkiv.md`.
 
+50. **Forhåndsvisning af de øvrige fem EPUB'er.** Hvem: dem der lander på
+    `/books/` uden en EPUB-læser. Tal: epub-downloads (9/uge på mahope.tools,
+    feature 45s mønster). Accept: hver bog på `/books` har en «Læs de første
+    kapitler»-knap. Datagrund: kun én bog kan læses i browseren endnu.
+51. **`/page-profile`: sammenlign to URL'er i browseren.** Hvem: SEO-bureauer.
+    Tal: konvertering til Page Profile Pro ($19/år). Accept: to URL-felter, én
+    diff med score-forskel pr. kontrollpunkt, Pro-funktionen bag licenskontrol.
+    Datagrund: CLI'en har allerede `--compare`; web-siden profilerer én URL.
+52. **Skabelon-hub for de mest hentede filer.** Hvem: de 25 downloadbesøg/uge på
+    mahope.tools. Tal: downloads og konvertering til EUComply Pro ($79/år).
+    Accept: én side med hver gratis skabelon, hvad den dækker, og én købsknap.
+    Datagrund: privacy-policy-template.md (5) og ropa-template.md (3) er de
+    mest hentede filer, men hentes som rå .md uden en side der forklarer dem.
+53. **cleancopy.tools: dansk udgave af web-værktøjet.** Hvem: de 3 besøgende/28
+    dage på `/da/`-stierne. Tal: konvertering til Clean Copy Pro ($19/år).
+    Accept: `/da/clean-copy-tool` med batch og licensaktivering på dansk.
+    Datagrund: DA-forsiden lover batch-konvertering «i webværktøjet», men
+    værktøjet findes kun på engelsk.
+
 45. **e-bøger: læs kapitel 1 gratis i browseren.** Hvem: dem der laster de seks
     EPUB'er (top-downloads). Tal: downloads og konvertering til $29-bundlet.
     Accept: en prøveside der viser det første kapitel og linker til bundlet.
     Datagrund: `/books/` er top-download, men der er ingen vej fra læsning til køb.
+    **LEVERET** `ceo/bog-proeveside` ( én bog; udvidelsen af de sidste fem er
+    feature 50).
 46. **cleancopy.tools: batch-konverter i web-værktøjet.** Hvem: de 18 besøgende/28d
     (bounce 81%). Tal: konvertering til Clean Copy Pro ($19/år). Accept: indsæt
     flere HTML-bidder, få flere Markdown-bagter. Datagrund: Pro-funktion bag
@@ -129,54 +155,3 @@ side; tallene er ikke vores egen trafik. Alt det leverede (1–44) står i
     `/color-blindness-simulator` + 9 på kontrastartiklen. Tal: trafik til
     simulatoren og videre til `/scan`/EUComply Pro. Accept: EN+DA-guide med
     målte tal. **LEVERET** `ceo/farveblindhed-artikel`.
-
-33. **`/compliance-report`: virkende vej fra den frie rapport til Pro.** Hvem: de
-    besøgende der kører det gratis tjek. Tal: `checkout.pages` i
-    `reports/weekly/2026-41.json` — kun `/compliance-report` har et købstal (1).
-    Accept: efter en scanning er `#pricingSection` synlig, og rapporten slutter
-    med et opgraderingskort med pris og købsknap. Datagrund: `renderReport()`
-    skjulte prissektionen, så hero- og rapportlinket var døde.
-    **LEVERET** `ceo/compliance-report-upgrade-path`; JS-skjulningen fuldført
-    `ceo/compliance-report-pricing-visible`.
-
-34. **`/scan`: kør et helt sitemap i én scanning.** Hvem: bureauer der tjekker en
-    kundes sider. Tal: scans (`health.scans=51`/uge) og konvertering til EUComply
-    Pro ($79). Accept: indsæt en sitemap-URL, få ét samlet scorekort og én delt
-    rapport. Datagrund: flerside-tjekket findes kun bag Pro.
-    **LEVERET** `ceo/sitemap-scan`.
-
-36. **`/text-on-image-checker`: eksportér det markerede tjek som billede.** Hvem:
-    de 6 besøgende på værktøjet (top-værktøjsside i ugerapporten). Tal:
-    besøgende/brug. Accept: en «Download the marked check»-fil med dommen
-    indbrændt. Datagrund: del-linket findes, men billedet gør ikke.
-    **LEVERET** `ceo/text-on-image-export`.
-
-37. **`/deskuptime`: vis Pro-forskellen i selve tjekresultatet.** Hvem: de 8
-     besøgende/28 dage, der alle forlader forsiden (bounce 100%). Tal: bounce på
-     `/` og konvertering til DeskUptime Pro ($19). Accept: resultatet viser hvad
-     online-overvågning tilføjer. Datagrund: Plausible 7/10. **LEVERET** JavaScript-iend
-     `site/one-off-check.js` og note i `site/deskuptime/index.html`.
-
-38. **eaa-scanner: SARIF-output til GitHub code scanning.** Hvem: de 91
-     npm-downloads/uge — stærkeste adoption. Tal: downloads og CI-integration.
-     Accept: `--sarif` giver et gyldigt SARIF 2.1.0-dokument med regler og fund.
-     Datagrund: udviklere bruger allerede CLI'en, men resultatet kunne ikke vises
-     i GitHubs Security-tab. **LEVERET** `ceo/eaa-sarif`.
-
-39. **Privatlivspolitik-generator.** Hvem: de 9 downloads/uge af
-     privatlivsskabeloner på mahope.tools. Tal: downloads og konvertering til
-     EUComply Pro ($79). Accept: en guide der stiller spørgsmål og genererer en
-     tilpasset politik. Datagrund: skabelonerne er top-downloads, men er statiske.
-     **LEVERED** *Privacy notice generator* kører client-side i begge sprog
-     (`/privacy-notice-generator` og `/privacy-notice-generator-da`), er linket
-     fra forsiden og `free-tools`, og matcher acceptkriteriet om at stille spørgsmål
-     og generere en tilpasset politik.
-
-40. **GitHub Action for eaa-scanner.** Hvem: udviklere der vil scanne i CI. Tal:
-     adoption. Accept: en `action.yml` der kører scanneren og uploader SARIF.
-     Datagrund: SARIF-outputet (feature 38) gør det muligt. *(Kræver publicering
-     på GitHub Marketplace — ❓ Til Mads.)*
-
-41. **DeskUptime forside: 100 % bounce.** Hvem: de 11 besøgende/28 dage. Tal:
-     bounce og konvertering til Pro ($19). Accept: forsiden får en klar værdi og
-     én købsknap. Datagrund: Plausible 8/10 — alle forlader uden at handle.

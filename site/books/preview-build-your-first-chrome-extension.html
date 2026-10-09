@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Read the First Chapters — Build Your First Chrome Extension (Free Preview)</title>
+<meta name="description" content="Read the opening chapters of Build Your First Chrome Extension in your browser — no download, no signup. Then download the complete EPUB free.">
+<meta property="og:type" content="book">
+<meta property="og:title" content="Free preview — Build Your First Chrome Extension">
+<meta property="og:description" content="Read the opening chapters in your browser, then download the complete EPUB free.">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/books/preview-build-your-first-chrome-extension">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/books/preview-build-your-first-chrome-extension">
+<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/books/preview-build-your-first-chrome-extension">
+<link rel="stylesheet" href="/style.css">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebPage",
+  "name": "Free preview — Build Your First Chrome Extension",
+  "url": "https://hermes-passiv.pages.dev/books/preview-build-your-first-chrome-extension",
+  "isPartOf": {"@type": "Book", "name": "Build Your First Chrome Extension — A Complete Practical Guide", "url": "https://hermes-passiv.pages.dev/books/build-your-first-chrome-extension"}
+}
+</script>
+<style>
+.preview-header {
+  max-width: 760px;
+  margin: 60px auto 30px;
+  padding: 0 20px;
+  text-align: center;
+}
+.preview-header h1 {
+  font-size: 34px;
+  line-height: 1.2;
+  margin-bottom: 12px;
+}
+.preview-header .tagline {
+  font-size: 17px;
+  color: #555;
+  margin-bottom: 20px;
+}
+.preview-header img {
+  border-radius: 8px;
+  box-shadow: 0 4px 24px rgba(0,0,0,.25);
+  margin: 0 auto 20px;
+  display: block;
+  max-width: 200px;
+  height: auto;
+}
+.chapter {
+  max-width: 720px;
+  margin: 0 auto 28px;
+  padding: 0 20px;
+}
+.chapter h2 {
+  font-size: 22px;
+  margin: 36px 0 12px;
+}
+.chapter p, .chapter li {
+  font-size: 16px;
+  line-height: 1.65;
+  color: #333;
+}
+.chapter ul {
+  padding-left: 1.3em;
+}
+.preview-end {
+  max-width: 720px;
+  margin: 40px auto 60px;
+  padding: 22px 24px;
+  background: #eef3ff;
+  border: 1px solid #1a56db;
+  border-radius: 10px;
+  text-align: center;
+}
+.preview-end h2 {
+  font-size: 19px;
+  margin: 0 0 8px;
+}
+.preview-end p {
+  font-size: 15px;
+  color: #333;
+  margin: 0 0 14px;
+  line-height: 1.6;
+}
+footer {
+  text-align: center;
+  padding: 40px 20px;
+  color: #888;
+  font-size: 13px;
+}
+footer a { color: #1a73e8; }
+</style>
+</head>
+<body>
+
+<header class="preview-header">
+  <div class="badge" style="display:inline-block;background:#eef3ff;color:#1a56db;font-size:12px;font-weight:700;letter-spacing:.08em;padding:6px 14px;border-radius:999px;margin-bottom:16px;">FREE PREVIEW · E-BOOK</div>
+  <h1>Build Your First Chrome Extension</h1>
+  <p class="tagline">The opening sections, exactly as they appear in the EPUB — read them here, no download and no signup.</p>
+  <img src="/chrome-extension-cover.jpg" alt="Build Your First Chrome Extension — book cover" width="200">
+  <p><a href="/books/build-your-first-chrome-extension">About the book, chapter list and the free EPUB download &rarr;</a></p>
+</header>
+
+<article class="chapter">
+  <h2>Preface: Why This Book Exists</h2>
+  <p>Every developer I know has had the same thought at some point: &ldquo;I wish my browser could just do X.&rdquo; Maybe it&rsquo;s copying text without formatting, checking a page for accessibility issues, or automating a repetitive task. Chrome extensions are how you build that.</p>
+  <p>I wrote this book because when I built my first extension (Clean Copy &mdash; an HTML-to-Markdown converter that runs in your browser), I had to piece together information from a dozen sources. The official Chrome docs are thorough but scattered. Stack Overflow answers assume you already know the architecture. Blog posts go out of date when Google updates the platform.</p>
+  <p>This book is what I wish I&rsquo;d had: a single, practical, step-by-step guide that takes you from &ldquo;I&rsquo;ve never built an extension&rdquo; to &ldquo;my extension is live in the Chrome Web Store.&rdquo;</p>
+</article>
+
+<article class="chapter">
+  <h2>Who This Book Is For</h2>
+  <ul>
+    <li>Web developers who know HTML, CSS, and basic JavaScript</li>
+    <li>Anyone who has thought &ldquo;I could build a browser extension for that&rdquo;</li>
+    <li>Developers who want to publish their first Chrome Web Store listing</li>
+  </ul>
+  <p>You don&rsquo;t need experience with service workers, the Chrome API, or browser extension architecture. You&rsquo;ll learn all of that here.</p>
+</article>
+
+<article class="chapter">
+  <h2>What You Will Build</h2>
+  <p>By the end of this book, you&rsquo;ll have built and published a working Chrome extension. Along the way, you&rsquo;ll create:</p>
+  <ul>
+    <li>A popup that interacts with the current page</li>
+    <li>A context menu that copies formatted text</li>
+    <li>A background service worker that handles events</li>
+    <li>An options page that persists user settings</li>
+    <li>A keyboard shortcut for power users</li>
+  </ul>
+  <p>The final extension is Clean Copy Lite &mdash; a simplified version of the real Clean Copy extension. It converts selected HTML into clean Markdown, ready to paste into any document.</p>
+</article>
+
+<div class="preview-end">
+  <h2>That was the beginning</h2>
+  <p>The complete book continues with ten chapters and three appendices: the popup, keyboard shortcuts, <code>chrome.storage</code>, the options page, icons, publishing to the Chrome Web Store, testing, the Firefox port, and complete manifest and permissions references.</p>
+  <p>
+    <a href="/downloads/build-your-first-chrome-extension.epub" class="btn-primary" style="display:inline-block;padding:12px 26px;background:#1a73e8;color:#fff;border-radius:6px;text-decoration:none;font-weight:600;">Download the full EPUB — free</a>
+  </p>
+  <p style="font-size:13px;color:#666;margin:0;">No account, no email, no payment. Updates are free too. <a href="/books">See all six free e-books</a>.</p>
+</div>
+
+<footer>
+  <p><a href="/books/build-your-first-chrome-extension">Build Your First Chrome Extension</a> · <a href="/books">All e-books</a> · <a href="/">Home</a> · <a href="/clean-copy">Clean Copy Extension</a></p>
+</footer>
+
+</body>
+</html>
