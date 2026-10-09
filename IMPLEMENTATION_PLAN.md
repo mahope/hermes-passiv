@@ -1,5 +1,10 @@
 # STATUS
 
+- **9/10:** dansk udgave af licensøgningen leveret
+  (`ceo/da-license-lookup`): `/da/license-lookup` med samme funktionalitet
+  som den engelske side — opslag af nøgle på ordrehenvisning og e-mail,
+  frigørelse af maskiner, kopier-knap. Al tekst på dansk, hreflang begge veje.
+  Gaten grøn (519/519 tests).
 - **9/10:** de fem bog-prøvesider fik en betalt vej
   (`ceo/bogproeve-betalt-vej`): hver ende-sektion linker til EUComply Pro
   ($79 pr. website pr. år) på `/compliance-report`. tool-paid-path var rød
