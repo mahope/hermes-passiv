@@ -9,9 +9,11 @@
   separate $69-kit. Fem sider lover nu en PDF, man kan udlevere.
 - **10/10:** STATUS kogt ned fra 33 til 14 linjer (plan-status-porten); de
   ældste punkter er flyttet til `docs/plan-arkiv.md`.
-- **10/10:** dependabot-PR #3 (undici 7.29.0 → 7.30.0 i `desktop/`) landet:
-  2 høje + 8 moderate sårbarheder i lockfilen lukket (`npm audit` 10 → 9,
-  ingen undici-advisories mere). PR #3 lukkes.
+- **10/10:** dependabot-PR #3 (undici 7.29.0 → 7.30.0 i `desktop/`) landet og
+  lukket: 2 høje + 8 moderate advisories væk fra lockfilen.
+- **10/10:** desktop-lockfilens sidste HØJE sårbarhed (`http-cache-semantics`
+  4.2.0 → 4.3.0 via `overrides`) er lukket; `npm audit` 9 → 8 fund, alle
+  moderate og kun i electron-build-kæden (`sprintf-js` har ingen rettet udgivelse).
 - 0 åbne review-fund. Sentry: 0 uløste fejl (14 dage). 0 åbne PR'er.
 - **PR-TJEK 10/10:** 0 åbne PR'er (undici-PR landet, se næste punkt).
   **BRANCH-TJEK 9/10:** `origin/ceo/hub-readme-note` kan slettes, men
@@ -23,6 +25,10 @@ Ingen.
 
 ## Verificér deploy
 
+- **VERIFICÉR DEPLOY:** `http-cache-semantics` 4.3.0 i desktop-lockfil +
+  download-zip `ceo/desktop-http-cache` 10/10-2026 — tjek at
+  `https://mahope.tools/downloads/eaa-scanner-desktop-src-1.3.4.zip` indeholder
+  http-cache-semantics 4.3.0.
 - **VERIFICÉR DEPLOY:** undici 7.30.0 i `desktop/package-lock.json` +
   download-zip `ceo/undici-sikkerhedsopdatering` 10/10-2026 — tjek at
   `https://mahope.tools/downloads/eaa-scanner-desktop-src-1.3.4.zip` indeholder
@@ -103,14 +109,12 @@ Ingen.
    (`gh run list`: success på `7154b50a`; alle 11 commits siden `74963e5c`
    verificeret live — se STATUS).
 
-3. **Desktop-lockfilen har 9 resterende sårbarheder.** Hvorfor:
-   `npm audit --package-lock-only` i `desktop/` viser `http-cache-semantics`
-   (HØJ, fix uden major) og electron-builder-kæden (`@electron/get`,
-   `app-builder-lib`, `dmg-builder`, `electron-builder`,
-   `electron-builder-squirrel-windows`, `global-agent`, `roarr`,
-   `sprintf-js` — kræver electron-builder 26.5.0, semver-major). Accept:
-   `http-cache-semantics` løftet og audit under 5 fund; ellers ❓ til Mads om
-   en ny electron-builder, der bygger til tre platforme.
+3. ✅ **Desktop-lockfilens sårbarheder** — den HØJE (`http-cache-semantics`)
+   løftet 4.2.0 → 4.3.0 via `overrides` 10/10. De 8 moderate sidder alle i
+   electron-build-kæden og stammer fra `sprintf-js` (≤ 1.1.3, ingen rettet
+   udgivelse findes) samt `http-cache-semantics`-forgreningen under
+   `@electron/get`. `electron-builder` er allerede nyeste (26.15.3); nærmeste
+   «fix» er et nedgradér til 26.5.0. Kun build-tid, ikke i den udgivne app.
 
 4. **Konvertering kan ikke måles uden `STATS_TOKEN`.** Hvorfor: `/api/stats`
    svarer 401, så trafikrangeringer er vor egen links-tælling, ikke besøg.

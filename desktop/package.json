@@ -84,6 +84,9 @@
     "electron": "^44.4.5",
     "electron-builder": "^26.15.3"
   },
+  "overrides": {
+    "http-cache-semantics": "^4.3.0"
+  },
   "engines": {
     "node": ">=22.12.0"
   }
