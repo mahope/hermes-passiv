@@ -131,6 +131,10 @@ CLIENTS: dict[str, str] = {
     # syvdagesreglen har intet at sige om den. Tom streng = intet product
     # forventet, kun tilladt når begrundelsen står her.
     "site/license-lookup.html": "",
+    # 9/10: den danske udgave af nøgleopslaget er samme klient som den
+    # engelske — den kalder kun `/lookup`, `/deactivate` og `/devices`, aldrig
+    # `activate`/`validate`, så intet product forventes her heller.
+    "site/da/license-lookup.html": "",
     "page-profile/page_profile.py": "page-profile-pro",
     "site/downloads/page-profile/page_profile.py": "page-profile-pro",
     "site-icons/site_icons.py": "",
@@ -228,6 +232,7 @@ CACHE_RULE_SKIP = {
     # "reload in a minute" uden at fjerne noget. Skriver den en cache, skal
     # den have reglen — det er derfor den står her med sin grund.
     "site/license-lookup.html": "opslagsside uden cachelagret Pro-status — intet at låse ud",
+    "site/da/license-lookup.html": "dansk opslagsside uden cachelagret Pro-status — intet at låse ud",
     "tools/clean_copy_license.js": "den kanoniske kilde — filen ER reglen",
     "extension-clean-copy/license.js": "byte-identisk kopi af den kanoniske kilde",
     "extension-clean-copy-firefox/license.js": "byte-identisk kopi af den kanoniske kilde",

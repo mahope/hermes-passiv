@@ -1919,7 +1919,7 @@
         },
         {
           "id": "rules",
-          "where": "site/clean-copy-tool.html:506 proCard() «In the browser extension: define your own rules once and reuse them on every site.»",
+          "where": "site/clean-copy-tool.html:508 proCard() «In the browser extension: define your own rules once and reuse them on every site.»",
           "labels": {
             "en": [
               "Custom cleanup rules you define once, in the browser extension"

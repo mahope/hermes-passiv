@@ -39,22 +39,22 @@
    "EUComply Pro": "/compliance-report"
   },
   "/books/preview-build-your-first-chrome-extension": {
-    "Clean Copy": "/clean-copy-tool"
-  },
-  "/books/preview-nis2-for-agencies": {
-    "EUComply Pro": "/compliance-report"
-  },
-  "/books/preview-gdpr-for-agencies": {
-    "EUComply Pro": "/compliance-report"
-  },
-  "/books/preview-eaa-checklist": {
-    "EUComply Pro": "/compliance-report"
-  },
-  "/books/preview-eaa-shopify": {
-    "EUComply Pro": "/compliance-report"
+   "Clean Copy": "/clean-copy-tool"
   },
   "/books/preview-cookie-consent-guide": {
-    "EUComply Pro": "/compliance-report"
+   "EUComply Pro": "/compliance-report"
+  },
+  "/books/preview-eaa-checklist": {
+   "EUComply Pro": "/compliance-report"
+  },
+  "/books/preview-eaa-shopify": {
+   "EUComply Pro": "/compliance-report"
+  },
+  "/books/preview-gdpr-for-agencies": {
+   "EUComply Pro": "/compliance-report"
+  },
+  "/books/preview-nis2-for-agencies": {
+   "EUComply Pro": "/compliance-report"
   },
   "/case-converter": {
    "say thanks": "/support"
@@ -138,9 +138,13 @@
    "Website Table Into Notion Paste real Markdown tables straight into a Notion page.": "/blog/copy-table-website-to-notion"
   },
   "/da/activate": {
-   "Clean Copy-webværktøjet": "/clean-copy-tool",
+   "Clean Copy-webværktøjet": "/da/clean-copy-tool",
    "Køb Clean Copy Pro — $19/år": "https://buy.stripe.com/6oU4gy76PgvgdBIdAXbMQ00",
-   "gratis og Pro side om side": "/clean-copy-tool"
+   "gratis og Pro side om side": "/da/clean-copy-tool"
+  },
+  "/da/clean-copy-tool": {
+   "pro-buy": "https://buy.stripe.com/6oU4gy76PgvgdBIdAXbMQ00",
+   "pro-buy-lifetime": "https://buy.stripe.com/aFadR81Mv6UGgNU68vbMQ0d"
   },
   "/da/compliance-report": {
    "Køb EUComply Pro Lifetime — $149 én gang": "https://buy.stripe.com/28E5kC3UDcf0btA2WjbMQ0f",
@@ -192,6 +196,9 @@
    "Webflow vs Squarespace: tilgængelighed sammenlignet": "/da/blog/webflow-vs-squarespace-tilgaengelighed",
    "Wix og tilgængelighed: bliv EAA-compliant": "/da/blog/wix-tilgaengelighed-eaa"
   },
+  "/da/license-lookup": {
+   "Aktivér Clean Copy Pro her →": "/da/clean-copy-tool"
+  },
   "/da/page-profile": {
    "Open Graph-tjekker": "/da/blog/open-graph-tjekker-guide",
    "pp-buy-lifetime": "https://buy.stripe.com/8x2cN42Qz0wifJQgN9bMQ0e",
@@ -223,8 +230,8 @@
    "Page Profile": "/da/page-profile"
   },
   "/da/url-til-markdown": {
-   "Web-værktøj": "/clean-copy-tool",
-   "Web-værktøjet": "/clean-copy-tool",
+   "Web-værktøj": "/da/clean-copy-tool",
+   "Web-værktøjet": "/da/clean-copy-tool",
    "page-profile": "/da/page-profile"
   },
   "/developers": {

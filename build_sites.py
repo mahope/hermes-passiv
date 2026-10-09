@@ -61,7 +61,7 @@ SITES: dict[str, dict] = {
         "nav": {
             "en": [("Extensions", "/#install"), ("CLI", "/clean-copy-cli-ref"), ("Tool", "/clean-copy-tool"),
                    ("Guides", "/blog/"), ("GitHub", "https://github.com/mahope/clean-copy")],
-            "da": [("Udvidelser", "/da/#install"), ("CLI", "/clean-copy-cli-ref"), ("Værktøj", "/clean-copy-tool"),
+            "da": [("Udvidelser", "/da/#install"), ("CLI", "/clean-copy-cli-ref"), ("Værktøj", "/da/clean-copy-tool"),
                    ("Guides", "/blog/"), ("GitHub", "https://github.com/mahope/clean-copy")],
         },
         "include": [

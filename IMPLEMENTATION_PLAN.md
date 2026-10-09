@@ -1,29 +1,26 @@
 # STATUS
 
-- **9/10:** dansk udgave af licensøgningen leveret
-  (`ceo/da-license-lookup`): `/da/license-lookup` med samme funktionalitet
-  som den engelske side — opslag af nøgle på ordrehenvisning og e-mail,
-  frigørelse af maskiner, kopier-knap. Al tekst på dansk, hreflang begge veje.
-  Gaten grøn (519/519 tests).
-- **9/10:** de fem bog-prøvesider fik en betalt vej
-  (`ceo/bogproeve-betalt-vej`): hver ende-sektion linker til EUComply Pro
-  ($79 pr. website pr. år) på `/compliance-report`. tool-paid-path var rød
-  med 10 fund, er nu GRØN. Gaten grøn (519/519 tests).
-- **9/10:** page-profiles sammenligning af to URL'er er verificeret live (to
-  URL-felter + «Compare») — feature 51 LEVERET, VERIFICÉR-noten lukket.
-- **9/10:** rød CI rettet i tre runder (`ceo/kontrast-selvtage-hero`,
-  `ceo/page-profile-cta`, `ceo/plan-status-laengde`): hero-montagen døde i
-  selvmålingen, page-profile havde to donationer, STATUS var 35 linjer.
+- **9/10:** rød CI rettet og de danske sider peger nu på det danske
+  webværktøj (`ceo/da-vaerktoej-links`): `license-clients` kendte ikke den
+  nye `/da/license-lookup`, og `catalog-where` lå skjult bag den (506 → 508).
+  20 danske sider sendte læseren til det engelske `/clean-copy-tool`.
+  Gaten grøn (187 steps).
+- **9/10:** dansk udgave af licensøgningen leveret (`ceo/da-license-lookup`):
+  `/da/license-lookup` med opslag af nøgle, frigørelse af maskiner,
+  kopier-knap. Al tekst på dansk, hreflang begge veje.
+- **9/10:** bog-prøvesider fik betalt vej (`ceo/bogproeve-betalt-vej`), og
+  page-profiles to-URL-sammenligning er verificeret live (feature 51 LEVERET).
 - **9/10:** Clean Copy-webværktøjet på dansk (`ceo/clean-copy-da-tool`) og
-  prøvesider for de fem øvrige EPUB'er (`ceo/bog-forhaandsvisning`) leveret.
-  Review-fonds to [LAV] gennemgået: ingen af dem var en åben fejl.
+  prøvesider for de fem øvrige EPUB'er leveret; review-fonds to [LAV]
+  gennemgået uden åbne fejl.
+- **9/10:** rød CI rettet i tre runder (`ceo/kontrast-selvtage-hero`,
+  `ceo/page-profile-cta`, `ceo/plan-status-laengde`): hero-montage,
+  dobbelt-donation på page-profile, STATUS 35 linjer.
 - **9/10:** page-profiles Pro-kort og fire guides siger nu at sammenligning i
-  browseren er gratis (`ceo/page-profile-cta`, `ceo/forsider-pro-prajs`) — de
-  loved Pro for noget tidligere arbejde havde gjort gratis.
+  browseren er gratis (`ceo/page-profile-cta`, `ceo/forsider-pro-prajs`).
 - 0 åbne review-fund. Sentry: 0 uløste fejl (14 dage). 0 åbne PR'er.
 - **PR-TJEK 9/10:** 0 åbne PR'er. **BRANCH-TJEK 9/10:**
-  `origin/ceo/hub-readme-note` (2 uger) er landet i `main` og kan slettes,
-  men `git push --delete` er spærret af miljøet (❓).
+  `origin/ceo/hub-readme-note` kan slettes, men push --delete er spærret (❓).
 - **CEO-kø #0** er færdig og merged; 0 åbent.
 ## Åbne review-fund
 
@@ -31,6 +28,11 @@ Ingen.
 
 ## Verificér deploy
 
+- **VERIFICÉR DEPLOY:** danske lenker + rød CI `ceo/da-vaerktoej-links`
+  9/10-2026 20:50 — tjek at `https://mahope.tools/da/license-lookup` (200)
+  viser «Find din licensnøgle», at `/da/clean-copy-tool` (200) viser
+  webværktøjet på dansk, og at f.eks. `/da/blog/kopier-tabel-til-excel`
+  linker til `/da/clean-copy-tool` (ikke `/clean-copy-tool`).
 - **VERIFICÉR DEPLOY:** dansk licensøgning `ceo/da-license-lookup` 9/10-2026
   15:00 — tjek at `https://mahope.tools/da/license-lookup` (200) viser
   «Find din licensnøgle» og at formularen virker. Filen er i `dist/` lokalt,

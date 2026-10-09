@@ -62,7 +62,7 @@ ROOT = Path(__file__).resolve().parent.parent
 RE_LANG = re.compile(r'<html[^>]*\blang="(da|en)"', re.I)
 RE_CANONICAL = re.compile(r'<link rel="canonical" href="([^"]+)"', re.I)
 RE_ALT = re.compile(r'<link rel="alternate" hreflang="([^"]+)" href="([^"]+)"', re.I)
-RE_LINK = re.compile(r'<a [^>]*href="(/[a-z0-9][a-z0-9/-]*)"[^>]*>(.*?)</a>', re.I | re.S)
+RE_LINK = re.compile(r'<a [^>]*href="(/[a-z0-9][a-z0-9/-]*)(?:#[^"]*)?"[^>]*>(.*?)</a>', re.I | re.S)
 
 OTHER = {"en": "da", "da": "en"}
 
@@ -320,6 +320,27 @@ def self_test() -> int:
                 print(f"KONTROLFEJL: uventet {p!r}", file=sys.stderr)
             return 1
         scenarios.append(("dansk side linker til engelsk udgave af en dansk side", got))
+
+        # 6b — samme fejl, men med et anker. Fragmentet må ikke gøre linket
+        #      usynligt for porten: en dansk læser sendes stadig til den
+        #      engelske side, blot længere ned på den.
+        _reset(root)
+        _fixture(root, {
+            "page-profile.html": ("en", {"da": "https://mahope.tools/da/page-profile"}),
+            "da/page-profile.html": ("da", {"en": "https://mahope.tools/page-profile"}),
+        })
+        (root / "dist" / "mahope.tools" / "da" / "activate.html").write_text(
+            '<!doctype html><html lang="da"><head><title>T</title>'
+            '<link rel="canonical" href="https://mahope.tools/da/activate">'
+            "</head><body>"
+            '<a href="/page-profile#pro">Aktivér her</a>'
+            "</body></html>", encoding="utf-8")
+        got = check(root)
+        if len(got) != 1 or "som findes på dansk som /da/page-profile" not in got[0]:
+            for p in got:
+                print(f"KONTROLFEJL: uventet {p!r}", file=sys.stderr)
+            return 1
+        scenarios.append(("dansk side linker til engelsk side med anker", got))
 
         # 5 — kontrol: 404 uden <html lang> må ikke fejle
         _reset(root)
