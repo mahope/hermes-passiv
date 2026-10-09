@@ -3589,11 +3589,11 @@ def self_test() -> int:
               "site/da/page-profile.html og site/page-profile.html")
         return 1
     da_sold_free = da_real.replace(
-        "<li>Sammenligning — diff to URLs side om side",
-        f"{old_da_pro}\n            <li>Sammenligning — diff to URLs side om side")
+        "<li>Sammenligningstilstand fra kommandolinjen — diff to URL'er i terminalen",
+        f"{old_da_pro}\n            <li>Sammenligningstilstand fra kommandolinjen — diff to URL'er i terminalen")
     en_sold_free = en_real.replace(
-        "<li>Comparison mode — diff two URLs side by side",
-        f"{old_en_pro}\n            <li>Comparison mode — diff two URLs side by side")
+        "<li>Compare mode from the command line — diff two URLs in your terminal",
+        f"{old_en_pro}\n            <li>Compare mode from the command line — diff two URLs in your terminal")
     da_in_free_card = da_real.replace(
         "<li>Historik — hver kørsel",
         f"{old_da_pro}\n            <li>Historik — hver kørsel")

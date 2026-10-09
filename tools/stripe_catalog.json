@@ -428,15 +428,13 @@
       "pro_features": [
         {
           "id": "compare",
-          "where": "page-profile/page_profile.py:1066 require_pro(\"compare mode\") -> run_compare :801-855",
+          "where": "page-profile/page_profile.py:1105 require_pro(\"compare mode\") -> run_compare :840-890",
           "labels": {
             "en": [
-              "comparison mode",
-              "compare two urls"
+              "compare mode from the command line"
             ],
             "da": [
-              "sammenligning",
-              "sammenlign to urls"
+              "sammenligningstilstand fra kommandolinjen"
             ]
           }
         },

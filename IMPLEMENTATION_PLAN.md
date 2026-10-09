@@ -7,6 +7,9 @@
 - **9/10:** review-fonds to [LAV] gennemgået: bog-prøvesiden har ingen
   katalogpost med forkert produkt, og `/support` og `/da/support` er begge i
   `route_inventory.json` — ingen af dem var en åben fejl.
+- **9/10:** page-profiles Pro-kort og fire guides siger nu at sammenligning i
+  browseren er gratis (`ceo/page-profile-cta`) — de loved Pro for noget
+  8d30d989 gjorde gratis.
 - **9/10:** review-fond [MIDDEL] rettet: hero-gradient-måling dømmes nu på
   alle montager med `gfrom`/`gto`, ikke kun dem med upload-felt.
 - **9/10:** review-fond [HØJ] rettet: scanFejl bruger `String(e)`, scan-proxy
