@@ -31,6 +31,10 @@ Ingen.
 
 ## Verificér deploy
 
+- **VERIFICÉR DEPLOY:** dansk licensøgning `ceo/da-license-lookup` 9/10-2026
+  15:00 — tjek at `https://mahope.tools/da/license-lookup` (200) viser
+  «Find din licensnøgle» og at formularen virker. Filen er i `dist/` lokalt,
+  men live-sitet gav 404 ved tjek — deploy endnu ikke gået igennem.
 - **VERIFICÉR DEPLOY OK 9/10:** scan-proxy POST + scanFejl fix `ceo/scan-fejl-post` — live `https://mahope.tools/scan-proxy` svarer 400 på POST med ugyldig URL (ruten er live og fungerer).
 - **VERIFICÉR DEPLOY OK 9/10:** fire pushes `ceo/page-profile-compare`,
   `ceo/kontrast-selvtage-hero`, `ceo/page-profile-cta`, `ceo/plan-status-laengde`
