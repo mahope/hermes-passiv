@@ -3237,13 +3237,7 @@ def main(argv: list[str] | None = None) -> int:
         for kode in sidekoder(fil, html):
             præfiks = præfiks_i(kode)
             felter = felter_i(html, præfiks)
-            if felter.get(præfiks + "file") is None:
-                # Hero-demoen (feature 43/44) har intet upload-felt: bruteren
-                # vælger baggrund og farve, men sender intet billede. De fire
-                # måle-løfter stilles via et upload, så de tælles ikke for
-                # denne montage — den dømmes på sin markup i kæden nedenfor.
-                # En måling uden billede ville dømme en egenskab, bruteren ikke
-                # kan få styrket.
+            if felter.get(præfiks + "gfrom") is None and felter.get(præfiks + "gto") is None:
                 continue
             grad = koer(hent_kode(fil, html, kode), hele=True,
                         felter=felter).get("gradient")

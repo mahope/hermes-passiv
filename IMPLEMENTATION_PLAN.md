@@ -1,5 +1,9 @@
 # STATUS
 
+- **9/10:** review-fond [MIDDEL] rettet: hero-gradient-måling dømmes nu på
+  alle montager med `gfrom`/`gto`, ikke kun dem med upload-felt.
+- **9/10:** review-fond [HØJ] rettet: scanFejl bruger `String(e)`, scan-proxy
+  er POST i worker, klient og tests. Gate grøn (519/519).
 - **9/10:** feature 49 leveret (`ceo/farveblindhed-artikel`): ny guide i EN+DA,
   `/blog/color-blindness-simulation-check` + `/da/blog/farveblindhed-tjek`, med
   en målende kontrasttabel pr. synstype — alle 24 tal beregnet med simulatorens
@@ -21,6 +25,8 @@
 Ingen.
 
 ## Verificér deploy
+
+- **VERIFICÉR DEPLOY:** scan-proxy POST + scanFejl fix `ceo/scan-fejl-post 9/10-2026`
 
 - **VERIFICÉR DEPLOY:** bog-prøveside + rød-port-fix `ceo/bogproeve-betalt-vej
   9/10-2026 03:30` — noten glemt i squash-commiten `fe9bdd51`, og siden kom
