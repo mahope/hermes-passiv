@@ -1,5 +1,12 @@
 # STATUS
 
+- **9/10:** rød CI rettet (`ceo/kontrast-selftest-hero`): hero-montagen har
+  intet upload-felt, så selvmålingen døde i harnessen efter 986e917f, og
+  scan-clients' mutation ledte efter en streng 85a47806 havde skiftet ud —
+  tre pushes nåede aldrig ud. `quality_gate.py` GRØN (187 steps).
+- **9/10:** review-fonds to [LAV] gennemgået: bog-prøvesiden har ingen
+  katalogpost med forkert produkt, og `/support` og `/da/support` er begge i
+  `route_inventory.json` — ingen af dem var en åben fejl.
 - **9/10:** review-fond [MIDDEL] rettet: hero-gradient-måling dømmes nu på
   alle montager med `gfrom`/`gto`, ikke kun dem med upload-felt.
 - **9/10:** review-fond [HØJ] rettet: scanFejl bruger `String(e)`, scan-proxy
@@ -27,7 +34,7 @@ Ingen.
 ## Verificér deploy
 
 - **VERIFICÉR DEPLOY OK 9/10:** scan-proxy POST + scanFejl fix `ceo/scan-fejl-post` — live `https://mahope.tools/scan-proxy` svarer 400 på POST med ugyldig URL (ruten er live og fungerer).
-- **VERIFICÉR DEPLOY:** page-profile compare `ceo/page-profile-compare 9/10-2026` — tjek at `https://mahope.tools/page-profile` viser compare-sektionen med to URL-felter og «Compare»-knappen.
+- **VERIFICÉR DEPLOY:** page-profile compare `ceo/page-profile-compare` 9/10-2026 — tre pushes lå ude af deploy pga. rød gate; de skal nu ud sammen med `ceo/kontrast-selftest-hero`. Tjek at `https://mahope.tools/page-profile` viser compare-sektionen med to URL-felter og «Compare»-knappen.
 
 - **VERIFICÉR DEPLOY:** bog-prøveside + rød-port-fix `ceo/bogproeve-betalt-vej
   9/10-2026 03:30` — noten glemt i squash-commiten `fe9bdd51`, og siden kom

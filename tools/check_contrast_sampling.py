@@ -803,528 +803,541 @@ const FARVEPAR = __FARVEPAR__;
 const FLADT = __FLADT__;
 const TODELT = __TODELT__;
 const GRADIENT = __GRADIENT__;
-const svar = [];
-for (const p of FARVEPAR) {
-  svar.push({ navn: p[0], forventet: p[3], fik: spoerg(ensfarvet(400, 300, p[1]), p[2]) });
-}
-svar.push({ navn: FLADT[0], forventet: FLADT[4], fik: spoerg(lodret(FLADT[1], FLADT[2], '#ffffff', '#000000'), '#ffffff', 'Hi', FLADT[3], FLADT[3]) });
-for (const t of TODELT) {
-  svar.push({ navn: t[0], forventet: t[5], fik: spoerg(todelt(t[1], t[2], '#000000', '#ffffff'), t[4], 'Hi', t[3], 200) });
-}
-// Den ene case hvor bedste og dårligste baggrund kan ligge i samme kasse.
-svar.push({ navn: GRADIENT[0], forventet: GRADIENT[6],
-            fik: spoerg(gradient(GRADIENT[1], GRADIENT[2], '#ffffff', '#000000', 120), GRADIENT[5], __GRADIENT_TEKST__, GRADIENT[3], GRADIENT[4]) });
-// De to billeder rettelsen er skrevet til: det ene kan klares med én
-// tekstfarve, det andet kræver et slør fordi ingen farve består begge
-// ende. Begge er **fejlende** i udgangspunktet, så tallet efter et tryk
-// på knappen kan dømmes mod det krav, siden viser.
-const FIX = [
-  // Alle fire er billeder hvor den **venstre** halvdel er mørkere end den
-  // højre, og teksten står midt i overgangen — så kassen dækker begge ende
-  // og værktøjet måler det dårligste par. Det er den situation «fix» er
-  // skrevet til; på et ensfarvet billede ville den altid bestå med hvid
-  // tekst, og knappen ville aldrig blive prøvet af.
-  { navn: 'jævnt baggrund (tekstfarve)', bg: ['#60646c', '#787c84'], farve: '#ffffff', krav: 4.5 },
-  { navn: 'midtone baggrund (tekstfarve)', bg: ['#6e727a', '#82868e'], farve: '#ffffff', krav: 4.5 },
-  { navn: 'spredt baggrund (slør)', bg: ['#161a22', '#ebeef2'], farve: '#ffffff', krav: 4.5 },
-  { navn: 'spredt baggrund, stor tekst', bg: ['#161a22', '#ebeef2'], farve: '#ffffff', krav: 3 },
-];
-const fixSvar = [];
-for (const f of FIX) {
-  const d = todeltVandret(400, 300, f.bg[0], f.bg[1]);
-  // `fontsize`-stubben står på `large`, så 4,5:1-casen sættes til `small` —
-  // ellers ville alle fire dømme det samme krav, og 3:1-casen ville være
-  // en dublet af den første.
-  N('fontsize').value = f.krav === 3 ? 'large' : 'small';
-  const r = fixEfter(d, f.farve, 'Dette er en overskrift over et todelt billede', 20, 140);
-  fixSvar.push({ navn: f.navn, krav: f.krav, foer: r.foer, efter: r.efter });
-}
+// Billedkæderne kræver et upload-felt. En montage uden (heroen på artiklerne)
+// springer dem over — JSON'en får da kun gradient- og demo-resultatet, og
+// dommen dømmer de kæder der findes. Variablerne de skriver erklæres herude,
+// så JSON-outputtet altid kan læse dem.
+var svar = [], fixSvar = [];
+var sekFarve = null, fixA = null, farveEfterFix = null, sekB1 = null, renB2 = null;
+var dlMaal = null, markMaalt = null, spotMaalt = null, deltaMaalt = null, hexMaalt = null, blokMaalt = null;
+  // Demo-noten igen *efter* at bruteren har valgt sit eget billede. Det er den
+  // anden halvdel af dommen: noten skal forsvinde, fordi «measured against the
+  // lightest and darkest pixels under your letters» først er sandt når der er
+  // et billede der er bruterens. Et upload her — også efter at state er flyttet
+  // — gør dommen uafhængig af hvilken måling der kørte sidst.
+  function demoEfterUpload() {
+    // En montage uden upload-felt (heroen på artiklerne) kan ikke vise «efter
+    // upload» — der returneres null, og dommen springer de to upload-løfter over
+    // i stedet for at dømme en tilstand der ikke findes.
+    if (!N('file')) return null;
+    Img.next = ensfarvet(300, 150, '#ffffff');
+    N('file').files = [{ type: 'image/png' }];
+    N('file').fire('change', { target: { files: N('file').files } });
+    const h = N('result').innerHTML || '';
+    const m = /data-ti-demo>([\s\S]*?)</.exec(h);
+    return { tekst: m ? m[1] : null, harTal: /<strong>[0-9.,]+:1<\/strong>/.test(h) };
+  }
 
-/* ---- To billeder i træk med «fix» imellem -------------------------------
- *
- * Alt ovenfor dømmer **ét** billede pr. måling. Det er den fejlform reviewen
- * 3/10 målte i rigtig Chromium på den byggede side: `loadFile()` satte hverken
- * `scrim` eller `lastFix` null, så et slør beregnet på *første* bildes
- * endepunkter blev tegnet på det næste, og `.ti-fixed`-teksten stod under et
- * tal der ikke stammer fra det bruteren havde lavet. Målt: foto A efter fix
- * 4,52:1, og det næste foto **1,52:1** med «Jeg lagde et 13 % mørkt lag bag
- * teksten» under sig — en påstand målt på et andet input end den den
- * udtaler sig om.
- *
-* `spoerg()` og `fixEfter()` kan ikke finde den: begge sætter `fg` og affyrer
- * `input`, og **den** handler nulstiller sløret. Så hvert eneste kald i
- * porten ryddede netop den tilstand, fejlen ligger i. Derfor er der her en
- * egen kæde, der *kun* uploader: `uploadBillede()` rører hverken farvefelt,
- * tekstfelt eller mus — det er præcis hvad en bruger gør ved sit tredje foto
- * i træk.
- *
- * Rækkefølgen er hele pointen, og den er kun to målinger:
- *   1. foto A + «fix»     → kernen får et slør, der hører til A
- *   2. foto B, intet rørt → `efter` er hvad bruteren faktisk ser
- *   3. foto B, farve=F    → `refer` er B's eget tal *ved den farve fixen
- *                           efterlod*, altså B målt uden slør
- *
- * Step 3 er ikke en småting. `applyFix()` sætter **også** tekstfarven, fordi
- * et hvidt slør kræver sort tekst — så efter en rettelse står der `#000000` i
- * feltet, og B's eget tal er sort-tekst-på-B, ikke hvid-på-B. Uden step 3
- * ville dommen sammenligne to forskellige farver og dømme en kern der gør
- * helt rigtigt. Den kommer *efter* step 2, så den nulstiller ikke den
- * tilstand den måler. */
-function uploadBillede(billede) {
-  Img.next = billede;
-  N('file').files = [{ type: 'image/png' }];
-  N('file').fire('change', { target: { files: N('file').files } });
-}
-// Læser skærmen, ikke en intern variabel: samme greb som `fixKnap()`.
-function laesSkarm() {
-  const res = N('result');
-  const m = /<strong>([0-9.,]+):1<\/strong>/.exec(res.innerHTML);
-  return {
-    fik: m ? parseFloat(m[1].replace(',', '.')) : null,
-    harFast: /\bti-fixed\b/.test(res.innerHTML),
-    harKnap: !!res.querySelector('[data-ti-fix]'),
-  };
-}
-// A er todelt mørk→lys med hvid tekst: ingen tekstfarve består begge ende, så
-// rettelsen *må* lægge et slør. Det er den eneste form hvor sløret overlever
-// til næste foto, så den er den eneste der kan finde fejlen.
-// B er derimod **mørk**, fordi det er den farve fixen efterlader: `applyFix()`
-// sætter tekstfarven til sort ved et hvidt slør, og sort tekst på et lyst
-// billede består altid. Et B der så består ville få dommen til at gråde over
-// en «fix»-knap der med vilje mangler, og løfter (b) og (c) ville være grønne
-// fordi de aldrig kan se den fejl, de er skrevet til. B skal altså fejle —
-// sort på #3a3a3a er ca. 1,9:1 mod kravet 4,5:1.
-const sekA = todeltVandret(400, 300, '#161a22', '#ebeef2');
-const sekB = ensfarvet(400, 300, '#3a3a3a');
-const sekTekst = 'Dette er en overskrift over et todelt billede';
-N('fontsize').value = 'small';
-const sekFarve = '#ffffff';
-// 1 — fix på A. `fixEfter()` bruger præcis den geometri som FIX-tabellen
-// bruger til sin **slør**-case, og det er ikke en tilfældighed: på en anden
-// tekstkasse vælger `suggestFix()` en *tekstfarve* i stedet, og så er der intet
-// slør at lække. Kun slør-casen kan finde den fejl, porten er skrevet til.
-const fixA = fixEfter(sekA, sekFarve, sekTekst, 20, 140);
-const farveEfterFix = N('fg').value;
-// 2 — foto B igen. Ingen `fg`, intet `input`, ingen mousedown.
-uploadBillede(sekB);
-const sekB1 = laesSkarm();
-// 3 — referencen for præcis den farve fixen efterlod.
-N('fg').value = farveEfterFix; N('fg').fire('input');
-uploadBillede(sekB);
-const renB2 = laesSkarm();
+if (N('file')) {
+  svar = [];
+  for (const p of FARVEPAR) {
+    svar.push({ navn: p[0], forventet: p[3], fik: spoerg(ensfarvet(400, 300, p[1]), p[2]) });
+  }
+  svar.push({ navn: FLADT[0], forventet: FLADT[4], fik: spoerg(lodret(FLADT[1], FLADT[2], '#ffffff', '#000000'), '#ffffff', 'Hi', FLADT[3], FLADT[3]) });
+  for (const t of TODELT) {
+    svar.push({ navn: t[0], forventet: t[5], fik: spoerg(todelt(t[1], t[2], '#000000', '#ffffff'), t[4], 'Hi', t[3], 200) });
+  }
+  // Den ene case hvor bedste og dårligste baggrund kan ligge i samme kasse.
+  svar.push({ navn: GRADIENT[0], forventet: GRADIENT[6],
+              fik: spoerg(gradient(GRADIENT[1], GRADIENT[2], '#ffffff', '#000000', 120), GRADIENT[5], __GRADIENT_TEKST__, GRADIENT[3], GRADIENT[4]) });
+  // De to billeder rettelsen er skrevet til: det ene kan klares med én
+  // tekstfarve, det andet kræver et slør fordi ingen farve består begge
+  // ende. Begge er **fejlende** i udgangspunktet, så tallet efter et tryk
+  // på knappen kan dømmes mod det krav, siden viser.
+  const FIX = [
+    // Alle fire er billeder hvor den **venstre** halvdel er mørkere end den
+    // højre, og teksten står midt i overgangen — så kassen dækker begge ende
+    // og værktøjet måler det dårligste par. Det er den situation «fix» er
+    // skrevet til; på et ensfarvet billede ville den altid bestå med hvid
+    // tekst, og knappen ville aldrig blive prøvet af.
+    { navn: 'jævnt baggrund (tekstfarve)', bg: ['#60646c', '#787c84'], farve: '#ffffff', krav: 4.5 },
+    { navn: 'midtone baggrund (tekstfarve)', bg: ['#6e727a', '#82868e'], farve: '#ffffff', krav: 4.5 },
+    { navn: 'spredt baggrund (slør)', bg: ['#161a22', '#ebeef2'], farve: '#ffffff', krav: 4.5 },
+    { navn: 'spredt baggrund, stor tekst', bg: ['#161a22', '#ebeef2'], farve: '#ffffff', krav: 3 },
+  ];
+  fixSvar = [];
+  for (const f of FIX) {
+    const d = todeltVandret(400, 300, f.bg[0], f.bg[1]);
+    // `fontsize`-stubben står på `large`, så 4,5:1-casen sættes til `small` —
+    // ellers ville alle fire dømme det samme krav, og 3:1-casen ville være
+    // en dublet af den første.
+    N('fontsize').value = f.krav === 3 ? 'large' : 'small';
+    const r = fixEfter(d, f.farve, 'Dette er en overskrift over et todelt billede', 20, 140);
+    fixSvar.push({ navn: f.navn, krav: f.krav, foer: r.foer, efter: r.efter });
+  }
 
-/* ---- Download-knappen: den ende-til-ende-dom ----------------------
- * Kæden er den bruteren går: upload → «Fix it» → «Download». Den sidste
- * handling er den nye, og den er den der *afleverer* noget — før 3/10 endte
- * værktøjet ved et tal, og bruteren måtte selv finde ud af, hvordan han fik
- * sit rettede billede ud igen.
- *
- * Der dømmes tre løfter, fordi de er tre forskellige fejlformer:
- *   a) der står en download-knap at trykke på;
- *   b) et klik afleverer en PNG med et filnavn der ender på `.png` — ellers
- *      hedder filen noget uden udvidelse, og den kan ikke bruges andet steder;
- *   c) den hentede fil er **billedet med rettelsen**: hver pixel dækket, og
- *      den afviger fra det rå foto, altså teksten og sløret er med.
- *
- * (c) er den dom, der kan se resten af `sampleContrast()`: den efterlader
- * bogstaverne på en *ryddet* baggrund, så en eksport der springer
- * `draw()` over giver en fil, der er næsten helt gennemsigtig — og
- * bruteren får noget, der ikke ligner det han lige målte og rettede. */
-function downloadMaal() {
-  const res = N('result');
-  Eksport.ankre.length = 0;
-  const knap = res.querySelector('[data-ti-dl]');
-  if (!knap) return { harKnap: false };
-  knap.click();
-  const a = Eksport.ankre[Eksport.ankre.length - 1] || null;
-  const px = Eksport.pixels, s = Img.next;
-  let uopaque = 0, afvigelser = 0;
-  if (px && s) {
-    const W = Eksport.bredde, H = Eksport.hoejde;
-    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
-      const di = (y * W + x) * 4;
-      const sy = Math.min(s.h - 1, Math.floor(y * s.h / H));
-      const sx = Math.min(s.w - 1, Math.floor(x * s.w / W));
-      const si = (sy * s.w + sx) * 4;
-      if (px[di + 3] === 255) uopaque++;
-      if (px[di] !== s.data[si] || px[di + 1] !== s.data[si + 1]
-          || px[di + 2] !== s.data[si + 2]) afvigelser++;
+  /* ---- To billeder i træk med «fix» imellem -------------------------------
+   *
+   * Alt ovenfor dømmer **ét** billede pr. måling. Det er den fejlform reviewen
+   * 3/10 målte i rigtig Chromium på den byggede side: `loadFile()` satte hverken
+   * `scrim` eller `lastFix` null, så et slør beregnet på *første* bildes
+   * endepunkter blev tegnet på det næste, og `.ti-fixed`-teksten stod under et
+   * tal der ikke stammer fra det bruteren havde lavet. Målt: foto A efter fix
+   * 4,52:1, og det næste foto **1,52:1** med «Jeg lagde et 13 % mørkt lag bag
+   * teksten» under sig — en påstand målt på et andet input end den den
+   * udtaler sig om.
+   *
+  * `spoerg()` og `fixEfter()` kan ikke finde den: begge sætter `fg` og affyrer
+   * `input`, og **den** handler nulstiller sløret. Så hvert eneste kald i
+   * porten ryddede netop den tilstand, fejlen ligger i. Derfor er der her en
+   * egen kæde, der *kun* uploader: `uploadBillede()` rører hverken farvefelt,
+   * tekstfelt eller mus — det er præcis hvad en bruger gør ved sit tredje foto
+   * i træk.
+   *
+   * Rækkefølgen er hele pointen, og den er kun to målinger:
+   *   1. foto A + «fix»     → kernen får et slør, der hører til A
+   *   2. foto B, intet rørt → `efter` er hvad bruteren faktisk ser
+   *   3. foto B, farve=F    → `refer` er B's eget tal *ved den farve fixen
+   *                           efterlod*, altså B målt uden slør
+   *
+   * Step 3 er ikke en småting. `applyFix()` sætter **også** tekstfarven, fordi
+   * et hvidt slør kræver sort tekst — så efter en rettelse står der `#000000` i
+   * feltet, og B's eget tal er sort-tekst-på-B, ikke hvid-på-B. Uden step 3
+   * ville dommen sammenligne to forskellige farver og dømme en kern der gør
+   * helt rigtigt. Den kommer *efter* step 2, så den nulstiller ikke den
+   * tilstand den måler. */
+  function uploadBillede(billede) {
+    Img.next = billede;
+    N('file').files = [{ type: 'image/png' }];
+    N('file').fire('change', { target: { files: N('file').files } });
+  }
+  // Læser skærmen, ikke en intern variabel: samme greb som `fixKnap()`.
+  function laesSkarm() {
+    const res = N('result');
+    const m = /<strong>([0-9.,]+):1<\/strong>/.exec(res.innerHTML);
+    return {
+      fik: m ? parseFloat(m[1].replace(',', '.')) : null,
+      harFast: /\bti-fixed\b/.test(res.innerHTML),
+      harKnap: !!res.querySelector('[data-ti-fix]'),
+    };
+  }
+  // A er todelt mørk→lys med hvid tekst: ingen tekstfarve består begge ende, så
+  // rettelsen *må* lægge et slør. Det er den eneste form hvor sløret overlever
+  // til næste foto, så den er den eneste der kan finde fejlen.
+  // B er derimod **mørk**, fordi det er den farve fixen efterlader: `applyFix()`
+  // sætter tekstfarven til sort ved et hvidt slør, og sort tekst på et lyst
+  // billede består altid. Et B der så består ville få dommen til at gråde over
+  // en «fix»-knap der med vilje mangler, og løfter (b) og (c) ville være grønne
+  // fordi de aldrig kan se den fejl, de er skrevet til. B skal altså fejle —
+  // sort på #3a3a3a er ca. 1,9:1 mod kravet 4,5:1.
+  const sekA = todeltVandret(400, 300, '#161a22', '#ebeef2');
+  const sekB = ensfarvet(400, 300, '#3a3a3a');
+  const sekTekst = 'Dette er en overskrift over et todelt billede';
+  N('fontsize').value = 'small';
+  sekFarve = '#ffffff';
+  // 1 — fix på A. `fixEfter()` bruger præcis den geometri som FIX-tabellen
+  // bruger til sin **slør**-case, og det er ikke en tilfældighed: på en anden
+  // tekstkasse vælger `suggestFix()` en *tekstfarve* i stedet, og så er der intet
+  // slør at lække. Kun slør-casen kan finde den fejl, porten er skrevet til.
+  fixA = fixEfter(sekA, sekFarve, sekTekst, 20, 140);
+  farveEfterFix = N('fg').value;
+  // 2 — foto B igen. Ingen `fg`, intet `input`, ingen mousedown.
+  uploadBillede(sekB);
+  sekB1 = laesSkarm();
+  // 3 — referencen for præcis den farve fixen efterlod.
+  N('fg').value = farveEfterFix; N('fg').fire('input');
+  uploadBillede(sekB);
+  renB2 = laesSkarm();
+
+  /* ---- Download-knappen: den ende-til-ende-dom ----------------------
+   * Kæden er den bruteren går: upload → «Fix it» → «Download». Den sidste
+   * handling er den nye, og den er den der *afleverer* noget — før 3/10 endte
+   * værktøjet ved et tal, og bruteren måtte selv finde ud af, hvordan han fik
+   * sit rettede billede ud igen.
+   *
+   * Der dømmes tre løfter, fordi de er tre forskellige fejlformer:
+   *   a) der står en download-knap at trykke på;
+   *   b) et klik afleverer en PNG med et filnavn der ender på `.png` — ellers
+   *      hedder filen noget uden udvidelse, og den kan ikke bruges andet steder;
+   *   c) den hentede fil er **billedet med rettelsen**: hver pixel dækket, og
+   *      den afviger fra det rå foto, altså teksten og sløret er med.
+   *
+   * (c) er den dom, der kan se resten af `sampleContrast()`: den efterlader
+   * bogstaverne på en *ryddet* baggrund, så en eksport der springer
+   * `draw()` over giver en fil, der er næsten helt gennemsigtig — og
+   * bruteren får noget, der ikke ligner det han lige målte og rettede. */
+  function downloadMaal() {
+    const res = N('result');
+    Eksport.ankre.length = 0;
+    const knap = res.querySelector('[data-ti-dl]');
+    if (!knap) return { harKnap: false };
+    knap.click();
+    const a = Eksport.ankre[Eksport.ankre.length - 1] || null;
+    const px = Eksport.pixels, s = Img.next;
+    let uopaque = 0, afvigelser = 0;
+    if (px && s) {
+      const W = Eksport.bredde, H = Eksport.hoejde;
+      for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+        const di = (y * W + x) * 4;
+        const sy = Math.min(s.h - 1, Math.floor(y * s.h / H));
+        const sx = Math.min(s.w - 1, Math.floor(x * s.w / W));
+        const si = (sy * s.w + sx) * 4;
+        if (px[di + 3] === 255) uopaque++;
+        if (px[di] !== s.data[si] || px[di + 1] !== s.data[si + 1]
+            || px[di + 2] !== s.data[si + 2]) afvigelser++;
+      }
     }
+    return {
+      harKnap: true,
+      anker: a ? { href: a.href, download: a.download } : null,
+      uopaque: uopaque, total: Eksport.bredde * Eksport.hoejde,
+      afvigelser: afvigelser,
+    };
   }
-  return {
-    harKnap: true,
-    anker: a ? { href: a.href, download: a.download } : null,
-    uopaque: uopaque, total: Eksport.bredde * Eksport.hoejde,
-    afvigelser: afvigelser,
-  };
-}
-// Efter «fix» på A: sløret ligger på canvas, og netop den rettelse skal være
-// med i filen bruteren henter.
-fixEfter(sekA, sekFarve, sekTekst, 20, 140);
-const dlMaal = downloadMaal();
+  // Efter «fix» på A: sløret ligger på canvas, og netop den rettelse skal være
+  // med i filen bruteren henter.
+  fixEfter(sekA, sekFarve, sekTekst, 20, 140);
+  dlMaal = downloadMaal();
 
-/* ---- «Download with the worst spot marked»: et *andet* valg ---------
- *
- * Et tal på 1,10:1 siger at noget er galt, men ikke hvor. Det er præcis det
- * et bureau der gennemgår en kundes fotos mangler, når det skal give
- * designeren besked uden at åbne værktøjet igen — og før dette valg var det
- * umuligt: bruteren fik filen, men ingen i filen.
- *
- * Fire løfter, fordi de er fire forskellige fejlformer:
- *   a) der står en knap med en tekst, og den er sin egen knap;
- *   b) den **rene** fil har intet felt i — ellers er de to valg ét valg, og
- *      bruteren kan ikke få den grafik han rettede;
- *   c) feltet sidder over det pixel der *koster mest kontrast*. Porten læser
- *      den rene fils farve under feltets midte og kræver den værste af de to;
- *      den må altså ikke bare ligge et sted i boksen;
- *   d) forhåndsvisningen er ren igen bagefter. Et felt der bliver stående på
- *      skærmen ville ligne en del af bruterens eget design. */
-const MARKER = [220, 38, 38];
-function taellFarve(px, rgb) {
-  if (!px) return 0;
-  let n = 0;
-  for (let i = 0; i < px.length; i += 4) {
-    if (px[i] === rgb[0] && px[i + 1] === rgb[1] && px[i + 2] === rgb[2]) n++;
+  /* ---- «Download with the worst spot marked»: et *andet* valg ---------
+   *
+   * Et tal på 1,10:1 siger at noget er galt, men ikke hvor. Det er præcis det
+   * et bureau der gennemgår en kundes fotos mangler, når det skal give
+   * designeren besked uden at åbne værktøjet igen — og før dette valg var det
+   * umuligt: bruteren fik filen, men ingen i filen.
+   *
+   * Fire løfter, fordi de er fire forskellige fejlformer:
+   *   a) der står en knap med en tekst, og den er sin egen knap;
+   *   b) den **rene** fil har intet felt i — ellers er de to valg ét valg, og
+   *      bruteren kan ikke få den grafik han rettede;
+   *   c) feltet sidder over det pixel der *koster mest kontrast*. Porten læser
+   *      den rene fils farve under feltets midte og kræver den værste af de to;
+   *      den må altså ikke bare ligge et sted i boksen;
+   *   d) forhåndsvisningen er ren igen bagefter. Et felt der bliver stående på
+   *      skærmen ville ligne en del af bruterens eget design. */
+  const MARKER = [220, 38, 38];
+  function taellFarve(px, rgb) {
+    if (!px) return 0;
+    let n = 0;
+    for (let i = 0; i < px.length; i += 4) {
+      if (px[i] === rgb[0] && px[i + 1] === rgb[1] && px[i + 2] === rgb[2]) n++;
+    }
+    return n;
   }
-  return n;
-}
-function farveBBox(px, rgb) {
-  let x0 = Infinity, y0 = Infinity, x1 = -1, y1 = -1, n = 0;
-  for (let i = 0; i < px.length; i += 4) {
-    if (px[i] !== rgb[0] || px[i + 1] !== rgb[1] || px[i + 2] !== rgb[2]) continue;
-    const x = (i / 4) % Eksport.bredde, y = Math.floor((i / 4) / Eksport.bredde);
-    if (x < x0) x0 = x; if (x > x1) x1 = x;
-    if (y < y0) y0 = y; if (y > y1) y1 = y;
-    n++;
+  function farveBBox(px, rgb) {
+    let x0 = Infinity, y0 = Infinity, x1 = -1, y1 = -1, n = 0;
+    for (let i = 0; i < px.length; i += 4) {
+      if (px[i] !== rgb[0] || px[i + 1] !== rgb[1] || px[i + 2] !== rgb[2]) continue;
+      const x = (i / 4) % Eksport.bredde, y = Math.floor((i / 4) / Eksport.bredde);
+      if (x < x0) x0 = x; if (x > x1) x1 = x;
+      if (y < y0) y0 = y; if (y > y1) y1 = y;
+      n++;
+    }
+    return n ? { x0: x0, y0: y0, x1: x1, y1: y1, antal: n } : null;
   }
-  return n ? { x0: x0, y0: y0, x1: x1, y1: y1, antal: n } : null;
-}
-function pixel(px, x, y) {
-  if (!px) return null;
-  const i = (y * Eksport.bredde + x) * 4;
-  const h = (v) => ('0' + v.toString(16)).slice(-2);
-  return '#' + h(px[i]) + h(px[i + 1]) + h(px[i + 2]);
-}
-// Farven i det **rå foto** under feltets midte. Ikke i den rene hentede fil:
-// den har teksten tegnet *på* det pixel, porten vil se på, så den svarer med
-// en blanding af bogstav og baggrund (246, 246, 242) i stedet for den
-// baggrund bruteren har sin dårligste kontrast imod. Det foto er det kernen
-// selv måler på — pass 1 i `sampleContrast()` maler billedet og intet andet —
-// så denne læsning er den samme baggrund, uden at porten spørger kernen.
-function fotoPixel(foto, x, y) {
-  if (!foto || x < 0 || y < 0 || x >= foto.w || y >= foto.h) return null;
-  const i = (y * foto.w + x) * 4, h = (v) => ('0' + v.toString(16)).slice(-2);
-  return '#' + h(foto.data[i]) + h(foto.data[i + 1]) + h(foto.data[i + 2]);
-}
-// Hvidt billede med et **sort bånd**. Uden båndet er hele boksen samme
-// farve, så «det dårligste pixel» og «et af pixelserne» er det samme sted —
-// og porten ville være grøn på en markering i eller ud af kassen.
-function baandet(w, h, hexBaand, x0, x1) {
-  const p = ensfarvet(w, h, '#ffffff'), rgb = hexToRgb(hexBaand);
-  for (let y = 0; y < h; y++) for (let x = x0; x < x1; x++) {
-    const i = (y * w + x) * 4;
-    p.data[i] = rgb[0]; p.data[i + 1] = rgb[1]; p.data[i + 2] = rgb[2];
+  function pixel(px, x, y) {
+    if (!px) return null;
+    const i = (y * Eksport.bredde + x) * 4;
+    const h = (v) => ('0' + v.toString(16)).slice(-2);
+    return '#' + h(px[i]) + h(px[i + 1]) + h(px[i + 2]);
   }
-  return p;
-}
-function markeringsMaal() {
-  Img.next = baandet(400, 300, '#000000', 150, 180);
-  N('file').files = [{ type: 'image/png' }];
-  N('file').fire('change', { target: { files: N('file').files } });
-  // Lys tekst: på hvid er den ulæselig (1,1:1) og på sort er den 14,6:1, så
-  // det *dårligste* sted er den hvide del — og den er den lette at skelne fra
-  // den bedste. Porten kræver feltet over den hvide.
-  N('text').value = 'Hej'; N('text').fire('input');
-  N('fg').value = '#e6e6e6'; N('fg').fire('input');
-  N('cv').fire('mousedown', { clientX: 150, clientY: 150, preventDefault: function () {} });
-  const res = N('result');
-  const ren = res.querySelector('[data-ti-dl]');
-  const mark = res.querySelector('[data-ti-dl-mark]');
-  if (!mark) return { harKnap: false, harRen: !!ren };
-  Eksport.pixels = null;
-  if (ren) ren.click();
-  const renPx = Eksport.pixels;
-  Eksport.pixels = null;
-  mark.click();
-  const markPx = Eksport.pixels;
-  const felt = farveBBox(markPx, MARKER);
-  // Farven i det rå foto under feltets midte — altså den baggrund bruteren har
-  // mindst kontrast imod, hvis kernen har peget på det rigtige sted. Porten
-  // dømmer den, den spørger ikke kernen hvor den troede det var.
-  const under = felt ? fotoPixel(Img.next, Math.round((felt.x0 + felt.x1) / 2),
-                                        Math.round((felt.y0 + felt.y1) / 2)) : null;
-  return {
-    harKnap: true, harRen: !!ren, etiket: (/<button[^>]*data-ti-dl-mark[^>]*>([\s\S]*?)<\/button>/.exec(res.innerHTML) || [])[1] || null,
-    renMark: taellFarve(renPx, MARKER), markMark: taellFarve(markPx, MARKER),
-    felt: felt, under: under,
-    liveMark: taellFarve(N('cv').getContext().buf.data, MARKER),
-  };
-}
-const markMaalt = markeringsMaal();
-
-/* ---- «Find where it reads best»: den tredje handling i resultatet -----
- *
- * Et foto består under den ene halvdel af bogstaverne og fejler under den
- * anden, så bruterens spørgsmål er ikke «hvad er tallet her?» men «hvor kan
- * den ligge?». Før 3/10 var svaret «træk selv rundt» — og det er præcis det
- * arbejde værktøjet er lavet for at fjerne.
- *
- * Kæden er den bruteren går: upload → læg teksten på den dårlige halvdel →
- * «Find where it reads best». Billedet er mørkt til venstre og lyst til
- * højre, og hvid tekst på den lyse halvdel kan ikke bestå noget krav, så
- * dommen har både en fejlsituation og et rigtigt svar at kræve. */
-function spotLaes() {
-  const res = N('result');
-  const m = /<strong>([0-9.,]+):1<\/strong>/.exec(res.innerHTML);
-  // `[^>]*` fremfor intet: kernen skriver ogsa et `data-ti-moved`-attribut,
-  // og en regex der kræver `class="ti-fixed">` holder op at finde en beskrivelse
-  // der står der — sa dommen ville vaere gron af den grund at den kenne noget.
-  const fast = /<span class="ti-fixed"[^>]*>([\s\S]*?)<\/span>/.exec(res.innerHTML);
-  const flyttet = /data-ti-moved="([01])"/.exec(res.innerHTML);
-  return {
-    fik: m ? parseFloat(m[1].replace(',', '.')) : null,
-    harFast: !!fast,
-    fast: fast ? fast[1].replace(/<[^>]*>/g, '') : '',
-    // Hvorvidt kernen faktisk flyttede teksten, læst som et tal. Sætningen
-    // under tallet afhænger af det, så dommen kan ikke læse det ud af teksten
-    // på to sprog — den skal kunne se *sandheden*, ikke ordene.
-    flyttet: flyttet ? flyttet[1] : null,
-    harSpot: !!res.querySelector('[data-ti-spot]'),
-    delta: deltaAttribut(),
-  };
-}
-// Før/nu-linjen læses samme sted som resten: fra `innerHTML`, aldrig fra en
-// variabel i kernen — ellers dømmer porten kernens egen hensigt i stedet for
-// det læseren faktisk ser.
-function deltaAttribut() {
-  const h = N('result').innerHTML || '';
-  const d = /data-ti-delta="([^"]*)"/.exec(h);
-  const s = /<span class="ti-delta"[^>]*>([\s\S]*?)<\/span>/.exec(h);
-  const dele = d ? d[1].split('|') : [];
-  const num = (v) => parseFloat(String(v).replace(',', '.'));
-  return {
-    harDelta: !!d,
-    foer: dele.length === 2 && !isNaN(num(dele[0])) ? num(dele[0]) : null,
-    nu: dele.length === 2 && !isNaN(num(dele[1])) ? num(dele[1]) : null,
-    tekst: s ? s[1].replace(/<[^>]*>/g, '') : '',
-  };
-}
-function spotMaal() {
-  uploadBillede(todeltVandret(400, 300, '#161a22', '#ebeef2'));
-  N('fg').value = '#ffffff'; N('fg').fire('input');
-  N('text').value = 'Dark'; N('text').fire('input');
-  N('fontsize').value = 'large'; N('fontsize').fire('change');
-  // Den lyse halvdel: hvid tekst på #ebeef2 er ca. 1,1:1 mod kravet 3:1.
-  N('cv').fire('mousedown', { clientX: 340, clientY: 260, preventDefault: function () {} });
-  const foer = spotLaes();
-  const knap = N('result').querySelector('[data-ti-spot]');
-  if (!knap) return { harKnap: false, foer: foer };
-  knap.click();
-  const efter = spotLaes();
-  // Og så bruteren selv: han trækker teksten tilbage. Kimens egen beskrivelse
-  // af *sin* flytning skal væk, ellers står der «jeg satte den på det bedste
-  // sted» under et tal fra et helt andet sted — præcis den fejl reviewen
-  // fandt med sløret ved billedskift.
-  N('cv').fire('mousedown', { clientX: 340, clientY: 260, preventDefault: function () {} });
-  const rykket = spotLaes();
-  return { harKnap: true, foer: foer, efter: efter, rykket: rykket };
-}
-const spotMaalt = spotMaal();
-
-/* ---- Før → nu: beviset på at kernens egen rettelse gjorde forskel -----
- *
- * Efter «Fix it» sagde værktøjet «I put a 24 % dark layer behind the text and
- * measured again» og så **kun** det nye tal. Hvad rettelsen havde vundet, var
- * væk — bruteren havde set 1,16:1 og så 3,04:1, men intet sted stod at de to
- * hørte sammen. Det er præcis den fejlform scannerens «siden din sidste
- * scanning» blev bygget for (40f24d0): et nyt tal uden en forskel svarer ikke på
- * «virkede det?». Og for en læser der skal tage tallet videre til sin kunde er
- * *forskellen* det interessante tal, ikke det nye.
- *
- * To kæder, fordi de to veje ind i kernen er to forskellige indgreb:
- *   1. «Fix it» — kernen lægger et slør eller skifter tekstfarven
- *   2. «Find det bedste sted» — kernen flytter teksten
- * Begge skal skrive begge tal, og begge skal tie når bruteren selv griber ind.
- *
- * Læst som tal (`data-ti-delta="a|b"`), ikke som tekst: dommen skal kunne se
- * *sandheden*, og en dansk læser skal ikke kunne få den engelske sætning. */
-function deltaLaes() {
-  const res = N('result');
-  const m = /<strong>([0-9.,]+):1<\/strong>/.exec(res.innerHTML);
-  return {
-    fik: m ? parseFloat(m[1].replace(',', '.')) : null,
-    delta: deltaAttribut(),
-  };
-}
-function deltaMaal() {
-  // Samme foto som spot-kæden bruger (todelt mørk→lys), fordi det er den
-  // eneste der både fejler *og* kan rettes: hvid tekst på den lyse halvdel er
-  // ca. 1,1:1 mod kravet 4,5:1, og intet tekstfarve består begge ende af et
-  // todelt billede — så rettelsen bliver et slør, og tallet flytter sig.
-  uploadBillede(todeltVandret(400, 300, '#161a22', '#ebeef2'));
-  N('fg').value = '#ffffff'; N('fg').fire('input');
-  N('text').value = 'Dette er en overskrift'; N('text').fire('input');
-  N('fontsize').value = 'small'; N('fontsize').fire('change');
-  N('cv').fire('mousedown', { clientX: 340, clientY: 260, preventDefault: function () {} });
-  const foer = deltaLaes();
-  const knap = N('result').querySelector('[data-ti-fix]');
-  if (!knap) return { harKnap: false, foer: foer };
-  knap.click();
-  const efter = deltaLaes();
-  // Bruteren tager over selv: han rører farvefeltet, og både beskrivelsen og
-  // før/nu-linjen skal væk — ellers står «før 1,16:1» under et tal der ikke
-  // længere stammer fra den pladsering kernen lagde.
-  N('fg').value = '#ffff00'; N('fg').fire('input');
-  const rykket = deltaLaes();
-  return { harKnap: true, foer: foer, efter: efter, rykket: rykket };
-}
-const deltaMaalt = deltaMaal();
-
-/* ---- Farvekoden: den målte tekstfarve som noget bruteren kan tage med -----
- *
- * Værktøjet målte, rettede og sagde «#1a1a1a» i en sætning, men skrev ingen
- * kode nogen sted — så bruteren måtte selv finde farvefeltet og skrive koden
- * af i Figma. Klarer han det, har han gjort værktøjets arbejde for de tre
- * euro den koster ham. Det er den konkrete uge, 3/10 (9a1c7f7).
- *
- * Læst som **tal og attributter**, aldrig som sætninger: dommen skal kunne se
- * sandheden, og en dansk læser må ikke få den engelske tekst. Farvefeltets
- * værdi læses her i harnessen, ikke i kernen — ellers ville porten dømme
- * kernens egen vilje (`hexNu` *er* `$('fg').value`) i stedet for at dømme det
- * der står på skærmen.
- *
- * `praem` læses i hele resultatet og **ikke** i `knap[0]`: farveprøven er en
- * `<span>` *inde i* knappen, så den står ikke i knappens egen åbningstag. Læst
- * i `knap[0]` var den altid `null`, og løftet «prøven er den samme kode» blev
- * da talt uden at dømme noget — præcis det porten her er skrevet til at finde.
- * Målt 3/10 på denne linje. */
-function hexLaes() {
-  const h = N('result').innerHTML || '';
-  const knap = /<button[^>]*\bdata-ti-hex="([^"]*)"[^>]*>/.exec(h);
-  const synlig = /<code>([^<]*)<\/code>/.exec(h);
-  const praem = /class="ti-swatch"[^>]*background:\s*([^;"']*)/.exec(h);
-  const tal = /<strong>([0-9.,]+):1<\/strong>/.exec(h);
-  return {
-    harKnap: !!knap,
-    // Punkt 2 i husets kvalitetsliste: knappen *gør* noget (kopierer), så
-    // den er en `<button>` — ikke en `<span>` der ligner som en knap.
-    erKnap: knap ? /<button[^>]*\btype="button"/.test(knap[0]) : false,
-    hex: knap ? knap[1] : null,
-    // Præcis det bruteren *læser*: koden i knappen. Attributtet er kun til
-    // for dommen, så en kode der er i attributtet men ikke på skærmen er
-    // en ulovet påstand — punkt 11.
-    synlig: synlig ? synlig[1] : null,
-    praem: praem ? praem[1].trim() : null,
-    // Farvefeltets egen værdi, som bruteren kan se i samme skærmbillede.
-    felt: String(N('fg').value || '').toLowerCase(),
-    fik: tal ? parseFloat(tal[1].replace(',', '.')) : null,
-  };
-}
-function hexMaal() {
-  // Samme todelte foto som de to andre kæder: hvid tekst på den lyse halvdel
-  // fejler, så «Fix it» har noget at rette — og `applyFix()` skriver *altid*
-  // en ny tekstfarve til feltet, også når rettelsen er et slør. Det er derfor
-  // koden kan dømmes for at *følge* rettelsen: ellers ville koden være den
-  // fra før trykket, mens bruteren kopierer en farve der ikke er den han ser.
-  uploadBillede(todeltVandret(400, 300, '#161a22', '#ebeef2'));
-  N('fg').value = '#ffffff'; N('fg').fire('input');
-  N('text').value = 'Dette er en overskrift'; N('text').fire('input');
-  N('fontsize').value = 'small'; N('fontsize').fire('change');
-  N('cv').fire('mousedown', { clientX: 340, clientY: 260, preventDefault: function () {} });
-  const foer = hexLaes();
-  const knap = N('result').querySelector('[data-ti-fix]');
-  if (!knap) return { harFix: false, foer: foer };
-  knap.click();
-  const efter = hexLaes();
-  return { harFix: true, foer: foer, efter: efter };
-}
-const hexMaalt = hexMaal();
-
-// Demo-noten igen *efter* at bruteren har valgt sit eget billede. Det er den
-// anden halvdel af dommen: noten skal forsvinde, fordi «measured against the
-// lightest and darkest pixels under your letters» først er sandt når der er
-// et billede der er bruterens. Et upload her — også efter at state er flyttet
-// — gør dommen uafhængig af hvilken måling der kørte sidst.
-function demoEfterUpload() {
-  Img.next = ensfarvet(300, 150, '#ffffff');
-  N('file').files = [{ type: 'image/png' }];
-  N('file').fire('change', { target: { files: N('file').files } });
-  const h = N('result').innerHTML || '';
-  const m = /data-ti-demo>([\s\S]*?)</.exec(h);
-  return { tekst: m ? m[1] : null, harTal: /<strong>[0-9.,]+:1<\/strong>/.test(h) };
-}
-
-// ---- To tekstblokke ------------------------------------------------------
-// Den mest almindelige reelle case: to overlejrende tekster på ét foto.
-// Før 3/10 målte værktøjet kun den *sidste*, så bruteren fik ét tal for to
-// tekster og vidste ikke om den anden var ulæselig. Her måles begge, på
-// hver sin del af et todelt billede: blok 1 over den mørke halvdel skal
-// give 21:1, blok 2 over den lyse 1:1. Kan de to tal ikke være forskellige,
-// læser værktøjet den ene blok to gange — eller kun den ene.
-function toBlokke() {
-  function laes(boks) {
-    const m = /<strong>([0-9.,]+):1<\/strong>/.exec(boks.innerHTML || '');
-    return m ? parseFloat(m[1].replace(',', '.')) : null;
+  // Farven i det **rå foto** under feltets midte. Ikke i den rene hentede fil:
+  // den har teksten tegnet *på* det pixel, porten vil se på, så den svarer med
+  // en blanding af bogstav og baggrund (246, 246, 242) i stedet for den
+  // baggrund bruteren har sin dårligste kontrast imod. Det foto er det kernen
+  // selv måler på — pass 1 i `sampleContrast()` maler billedet og intet andet —
+  // så denne læsning er den samme baggrund, uden at porten spørger kernen.
+  function fotoPixel(foto, x, y) {
+    if (!foto || x < 0 || y < 0 || x >= foto.w || y >= foto.h) return null;
+    const i = (y * foto.w + x) * 4, h = (v) => ('0' + v.toString(16)).slice(-2);
+    return '#' + h(foto.data[i]) + h(foto.data[i + 1]) + h(foto.data[i + 2]);
   }
-  Img.next = todeltVandret(400, 300, '#000000', '#ffffff');
-  N('file').files = [{ type: 'image/png' }];
-  N('file').fire('change', { target: { files: N('file').files } });
-  N('fontsize').value = 'large'; N('fontsize').fire('change');
-  // De to blokke har *forskellige* farver. Det er ikke pynt: en mutation der
-  // læser blok 1s farve i stedet for blok 2s er ækvivalent, når begge er
-  // hvide, så den ville være grøn på det langt meste billeder. Med sort mod
-  // hvid kan de to tal ikke forveksles, og mutationen kan gå rød.
-  N('fg').value = '#ffffff'; N('fg').fire('input');
-  N('fg2').value = '#000000'; N('fg2').fire('input');
-  N('text').value = 'Overskrift'; N('text').fire('input');
-  N('text2').value = 'Undertekst'; N('text2').fire('input');
-  // Blok 1 over den mørke venstre halvdel, blok 2 over den lyse højre.
-  const plac = function (x, y) {
-    N('cv').fire('mousedown', { clientX: x, clientY: y, preventDefault: function () {} });
-  };
-  // Blok 0 er den aktive fra start, så *dens* klik flytter den.
-  plac(20, 240);                       // venstre, mørk halvdel
-  const foerste = laes(N('result'));
-  // Så vælges blok 2 med dens **egen** vælger, og næste klik flytter *den*.
-  // Den har sort tekst og skal også stå på den mørke halvdel, så de to tal
-  // er 21:1 og 1:1 fra det samme billede. Kan de ikke være forskellige,
-  // læser værktøjet den ene blok to gange: bruteren får ét tal for to
-  // tekster igen, og det er præcis den fejl værktøjet havde.
-  const knap = (N('result2') || { querySelector: function () { return null; } })
-    .querySelector('[data-ti-pick]');
-  if (knap) knap.click();
-  plac(20, 240);
-  const anden = laes(N('result2'));
-  // Blok 2 er stadig den valgte, så næste klik flytter den igen — og kun
-  // den. Den skal *helt* ud i den lyse halvdel: tekstkassen er så bred at
-  // den løber ind i den mørke, og værktøjet svarer da korrekt på det værste
-  // par — et scenarie der ikke kan skelne to blokke fra hinanden. Blok 0
-  // skal stå helt uændret: bruterens eget greb må ikke slette den måling han
-  // lige lavede.
-  plac(360, 240);
-  const efterFoerste = laes(N('result'));
-  const efterAnden = laes(N('result2'));
-  const valgt = N('result2') ? N('result2').querySelector('[data-ti-pick]') : null;
-  const valgt1 = N('result') ? N('result').querySelector('[data-ti-pick]') : null;
-  return {
-    harBokse: blokAntalErTo(),
-    harVaelger: !!knap,
-    foerste: foerste, anden: anden,
-    efterFoerste: efterFoerste, efterAnden: efterAnden,
-    andenTrykket: valgt ? valgt.getAttribute('aria-pressed') : null,
-    foersteTrykket: valgt1 ? valgt1.getAttribute('aria-pressed') : null,
-  };
-}
-function blokAntalErTo() {
-  // `getElementById` giver en ny stub for ukendte id'er, så «feltet findes»
-  // kan ikke dømmes ved at kernens egen tæller er sand — den er alt sand i
-  // harnessen. Det porten kan dømme er *markup'en*: to resultatkasser med et
-  // tal hver. Det er det bruteren ser.
-  return /<strong>[0-9.,]+:1<\/strong>/.test((N('result') || {}).innerHTML || '') &&
-         /<strong>[0-9.,]+:1<\/strong>/.test((N('result2') || {}).innerHTML || '');
-}
-const blokMaalt = toBlokke();
+  // Hvidt billede med et **sort bånd**. Uden båndet er hele boksen samme
+  // farve, så «det dårligste pixel» og «et af pixelserne» er det samme sted —
+  // og porten ville være grøn på en markering i eller ud af kassen.
+  function baandet(w, h, hexBaand, x0, x1) {
+    const p = ensfarvet(w, h, '#ffffff'), rgb = hexToRgb(hexBaand);
+    for (let y = 0; y < h; y++) for (let x = x0; x < x1; x++) {
+      const i = (y * w + x) * 4;
+      p.data[i] = rgb[0]; p.data[i + 1] = rgb[1]; p.data[i + 2] = rgb[2];
+    }
+    return p;
+  }
+  function markeringsMaal() {
+    Img.next = baandet(400, 300, '#000000', 150, 180);
+    N('file').files = [{ type: 'image/png' }];
+    N('file').fire('change', { target: { files: N('file').files } });
+    // Lys tekst: på hvid er den ulæselig (1,1:1) og på sort er den 14,6:1, så
+    // det *dårligste* sted er den hvide del — og den er den lette at skelne fra
+    // den bedste. Porten kræver feltet over den hvide.
+    N('text').value = 'Hej'; N('text').fire('input');
+    N('fg').value = '#e6e6e6'; N('fg').fire('input');
+    N('cv').fire('mousedown', { clientX: 150, clientY: 150, preventDefault: function () {} });
+    const res = N('result');
+    const ren = res.querySelector('[data-ti-dl]');
+    const mark = res.querySelector('[data-ti-dl-mark]');
+    if (!mark) return { harKnap: false, harRen: !!ren };
+    Eksport.pixels = null;
+    if (ren) ren.click();
+    const renPx = Eksport.pixels;
+    Eksport.pixels = null;
+    mark.click();
+    const markPx = Eksport.pixels;
+    const felt = farveBBox(markPx, MARKER);
+    // Farven i det rå foto under feltets midte — altså den baggrund bruteren har
+    // mindst kontrast imod, hvis kernen har peget på det rigtige sted. Porten
+    // dømmer den, den spørger ikke kernen hvor den troede det var.
+    const under = felt ? fotoPixel(Img.next, Math.round((felt.x0 + felt.x1) / 2),
+                                          Math.round((felt.y0 + felt.y1) / 2)) : null;
+    return {
+      harKnap: true, harRen: !!ren, etiket: (/<button[^>]*data-ti-dl-mark[^>]*>([\s\S]*?)<\/button>/.exec(res.innerHTML) || [])[1] || null,
+      renMark: taellFarve(renPx, MARKER), markMark: taellFarve(markPx, MARKER),
+      felt: felt, under: under,
+      liveMark: taellFarve(N('cv').getContext().buf.data, MARKER),
+    };
+  }
+  markMaalt = markeringsMaal();
 
+  /* ---- «Find where it reads best»: den tredje handling i resultatet -----
+   *
+   * Et foto består under den ene halvdel af bogstaverne og fejler under den
+   * anden, så bruterens spørgsmål er ikke «hvad er tallet her?» men «hvor kan
+   * den ligge?». Før 3/10 var svaret «træk selv rundt» — og det er præcis det
+   * arbejde værktøjet er lavet for at fjerne.
+   *
+   * Kæden er den bruteren går: upload → læg teksten på den dårlige halvdel →
+   * «Find where it reads best». Billedet er mørkt til venstre og lyst til
+   * højre, og hvid tekst på den lyse halvdel kan ikke bestå noget krav, så
+   * dommen har både en fejlsituation og et rigtigt svar at kræve. */
+  function spotLaes() {
+    const res = N('result');
+    const m = /<strong>([0-9.,]+):1<\/strong>/.exec(res.innerHTML);
+    // `[^>]*` fremfor intet: kernen skriver ogsa et `data-ti-moved`-attribut,
+    // og en regex der kræver `class="ti-fixed">` holder op at finde en beskrivelse
+    // der står der — sa dommen ville vaere gron af den grund at den kenne noget.
+    const fast = /<span class="ti-fixed"[^>]*>([\s\S]*?)<\/span>/.exec(res.innerHTML);
+    const flyttet = /data-ti-moved="([01])"/.exec(res.innerHTML);
+    return {
+      fik: m ? parseFloat(m[1].replace(',', '.')) : null,
+      harFast: !!fast,
+      fast: fast ? fast[1].replace(/<[^>]*>/g, '') : '',
+      // Hvorvidt kernen faktisk flyttede teksten, læst som et tal. Sætningen
+      // under tallet afhænger af det, så dommen kan ikke læse det ud af teksten
+      // på to sprog — den skal kunne se *sandheden*, ikke ordene.
+      flyttet: flyttet ? flyttet[1] : null,
+      harSpot: !!res.querySelector('[data-ti-spot]'),
+      delta: deltaAttribut(),
+    };
+  }
+  // Før/nu-linjen læses samme sted som resten: fra `innerHTML`, aldrig fra en
+  // variabel i kernen — ellers dømmer porten kernens egen hensigt i stedet for
+  // det læseren faktisk ser.
+  function deltaAttribut() {
+    const h = N('result').innerHTML || '';
+    const d = /data-ti-delta="([^"]*)"/.exec(h);
+    const s = /<span class="ti-delta"[^>]*>([\s\S]*?)<\/span>/.exec(h);
+    const dele = d ? d[1].split('|') : [];
+    const num = (v) => parseFloat(String(v).replace(',', '.'));
+    return {
+      harDelta: !!d,
+      foer: dele.length === 2 && !isNaN(num(dele[0])) ? num(dele[0]) : null,
+      nu: dele.length === 2 && !isNaN(num(dele[1])) ? num(dele[1]) : null,
+      tekst: s ? s[1].replace(/<[^>]*>/g, '') : '',
+    };
+  }
+  function spotMaal() {
+    uploadBillede(todeltVandret(400, 300, '#161a22', '#ebeef2'));
+    N('fg').value = '#ffffff'; N('fg').fire('input');
+    N('text').value = 'Dark'; N('text').fire('input');
+    N('fontsize').value = 'large'; N('fontsize').fire('change');
+    // Den lyse halvdel: hvid tekst på #ebeef2 er ca. 1,1:1 mod kravet 3:1.
+    N('cv').fire('mousedown', { clientX: 340, clientY: 260, preventDefault: function () {} });
+    const foer = spotLaes();
+    const knap = N('result').querySelector('[data-ti-spot]');
+    if (!knap) return { harKnap: false, foer: foer };
+    knap.click();
+    const efter = spotLaes();
+    // Og så bruteren selv: han trækker teksten tilbage. Kimens egen beskrivelse
+    // af *sin* flytning skal væk, ellers står der «jeg satte den på det bedste
+    // sted» under et tal fra et helt andet sted — præcis den fejl reviewen
+    // fandt med sløret ved billedskift.
+    N('cv').fire('mousedown', { clientX: 340, clientY: 260, preventDefault: function () {} });
+    const rykket = spotLaes();
+    return { harKnap: true, foer: foer, efter: efter, rykket: rykket };
+  }
+  spotMaalt = spotMaal();
+
+  /* ---- Før → nu: beviset på at kernens egen rettelse gjorde forskel -----
+   *
+   * Efter «Fix it» sagde værktøjet «I put a 24 % dark layer behind the text and
+   * measured again» og så **kun** det nye tal. Hvad rettelsen havde vundet, var
+   * væk — bruteren havde set 1,16:1 og så 3,04:1, men intet sted stod at de to
+   * hørte sammen. Det er præcis den fejlform scannerens «siden din sidste
+   * scanning» blev bygget for (40f24d0): et nyt tal uden en forskel svarer ikke på
+   * «virkede det?». Og for en læser der skal tage tallet videre til sin kunde er
+   * *forskellen* det interessante tal, ikke det nye.
+   *
+   * To kæder, fordi de to veje ind i kernen er to forskellige indgreb:
+   *   1. «Fix it» — kernen lægger et slør eller skifter tekstfarven
+   *   2. «Find det bedste sted» — kernen flytter teksten
+   * Begge skal skrive begge tal, og begge skal tie når bruteren selv griber ind.
+   *
+   * Læst som tal (`data-ti-delta="a|b"`), ikke som tekst: dommen skal kunne se
+   * *sandheden*, og en dansk læser skal ikke kunne få den engelske sætning. */
+  function deltaLaes() {
+    const res = N('result');
+    const m = /<strong>([0-9.,]+):1<\/strong>/.exec(res.innerHTML);
+    return {
+      fik: m ? parseFloat(m[1].replace(',', '.')) : null,
+      delta: deltaAttribut(),
+    };
+  }
+  function deltaMaal() {
+    // Samme foto som spot-kæden bruger (todelt mørk→lys), fordi det er den
+    // eneste der både fejler *og* kan rettes: hvid tekst på den lyse halvdel er
+    // ca. 1,1:1 mod kravet 4,5:1, og intet tekstfarve består begge ende af et
+    // todelt billede — så rettelsen bliver et slør, og tallet flytter sig.
+    uploadBillede(todeltVandret(400, 300, '#161a22', '#ebeef2'));
+    N('fg').value = '#ffffff'; N('fg').fire('input');
+    N('text').value = 'Dette er en overskrift'; N('text').fire('input');
+    N('fontsize').value = 'small'; N('fontsize').fire('change');
+    N('cv').fire('mousedown', { clientX: 340, clientY: 260, preventDefault: function () {} });
+    const foer = deltaLaes();
+    const knap = N('result').querySelector('[data-ti-fix]');
+    if (!knap) return { harKnap: false, foer: foer };
+    knap.click();
+    const efter = deltaLaes();
+    // Bruteren tager over selv: han rører farvefeltet, og både beskrivelsen og
+    // før/nu-linjen skal væk — ellers står «før 1,16:1» under et tal der ikke
+    // længere stammer fra den pladsering kernen lagde.
+    N('fg').value = '#ffff00'; N('fg').fire('input');
+    const rykket = deltaLaes();
+    return { harKnap: true, foer: foer, efter: efter, rykket: rykket };
+  }
+  deltaMaalt = deltaMaal();
+
+  /* ---- Farvekoden: den målte tekstfarve som noget bruteren kan tage med -----
+   *
+   * Værktøjet målte, rettede og sagde «#1a1a1a» i en sætning, men skrev ingen
+   * kode nogen sted — så bruteren måtte selv finde farvefeltet og skrive koden
+   * af i Figma. Klarer han det, har han gjort værktøjets arbejde for de tre
+   * euro den koster ham. Det er den konkrete uge, 3/10 (9a1c7f7).
+   *
+   * Læst som **tal og attributter**, aldrig som sætninger: dommen skal kunne se
+   * sandheden, og en dansk læser må ikke få den engelske tekst. Farvefeltets
+   * værdi læses her i harnessen, ikke i kernen — ellers ville porten dømme
+   * kernens egen vilje (`hexNu` *er* `$('fg').value`) i stedet for at dømme det
+   * der står på skærmen.
+   *
+   * `praem` læses i hele resultatet og **ikke** i `knap[0]`: farveprøven er en
+   * `<span>` *inde i* knappen, så den står ikke i knappens egen åbningstag. Læst
+   * i `knap[0]` var den altid `null`, og løftet «prøven er den samme kode» blev
+   * da talt uden at dømme noget — præcis det porten her er skrevet til at finde.
+   * Målt 3/10 på denne linje. */
+  function hexLaes() {
+    const h = N('result').innerHTML || '';
+    const knap = /<button[^>]*\bdata-ti-hex="([^"]*)"[^>]*>/.exec(h);
+    const synlig = /<code>([^<]*)<\/code>/.exec(h);
+    const praem = /class="ti-swatch"[^>]*background:\s*([^;"']*)/.exec(h);
+    const tal = /<strong>([0-9.,]+):1<\/strong>/.exec(h);
+    return {
+      harKnap: !!knap,
+      // Punkt 2 i husets kvalitetsliste: knappen *gør* noget (kopierer), så
+      // den er en `<button>` — ikke en `<span>` der ligner som en knap.
+      erKnap: knap ? /<button[^>]*\btype="button"/.test(knap[0]) : false,
+      hex: knap ? knap[1] : null,
+      // Præcis det bruteren *læser*: koden i knappen. Attributtet er kun til
+      // for dommen, så en kode der er i attributtet men ikke på skærmen er
+      // en ulovet påstand — punkt 11.
+      synlig: synlig ? synlig[1] : null,
+      praem: praem ? praem[1].trim() : null,
+      // Farvefeltets egen værdi, som bruteren kan se i samme skærmbillede.
+      felt: String(N('fg').value || '').toLowerCase(),
+      fik: tal ? parseFloat(tal[1].replace(',', '.')) : null,
+    };
+  }
+  function hexMaal() {
+    // Samme todelte foto som de to andre kæder: hvid tekst på den lyse halvdel
+    // fejler, så «Fix it» har noget at rette — og `applyFix()` skriver *altid*
+    // en ny tekstfarve til feltet, også når rettelsen er et slør. Det er derfor
+    // koden kan dømmes for at *følge* rettelsen: ellers ville koden være den
+    // fra før trykket, mens bruteren kopierer en farve der ikke er den han ser.
+    uploadBillede(todeltVandret(400, 300, '#161a22', '#ebeef2'));
+    N('fg').value = '#ffffff'; N('fg').fire('input');
+    N('text').value = 'Dette er en overskrift'; N('text').fire('input');
+    N('fontsize').value = 'small'; N('fontsize').fire('change');
+    N('cv').fire('mousedown', { clientX: 340, clientY: 260, preventDefault: function () {} });
+    const foer = hexLaes();
+    const knap = N('result').querySelector('[data-ti-fix]');
+    if (!knap) return { harFix: false, foer: foer };
+    knap.click();
+    const efter = hexLaes();
+    return { harFix: true, foer: foer, efter: efter };
+  }
+  hexMaalt = hexMaal();
+
+
+  // ---- To tekstblokke ------------------------------------------------------
+  // Den mest almindelige reelle case: to overlejrende tekster på ét foto.
+  // Før 3/10 målte værktøjet kun den *sidste*, så bruteren fik ét tal for to
+  // tekster og vidste ikke om den anden var ulæselig. Her måles begge, på
+  // hver sin del af et todelt billede: blok 1 over den mørke halvdel skal
+  // give 21:1, blok 2 over den lyse 1:1. Kan de to tal ikke være forskellige,
+  // læser værktøjet den ene blok to gange — eller kun den ene.
+  function toBlokke() {
+    function laes(boks) {
+      const m = /<strong>([0-9.,]+):1<\/strong>/.exec(boks.innerHTML || '');
+      return m ? parseFloat(m[1].replace(',', '.')) : null;
+    }
+    Img.next = todeltVandret(400, 300, '#000000', '#ffffff');
+    N('file').files = [{ type: 'image/png' }];
+    N('file').fire('change', { target: { files: N('file').files } });
+    N('fontsize').value = 'large'; N('fontsize').fire('change');
+    // De to blokke har *forskellige* farver. Det er ikke pynt: en mutation der
+    // læser blok 1s farve i stedet for blok 2s er ækvivalent, når begge er
+    // hvide, så den ville være grøn på det langt meste billeder. Med sort mod
+    // hvid kan de to tal ikke forveksles, og mutationen kan gå rød.
+    N('fg').value = '#ffffff'; N('fg').fire('input');
+    N('fg2').value = '#000000'; N('fg2').fire('input');
+    N('text').value = 'Overskrift'; N('text').fire('input');
+    N('text2').value = 'Undertekst'; N('text2').fire('input');
+    // Blok 1 over den mørke venstre halvdel, blok 2 over den lyse højre.
+    const plac = function (x, y) {
+      N('cv').fire('mousedown', { clientX: x, clientY: y, preventDefault: function () {} });
+    };
+    // Blok 0 er den aktive fra start, så *dens* klik flytter den.
+    plac(20, 240);                       // venstre, mørk halvdel
+    const foerste = laes(N('result'));
+    // Så vælges blok 2 med dens **egen** vælger, og næste klik flytter *den*.
+    // Den har sort tekst og skal også stå på den mørke halvdel, så de to tal
+    // er 21:1 og 1:1 fra det samme billede. Kan de ikke være forskellige,
+    // læser værktøjet den ene blok to gange: bruteren får ét tal for to
+    // tekster igen, og det er præcis den fejl værktøjet havde.
+    const knap = (N('result2') || { querySelector: function () { return null; } })
+      .querySelector('[data-ti-pick]');
+    if (knap) knap.click();
+    plac(20, 240);
+    const anden = laes(N('result2'));
+    // Blok 2 er stadig den valgte, så næste klik flytter den igen — og kun
+    // den. Den skal *helt* ud i den lyse halvdel: tekstkassen er så bred at
+    // den løber ind i den mørke, og værktøjet svarer da korrekt på det værste
+    // par — et scenarie der ikke kan skelne to blokke fra hinanden. Blok 0
+    // skal stå helt uændret: bruterens eget greb må ikke slette den måling han
+    // lige lavede.
+    plac(360, 240);
+    const efterFoerste = laes(N('result'));
+    const efterAnden = laes(N('result2'));
+    const valgt = N('result2') ? N('result2').querySelector('[data-ti-pick]') : null;
+    const valgt1 = N('result') ? N('result').querySelector('[data-ti-pick]') : null;
+    return {
+      harBokse: blokAntalErTo(),
+      harVaelger: !!knap,
+      foerste: foerste, anden: anden,
+      efterFoerste: efterFoerste, efterAnden: efterAnden,
+      andenTrykket: valgt ? valgt.getAttribute('aria-pressed') : null,
+      foersteTrykket: valgt1 ? valgt1.getAttribute('aria-pressed') : null,
+    };
+  }
+  function blokAntalErTo() {
+    // `getElementById` giver en ny stub for ukendte id'er, så «feltet findes»
+    // kan ikke dømmes ved at kernens egen tæller er sand — den er alt sand i
+    // harnessen. Det porten kan dømme er *markup'en*: to resultatkasser med et
+    // tal hver. Det er det bruteren ser.
+    return /<strong>[0-9.,]+:1<\/strong>/.test((N('result') || {}).innerHTML || '') &&
+           /<strong>[0-9.,]+:1<\/strong>/.test((N('result2') || {}).innerHTML || '');
+  }
+  blokMaalt = toBlokke();
+}
 // Gradienten måles **sidst**, fordi den skriver `img` — så den efterlader
 // værktøjet i gradienttilstand. Det er i sig selv værd at dømme: en bruter der
 // har brugt gradienten og så uploader et foto, skal se fotoet igen.
@@ -1339,8 +1352,11 @@ const blokMaalt = toBlokke();
 const GRAD_TOP = 2;          // tekstkassen i toppen af en 900×420 flade
 const GRAD_NED = 360;        // …og i bunden
 function læsGradient(fra, til, vinkel, tekst, x, y, stor) {
-  N('fontsize').value = stor ? 'large' : 'small';
-  N('fontsize').fire('change', {});
+  // Hero-montagen har ingen fontsize-vælger — målingen bruger så standarden.
+  if (N('fontsize')) {
+    N('fontsize').value = stor ? 'large' : 'small';
+    N('fontsize').fire('change', {});
+  }
   return spoergGradient(fra, til, vinkel, '#ffffff', tekst, x, y);
 }
 const gradMaalt = (function () {
@@ -2095,7 +2111,7 @@ def dom_demo(fil: str, d: dict | None) -> list[str]:
     if not d:
         return [f"{fil}: harnessen målte ikke demo-tilstanden, så den dømmer ingenting"]
     start = d.get("start") or {}
-    efter = d.get("efterUpload") or {}
+    efter = d.get("efterUpload")
     egen = re.search(r"demoNote:\s*'([^']*)'", (SITE / fil).read_text(encoding="utf-8"))
     if not start.get("tekst"):
         fund.append(f"{fil}: værktøjet måler på sit eget eksempelbillede uden at "
@@ -2109,12 +2125,13 @@ def dom_demo(fil: str, d: dict | None) -> list[str]:
     if start.get("tekst") and not start.get("harTal"):
         fund.append(f"{fil}: eksempelbilledet giver intet forholdstal — så der er "
                     "intet at lære af, før bruteren har uploadet sit eget")
-    if efter.get("tekst"):
-        fund.append(f"{fil}: demo-noten står stadig efter at bruteren har valgt "
-                    f"sit eget billede ({efter['tekst']!r})")
-    if not efter.get("harTal"):
-        fund.append(f"{fil}: der står intet forholdstal efter upload — værktøjet "
-                    "skal stadig måle det bruterens eget billede")
+    if efter is not None:
+        if efter.get("tekst"):
+            fund.append(f"{fil}: demo-noten står stadig efter at bruteren har valgt "
+                        f"sit egen billede ({efter['tekst']!r})")
+        if not efter.get("harTal"):
+            fund.append(f"{fil}: der står intet forholdstal efter upload — værktøjet "
+                        "skal stadig måle det bruterens eget billede")
     return fund
 
 
