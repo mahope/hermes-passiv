@@ -186,6 +186,14 @@ UKENDTE_UNDTAGELSER: dict[str, str] = {
         "kilden. Licensemodulets egen `decide()` holder den 7-dages cache og "
         "viser serverens egen sætning, så kaldet skal ikke gå gennem kernen"
     ),
+    # Samme værktøj på dansk: scriptet er det samme, derfor også den samme
+    # dynamiske licensrute.
+    "da/clean-copy-tool.html": (
+        "dynamisk rute: `'/api/license/' + endpoint` kaler de fem "
+        "licensendepunkter med samme krop, så porten kan ikke læse dem fra "
+        "kilden. Licensemodulets egen `decide()` holder den 7-dages cache og "
+        "viser serverens egen sætning, så kaldet skal ikke gå gennem kernen"
+    ),
 }
 
 

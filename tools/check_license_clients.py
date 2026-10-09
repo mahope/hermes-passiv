@@ -123,6 +123,7 @@ CLIENTS: dict[str, str] = {
     "extension-clean-copy-firefox/license.js": "clean-copy-pro",
     "tools/clean_copy_license.js": "clean-copy-pro",
     "site/clean-copy-tool.html": "clean-copy-pro",
+    "site/da/clean-copy-tool.html": "clean-copy-pro",
     "site/compliance-report.html": "eucomply-pro",
     # Opgave 37: nøgleopslaget. Kalder `/api/license/lookup`, som er
     # *opslag* på en nøgle kunden allerede ejer — den kalder hverken

@@ -63,9 +63,9 @@
             "en": [
               "every conversion mode in the extension and on the web tool"
             ],
-            "da": [
-              "alle konverteringsmoduler i udvidelsen og på webværktøjet"
-            ]
+"da": [
+                "alle konverteringsmoduler i udvidelsen og på webværktøjet"
+              ]
           }
         },
         {
@@ -741,6 +741,22 @@
       "requires_text": [
         "Buy Clean Copy Pro — $19/year",
         "Buy Clean Copy Pro Lifetime — $39 once"
+      ]
+    },
+    {
+      "path": "site/da/clean-copy-tool.html",
+      "domain": "cleancopy.tools",
+      "route": "/da/clean-copy-tool",
+      "lifetime": true,
+      "product": "clean-copy-pro",
+      "prices": [
+        "$0",
+        "$19",
+        "$39"
+      ],
+      "requires_text": [
+        "Køb Clean Copy Pro — $19/år",
+        "Køb Clean Copy Pro Lifetime — $39 én gang"
       ]
     },
     {

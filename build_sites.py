@@ -86,6 +86,10 @@ SITES: dict[str, dict] = {
             "openapi.yaml",
             "da/url-til-markdown.html",
             "da/clean-copy.html",
+            # Dansk udgave af webværktøjet (23/10): samme siderækkefølge og
+            # script, kun teksten er dansk — så Pro-købet og licensaktiveringen
+            # findes på begge sprog.
+            "da/clean-copy-tool.html",
             "downloads/clean-copy*",
         ],
         "title_match": [

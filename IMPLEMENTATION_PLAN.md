@@ -11,6 +11,15 @@
   browseren er gratis (`ceo/page-profile-cta`) — de loved Pro for noget
   8d30d989 gjorde gratis. De to forsiders værktøjsliste samme rettelse
   (`ceo/forsider-pro-prajs`).
+- **9/10:** dansk udgave af Clean Copy-webværktøjet leveret
+  (`ceo/clean-copy-da-tool`): `/da/clean-copy-tool` med batch-konvertering,
+  licensaktivering og Pro-kort på dansk. Gaten grøn (build, seo_check,
+  519/519 tests, inline-js). hreflang begge veje, ratchet 13→14.
+- **9/10:** deploy-verifikation af de fire ude-blivere pushes: bog-prøvesiden
+  viser «Preface» + Clean Copy-sætningen ✓, color-blindness-simulatoren
+  linker til bloggen ✓, men page-profile har kun ét URL-felt live — deploy-
+  jobbet var in_progress ved tjekket, så compare-sektionen tjekkes næste
+  iteration.
 - 0 åbne review-fund. Sentry: 0 uløste fejl (14 dage). 0 åbne PR'er.
 - **PR-TJEK 9/10:** 0 åbne PR'er. **BRANCH-TJEK 9/10:** `origin/ceo/hub-readme-note`
   (2 uger) er helt landet i `main` og kan slettes — men `git push --delete`
@@ -27,11 +36,11 @@ Ingen.
 - **VERIFICÉR DEPLOY OK 9/10:** scan-proxy POST + scanFejl fix `ceo/scan-fejl-post` — live `https://mahope.tools/scan-proxy` svarer 400 på POST med ugyldig URL (ruten er live og fungerer).
 - **VERIFICÉR DEPLOY:** fire pushes `ceo/page-profile-compare`,
   `ceo/kontrast-selftest-hero`, `ceo/page-profile-cta`, `ceo/plan-status-laengde`
-  9/10-2026 — tre gates var røde i træk, så intet nåede ud. Næste iteration med
-  grøn CI: hent `https://mahope.tools/page-profile` og tjek compare-sektionen
-  (to URL-felter + «Compare»), at der står én donation under resultatet, at
-  forsiderne siger «compare mode from the command line», bog-prøvesiden og
-  farveblindhedsguiden er live.
+  9/10-2026 — tre gates var røde i træk, så intet nåede ud. Tjek 9/10: bog-
+  prøvesiden live ✓ («Preface» + Clean Copy-sætning), color-blindness-
+  simulatoren linker ✓, men page-profile har kun ét URL-felt live — deploy
+  in_progress ved tjekket. Næste iteration: tjek compare-sektionen igen
+  (to URL-felter + «Compare»).
 
 - **VERIFICÉR DEPLOY:** bog-prøveside + rød-port-fix `ceo/bogproeve-betalt-vej
   9/10-2026 03:30` — noten glemt i squash-commiten `fe9bdd51`, og siden kom
@@ -155,7 +164,7 @@ side; tallene er ikke vores egen trafik. Alt det leverede (1–44) står i
     dage på `/da/`-stierne. Tal: konvertering til Clean Copy Pro ($19/år).
     Accept: `/da/clean-copy-tool` med batch og licensaktivering på dansk.
     Datagrund: DA-forsiden lover batch-konvertering «i webværktøjet», men
-    værktøjet findes kun på engelsk.
+    værktøjet findes kun på engelsk. **LEVERET** `ceo/clean-copy-da-tool`.
 
 45. **e-bøger: læs kapitel 1 gratis i browseren.** Hvem: dem der laster de seks
     EPUB'er (top-downloads). Tal: downloads og konvertering til $29-bundlet.

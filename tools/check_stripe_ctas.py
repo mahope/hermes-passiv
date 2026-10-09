@@ -812,8 +812,8 @@ def check_free_cells_for_paid(catalog: dict, pages: list[tuple[str, str]]) -> li
 #: conversion to the free version" nævner det betalte navn **og** siger
 #: *gratis* i samme sætning, uden at påstande om batch er gratis.
 PRO_ADDS = re.compile(
-    r"\bpro\b[^.]{0,80}?\b(?:adds?|giver|tilføjer)\b"
-    r"|\b(?:adds?|giver|tilføjer)\b[^.]{0,80}?\bpro\b"
+    r"\bpro\b[^.]{0,80}?\b(?:adds?|giver|tilføjer|lægger(?:\s+oveni)?)\b"
+    r"|\b(?:adds?|giver|tilføjer|lægger)\b[^.]{0,80}?\bpro\b"
     r"|\bpart of pro\b|\bdel af pro\b",
     re.I,
 )

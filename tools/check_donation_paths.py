@@ -283,8 +283,9 @@ def self_test() -> int:
     # resultat af opgaven, ikke et tal der falder. Tællingen skal derfor dømme
     # *hvem* der står tilbage, ellers ville porten grønne over en side den
     # burde have dømt.
-    tjek("kun de tre navngive undtagelser mangler linjen",
-         set(mangler) == {"site/clean-copy-tool.html", "site/compliance-report.html",
+    tjek("kun de navngive undtagelser mangler linjen",
+         set(mangler) == {"site/clean-copy-tool.html", "site/da/clean-copy-tool.html",
+                          "site/compliance-report.html",
                           "site/site-icons.html"},
          f"{len(mangler)} sider: {', '.join(mangler)}")
     tjek("tak-siden tælles ikke med (købet er lige sket)",

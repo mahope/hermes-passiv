@@ -34,7 +34,7 @@ Dommen er tre ting, fordi hver især kan være grøn mens den anden er rød:
      «Buy» på en dansk side være grøn, fordi porten bare valgte det samme sprog
      som den fandt. Sådan er `/da/cookie-check` dømt på sin egen tekst.
 
-Og en ratchet på **13 sider**: en side hvis pro-kort mister knappen, eller hvor
+Og en ratchet på **14 sider**: en side hvis pro-kort mister knappen, eller hvor
 knappen flyttes ud af kortet, skal være rød — ellers kunne en fejlretelse slette
 salgsmuligheden og porten være grøn.
 
@@ -60,7 +60,10 @@ SITE = ROOT / "site"
 # Copy Pro og `/url-inspector` sælger Page Profile Pro. De to artikler med et
 # pro-kort (`/blog/text-on-image-contrast-check` + den danske) har **ingen**
 # købsknap — de linker til `#report` — så de tæller ikke med.
-VÆRKTØJSSIDER = 13
+# 9/10: `/da/clean-copy-tool` er det samme værktøj på dansk med den samme
+# købsknap, så den tæller som den fjortende. Ratchet'en stiger kun, når en ny
+# side rent faktisk får en knap sat op.
+VÆRKTØJSSIDER = 14
 
 # Åbningen af et pro-kort: den `<div …>` hvis attributter indeholder `pro-card`.
 KORT_RE = re.compile(r'<div\b[^>]*\bclass="[^"]*\bpro-card\b[^"]*"[^>]*>', re.S)

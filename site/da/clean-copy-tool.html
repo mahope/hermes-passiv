@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="da">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Clean Copy Web — Paste messy text, get clean Markdown. Free, in your browser</title>
-  <meta name="description" content="Free online tool: paste HTML or messy formatted text and copy it back as clean Markdown or plain text. Your text never leaves your browser.">
-  <meta property="og:title" content="Clean Copy Web — Messy paste to clean Markdown, instantly">
-  <meta property="og:description" content="Paste any formatted text and get clean Markdown or plain text back. Your text never leaves your browser, free.">
+  <title>Clean Copy Web — Indsæt rodet tekst, få ren Markdown. Gratis, i din browser</title>
+  <meta name="description" content="Gratis onlineværktøj: indsæt HTML eller rodet formateret tekst og få den tilbage som ren Markdown eller ren tekst. Din tekst forlader aldrig din browser.">
+  <meta property="og:title" content="Clean Copy Web — Rodet udklip til ren Markdown, med det samme">
+  <meta property="og:description" content="Indsæt formateret tekst og få ren Markdown eller ren tekst tilbage. Gratis, og din tekst forlader aldrig din browser.">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://hermes-passiv.pages.dev/clean-copy-tool">
   <meta property="og:image" content="https://hermes-passiv.pages.dev/clean-copy/og-preview.png">
@@ -14,7 +14,8 @@
   <meta name="twitter:title" content="Clean Copy Web — Paste messy text, get clean Markdown. Free, in your browser">
   <meta name="twitter:description" content="Free online tool: paste HTML or messy formatted text and copy it back as clean Markdown or plain text. Your text never leaves your browser.">
   <meta name="twitter:image" content="https://hermes-passiv.pages.dev/clean-copy/og-preview.png">
-  <link rel="canonical" href="https://hermes-passiv.pages.dev/clean-copy-tool">
+  <link rel="canonical" href="https://hermes-passiv.pages.dev/da/clean-copy-tool">
+<link rel="alternate" hreflang="en" href="https://hermes-passiv.pages.dev/clean-copy-tool">
 <link rel="alternate" hreflang="da" href="https://hermes-passiv.pages.dev/da/clean-copy-tool">
 <link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/clean-copy-tool">
   <link rel="stylesheet" href="/style.css">
@@ -23,11 +24,11 @@
     "@context": "https://schema.org",
     "@type": "WebApplication",
     "name": "Clean Copy Web",
-    "url": "https://hermes-passiv.pages.dev/clean-copy-tool",
+    "url": "https://hermes-passiv.pages.dev/da/clean-copy-tool",
     "applicationCategory": "UtilitiesApplication",
     "operatingSystem": "Any",
     "offers": [{ "@type": "Offer", "price": "0", "priceCurrency": "USD" }, { "@type": "Offer", "name": "Clean Copy Pro Lifetime (founding price, first 100 purchases)", "price": "39", "priceCurrency": "USD", "availability": "https://schema.org/InStock", "url": "https://buy.stripe.com/aFadR81Mv6UGgNU68vbMQ0d" }],
-    "description": "Paste messy formatted text and get clean Markdown or plain text back. Your text never leaves your browser."
+    "description": "Indsæt rodet formateret tekst og få ren Markdown eller ren tekst tilbage. Din tekst forlader aldrig din browser."
   }
   </script>
   <style>
@@ -125,7 +126,7 @@
 <body>
   <main class="tool-wrap">
     <nav aria-label="Breadcrumb" style="font-size:0.8rem;margin-bottom:1rem;">
-      <a href="/">Home</a> · <a href="/clean-copy">Clean Copy extension</a> · <a href="/clean-copy-bookmarklet">Bookmarklet</a> · <span aria-current="page">Web tool</span>
+      <a href="/da/">Forside</a> · <a href="/clean-copy">Clean Copy-udvidelsen</a> · <a href="/clean-copy-bookmarklet">Bogmærket</a> · <span aria-current="page">Webbaseret værktøj</span>
     </nav>
 
     <!-- 5/10: siden havde ingen `.hero`, så `fold_region()` gav 0 tegn og
@@ -134,54 +135,54 @@
          og ikke på en købsknap, læseren ikke har bedt om endnu. -->
     <header class="hero">
       <h1>Clean Copy Web</h1>
-      <p class="lead">Paste messy, over-formatted text — get clean Markdown or plain text back.
-      The same converter our browser extension uses, running here in your browser.</p>
+      <p class="lead">Indsæt rodet, overformateret tekst — få ren Markdown eller ren tekst
+      tilbage. Samme konvertering som vores browserudvidelse bruger, kørende her i din browser.</p>
       <div class="hero-cta">
-        <a href="#input-box" class="btn-primary">Paste your text</a>
+        <a href="#input-box" class="btn-primary">Indsæt din tekst</a>
       </div>
-      <span class="hero-note">Free and complete, not a trial.
-      <a href="#free-vs-pro">See what Clean Copy Pro — $19/year adds, side by side</a>.</span>
+      <span class="hero-note">Gratis og komplet, ikke en prøveversion.
+      <a href="#free-vs-pro">Se hvad Clean Copy Pro — $19/år tilføjer, side om side</a>.</span>
     </header>
 
     <div class="privacy-note" role="note">
       <span aria-hidden="true"></span>
-      <span><strong>Your text never leaves this page.</strong> The conversion runs in JavaScript
-      here. No upload, no cookies, no tracking of your text. Two things do leave your browser,
-      and only when you ask for them: an anonymous page-view count, and — if you activate a Pro
-      key — that key and a device id, sent to our license API on
-      <code>mahope.tools</code> so the license can be validated.</span>
+      <span><strong>Din tekst forlader aldrig denne side.</strong> Konverteringen kører i
+      JavaScript her. Ingen upload, ingen cookies, ingen sporing af din tekst. To ting
+      forlader din browser, og kun når du selv beder om det: en anonym tælling af
+      sidevisninger, og — hvis du aktiverer en Pro-nøgle — den nøgle og et enheds-id,
+      sendt til vores licens-API på <code>mahope.tools</code>, så licensen kan valideres.</span>
     </div>
 
-    <div class="toolbar" role="group" aria-label="Output options">
-      <div class="seg-group" role="group" aria-label="Output format">
+    <div class="toolbar" role="group" aria-label="Valg for resultatet">
+      <div class="seg-group" role="group" aria-label="Format på resultatet">
         <button type="button" id="mode-md" aria-pressed="true">Markdown</button>
         <button type="button" id="mode-wl" aria-pressed="false">WikiLinks</button>
         <button type="button" id="mode-csv" aria-pressed="false">CSV</button>
         <button type="button" id="mode-txt" aria-pressed="false">Plain text</button>
       </div>
       <label style="display:inline-flex;align-items:center;gap:.45rem;font-weight:400;font-size:.9rem;">
-        <input type="checkbox" id="opt-smart"> Replace smart quotes &amp; dashes
+        <input type="checkbox" id="opt-smart"> Erstat intelligente anførselstegn og tankestreger
       </label>
-      <button type="button" class="btn-secondary" id="btn-sample">Load sample</button>
-      <button type="button" class="btn-secondary" id="btn-clear">Clear</button>
+      <button type="button" class="btn-secondary" id="btn-sample">Indlæs eksempel</button>
+      <button type="button" class="btn-secondary" id="btn-clear">Ryd</button>
     </div>
 
     <div class="tool-grid">
       <div class="tool-pane">
-        <label for="input-box">Paste your text here</label>
-        <textarea id="input-box" placeholder="Paste richly formatted text (copied from a web page, Word, email…) or raw HTML…" aria-describedby="input-hint"></textarea>
-        <p class="tool-hint" id="input-hint">Tip: text copied from a web page keeps its formatting when pasted here.</p>
+        <label for="input-box">Indsæt din tekst her</label>
+        <textarea id="input-box" placeholder="Indsæt formateret tekst (kopieret fra en webside, Word, en mail…) eller rå HTML…" aria-describedby="input-hint"></textarea>
+        <p class="tool-hint" id="input-hint">Tip: tekst kopieret fra en webside har stadig sin formatering, når den indsættes her.</p>
       </div>
       <div class="tool-pane">
-        <label for="output-box">Clean result</label>
+        <label for="output-box">Rent resultat</label>
         <textarea id="output-box" readonly aria-live="polite"></textarea>
         <p class="tool-hint" id="out-stats" aria-live="polite"></p>
       </div>
     </div>
 
     <div class="toolbar">
-      <button type="button" class="btn-primary" id="btn-copy">Copy result</button>
-      <button type="button" class="btn-secondary" id="btn-download">Download as .md</button>
+      <button type="button" class="btn-primary" id="btn-copy">Kopiér resultat</button>
+      <button type="button" class="btn-secondary" id="btn-download">Hent som .md</button>
       <span id="copy-status" role="status"></span>
     </div>
 
@@ -191,146 +192,150 @@
          så pris og periode kommer fra samme katalog som resten af siderne. -->
     <div id="pro-nudge" hidden></div>
 
-    <h2>Why clean copied text?</h2>
-    <p>Text you copy from the web arrives stuffed with invisible junk: smart quotes that break
-    code, non-breaking spaces that break search, nested spans and styles that break your CMS.
-    Clean Copy strips all of it and gives you predictable output:</p>
+    <h2>Hvorfor ren kopieret tekst?</h2>
+    <p>Tekst du kopierer fra nettet er fyldt med usynligt skrammel: intelligente
+    anførselstegn der knækker kode, mb.indstilte mellemrum der knækker søgning, og
+    indlejrede spans og styles der knækker dit CMS. Clean Copy fjerner det hele og giver
+    dig et resultat du kan regne med:</p>
     <ul>
-      <li><strong>Markdown mode</strong> keeps the structure that matters — headings, bold/italic,
-      links, lists (including nested ones), code blocks, and tables (converted to
-      pipe-separated Markdown tables).</li>
-      <li><strong>WikiLinks mode</strong> converts internal links to
-      Obsidian-style <code>[[WikiLinks]]</code> — perfect for pasting research
-      into Obsidian or any other notes app. External
-      links, images and code blocks stay as Markdown.</li>
-      <li><strong>CSV mode</strong> turns HTML tables into comma-separated rows you
-      can paste straight into Excel or Google Sheets, or save as a .csv file.
-      Commas and quotes inside cells are quoted automatically.</li>
-      <li><strong>Plain text mode</strong> removes everything but readable characters.</li>
-      <li><strong>Smart-quote cleanup</strong> converts “ ” ‘ ’ — – into safe ASCII equivalents
-      and removes zero-width and non-breaking spaces.</li>
+      <li><strong>Markdown-tilstand</strong> beholder den struktur der betyder noget —
+      overskrifter, fed/kursiv, links, lister (også indlejrede), kodeblokke og tabeller
+      (omdannet til Markdown-tabeller med pipe).</li>
+      <li><strong>WikiLinks-tilstand</strong> laver interne links om til
+      Obsidian-<code>[[WikiLinks]]</code> — perfekt når research skal ind i
+      Obsidian eller et andet notes-program. Eksterne
+      links, billeder og kodeblokke forbliver Markdown.</li>
+      <li><strong>CSV-tilstand</strong> laver HTML-tabeller om til kommaadskilte rækker du
+      kan indsætte direkte i Excel eller Google Sheets, eller gemme som en .csv-fil.
+      Kommaer og anførselstegn i cellerne sættes automatisk i anførselstegn.</li>
+      <li><strong>Ren tekst</strong> fjerner alt undtagen de tegn man kan læse.</li>
+      <li><strong>Rensning af tegn</strong> laver “ ” ‘ ’ — – om til sikre ASCII-tegn
+      og fjerner nulbredde- og mb.indstillede mellemrum.</li>
     </ul>
 
-    <h2>Frequently asked questions</h2>
+    <h2>Ofte stillede spørgsmål</h2>
     <details class="faq">
-      <summary>Is my text uploaded anywhere?</summary>
-      <p>No. The conversion is pure JavaScript running on this page. Your text never touches a server.</p>
+      <summary>Bliver min tekst uploadet?</summary>
+      <p>Nej. Konverteringen er rent JavaScript, der kører på denne side. Din tekst rører aldrig en server.</p>
     </details>
     <details class="faq">
-      <summary>What's the difference between this and the browser extension?</summary>
-      <p>The extension copies directly from any web page with a right-click — no paste needed.
-      This web tool handles text you already have: email content, documents, anything. Same engine,
-      same results. <a href="/clean-copy">Get the extension →</a></p>
+      <summary>Hvad er forskellen på dette og browserudvidelsen?</summary>
+      <p>Udvidelsen kopierer direkte fra enhver webside med et højreklik — ingen indsættelse
+      behøves. Dette webværktøj tager den tekst du allerede har: mailindhold, dokumenter,
+      hvad som helst. Samme motor, samme resultat.
+      <a href="/clean-copy">Hent udvidelsen →</a></p>
     </details>
     <details class="faq">
-      <summary>Does it work offline?</summary>
-      <p>Yes — once the page has loaded, you can disconnect and keep converting.</p>
+      <summary>Virker det uden net?</summary>
+      <p>Ja — når siden først er indlæst, kan du koble fra nettet og blive ved med at konvertere.</p>
     </details>
     <details class="faq">
-      <summary>Which HTML elements are converted?</summary>
-      <p>Headings h1–h6 (#…######), bold/strong (**), italic/em (*), links [text](url), images
-      ![alt](src), ordered and unordered lists including nesting, code blocks (```), inline code (`),
-      paragraphs, line breaks and horizontal rules. Everything else is stripped to plain text.</p>
+      <summary>Hvilke HTML-elementer konverteres?</summary>
+      <p>Overskrifter h1–h6 (#…######), fed/strong (**), kursiv/em (*), links [tekst](url),
+      billeder ![alt](src), punktede og nummererede lister også når de er indlejrede,
+      kodeblokke (```), kode i tekst (`), afsnit, linjeskift og vandrette linjer. Alt
+      andet bliver til ren tekst.</p>
     </details>
     <details class="faq">
-      <summary>What are WikiLinks?</summary>
-      <p>WikiLinks are the double-bracket links Obsidian, Roam and similar
-      note apps use: <code>[[Page name]]</code>. In WikiLinks mode, links that
-      point inside the same site become <code>[[Page name]]</code> so they
-      connect to your notes, while external links stay as normal Markdown.
-      The <a href="/clean-copy">browser extension</a>, <a href="/blog/install-obsidian-plugin-clean-copy">Obsidian plugin</a> &middot; <a href="/blog/html-table-to-csv-converter" style="color:var(--color-accent);">HTML table to CSV guide</a> &middot; <a href="/da/blog/html-tabel-til-csv-konverter" style="color:var(--color-accent);">HTML-tabel til CSV (guide)</a>
-      and CLI all support the same mode.</p>
+      <summary>Hvad er WikiLinks?</summary>
+      <p>WikiLinks er de links med dobbelte klammer som Obsidian, Roam og lignende
+      notes-programmer bruger: <code>[[Sidenavn]]</code>. I WikiLinks-tilstand bliver
+      links der peger inden for det samme site til <code>[[Sidenavn]]</code>, så de
+      hænger sammen med dine noter, mens eksterne links forbliver almindelig Markdown.
+      <a href="/clean-copy">Browserudvidelsen</a>, <a href="/da/blog/installer-clean-copy-obsidian">Obsidian-pluginet</a>,
+      <a href="/da/blog/html-tabel-til-csv-konverter" style="color:var(--color-accent);">guiden om HTML-tabel til CSV</a>
+      og CLIen understøtter den samme tilstand.</p>
     </details>
     <details class="faq">
-      <summary>Can I get tables as CSV?</summary>
-      <p>Yes — pick <strong>CSV</strong> mode. Every HTML table in your text becomes
-      comma-separated rows (RFC 4180), ready to paste into Excel, Google Sheets or
-      Numbers. Cells containing commas or quotes are escaped automatically, and the
-      download button then saves a proper .csv file.</p>
+      <summary>Kan jeg få tabeller som CSV?</summary>
+      <p>Ja — vælg tilstanden <strong>CSV</strong>. Hver HTML-tabel i din tekst bliver
+      til kommaadskilte rækker (RFC 4180), klar til Excel, Google Sheets eller
+      Numbers. Celler med komma eller anførselstegn escapes automatisk, og
+      downloadknappen gemmer en rigtig .csv-fil.</p>
     </details>
     <details class="faq">
-      <summary>Can I paste raw HTML?</summary>
-      <p>Yes. If your clipboard contains actual HTML markup (e.g. copied from an editor's code view),
-      use the source of this trick: paste it into the field — the tool detects raw tags starting with
-      "&lt;" and converts them directly.</p>
+      <summary>Kan jeg indsætte rå HTML?</summary>
+      <p>Ja. Hvis din udklipsholder indeholder rigtig HTML-markup (for eksempel kopieret fra
+      en editors kodevisning), kan du bare indsætte den i feltet — værktøjet genkender
+      rå tags der starter med "&lt;" og konverterer dem direkte.</p>
     </details>
 
-    <h2 id="free-vs-pro">Free and Pro</h2>
+    <h2 id="free-vs-pro">Gratis og Pro</h2>
 <!-- pro-table:start -->
 <div class="table-wrap">
 <table class="compare pro-table">
-  <caption class="sr-only">Free and Clean Copy Pro, side by side</caption>
+  <caption class="sr-only">Gratis og Clean Copy Pro, side om side</caption>
   <thead>
-    <tr><th scope="col"><span class="sr-only">Plan</span></th><th scope="col">Free</th><th scope="col">Clean Copy Pro</th></tr>
+    <tr><th scope="col"><span class="sr-only">Plan</span></th><th scope="col">Gratis</th><th scope="col">Clean Copy Pro</th></tr>
   </thead>
   <tbody>
-    <tr><th scope="row">What you get</th><td><ul><li>The four conversion modes on this page — Markdown, WikiLinks, CSV, plain text</li><li>No limit on how much text you paste</li></ul></td><td><ul><li>Batch conversion — many snippets at once, one per line</li><li>Custom cleanup rules you define once, in the browser extension</li></ul></td></tr>
-    <tr><th scope="row">Price</th><td><span class="pro-price">$0</span><span class="pro-note">no licence key needed</span></td><td><span class="pro-price">$19/year</span></td></tr>
+    <tr><th scope="row">Hvad du får</th><td><ul><li>De fire konverteringstilstande på denne side — Markdown, WikiLinks, CSV, ren tekst</li><li>Ingen grænse på hvor meget tekst du indsætter</li></ul></td><td><ul><li>Batch-konvertering — mange udsnip ad gangen, ét pr. linje</li><li>Egne rense regler du definerer én gang, i browserudvidelsen</li></ul></td></tr>
+    <tr><th scope="row">Pris</th><td><span class="pro-price">$0</span><span class="pro-note">ingen licensnøgle behøves</span></td><td><span class="pro-price">$19/år</span></td></tr>
   </tbody>
 </table>
 </div>
-<p class="pro-note">$39 once — lifetime, first 100 purchases · One licence covers 5 devices.</p>
-<p class="pro-note pro-limit">Batch conversion is web-tool only. Custom cleanup rules are in the browser extension and the Obsidian plugin — the CLI and the VS Code plugin have none</p>
+<p class="pro-note">$39 én gang — livstid, de første 100 køb · Én licens dækker 5 enheder.</p>
+<p class="pro-note pro-limit">Batch-konvertering findes kun i webværktøjet. Egne rense regler findes i browserudvidelsen og Obsidian-pluginet — CLIen og VS Code-pluginet har dem ikke</p>
 <!-- pro-table:end -->
 
-    <p class="tool-hint">Free without an account or a key: every conversion mode in the
-    extension and on the web tool, and no limit on how much text you paste.</p>
-    <p class="tool-hint">The free version is the complete tool, not a trial: it has no account,
-    no expiry and no limit, and the source is
-    <a href="https://github.com/mahope/clean-copy">MIT-licensed on GitHub</a>. Pro adds batch
-    conversion and custom cleanup rules on top of that, and one license covers 5 devices.</p>
+    <p class="tool-hint">Gratis uden konto og uden nøgle: alle konverteringsmoduler i
+    udvidelsen og på webværktøjet, og ingen grænse for hvor meget tekst du indsætter.</p>
+    <p class="tool-hint">Den gratis udgave er det komplette værktøj, ikke en prøveversion:
+    ingen konto, ingen udløbsdato, ingen grænse. Kildemagengningen er
+    <a href="https://github.com/mahope/clean-copy">MIT-licenseret på GitHub</a>. Pro lægger
+    batch-konvertering og egne rense regler oveni, og én licens dækker 5 enheder.</p>
 
-    <h2>Clean Copy Pro — $19/year</h2>
+    <h2>Clean Copy Pro — $19/år</h2>
     <div class="pro-box" id="pro-box">
-      <p><strong>Pro</strong> adds priority features to both the web tool and the browser
-      extension: <em>batch conversion</em> of many snippets at once, <em>custom cleanup
-      rules</em> you define once and reuse everywhere, and a year of major updates.
-      One license covers 5 devices.</p>
+      <p><strong>Pro</strong> tilføjer de funktioner der sparer mest tid, både i webværktøjet
+      og i browserudvidelsen: <em>batch-konvertering</em> af mange udsnip ad gangen,
+      <em>egne rense regler</em> du definerer én gang og genbruger overalt, og et år med
+      større opdateringer. Én licens dækker 5 enheder.</p>
 
       <!-- Batch conversion (Pro) -->
       <details class="faq" id="batch-details" hidden>
-        <summary>Batch conversion — clean many snippets at once</summary>
-        <p style="font-size:.88rem;">Paste one snippet per line. Lines starting with
-        <code>&lt;</code> are treated as HTML and converted to Markdown; other lines are
-        cleaned as plain text. Results appear one per line, in the same order.</p>
+        <summary>Batch-konvertering — rens mange udsnip ad gangen</summary>
+        <p style="font-size:.88rem;">Indsæt ét udsnip pr. linje. Linjer der starter med
+        <code>&lt;</code> behandles som HTML og konverteres til Markdown; øvrige linjer
+        renses som ren tekst. Resultaterne kommer ét pr. linje, i samme rækkefølge.</p>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-top:.8rem;" class="batch-grid">
           <div>
-            <label for="batch-input" style="font-weight:600;font-size:.85rem;">Snippets (one per line)</label>
+            <label for="batch-input" style="font-weight:600;font-size:.85rem;">Udsnip (ét pr. linje)</label>
             <textarea id="batch-input" rows="6" style="width:100%;box-sizing:border-box;border:1px solid var(--color-border);border-radius:8px;background:var(--color-surface);color:var(--color-text);padding:.7rem;font-family:'SF Mono','Monaco',monospace;font-size:.82rem;resize:vertical;"></textarea>
           </div>
           <div>
-            <label for="batch-output" style="font-weight:600;font-size:.85rem;">Results</label>
+            <label for="batch-output" style="font-weight:600;font-size:.85rem;">Resultater</label>
             <textarea id="batch-output" rows="6" readonly aria-live="polite" style="width:100%;box-sizing:border-box;border:1px solid var(--color-border);border-radius:8px;background:var(--color-surface);color:var(--color-text);padding:.7rem;font-family:'SF Mono','Monaco',monospace;font-size:.82rem;resize:vertical;"></textarea>
           </div>
         </div>
         <div class="toolbar" style="margin-bottom:0;">
-          <button type="button" class="btn-primary" id="btn-batch">Convert all</button>
-          <button type="button" class="btn-secondary" id="btn-batch-copy">Copy results</button>
+          <button type="button" class="btn-primary" id="btn-batch">Konvertér alle</button>
+          <button type="button" class="btn-secondary" id="btn-batch-copy">Kopiér resultater</button>
           <span id="batch-status" role="status"></span>
         </div>
       </details>
 
       <p id="pro-buy-row">
-        <a class="btn-primary pro-buy" id="pro-buy" style="text-decoration:none;display:inline-block;" href="https://buy.stripe.com/6oU4gy76PgvgdBIdAXbMQ00" rel="nofollow noopener">Buy Clean Copy Pro — $19/year</a>
-        <span class="tool-hint">Secure checkout via Stripe. Your license key arrives by email and on the thank-you page.</span>
+        <a class="btn-primary pro-buy" id="pro-buy" style="text-decoration:none;display:inline-block;" href="https://buy.stripe.com/6oU4gy76PgvgdBIdAXbMQ00" rel="nofollow noopener">Køb Clean Copy Pro — $19/år</a>
+        <span class="tool-hint">Sikker betaling med Stripe. Din licensnøgle kommer pr. mail og på takkesiden.</span>
       </p>
       <p id="pro-lifetime-row">
-        <a class="btn-secondary" id="pro-buy-lifetime" style="text-decoration:none;display:inline-block;" href="https://buy.stripe.com/aFadR81Mv6UGgNU68vbMQ0d" rel="nofollow noopener">Buy Clean Copy Pro Lifetime — $39 once</a>
-        <span class="tool-hint">Or pay once: the same Pro license, forever, with no renewal. Founding price for the first 100 purchases only.</span>
+        <a class="btn-secondary" id="pro-buy-lifetime" style="text-decoration:none;display:inline-block;" href="https://buy.stripe.com/aFadR81Mv6UGgNU68vbMQ0d" rel="nofollow noopener">Køb Clean Copy Pro Lifetime — $39 én gang</a>
+        <span class="tool-hint">Eller betal én gang: samme Pro-licens, for altid, uden fornyelse. Stifterpris, kun for de første 100 køb.</span>
       </p>
       <details class="faq" id="pro-activate-details">
-        <summary>Already have a license key? Activate it here</summary>
+        <summary>Har du allerede en licensnøgle? Aktivér den her</summary>
         <p style="font-size:0.85rem;color:var(--color-text-muted);margin:0.5rem 0 0 0;">
-          Lost your key? It is in your order email from orders@mahoje.dk —
-          <a href="https://mahope.tools/license-lookup">here is how to find it</a>.
+          Har du mistet nøglen? Den står i din ordre-mail fra orders@mahoje.dk —
+          <a href="https://mahope.tools/license-lookup">sådan finder du den</a>.
         </p>
         <form id="pro-form" style="margin-top:.8rem;">
-          <label for="pro-key" style="font-weight:400;font-size:.9rem;">License key</label>
+          <label for="pro-key" style="font-weight:400;font-size:.9rem;">Licensnøgle</label>
           <div style="display:flex;gap:.6rem;flex-wrap:wrap;margin-top:.35rem;">
             <input type="text" id="pro-key" name="license_key" autocomplete="off"
-                   placeholder="32-character key" required aria-describedby="pro-status"
+                   placeholder="32 tegn" required aria-describedby="pro-status"
                    style="flex:1;min-width:220px;padding:.55rem .7rem;border:1px solid var(--color-border);border-radius:8px;background:var(--color-surface);color:var(--color-text);font-family:'SF Mono','Monaco',monospace;font-size:.85rem;">
-            <button type="submit" class="btn-primary">Activate</button>
+            <button type="submit" class="btn-primary">Aktivér</button>
           </div>
           <p id="pro-status" role="status" aria-live="polite" style="font-size:.85rem;margin-top:.5rem;"></p>
         </form>
@@ -338,21 +343,21 @@
     </div>
 
     <div class="related-tools" style="margin: 2rem 0 1rem; padding: 1.2rem 1.4rem; background: var(--color-surface-2, #f8fafc); border-radius: 12px;">
-      <h3 style="margin-top: 0;">More free tools</h3>
+      <h3 style="margin-top: 0;">Flere gratis værktøjer</h3>
       <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.6rem; font-size: 0.9rem;">
-        <a href="/url-to-markdown">URL to Markdown →</a>
-        <a href="/markdown-table-generator">Markdown table generator →</a>
-        <a href="/text-diff">Text diff checker →</a>
+        <a href="/da/url-til-markdown">URL til Markdown →</a>
+        <a href="/markdown-table-generator">Markdown-tabelgenerator →</a>
+        <a href="/text-diff">Tekst-diff →</a>
         <a href="/case-converter">Case converter →</a>
         <a href="/word-counter">Word counter →</a>
         <a href="/json-formatter">JSON formatter →</a>
-        <a href="/clean-copy-cli-ref">CLI reference card →</a>
-        <a href="/free-tools">All free tools →</a>
+        <a href="/clean-copy-cli-ref">CLI-referencekort →</a>
+        <a href="/da/free-tools">Alle gratis værktøjer →</a>
       </div>
     </div>
 
     <footer style="text-align:center;padding:2rem 1rem;color:var(--color-text-muted);font-size:0.85rem;">
-      <p><a href="/blog/building-html-to-markdown-converter">Building an HTML to Markdown converter</a> · <a href="/blog/html-to-markdown-converter">HTML to Markdown converter guide</a> · <a href="/blog/copy-from-chatgpt-into-word">Copy ChatGPT into Word</a> · <a href="/url-to-markdown">URL to Markdown</a> · <a href="/clean-copy">Clean Copy browser extension</a> · <a href="/free-tools">More free tools</a> · by Passiv</p>
+      <p><a href="/da/blog/byg-en-html-til-markdown-konverter">Sådan bygger du en HTML-til-Markdown-konvertering</a> · <a href="/da/blog/html-til-markdown-konverter">Guide til HTML til Markdown</a> · <a href="/da/blog/kopier-chatgpt-til-word">Kopiér ChatGPT til Word</a> · <a href="/da/url-til-markdown">URL til Markdown</a> · <a href="/clean-copy">Clean Copy-browserudvidelsen</a> · <a href="/da/free-tools">Flere gratis værktøjer</a> · af Passiv</p>
     </footer>
   </main>
 
@@ -471,7 +476,7 @@
         fetch('/api/track', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ path: '/clean-copy-tool', event: 'convert' }),
+          body: JSON.stringify({ path: '/da/clean-copy-tool', event: 'convert' }),
           keepalive: true
         }).catch(function () {});
       } catch (e) {}
@@ -501,15 +506,15 @@
 
     function proCard() {
       var html = '<div class="pro-card">';
-      html += '<h3>Cleaning one snippet at a time?</h3>';
-      html += '<p class="pro-lead">What Pro adds on top of this tool:</p>';
+      html += '<h3>Renser ét udsnip ad gangen?</h3>';
+      html += '<p class="pro-lead">Det her tilføjer Pro oven i værktøjet:</p>';
       html += '<ul class="pro-list">';
-      html += '<li><strong>Batch conversion.</strong> One click cleans many snippets — one per line — instead of one paste at a time.</li>';
-      html += '<li><strong>Custom cleanup rules.</strong> In the browser extension: define your own rules once and reuse them on every site.</li>';
-      html += '<li><strong>Nothing here is taken away.</strong> Every conversion mode on this page, and no limit on how much text you paste, stay free.</li>';
+      html += '<li><strong>Batch-konvertering.</strong> Ét klik renser mange udsnip — ét pr. linje — i stedet for én indsættelse ad gangen.</li>';
+      html += '<li><strong>Egne rense regler.</strong> I browserudvidelsen: definer dine egne regler én gang og genbrug dem på alle sites.</li>';
+      html += '<li><strong>Her bliver intet taget fra dig.</strong> Alle konverteringstilstande på denne side, og den ubegrænsede tekstmængde, forbliver gratis.</li>';
       html += '</ul>';
-      html += '<a class="btn-primary" style="display:inline-block;text-decoration:none" href="https://buy.stripe.com/6oU4gy76PgvgdBIdAXbMQ00" rel="nofollow noopener">Buy Clean Copy Pro — $19/year</a>';
-      html += '<p class="pro-card-note">One licence covers 5 devices. <a href="#free-vs-pro">See what Pro adds before you buy</a>.</p>';
+      html += '<a class="btn-primary" style="display:inline-block;text-decoration:none" href="https://buy.stripe.com/6oU4gy76PgvgdBIdAXbMQ00" rel="nofollow noopener">Køb Clean Copy Pro — $19/år</a>';
+      html += '<p class="pro-card-note">Én licens dækker 5 enheder. <a href="#free-vs-pro">Se hvad Pro tilføjer, før du køber</a>.</p>';
       html += '</div>';
       return html;
     }
@@ -544,13 +549,13 @@
         }
         output.value = result;
         var words = result.split(/\s+/).filter(Boolean).length;
-        statsEl.textContent = result.length + ' chars · ' + words + ' words';
+        statsEl.textContent = result.length + ' tegn · ' + words + ' ord';
         setStatus('');
         showProCard();
         if (!convert._tracked) { convert._tracked = true; trackUse(); }
       } catch (err) {
         output.value = '';
-        setStatus('Conversion failed: ' + err.message, true);
+        setStatus('Konverteringen mislykkedes: ' + err.message, true);
       }
     }
 
@@ -577,8 +582,8 @@
     input.addEventListener('input', convert);
 
     document.getElementById('btn-copy').addEventListener('click', function () {
-      if (!output.value) { setStatus('Nothing to copy yet.', true); return; }
-      var done = function () { setStatus('✓ Copied to clipboard'); };
+      if (!output.value) { setStatus('Der er intet at kopiere endnu.', true); return; }
+      var done = function () { setStatus('✓ Kopieret til udklipsholderen'); };
       if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(output.value).then(done, function () { fallbackCopy(); done(); });
       } else { fallbackCopy(); done(); }
@@ -592,7 +597,7 @@
     }
 
     document.getElementById('btn-download').addEventListener('click', function () {
-      if (!output.value) { setStatus('Nothing to download yet.', true); return; }
+      if (!output.value) { setStatus('Der er intet at downloade endnu.', true); return; }
       var ext = mode === 'csv' ? '.csv' : '.md';
       var mime = mode === 'csv' ? 'text/csv' : 'text/markdown';
       var blob = new Blob([output.value], { type: mime });
@@ -602,7 +607,7 @@
       a.click();
       URL.revokeObjectURL(a.href);
       if (window.trackEvent) window.trackEvent('download-' + mode);
-      setStatus('✓ Downloaded');
+      setStatus('✓ Downloadet');
     });
 
     document.getElementById('btn-clear').addEventListener('click', function () {
@@ -613,10 +618,10 @@
 
     document.getElementById('btn-sample').addEventListener('click', function () {
       input.innerHTML = '';
-      input.value = '<h2>Quarterly Update</h2>\n<p>Revenue grew <strong>34%</strong> \u2014 driven by '
-        + 'the <em>EU launch</em>. Full report at <a href="https://example.com/report">example.com/report</a>.</p>'
-        + '<ul><li>Hired 6 engineers</li><li>Shipped v2<ul><li>New editor</li><li>Offline mode</li></ul></li></ul>'
-        + '<p>Contact: \u201Cteam\u201D <code>ops@example.com</code></p>';
+      input.value = '<h2>Kvartalsopdatering</h2>\n<p>Omsætningen voksede <strong>34 %</strong> \u2014 drevet af '
+        + '<em>EU-lanceringen</em>. Hele rapporten på <a href="https://eksempel.dk/rapport">eksempel.dk/rapport</a>.</p>'
+        + '<ul><li>Ansatte 6 udviklere</li><li>Lancerede v2<ul><li>Ny editor</li><li>Offline-tilstand</li></ul></li></ul>'
+        + '<p>Kontakt: \u201Cteamet\u201D <code>drift@eksempel.dk</code></p>';
       convert();
     });
 
@@ -655,7 +660,7 @@
     }
 
     function showProActive(expiresAt) {
-      proStatus.textContent = '✓ Pro activated' + (expiresAt ? ' — valid until ' + expiresAt.slice(0, 10) : '') + '.';
+      proStatus.textContent = '✓ Pro aktiveret' + (expiresAt ? ' — gyldig til ' + expiresAt.slice(0, 10) : '') + '.';
       proStatus.style.color = '#16a34a';
       proKeyInput.value = '';
     }
@@ -712,7 +717,7 @@
         enableBatch(false);
       } else if (expiresSaved && expiresSaved <= new Date().toISOString()) {
         clearPro();
-        proStatus.textContent = 'Your Pro license expired on ' + expiresSaved.slice(0, 10) + '.';
+        proStatus.textContent = 'Din Pro-licens udløb den ' + expiresSaved.slice(0, 10) + '.';
         proStatus.style.color = '#dc2626';
       } else {
         // Show Pro immediately from the local copy, then re-validate quietly.
@@ -740,7 +745,7 @@
     document.getElementById('btn-batch').addEventListener('click', function () {
       var lines = batchInput.value.split('\n').filter(function (l) { return l.trim().length > 0; });
       if (!lines.length) {
-        batchStatus.textContent = 'Paste at least one snippet.';
+        batchStatus.textContent = 'Indsæt mindst ét udsnip.';
         batchStatus.style.color = '#dc2626';
         return;
       }
@@ -756,22 +761,22 @@
       }).join('\n');
       var failed = results.filter(function (r) { return !r.ok; }).length;
       batchStatus.textContent = failed
-        ? results.length + ' snippets — ' + failed + ' failed.'
-        : '✓ Converted ' + results.length + ' snippets.';
+        ? results.length + ' udsnip — ' + failed + ' fejlede.'
+        : '✓ Konverterede ' + results.length + ' udsnip.';
       batchStatus.style.color = failed ? '#dc2626' : '#16a34a';
     });
 
     document.getElementById('btn-batch-copy').addEventListener('click', function () {
       if (!batchOutput.value) {
-        batchStatus.textContent = 'Nothing to copy yet.';
+        batchStatus.textContent = 'Der er intet at kopiere endnu.';
         batchStatus.style.color = '#dc2626';
         return;
       }
       navigator.clipboard.writeText(batchOutput.value).then(function () {
-        batchStatus.textContent = '✓ Results copied.';
+        batchStatus.textContent = '✓ Resultaterne er kopieret.';
         batchStatus.style.color = '#16a34a';
       }, function () {
-        batchStatus.textContent = 'Could not access clipboard.';
+        batchStatus.textContent = 'Kunne ikke få adgang til udklipsholderen.';
         batchStatus.style.color = '#dc2626';
       });
     });
@@ -780,10 +785,10 @@
       ev.preventDefault();
       var key = L.normalizeKey(proKeyInput.value);
       if (!key) return;
-      proStatus.textContent = 'Checking license…';
+      proStatus.textContent = 'Tjekker licensen…';
       proStatus.style.color = '';
       if (!L.isKeyFormat(key)) {
-        proStatus.textContent = 'A license key is 32 characters, like a-f0-9. Check the key in your receipt mail.';
+        proStatus.textContent = 'En licensnøgle er 32 tegn med a-f og 0-9. Tjek nøglen i din kvitteringsmail.';
         proStatus.style.color = '#dc2626';
         return;
       }
