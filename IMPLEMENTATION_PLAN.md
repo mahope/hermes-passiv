@@ -17,9 +17,6 @@
 - **9/10:** Clean Copy-webværktøjet på dansk (`ceo/clean-copy-da-tool`) og
   prøvesider for de fem øvrige EPUB'er leveret; review-fonds to [LAV]
   gennemgået uden åbne fejl.
-- **9/10:** rød CI rettet i tre runder (`ceo/kontrast-selvtage-hero`,
-  `ceo/page-profile-cta`, `ceo/plan-status-laengde`): hero-montage,
-  dobbelt-donation på page-profile, STATUS 35 linjer.
 - **9/10:** page-profiles Pro-kort og fire guides siger nu at sammenligning i
   browseren er gratis (`ceo/page-profile-cta`, `ceo/forsider-pro-prajs`).
 - 0 åbne review-fund. Sentry: 0 uløste fejl (14 dage). 0 åbne PR'er.

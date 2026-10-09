@@ -9622,3 +9622,7 @@ Planen listede dem som åbne, men arbejdet fandtes:
   score-simulator).
 - **9/10:** simulatoren (`ceo/farveblindhed-cta`) linker nu til farveblindhedsguiden,
   så de 5 besøgende på værktøjet kan nå guiden (9 besøgende).
+
+- **9/10:** rød CI rettet i tre runder (`ceo/kontrast-selvtage-hero`,
+  `ceo/page-profile-cta`, `ceo/plan-status-laengde`): hero-montage,
+  dobbelt-donation på page-profile, STATUS 35 linjer.
