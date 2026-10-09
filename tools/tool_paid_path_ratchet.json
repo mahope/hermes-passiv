@@ -1,7 +1,7 @@
 {
  "note": "Hvert betalt anker på hver dømt værktøjsside, målt af check_tool_paid_path.py. Ratchet: et par der står her og ikke længere findes på siden er rød, fordi en side der mister den vej den lå på er en tilbagefaldet side — også når der stadig står en anden vej på den. Den dømmer OGSÅ et anker der peger på en anden destination end den blev målt med, altså en ombytning: en liste destinationer kan ikke se den, fordi sættet er uændret. `blind` i tool_paid_path_blind.json er det modsatte: sider der MÅLSLIGE ikke har nogen. Begge skrives med `--write --force`.",
  "source": "python3 tools/check_tool_paid_path.py --write  · Parrene er de rå href'er A.paid_anchors() målte i sidens egen tekst, nøglet på ankerets `id` (ellers dets synlige tekst)",
- "measured": "2026-10-08",
+ "measured": "2026-10-09",
  "paths": {
   "/accessibility-statement-generator": {
    "the compliance report": "/compliance-report"
@@ -38,6 +38,9 @@
   "/books/nis2-for-agencies": {
    "EUComply Pro": "/compliance-report"
   },
+  "/books/preview-build-your-first-chrome-extension": {
+   "Clean Copy": "/clean-copy-tool"
+  },
   "/case-converter": {
    "say thanks": "/support"
   },
@@ -64,11 +67,13 @@
    "Buy EUComply Pro — $79/year per website": "https://buy.stripe.com/eVq00i4YH6UG69g0ObbMQ03",
    "EUComply Pro": "/compliance-report",
    "Palette generator": "/palette-generator",
+   "Read the color blindness guide →": "/blog/color-blindness-simulation-check",
    "palette generator": "/palette-generator"
   },
   "/color-blindness-simulator-da": {
    "EUComply Pro": "/da/compliance-report",
    "Køb EUComply Pro — $79/år pr. website": "https://buy.stripe.com/eVq00i4YH6UG69g0ObbMQ03",
+   "Læs farveblindhedsguiden →": "/da/blog/farveblindhed-tjek",
    "Palet-generator": "/palette-generator-da",
    "palet-generatoren": "/palette-generator-da"
   },

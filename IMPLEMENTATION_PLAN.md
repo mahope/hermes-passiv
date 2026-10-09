@@ -22,6 +22,18 @@ Ingen.
 
 ## Verificér deploy
 
+- **VERIFICÉR DEPLOY:** bog-prøveside + rød-port-fix `ceo/bogproeve-betalt-vej
+  9/10-2026 03:30` — noten glemt i squash-commiten `fe9bdd51`, og siden kom
+  aldrig ud: den commits egen gate var rød (tool-paid-path), så deploy-jobbet
+  blev sprunget. Tjek at
+  `https://mahope.tools/books/preview-build-your-first-chrome-extension` (200)
+  viser «Preface: Why This Book Exists» og den nye sætning om Clean Copy, at
+  knappen «Or read the first chapters in your browser» findes på
+  `/books/build-your-first-chrome-extension`, og at
+  `https://mahope.tools/color-blindness-simulator` (200) linker til
+  `/blog/color-blindness-simulation-check` — begge commits (708d302e,
+  fe9bdd51) lå ude af deploy indtil rettelsen landed.
+
 - **VERIFICÉR DEPLOY OK 9/10:** eaa-action `ceo/eaa-github-action` — live
   `https://mahope.tools/downloads` (200) viser GitHub Action-skabelonen med
   `action.yml`, `--sarif` og `--fail-on`.
