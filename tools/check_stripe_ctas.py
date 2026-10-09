@@ -4103,10 +4103,10 @@ def self_test() -> int:
     if (whole_page_real
             or len(whole_page_synthetic) != 1
             or "'batch'" not in whole_page_synthetic[0]
-            or len(whole_page_without_marker) != 7):
+            or len(whole_page_without_marker) != 8):
         print("SELFTEST FEJLER: helsides-reglen skal finde 0 på de rigtige sider "
               "(de otte blokke er den ærlige 'Pro tilføjer'-form), 1 på den "
-              "syntetiske løgn, og 7 når 'tilføjer'-markøren slås fra. "
+              "syntetiske løgn, og 8 når 'tilføjer'-markøren slås fra. "
               f"Målt: {len(whole_page_real)} / {len(whole_page_synthetic)} / "
               f"{len(whole_page_without_marker)}. Et tal der ikke passer kan "
               "være en ny fejl i prosaen — eller en redaktion der har flyttet "

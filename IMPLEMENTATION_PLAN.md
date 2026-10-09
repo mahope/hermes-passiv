@@ -1,36 +1,24 @@
 # STATUS
 
-- **9/10:** rød CI rettet i tre runder (`ceo/kontrast-selftest-hero`,
+- **9/10:** de fem bog-prøvesider fik en betalt vej
+  (`ceo/bogproeve-betalt-vej`): hver ende-sektion linker til EUComply Pro
+  ($79 pr. website pr. år) på `/compliance-report`. tool-paid-path var rød
+  med 10 fund, er nu GRØN. Gaten grøn (519/519 tests).
+- **9/10:** page-profiles sammenligning af to URL'er er verificeret live (to
+  URL-felter + «Compare») — feature 51 LEVERET, VERIFICÉR-noten lukket.
+- **9/10:** rød CI rettet i tre runder (`ceo/kontrast-selvtage-hero`,
   `ceo/page-profile-cta`, `ceo/plan-status-laengde`): hero-montagen døde i
-  selvmålingen, page-profile havde to donationer (donation-paths), og STATUS
-  var 35 linjer mod plan-status' 25. Fire pushes lå ude af deploy.
-- **9/10:** review-fonds to [LAV] gennemgået: bog-prøvesiden har ingen
-  katalogpost med forkert produkt, og `/support` og `/da/support` er begge i
-  `route_inventory.json` — ingen af dem var en åben fejl.
+  selvmålingen, page-profile havde to donationer, STATUS var 35 linjer.
+- **9/10:** Clean Copy-webværktøjet på dansk (`ceo/clean-copy-da-tool`) og
+  prøvesider for de fem øvrige EPUB'er (`ceo/bog-forhaandsvisning`) leveret.
+  Review-fonds to [LAV] gennemgået: ingen af dem var en åben fejl.
 - **9/10:** page-profiles Pro-kort og fire guides siger nu at sammenligning i
-  browseren er gratis (`ceo/page-profile-cta`) — de loved Pro for noget
-  8d30d989 gjorde gratis. De to forsiders værktøjsliste samme rettelse
-  (`ceo/forsider-pro-prajs`).
-- **9/10:** dansk udgave af Clean Copy-webværktøjet leveret
-  (`ceo/clean-copy-da-tool`): `/da/clean-copy-tool` med batch-konvertering,
-  licensaktivering og Pro-kort på dansk. Gaten grøn (build, seo_check,
-  519/519 tests, inline-js). hreflang begge veje, ratchet 13→14.
-- **9/10:** forhåndsvisninger af de fem øvrige EPUB'er leveret
-  (`ceo/bog-forhaandsvisning`): `/books/preview-{nis2,gdpr,eaa-checklist,
-  eaa-shopify,cookie-consent-guide}` med rigtige kapitler fra hver EPUB,
-  linket fra `/books`-kortene. Gaten grøn (build, seo_check, 519/519 tests,
-  inline-js). route_inventory + ratchet opdateret med 5 nye ruter.
-- **9/10:** deploy-verifikation af de fire ude-blivere pushes: bog-prøvesiden
-  viser «Preface» + Clean Copy-sætningen ✓, color-blindness-simulatoren
-  linker til bloggen ✓, men page-profile har kun ét URL-felt live — deploy-
-  jobbet var in_progress ved tjekket, så compare-sektionen tjekkes næste
-  iteration.
+  browseren er gratis (`ceo/page-profile-cta`, `ceo/forsider-pro-prajs`) — de
+  loved Pro for noget tidligere arbejde havde gjort gratis.
 - 0 åbne review-fund. Sentry: 0 uløste fejl (14 dage). 0 åbne PR'er.
-- **PR-TJEK 9/10:** 0 åbne PR'er. **BRANCH-TJEK 9/10:** `origin/ceo/hub-readme-note`
-  (2 uger) er helt landet i `main` og kan slettes — men `git push --delete`
-  er spærret af miljøet, så ❓ til Mads. `origin/lifetime-founding` er 12 dage
-  og uden for vinduet. `ceo/clean-copy-da-tool` (lokal) har to wip-commits med
-  `site/da/clean-copy-tool.html` — det er feature 53, ikke startet forfra.
+- **PR-TJEK 9/10:** 0 åbne PR'er. **BRANCH-TJEK 9/10:**
+  `origin/ceo/hub-readme-note` (2 uger) er landet i `main` og kan slettes,
+  men `git push --delete` er spærret af miljøet (❓).
 - **CEO-kø #0** er færdig og merged; 0 åbent.
 ## Åbne review-fund
 
@@ -39,25 +27,20 @@ Ingen.
 ## Verificér deploy
 
 - **VERIFICÉR DEPLOY OK 9/10:** scan-proxy POST + scanFejl fix `ceo/scan-fejl-post` — live `https://mahope.tools/scan-proxy` svarer 400 på POST med ugyldig URL (ruten er live og fungerer).
-- **VERIFICÉR DEPLOY:** fire pushes `ceo/page-profile-compare`,
-  `ceo/kontrast-selftest-hero`, `ceo/page-profile-cta`, `ceo/plan-status-laengde`
-  9/10-2026 — tre gates var røde i træk, så intet nåede ud. Tjek 9/10: bog-
-  prøvesiden live ✓ («Preface» + Clean Copy-sætning), color-blindness-
-  simulatoren linker ✓, men page-profile har kun ét URL-felt live — deploy
-  in_progress ved tjekket. Næste iteration: tjek compare-sektionen igen
-  (to URL-felter + «Compare»).
+- **VERIFICÉR DEPLOY OK 9/10:** fire pushes `ceo/page-profile-compare`,
+  `ceo/kontrast-selvtage-hero`, `ceo/page-profile-cta`, `ceo/plan-status-laengde`
+  9/10-2026 — tjekket live: `/page-profile` har to URL-felter
+  (`compare-url-a`/`compare-url-b`) og «Compare», bog-prøvesiden viser
+  «Preface: Why This Book Exists», knappen «Or read the first chapters in your
+  browser» findes på `/books/build-your-first-chrome-extension`, og
+  `/color-blindness-simulator` linker til `/blog/color-blindness-simulation-check`.
+  Fire ude-blivere pushes er nu live.
 
-- **VERIFICÉR DEPLOY:** bog-prøveside + rød-port-fix `ceo/bogproeve-betalt-vej
-  9/10-2026 03:30` — noten glemt i squash-commiten `fe9bdd51`, og siden kom
-  aldrig ud: den commits egen gate var rød (tool-paid-path), så deploy-jobbet
-  blev sprunget. Tjek at
-  `https://mahope.tools/books/preview-build-your-first-chrome-extension` (200)
-  viser «Preface: Why This Book Exists» og den nye sætning om Clean Copy, at
-  knappen «Or read the first chapters in your browser» findes på
-  `/books/build-your-first-chrome-extension`, og at
-  `https://mahope.tools/color-blindness-simulator` (200) linker til
-  `/blog/color-blindness-simulation-check` — begge commits (708d302e,
-  fe9bdd51) lå ude af deploy indtil rettelsen landed.
+- **VERIFICÉR DEPLOY:** bog-prøvesider med betalt vej `ceo/bogproeve-betalt-vej`
+  9/10-2026 14:3x — tjek at `https://mahope.tools/books/preview-{nis2-for-agencies,
+  gdpr-for-agencies, eaa-checklist, eaa-shopify, cookie-consent-guide}` (200)
+  viser den nye sætning med «EUComply Pro» og $79 pr. website pr. år, og at
+  `/compliance-report` stadig viser «Buy EUComply Pro — $79/year».
 
 - **VERIFICÉR DEPLOY OK 9/10:** eaa-action `ceo/eaa-github-action` — live
   `https://mahope.tools/downloads` (200) viser GitHub Action-skabelonen med
@@ -153,38 +136,54 @@ side; tallene er ikke vores egen trafik. Alt det leverede (1–44) står i
 `docs/plan-arkiv.md`.
 
 51. **`/page-profile`: sammenlign to URL'er i browseren.** Hvem: SEO-bureauer.
-     Tal: konvertering til Page Profile Pro ($19/år). Accept: to URL-felter, én
-     diff med score-forskel pr. kontrollpunkt, Pro-funktionen bag licenskontrol.
-     Datagrund: CLI'en har allerede `--compare`; web-siden profilerer én URL.
-52. **Skabelon-hub for de mest hentede filer.** Hvem: de 25 downloadbesøg/uge på
-    mahope.tools. Tal: downloads og konvertering til EUComply Pro ($79/år).
-    Accept: én side med hver gratis skabelon, hvad den dækker, og én købsknap.
-    Datagrund: privacy-policy-template.md (5) og ropa-template.md (3) er de
-    mest hentede filer, men hentes som rå .md uden en side der forklarer dem.
+      Tal: konvertering til Page Profile Pro ($19/år). Accept: to URL-felter, én
+      diff med score-forskel pr. kontrollpunkt, Pro-funktionen bag licenskontrol.
+      Datagrund: CLI'en har allerede `--compare`; web-siden profilerte én URL.
+      **LEVERET** `ceo/page-profile-compare` — live verificeret 9/10 (to felter
+      + «Compare»).
+52. **`/free-downloads`: én købsknap til de betalte skabelonsæt.** Hvem: de 25
+     downloadbesøg/uge på mahope.tools. Tal: konvertering til de betalte
+     skabeloner ($29–$149) og EUComply Pro ($79/år). Accept: hubben viser pr.
+     gratis fil hvad den dækker og har én købsknap der virker. Datagrund:
+     privacy-policy-template.md (5) og ropa-template.md (3) er de mest hentede
+     filer, og hubben har i dag intet købsanker.
+
 53. **cleancopy.tools: dansk udgave af web-værktøjet.** Hvem: de 3 besøgende/28
-    dage på `/da/`-stierne. Tal: konvertering til Clean Copy Pro ($19/år).
-    Accept: `/da/clean-copy-tool` med batch og licensaktivering på dansk.
-    Datagrund: DA-forsiden lover batch-konvertering «i webværktøjet», men
-    værktøjet findes kun på engelsk. **LEVERET** `ceo/clean-copy-da-tool`.
+     dage på `/da/`-stierne. Tal: konvertering til Clean Copy Pro ($19/år).
+     Accept: `/da/clean-copy-tool` med batch og licensaktivering på dansk.
+     Datagrund: DA-forsiden lover batch-konvertering «i webværktøjet», men
+     værktøjet findes kun på engelsk. **LEVERET** `ceo/clean-copy-da-tool`.
 
 45. **e-bøger: læs kapitel 1 gratis i browseren.** Hvem: dem der laster de seks
-    EPUB'er (top-downloads). Tal: downloads og konvertering til $29-bundlet.
-    Accept: en prøveside der viser det første kapitel og linker til bundlet.
-    Datagrund: `/books/` er top-download, men der er ingen vej fra læsning til køb.
-    **LEVERET** `ceo/bog-proeveside` ( én bog; udvidelsen af de sidste fem er
-    feature 50).
+     EPUB'er (top-downloads). Tal: downloads og konvertering til $29-bundlet.
+     Accept: en prøveside der viser det første kapitel og linker til bundlet.
+     Datagrund: `/books/` er top-download, men der er ingen vej fra læsning til køb.
+     **LEVERET** `ceo/bog-proeveside` + `ceo/bog-forhaandsvisning` (seks prøvesider);
+     den betalte vej (EUComply Pro på `/compliance-report`) kom i
+     `ceo/bogproeve-betalt-vej` 9/10.
 46. **cleancopy.tools: batch-konverter i web-værktøjet.** Hvem: de 18 besøgende/28d
-    (bounce 81%). Tal: konvertering til Clean Copy Pro ($19/år). Accept: indsæt
-    flere HTML-bidder, få flere Markdown-bagter. Datagrund: Pro-funktion bag
-    licenskontrol (open-core), web-værktøjet er den gratis indgang.
+     (bounce 81%). Tal: konvertering til Clean Copy Pro ($19/år). Accept: indsæt
+     flere HTML-bidder, få flere Markdown-bagter. Datagrund: Pro-funktion bag
+     licenskontrol (open-core), web-værktøjet er den gratis indgang.
+     **LEVERET** — batch-sektionen kører i EN og DA bag licenskontrollen.
 47. **GitHub Action for eaa-scanner.** Hvem: de 91 npm-downloads/uge. Tal:
-    adoption. Accept: `action.yml` der scanner og uploader SARIF. Datagrund:
-    SARIF-outputet (feature 38) findes; kræver Marketplace-publicering (❓).
+     adoption. Accept: `action.yml` der scanner og uploader SARIF. Datagrund:
+     SARIF-outputet (feature 38) findes; kræver Marketplace-publicering (❓).
+     **LEVERET** `ceo/eaa-github-action` — live på `/downloads` verificeret.
 48. **/page-profile: sammenlign to URL'er.** Hvem: SEO-bureauer. Tal: konvertering
-    til Page Profile Pro ($19/år). Accept: `page-profile --compare A B` giver
-    en diff. Datagrund: Pro-funktionen findes ikke endnu; CLI'en har allerede
-    score og grade.
+     til Page Profile Pro ($19/år). Accept: `page-profile --compare A B` giver
+     en diff. Datagrund: Pro-funktionen findes ikke endnu; CLI'en har allerede
+     score og grade.
 49. **Guide: farveblindhedssimulering.** Hvem: de 5 besøgende/28d på
-    `/color-blindness-simulator` + 9 på kontrastartiklen. Tal: trafik til
-    simulatoren og videre til `/scan`/EUComply Pro. Accept: EN+DA-guide med
-    målte tal. **LEVERET** `ceo/farveblindhed-artikel`.
+     `/color-blindness-simulator` + 9 på kontrastartiklen. Tal: trafik til
+     simulatoren og videre til `/scan`/EUComply Pro. Accept: EN+DA-guide med
+     målte tal. **LEVERET** `ceo/farveblindhed-artikel`.
+54. **`deskuptime.com`: 11 besøg, 100 % bounce, 0 s besøgstid.** Hvem: alle der
+     lander på forsideen. Tal: fra 0 s til en reel læsning, og CTR til CLI/Pro.
+     Accept: fundet og rettet hvad der får besøgende til at forlade siden med det
+     samme (0 s tyder på fejl før indholdet vises). Datagrund: Plausible
+     28 dage: besøgstid 0 s og bounce 100 % — den eneste af de tre måldomæner.
+55. **EUComply: kundeklar rapport ud af det frie multi-site-tjek.** Hvem: bureauer
+     med kunder. Tal: flytter en $79/årslinje. Accept: rapport-knappen på
+     checket der fører til `/paid-templates` eller Pro. Datagrund: spørger Mads
+     først (🟡 i ❓) — rapportkittet til $69 er den nærmeste eksisterende vej.
