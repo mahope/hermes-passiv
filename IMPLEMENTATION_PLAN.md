@@ -26,7 +26,7 @@ Ingen.
 
 ## Verificér deploy
 
-- **VERIFICÉR DEPLOY:** scan-proxy POST + scanFejl fix `ceo/scan-fejl-post 9/10-2026`
+- **VERIFICÉR DEPLOY OK 9/10:** scan-proxy POST + scanFejl fix `ceo/scan-fejl-post` — live `https://mahope.tools/scan-proxy` svarer 400 på POST med ugyldig URL (ruten er live og fungerer).
 
 - **VERIFICÉR DEPLOY:** bog-prøveside + rød-port-fix `ceo/bogproeve-betalt-vej
   9/10-2026 03:30` — noten glemt i squash-commiten `fe9bdd51`, og siden kom
