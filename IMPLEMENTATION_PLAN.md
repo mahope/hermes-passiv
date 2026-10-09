@@ -1,5 +1,9 @@
 # STATUS
 
+- **9/10:** gratis-downloads-hubben har ét købsanker (`ceo/free-downloads-paid-path`):
+  kortet siger pr. gratis fil hvad den dækker, at browser-tjekket på
+  `/compliance-report` er gratis, og at Pro tilføjer de 18 server-side tjek
+  plus en PDF. Gaten grøn (187 steps).
 - **9/10:** rød CI rettet og de danske sider peger nu på det danske
   webværktøj (`ceo/da-vaerktoej-links`): `license-clients` kendte ikke den
   nye `/da/license-lookup`, og `catalog-where` lå skjult bag den (506 → 508).
@@ -28,6 +32,12 @@ Ingen.
 
 ## Verificér deploy
 
+- **VERIFICÉR DEPLOY:** købsanker på gratis-downloads
+  `ceo/free-downloads-paid-path` 9/10-2026 22:50 — tjek at
+  `https://mahope.tools/free-downloads` viser sektionen «When the free files are
+  not enough» med knappen «Buy EUComply Pro — $79/year per website», og at
+  `https://mahope.tools/paid-templates` samt `/compliance-report` stadig er
+  tilgængelige fra siden.
 - **VERIFICÉR DEPLOY:** danske lenker + rød CI `ceo/da-vaerktoej-links`
   9/10-2026 20:50 — tjek at `https://mahope.tools/da/license-lookup` (200)
   viser «Find din licensnøgle», at `/da/clean-copy-tool` (200) viser
@@ -153,11 +163,13 @@ side; tallene er ikke vores egen trafik. Alt det leverede (1–44) står i
       **LEVERET** `ceo/page-profile-compare` — live verificeret 9/10 (to felter
       + «Compare»).
 52. **`/free-downloads`: én købsknap til de betalte skabelonsæt.** Hvem: de 25
-     downloadbesøg/uge på mahope.tools. Tal: konvertering til de betalte
-     skabeloner ($29–$149) og EUComply Pro ($79/år). Accept: hubben viser pr.
-     gratis fil hvad den dækker og har én købsknap der virker. Datagrund:
-     privacy-policy-template.md (5) og ropa-template.md (3) er de mest hentede
-     filer, og hubben har i dag intet købsanker.
+      downloadbesøg/uge på mahope.tools. Tal: konvertering til de betalte
+      skabeloner ($29–$149) og EUComply Pro ($79/år). Accept: hubben viser pr.
+      gratis fil hvad den dækker og har én købsknap der virker. Datagrund:
+      privacy-policy-template.md (5) og ropa-template.md (3) er de mest hentede
+      filer, og hubben har i dag intet købsanker.
+      **LEVERET** `ceo/free-downloads-paid-path` — kortet «When the free files
+      are not enough» med én EUComply Pro-knap og vej til `/paid-templates`.
 
 53. **cleancopy.tools: dansk udgave af web-værktøjet.** Hvem: de 3 besøgende/28
      dage på `/da/`-stierne. Tal: konvertering til Clean Copy Pro ($19/år).

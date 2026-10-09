@@ -159,6 +159,7 @@
    "Betalt skabeloner og klausulsæt": "/da/paid-templates",
    "Farveblindhedssimulator": "/color-blindness-simulator-da",
    "Generator til tilgængelig farvepalet": "/palette-generator-da",
+   "Gratis downloads": "/free-downloads",
    "Se de syv dokumenter →": "/da/paid-templates",
    "Se hvad rapporten dækker →": "/da/compliance-report",
    "Simulator for farveblindhed": "/color-blindness-simulator-da",
@@ -212,7 +213,8 @@
    "Køb Komplet skabelonpakke": "https://buy.stripe.com/eVqaEW0Iren855c68vbMQ0a",
    "Køb Kunderapporteringssæt": "https://buy.stripe.com/00wdR8bn5a6S0OWeF1bMQ09",
    "Køb NIS2 / DORA-leverandørklauselsæt": "https://buy.stripe.com/4gM4gydvd92OapwgN9bMQ06",
-   "compliance-rapport": "/da/compliance-report"
+   "compliance-rapport": "/da/compliance-report",
+   "gratis downloads": "/free-downloads"
   },
   "/da/pricing": {
    "Donér": "/da/support",
@@ -247,7 +249,10 @@
    "EUComply Pro": "/da/compliance-report"
   },
   "/free-downloads": {
-   "page-profile": "/page-profile"
+   "Buy EUComply Pro — $79/year per website": "https://buy.stripe.com/eVq00i4YH6UG69g0ObbMQ03",
+   "page-profile": "/page-profile",
+   "the compliance report page": "/compliance-report",
+   "the paid kits": "/paid-templates"
   },
   "/free-tools": {
    "Accessible Color Palette Generator": "/palette-generator",
@@ -257,6 +262,7 @@
    "Clean Copy Web →": "/clean-copy-tool",
    "Color Blindness Simulator": "/color-blindness-simulator",
    "Colour Blindness Simulator": "/color-blindness-simulator",
+   "Free Downloads": "/free-downloads",
    "Full page →": "/page-profile",
    "NIS2 Readiness Guide": "/blog/nis2-readiness-guide",
    "Paid templates & clause sets": "/paid-templates",
@@ -406,7 +412,8 @@
    "Buy GDPR DPA template": "https://buy.stripe.com/bJe7sK8aT4My7dk7czbMQ05",
    "Buy Mutual NDA Clause Set": "https://buy.stripe.com/aFafZg1Mv92OdBI8gDbMQ07",
    "Buy NIS2 / DORA Vendor Clause Set": "https://buy.stripe.com/4gM4gydvd92OapwgN9bMQ06",
-   "automated compliance report": "/compliance-report"
+   "automated compliance report": "/compliance-report",
+   "downloads": "/free-downloads"
   },
   "/palette-generator": {
    "Buy EUComply Pro — $79/year per website": "https://buy.stripe.com/eVq00i4YH6UG69g0ObbMQ03",

@@ -919,6 +919,20 @@
       ]
     },
     {
+      "path": "site/free-downloads.html",
+      "domain": "mahope.tools",
+      "route": "/free-downloads",
+      "lifetime": false,
+      "product": "eucomply-pro",
+      "prices": [
+        "$0",
+        "$79"
+      ],
+      "requires_text": [
+        "Buy EUComply Pro — $79/year per website"
+      ]
+    },
+    {
       "path": "site/da/compliance-report.html",
       "domain": "mahope.tools",
       "route": "/da/compliance-report",
