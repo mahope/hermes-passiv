@@ -4,7 +4,10 @@
   `/blog/color-blindness-simulation-check` + `/da/blog/farveblindhed-tjek`, med
   en målende kontrasttabel pr. synstype — alle 24 tal beregnet med simulatorens
   egen Machado-model, ikke estimeret. Gate GRØN.
-- **9/10:** to deploy-noter lukket på live-indhold (eaa-action, sitemap-scan).
+- **9/10:** to deploy-noter lukket på live-indhold (eaa-action, sitemap-scan,
+  score-simulator).
+- **9/10:** simulatoren (`ceo/farveblindhed-cta`) linker nu til farveblindhedsguiden,
+  så de 5 besøgende på værktøjet kan nå guiden (9 besøgende).
 - 0 åbne review-fund. Sentry: 0 uløste fejl (14 dage). 0 åbne PR'er.
 - **PR-TJEK 8/10:** 0 åbne PR'er. **BRANCH-TJEK:** ikke kørt.
 - **CEO-kø #0** er færdig og merged; 0 åbent.
@@ -20,9 +23,9 @@ Ingen.
 - **VERIFICÉR DEPLOY OK 9/10:** sitemap-scanning `ceo/sitemap-scan` — live
   `https://mahope.tools/scan` og `/da/scan` (200) viser Pages/Sitemap-skifteren
   i heroen («Sider» på dansk).
-- **VERIFICÉR DEPLOY:** compliance-score-simulator `ceo/compliance-score-simulator`
-  — tjek at `https://mahope.tools/compliance-report` viser score-simulatoren
-  (score-bar med «Nu» vs «Fixed» og point-værdier per fix).
+- **VERIFICÉR DEPLOY OK 9/10:** compliance-score-simulator `ceo/compliance-score-simulator`
+  — live `https://mahope.tools/compliance-report` viser score-barer med «Nu» vs
+  «Fixed» og point-værdier pr. fix («Fix all N error(s) → +N points»).
 - **VERIFICÉR DEPLOY OK 8/10:** GDPR-brudsgenerator `ceo/gdpr-breach-report-generator` —
   live EN/DA svarer 200, 72-timers-fristen vises, «Generate report»/«Lav rapport»
   viser rapporten med link til `/paid-templates`.
