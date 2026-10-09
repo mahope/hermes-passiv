@@ -9602,3 +9602,23 @@ Planen listede dem som åbne, men arbejdet fandtes:
   (feature 53).
 - 48 page-profile `--compare`: `page-profile/page_profile.py:1071` har
   `--compare URL_A URL_B` og `run_compare()` (:840) bag `require_pro`.
+
+## Arkiveret fra STATUS 9/10 (plan-status-porten kræver højst 25 linjer)
+
+- **9/10:** review-fond [MIDDEL] rettet: hero-gradient-måling dømmes nu på
+  alle montager med `gfrom`/`gto`, ikke kun dem med upload-felt.
+- **9/10:** review-fond [HØJ] rettet: scanFejl bruger `String(e)`, scan-proxy
+  er POST i worker, klient og tests. Gate grøn (519/519).
+- **9/10:** feature 49 leveret (`ceo/farveblindhed-artikel`): ny guide i EN+DA,
+  `/blog/color-blindness-simulation-check` + `/da/blog/farveblindhed-tjek`, med
+  en målende kontrasttabel pr. synstype — alle 24 tal beregnet med simulatorens
+  egen Machado-model, ikke estimeret. Gate GRØN.
+- **9/10:** feature 45 leveret (`ceo/bog-proeveside`): «Læs de første kapitler i
+  browseren» for Build Your First Chrome Extension — ny side
+  `/books/preview-build-your-first-chrome-extension` med bogens tre første
+  afsnit (præcis teksten fra EPUB'en) og EPUB-download til slut. Bog-siden
+  har nu en sekundær knap til forhåndsvisningen. Gate GRØN.
+- **9/10:** to deploy-noter lukket på live-indhold (eaa-action, sitemap-scan,
+  score-simulator).
+- **9/10:** simulatoren (`ceo/farveblindhed-cta`) linker nu til farveblindhedsguiden,
+  så de 5 besøgende på værktøjet kan nå guiden (9 besøgende).

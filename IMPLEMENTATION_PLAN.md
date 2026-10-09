@@ -11,23 +11,6 @@
   browseren er gratis (`ceo/page-profile-cta`) — de loved Pro for noget
   8d30d989 gjorde gratis. De to forsiders værktøjsliste samme rettelse
   (`ceo/forsider-pro-prajs`).
-- **9/10:** review-fond [MIDDEL] rettet: hero-gradient-måling dømmes nu på
-  alle montager med `gfrom`/`gto`, ikke kun dem med upload-felt.
-- **9/10:** review-fond [HØJ] rettet: scanFejl bruger `String(e)`, scan-proxy
-  er POST i worker, klient og tests. Gate grøn (519/519).
-- **9/10:** feature 49 leveret (`ceo/farveblindhed-artikel`): ny guide i EN+DA,
-  `/blog/color-blindness-simulation-check` + `/da/blog/farveblindhed-tjek`, med
-  en målende kontrasttabel pr. synstype — alle 24 tal beregnet med simulatorens
-  egen Machado-model, ikke estimeret. Gate GRØN.
-- **9/10:** feature 45 leveret (`ceo/bog-proeveside`): «Læs de første kapitler i
-  browseren» for Build Your First Chrome Extension — ny side
-  `/books/preview-build-your-first-chrome-extension` med bogens tre første
-  afsnit (præcis teksten fra EPUB'en) og EPUB-download til slut. Bog-siden
-  har nu en sekundær knap til forhåndsvisningen. Gate GRØN.
-- **9/10:** to deploy-noter lukket på live-indhold (eaa-action, sitemap-scan,
-  score-simulator).
-- **9/10:** simulatoren (`ceo/farveblindhed-cta`) linker nu til farveblindhedsguiden,
-  så de 5 besøgende på værktøjet kan nå guiden (9 besøgende).
 - 0 åbne review-fund. Sentry: 0 uløste fejl (14 dage). 0 åbne PR'er.
 - **PR-TJEK 9/10:** 0 åbne PR'er. **BRANCH-TJEK 9/10:** `origin/ceo/hub-readme-note`
   (2 uger) er helt landet i `main` og kan slettes — men `git push --delete`
