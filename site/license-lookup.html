@@ -264,6 +264,9 @@
         + '<p class="hint">Keep this page, or write the key down. You can run the lookup '
         + 'again with the same order reference and email whenever you need it.</p>';
       out.hidden = false;
+      // Nøglen der netop blev fundet, skrevet ind i frigørelsesformularen, så
+      // kunden ikke skal kopiere de samme 32 tegn to gange på den samme side.
+      udfyldSeatKey();
       statusEl.textContent = '';
       statusEl.removeAttribute('data-state');
       var copy = document.getElementById('copyKey');
@@ -295,12 +298,29 @@
   function normalisér(k) {
     return String(k || '').trim().toLowerCase();
   }
+  // Nøglen der netop blev fundet, skrevet ind i frigørelsesformularen. Den
+  // forrige kode gjorde dette i en `setTimeout(…, 0)` på formularens submit —
+  // en timer der løb ud inden svaret var kommet tilbage, så forudfyldningen
+  // aldrig skete, og kunden sad med at skrive 32 tegn om igen.
+  function udfyldSeatKey() {
+    if (!seatKey) return;
+    if (normalisér(seatKey.value)) return;
+    var fundet = document.getElementById('foundKey');
+    if (!fundet) return;
+    seatKey.value = normalisér(fundet.textContent);
+  }
   // `bekræftelse` overlever den genindlæsning efter en frigørelse. Uden den
   // skrev `tegnMaskiner` sit eget taltjek over «Machine freed» i samme øjeblik,
   // så kunden aldrig så at der skete noget — kun et tal der faldt fra tre til to.
   function tegnMaskiner(j, bekræftelse) {
     var maskiner = Array.isArray(j.devices) ? j.devices : [];
-    var fri = j.max_devices - j.devices_in_use;
+    // Loft og brug læses fra svaret, men ingen af dem må kunne gøre sætningen
+    // til «3 af undefined maskiner i brug»: en nøgle skrevet før felterne
+    // fandtes har hverken, og så benyttes listen selv. Uden faldet stod en
+    // kunde med en gammel nøgle med et tal af to hun ikke kunne bruge.
+    var loft = typeof j.max_devices === 'number' ? j.max_devices : maskiner.length;
+    var iBrug = typeof j.devices_in_use === 'number' ? j.devices_in_use : maskiner.length;
+    var fri = loft - iBrug;
     rydSeat();
     if (!maskiner.length) {
       // Tom-tilstand: sig hvad kunden kan gøre nu, ikke bare "ingen data".
@@ -328,11 +348,18 @@
     Array.prototype.forEach.call(seatList.querySelectorAll('button[data-device]'), function (b) {
       b.addEventListener('click', function () { frigør(b.getAttribute('data-device'), b); });
     });
-    seatSay((bekræftelse ? bekræftelse + ' ' : '')
-      + maskiner.length + ' of ' + j.max_devices + ' machines in use. '
-      + (fri > 0
-        ? fri + (fri === 1 ? ' place is free.' : ' places are free.')
-        : 'All places are in use — free one to move the key to a new machine.'), null);
+    // Sætningen skriver loftet kun, når det er et tal. Er det ikke det, står
+    // kunden med «3 machines in use» — og intet om pladser hun ikke kan se.
+    var saetning = (bekræftelse ? bekræftelse + ' ' : '');
+    if (typeof j.max_devices === 'number') {
+      saetning += maskiner.length + ' of ' + loft + ' machines in use.';
+      saetning += fri > 0
+        ? ' ' + fri + (fri === 1 ? ' place is free.' : ' places are free.')
+        : ' All places are in use — free one to move the key to a new machine.';
+    } else {
+      saetning += maskiner.length + ' machine' + (maskiner.length === 1 ? '' : 's') + ' in use.';
+    }
+    seatSay(saetning, null);
   }
   function frigør(deviceId, knap) {
     var nøgle = normalisér(seatKey.value);
@@ -389,16 +416,6 @@
       seatSay('No connection. Reload the page in a minute and try again.', 'error');
     });
   });
-  // Slå nøglen ind fra opslaget ovenfor, så kunden ikke skal kopiere den samme
-  // 32 tegn to gange på den samme side.
-  if (form) {
-    form.addEventListener('submit', function () {
-      setTimeout(function () {
-        var fundet = document.getElementById('foundKey');
-        if (fundet && seatKey && !normalisér(seatKey.value)) seatKey.value = fundet.textContent.trim();
-      }, 0);
-    });
-  }
 })();
 </script>
 <script>

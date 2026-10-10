@@ -1,35 +1,40 @@
 # STATUS
 
 - 0 åbne review-fund. Sentry: 0 uløste fejl (14 dage). 0 åbne PR'er.
-- **PR-TJEK 10/10:** 0 åbne PR'er (undici-PR landet, i arkivet).
-  **BRANCH-TJEK 9/10:** `origin/ceo/hub-readme-note` kan slettes, men
-  push --delete er spærret (❓).
+  **PR-TJEK 10/10:** 0 åbne PR'er. **BRANCH-TJEK 9/10:** `origin/ceo/hub-readme-note`
+  kan slettes, men push --delete er spærret (❓).
 - **CEO-kø #0** er færdig og merged; 0 åbent.
-- **10/10:** `/contrast-checker` (EN+DA) viser nu også APCA Lc ved siden af
-  WCAG-forholdet — polariteten 2.x-tallet smider ud (`ceo/apca-kontrasttjekker`).
-  `site/apca.js` er en citatport af APCA 0.1.9 (W3, G-4g); de otte
-  reference-værdier i `tests/apca.test.mjs` er regnet om med
-  `Myndex/apca-w3@master` og stemmer tegn for tegn.
-- **10/10:** `page-profile --compare A B` giver nu diffet som data
-  (`--json`, `ceo/compare-json`): `differences` med rigtige værdier (en
-  manglende HSTS er `null`, ikke `—`), `score_delta` og `verdict`.
-  Download-kopien følger som 1.2.2, og 1.2.1 er lagt i
-  `tools/retired_downloads.json`.
-- **10/10:** seks deploy-noter verificeret live: Clean Copy-arkiverne er
-  byte-identiske med kilden, `popup.html` har ingen «Soon», `options.html`
-  har $19-købslinket; de tre cleancopy-guider indlæser `net.js` før
-  `clean-copy-embed.js`; alle fire `example:`-montager kører på EN+DA; de
-  fem bog-prøvesider siger «PDF report you can hand to a client».
-- **10/10:** farveblindhedssimulatoren og artiklen bruger nu én delt
-  `cb-machado.js` i stedet for tre kopier (`ceo/farveblindhed-artikel`):
-  simulatoren (EN+DA) og `/blog/color-blindness-simulation-check` indlæser
-  `/cb-machado.js` og eksponerer `CB_SIM` til billed- og kontrast-modulerne.
-  Alle tests grønne: `cb-share`, `cb-preview`, `cb-image`, `cb-contrast`.
+- **10/10:** `/license-lookup` (EN+DA) slår den fundne nøgle ind i
+  frigørelsesformularen (`ceo/licensnogle-forudfyld`): et `setTimeout(…, 0)`
+  løb ud inden svaret kom, så kunden skrev de samme 32 tegn to gange, og
+  maskinlisten skrev «1 af undefined maskiner» uden `max_devices`. Begge
+  dømmes af funktionerne kørt i `tests/license-lookup.test.mjs`.
+- **10/10:** `/contrast-checker` (EN+DA) viser APCA Lc ved siden af WCAG-
+  forholdet (`ceo/apca-kontrasttjekker`); `site/apca.js` er en citatport af
+  APCA 0.1.9, reference-værdierne i `tests/apca.test.mjs` er `apca-w3` egne.
+- **10/10:** `page-profile --compare A B --json` giver diffet som data
+  (`ceo/compare-json`); downloaden følger som 1.2.2.
+- **10/10:** seks deploy-noter live: Clean Copy-arkiver byte-identiske,
+  popup uden «Soon» med $19-købslink, tre cleancopy-guider med `net.js`,
+  fire `example:`-montager på EN+DA, bog-prøvesider med «PDF report».
+- **10/10:** farveblindhedssimulatoren og artiklen deler én `cb-machado.js`
+  i stedet for tre kopier (`ceo/farveblindhed-artikel`).
+- **Måling til feature 63:** 97 DA-artikler mod 95 EN; 3 DA mangler hreflang
+  (`kopier-tabel-hjemmeside-til-excel`, `nis2-guide-da`, `wcag-22-krav-liste`),
+  0 EN mangler DA-par; `/da/blog/` viser de danske guider.
 ## Åbne review-fund
 
 Ingen.
 
 ## Verificér deploy
+
+- **VERIFICÉR DEPLOY:** licensnøglen forudfyldt i frigørelsesformularen
+  `ceo/licensnogle-forudfyld` 10/10-2026 — tjek at live
+  `https://mahope.tools/license-lookup` og `/da/license-lookup` (200) indeholder
+  `udfyldSeatKey()` og kalder den efter `out.hidden = false;`, at ingen
+  `setTimeout` står i vejen for forudfyldningen, og at løsningen virker i
+  browseren: kør et opslag med ordrenummer og mail, så skal nøglen stå i
+  feltet til «Vis maskinerne på denne nøgle» uden at blive skrevet igen.
 
 - **VERIFICÉR DEPLOY:** farveblindhed-simulator + artikel `ceo/farveblindhed-artikel`
   10/10-2026 — tjek at live `https://mahope.tools/color-blindness-simulator`
@@ -237,9 +242,12 @@ side; tallene er ikke vores egen trafik. Alt det leverede (1–44 og 45–60) st
         Tal: brug af simulatoren, PRO-tjek og videre til `/scan`/EUComply Pro
         ($79/år). Accept: artiklen indlæser samme kerne som simulatoren og viser
         resultatet i en figur, uden at forlade siden. Datagrund: præcis det
-        mønster der flyttede kontrastartiklen (`/blog/text-on-image-contrast-check`,
+        mønster der flyttede kontrastartikken (`/blog/text-on-image-contrast-check`,
         feature 60) og cleancopy' tre html-to-markdown-guider (feature 58); i dag
         har artiklen intet `<script>` og sender læseren til værktøjet.
+        **LEVERET** i `ceo/farveblindhed-artikel` (10/10): artiklen indlæser
+        `/cb-machado.js` og kører den samme simulering på 6 farver × 3 synstyper
+        med severity-slider, så læseren ser resultatet uden at forlade siden.
  62. **deskuptime.com: fler-URL-tjek på `/bulk-url-checker/`, med ét inputfelt.**
         Hvem: de 16–17 besøgende/28 d på `/` (100 % bounce, 0 s). Tal: kørte
         tjek og CTR til CLI/Pro ($19 engang). Accept: indsæt adresser én pr.
@@ -247,12 +255,22 @@ side; tallene er ikke vores egen trafik. Alt det leverede (1–44 og 45–60) st
         siden henviser ikke til denne rute i dag (1 besøgende). Datagrund: det er
         det Pro-træk Produkt-køen allerede sælger (batch i CLI'en), og en gratis
         smagsprøve er den billigste vej fra et 0-sekunds besøg til en læsning.
+        **LEVERET** (målt 10/10): ruten `/bulk-url-checker/` svarer 200 på
+        deskuptime.com, læser adresser én pr. linje (op til 10), kører dem i
+        browseren mod `deskuptime-quickcheck.mahope-eeb.workers.dev` (målt live:
+        CORS `*`, svar med status/responseMs/redirect/sslDaysRemaining) og skriver
+        én tabel; EN-forsiden (`/` sektionen «Free web tools») og DA-forsiden
+        linker til den, og `/tools/` gør det samme.
  63. **`site/blog/` opdeler sig på sprog i sitemap'et.** Hvem: dem der søger på
-        danske værktøjsord. Tal: danske indgange og DA-Pro-køb. Accept: hver
-        DA-artikel har et `hreflang`-par til sin EN-side, og `/da/blog/` indeks
-        viser de danske guider i stedet for «96 Danish guides». Datagrund: ❓-listen
-        peger allerede på, at påstanden om 96 guider er forkert (11 ligger på
-        cleancopy.tools).
+        danske værktøjsord. Tal: danske indgange og DA-Pro-køb. Accept: **94 af
+        97 er leveret** — `/da/blog/` viser de 97 danske guider med link til
+        EN-indekset (ikke længere «96 Danish guides»), 94 af 97 DA-artikler har
+        `hreflang="en"` til sin modpart, og `tools/check_hreflang_pairs.py`
+        dømmer at hver EN-side har præcis én DA-søskende. Resten: giv de tre DA-
+        artikler uden par (`kopier-tabel-hjemmeside-til-excel`,
+        `nis2-guide-da`, `wcag-22-krav-liste`) hver deres rigtige EN-modpart og
+        skriv de tre `hreflang`-linjer i begge retninger. Datagrund: en DA-side
+        uden par er usynlig for Googles sprogvalg. *(Start her — 3 artikler.)*
 
  59. **Clean Copy: popup'en skal sælge Pro, ikke love «Soon».** Hvem: de 8–9
        besøg/7 d på de to mest hentede arkiver i familien (firefox 9, chrome 8).
