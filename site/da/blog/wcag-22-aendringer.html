@@ -50,7 +50,7 @@
       <div class="card"><span class="badge" style="font-size:0.75em;display:inline-block;margin-bottom:6px;">UPTIME</span><h3><a href="/deskuptime/" style="color:var(--color-accent);text-decoration:none;">DeskUptime: Gratis Desktop Uptime- &amp; SSL-overvågning</a></h3></div>
       <div class="card"><h3>EAA-h&aring;ndh&aelig;velse</h3><p>Siden juni 2025 skal e-handel, bank, transport og teleservices i EU v&aelig;re tilg&aelig;ngelige. Nationale markedsoverv&aring;gningsmyndigheder kan b&oslash;de- l&aelig;gge ikke-konforme virksomheder.</p></div>
       <div class="card"><h3>9 nye kriterier</h3><p>WCAG 2.2 tilf&oslash;jer ni nye successkriterier med fokus p&aring; kognitiv tilg&aelig;ngelighed, mobilinteraktion og formularer &mdash; omr&aring;der hvor de fleste sites fejler i dag.</p></div>
-      <div class="card"><h3>4 fjernede</h3><p>Fire gamle kriterier blev fjernet fordi de overlappede med andre. Sites bygget til 2.0 kan opleve at nogle krav er forsvundet &mdash; men ingen er blevet sv&aelig;rere uden erstatning.</p></div>
+      <div class="card"><h3>1 fjernet</h3><p>Ét kriterie fra WCAG 2.1 blev fjernet i 2.2: 4.1.1 Parsing. Hj&aelig;lpeteknologi har ikke l&aelig;ngere brug for at parse HTML direkte, og duplikerede ID&rsquo;er fanges stadig af andre kriterier.</p></div>
     </div>
   </div>
 </section>
@@ -76,9 +76,9 @@
 <section class="products">
   <div class="container">
     <h2 id="hvad-fjernet">Hvad blev fjernet</h2>
-    <p>Fire kriterier fra tidligere versioner blev fjernet i 2.2 fordi de duplikerede andre eller viste sig ikke-testbare:</p>
+    <p>Ét kriterie fra tidligere versioner blev fjernet i 2.2 fordi det ikke l&aelig;ngere har nogen v&aelig;rdi:</p>
     <p><strong>4.1.1 Parsing</strong> &mdash; fjernet; duplikerede ID'er og misdannet markup bryder stadig hj&aelig;lpeteknologi, men kravet er d&aelig;kket af andre kriterier og browsers parsing-adf&aelig;rd. Ret duplikerede ID'er alligevel (vores scanner tjekker for dem).</p>
-    <p>Andre krav blev reorganiseret: 2.4.10 Section Headings og dele af farvekontrast-vejledningen blev konsolideret frem for strammet.</p>
+    <p>2.4.10 Section Headings og dele af farvekontrast-vejledningen blev reorganiseret frem for strammet.</p>
     <p>Praktisk konsekvens: en audit mod 2.0 vil liste fejl der ikke l&aelig;ngere eksisterer, og overse fejl der g&oslash;r. Genbas&eacute;r dine audits mod 2.2.</p>
   </div>
 </section>

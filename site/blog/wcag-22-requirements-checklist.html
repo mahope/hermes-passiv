@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WCAG 2.2 Requirements: The Complete A/AA List (2026)</title>
+<meta name="description" content="All 55 WCAG 2.2 success criteria at levels A and AA in one list — including the six new in 2.2 — with a plain explanation of each.">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Hermes Passiv">
+<meta property="og:title" content="WCAG 2.2 requirements — the complete A and AA list">
+<meta property="og:description" content="Every WCAG 2.2 success criterion at level A and AA in one list — including the six new in 2.2 — with a short explanation of each and a free way to check your page.">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/blog/wcag-22-requirements-checklist">
+<meta property="og:image" content="https://hermes-passiv.pages.dev/cover.jpg">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/blog/wcag-22-requirements-checklist">
+<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/blog/wcag-22-requirements-checklist">
+<link rel="alternate" hreflang="da" href="https://hermes-passiv.pages.dev/da/blog/wcag-22-krav-liste">
+<link rel="alternate" hreflang="en" href="https://hermes-passiv.pages.dev/blog/wcag-22-requirements-checklist">
+
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "Article", "headline": "WCAG 2.2 requirements — the complete A and AA list", "description": "All 55 WCAG 2.2 success criteria at levels A and AA in one list — including the six new in 2.2 — with a plain explanation of each and a free way to check your page.", "url": "https://hermes-passiv.pages.dev/blog/wcag-22-requirements-checklist", "datePublished": "2026-10-10", "dateModified": "2026-10-10", "author": {"@type": "Person", "name": "Mads Holst Jensen", "url": "https://mahoje.dk"}, "publisher": {"@type": "Organization", "name": "mahoje.dk", "url": "https://mahoje.dk"}}
+</script>
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "How many requirements are in WCAG 2.2?", "acceptedAnswer": {"@type": "Answer", "text": "WCAG 2.2 has 86 success criteria: 31 at level A, 24 at level AA and 31 at level AAA. Public bodies and most laws (including the EAA) require levels A and AA — 55 criteria in total."}}, {"@type": "Question", "name": "What is new in WCAG 2.2 compared with 2.1?", "acceptedAnswer": {"@type": "Answer", "text": "Nine criteria were added in 2.2, six of them at level A or AA: focus not obscured (2.4.11), dragging alternatives (2.5.7), target size (2.5.8), consistent help (3.2.6), redundant entry (3.3.7) and accessible authentication (3.3.8). The other three are AAA-only, and 4.1.1 Parsing was removed. The ones that hit ordinary websites hardest are visible focus and login without cognitive traps."}}, {"@type": "Question", "name": "Is WCAG 2.2 law in the EU?", "acceptedAnswer": {"@type": "Answer", "text": "Not directly. The EAA references EN 301 549, which incorporates WCAG 2.1 level A/AA — but market surveillance works with the newest version in practice, and the EU is updating the harmonised standards to 2.2. Build to WCAG 2.2 AA and you are covered for both."}}, {"@type": "Question", "name": "What do levels A, AA and AAA mean?", "acceptedAnswer": {"@type": "Answer", "text": "The levels are grades of difficulty and importance. Level A is the basics (without them many people cannot use the page), AA is the standard law and contracts point to, and AAA is the best level — rarely required in full, because some AAA criteria cannot be met for all types of content."}}, {"@type": "Question", "name": "How do I check my page against the list fastest?", "acceptedAnswer": {"@type": "Answer", "text": "The automatable criteria — contrast, alt text, labels, language, heading structure — can be checked for free with a scanner in minutes. The rest (focus order, keyboard navigation) is best done by hand. A free scan typically finds 80% of the errors users actually complain about."}}]}
+</script>
+<script defer src="/track.js"></script>
+<style>
+  .compare { width:100%; border-collapse:collapse; font-size:0.88rem; margin:1rem 0 2rem; }
+  .compare th, .compare td { text-align:left; padding:8px 10px; border-bottom:1px solid var(--color-border); vertical-align:top; }
+  .compare th { border-bottom:2px solid var(--color-border); font-size:0.85rem; text-transform:uppercase; letter-spacing:0.03em; }
+  tr.new22 td { background:rgba(46,160,67,0.08); }
+  .lvl-badge { display:inline-block; font-size:0.72rem; padding:2px 8px; border-radius:999px; background:var(--color-accent); color:#fff; margin-right:8px; vertical-align:middle; }
+  @media (max-width:640px) { .compare { font-size:0.82rem; } .compare th:nth-child(3), .compare td:nth-child(3) { display:none; } }
+</style>
+</head>
+<body>
+<header class="hero">
+  <div class="container">
+    <div class="badge">ACCESSIBILITY &middot; WCAG 2.2 &middot; CHECKLIST</div>
+    <h1>Every WCAG 2.2 requirement<br>in one list</h1>
+    <p class="subtitle">The complete list of Level A and AA success criteria — the 55 requirements the EAA and public bodies measure against in practice. The six A/AA criteria that are <strong>new in 2.2</strong> are marked green.</p>
+    <div class="hero-cta">
+      <a href="/scan" class="btn-primary">Check your page against the list free &rarr;</a>
+      <a href="#listen" class="btn-secondary">Skip to the list</a>
+    </div>
+    <p class="hero-note">Updated 2026 &middot; 55 criteria (A + AA)</p>
+  </div>
+</header>
+<div class="blog-tool-cta ai-cta"><span class="btc-label">EAA, NIS2 and GDPR — three free guides with the answers, and a scanner for any public URL:</span> <a href="/compliance-ai" class="btn-secondary ai-cta-link" data-track="ai-cta">See what we publish free →</a></div>
+
+<section class="problem">
+  <div class="container">
+    <h2>How to use this list</h2>
+    <div class="problem-cards">
+      <div class="card"><h3>1️⃣ Scan automatically</h3><p>Roughly 80% of the errors users actually complain about can be found by machine: contrast, alt text, labels, language. Use the <a href="/scan">free scanner</a>.</p></div>
+      <div class="card"><h3>2️⃣ Review by hand</h3><p>Keyboard navigation, focus order and screen readers cannot be fully automated. Walk through your page once with this list beside you.</p></div>
+      <div class="card"><h3>3️⃣ Document it</h3><p>Generate an <a href="/accessibility-statement-generator">accessibility statement</a> once the problems are fixed — it is required under the accessibility law.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="products" id="listen">
+  <div class="container">
+    <span class="lvl-badge">NEW IN 2.2</span> The criteria at level A and AA that WCAG 2.2 added (three further new requirements exist only at AAA: 2.4.12, 2.4.13 and 3.3.9):
+    <table class="compare">
+      <thead><tr><th>Nr.</th><th>Requirement</th><th>What it means in practice</th></tr></thead>
+      <tbody><tr class="new22"><td>2.4.11</td><td>Focus Not Obscured (NEW IN 2.2)</td><td>Focus is never fully hidden behind sticky headers or modals</td></tr><tr class="new22"><td>2.5.7</td><td>Dragging Alternatives (NEW IN 2.2)</td><td>Drag-and-drop also works with a click</td></tr><tr class="new22"><td>2.5.8</td><td>Target Size (NEW IN 2.2)</td><td>Clickable areas are at least about 24&times;24 px</td></tr><tr class="new22"><td>3.2.6</td><td>Consistent Help (NEW IN 2.2)</td><td>Help/contact sits in the same place on every page</td></tr><tr class="new22"><td>3.3.7</td><td>Redundant Entry (NEW IN 2.2)</td><td>Information already given is not asked for again</td></tr><tr class="new22"><td>3.3.8</td><td>Accessible Authentication (NEW IN 2.2)</td><td>Login must not require remembering or solving puzzles; an alternative exists</td></tr></tbody>
+    </table>
+
+    <span class="lvl-badge">LEVEL A</span> The basics — without them many people cannot use the page at all:
+    <table class="compare">
+      <thead><tr><th>Nr.</th><th>Requirement</th><th>What it means in practice</th></tr></thead>
+      <tbody><tr><td>1.1.1</td><td>Non-text Content</td><td>Every image has alt text; decorative images have empty alt</td></tr><tr><td>1.2.1</td><td>Audio-only and Video-only (Prerecorded)</td><td>Videos with sound have a text or audio alternative</td></tr><tr><td>1.2.2</td><td>Captions (Prerecorded)</td><td>Videos with audio have captions</td></tr><tr><td>1.2.3</td><td>Audio Description or Media Alternative</td><td>Videos are usable without seeing the screen</td></tr><tr><td>1.3.1</td><td>Info and Relationships</td><td>Headings, lists and tables use the right HTML structure</td></tr><tr><td>1.3.2</td><td>Meaningful Sequence</td><td>Content makes sense in DOM order</td></tr><tr><td>1.3.3</td><td>Sensory Characteristics</td><td>Instructions never rely on shape, color, size or position alone</td></tr><tr><td>1.4.1</td><td>Use of Color</td><td>Color is never the only way to convey information</td></tr><tr><td>1.4.2</td><td>Audio Control</td><td>Auto-playing audio can be stopped</td></tr><tr><td>2.1.1</td><td>Keyboard</td><td>Everything works with the keyboard alone</td></tr><tr><td>2.1.2</td><td>No Keyboard Trap</td><td>Focus can always be moved away again</td></tr><tr><td>2.1.4</td><td>Character Key Shortcuts</td><td>Single-key shortcuts can be turned off or remapped</td></tr><tr><td>2.2.1</td><td>Timing Adjustable</td><td>Time limits can be extended or turned off</td></tr><tr><td>2.2.2</td><td>Pause, Stop, Hide</td><td>Moving or auto-updating content can be paused</td></tr><tr><td>2.3.1</td><td>Three Flashes or Below Threshold</td><td>Nothing flashes beyond the limits</td></tr><tr><td>2.4.1</td><td>Bypass Blocks</td><td>A "skip to content" link or correct landmark structure</td></tr><tr><td>2.4.2</td><td>Page Titled</td><td>Every page has a descriptive title</td></tr><tr><td>2.4.3</td><td>Focus Order</td><td>Tab order follows a logical sequence</td></tr><tr><td>2.4.4</td><td>Link Purpose (In Context)</td><td>Links describe where they lead</td></tr><tr><td>2.5.1</td><td>Pointer Gestures</td><td>Multi-point gestures have a single-pointer alternative</td></tr><tr><td>2.5.2</td><td>Pointer Cancellation</td><td>A click completes on release, and can be aborted</td></tr><tr><td>2.5.3</td><td>Label in Name</td><td>The visible label is part of the accessible name</td></tr><tr><td>2.5.4</td><td>Motion Actuation</td><td>Shake-to-activate can be turned off</td></tr><tr><td>3.1.1</td><td>Language of Page</td><td>&lt;html lang="en"&gt; (or another correct code)</td></tr><tr><td>3.2.1</td><td>On Focus</td><td>No unexpected changes when a field receives focus</td></tr><tr><td>3.2.2</td><td>On Input</td><td>Forms do not change context without warning</td></tr><tr><td>3.3.1</td><td>Error Identification</td><td>Form errors are described in text next to the field</td></tr><tr><td>3.3.2</td><td>Labels or Instructions</td><td>Every form field has a visible label</td></tr><tr><td>4.1.2</td><td>Name, Role, Value</td><td>Components (modals, dropdowns) expose themselves correctly to screen readers</td></tr></tbody>
+    </table>
+
+    <span class="lvl-badge">LEVEL AA</span> The standard requirements — what law and contracts point to (the ones carried over from 2.0/2.1):
+    <table class="compare">
+      <thead><tr><th>Nr.</th><th>Requirement</th><th>What it means in practice</th></tr></thead>
+      <tbody><tr><td>1.2.4</td><td>Captions (Live)</td><td>Live videos have captions</td></tr><tr><td>1.2.5</td><td>Audio Description</td><td>Videos have an audio description</td></tr><tr><td>1.3.4</td><td>Orientation</td><td>Nothing locks to landscape-only or portrait-only</td></tr><tr><td>1.3.5</td><td>Identify Input Purpose</td><td>Fields like name/email support autofill</td></tr><tr><td>1.4.3</td><td>Contrast (Minimum)</td><td>Text contrast of at least 4.5:1 (3:1 for large text)</td></tr><tr><td>1.4.4</td><td>Resize Text</td><td>Text scales to 200% without loss of function</td></tr><tr><td>1.4.5</td><td>Images of Text</td><td>Real text instead of text in images</td></tr><tr><td>1.4.10</td><td>Reflow</td><td>No horizontal scrolling at 320 px width / 400% zoom</td></tr><tr><td>1.4.11</td><td>Non-text Contrast</td><td>Buttons, icons and fields have at least 3:1 contrast</td></tr><tr><td>1.4.12</td><td>Text Spacing</td><td>The page works with user-adjusted line and letter spacing</td></tr><tr><td>1.4.13</td><td>Content on Hover or Focus</td><td>Tooltips can be dismissed and kept open</td></tr><tr><td>2.4.5</td><td>Multiple Ways</td><td>More than one way to find pages (menu, search, index)</td></tr><tr><td>2.4.6</td><td>Headings and Labels</td><td>Descriptive headings and field labels</td></tr><tr><td>2.4.7</td><td>Focus Visible</td><td>Keyboard focus is clearly visible</td></tr><tr><td>3.1.2</td><td>Language of Parts</td><td>Words in other languages are marked with lang</td></tr><tr><td>3.2.3</td><td>Consistent Navigation</td><td>Navigation sits in the same place on every page</td></tr><tr><td>3.2.4</td><td>Consistent Identification</td><td>The same function has the same icon and text everywhere</td></tr><tr><td>3.3.3</td><td>Error Suggestion</td><td>Errors come with a suggested fix when possible</td></tr><tr><td>3.3.4</td><td>Error Prevention (Legal, Financial)</td><td>Important submissions can be reviewed or undone</td></tr><tr><td>4.1.3</td><td>Status Messages</td><td>Dynamic messages are announced (aria-live)</td></tr></tbody>
+    </table>
+
+    <p style="font-size:0.85rem;color:var(--color-text-muted);">The list shows levels A and AA (55 criteria). WCAG 2.2 additionally contains 31 AAA criteria, which are almost never required in full by law. The criterion numbers match W3C's official numbering, so you can look the details up directly at W3C.</p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Frequently asked questions</h2>
+    <div class="problem-cards">
+      <div class="card"><h3>How many requirements are in WCAG 2.2?</h3><p>WCAG 2.2 has 86 success criteria: 31 at level A, 24 at level AA and 31 at level AAA. Public bodies and most laws (including the EAA) require levels A and AA — 55 criteria in total.</p></div>
+<div class="card"><h3>What is new in WCAG 2.2 compared with 2.1?</h3><p>Nine criteria were added in 2.2, six of them at level A or AA: focus not obscured (2.4.11), dragging alternatives (2.5.7), target size (2.5.8), consistent help (3.2.6), redundant entry (3.3.7) and accessible authentication (3.3.8). The other three are AAA-only, and 4.1.1 Parsing was removed. The ones that hit ordinary websites hardest are visible focus and login without cognitive traps.</p></div>
+<div class="card"><h3>Is WCAG 2.2 law in the EU?</h3><p>Not directly. The EAA references EN 301 549, which incorporates WCAG 2.1 level A/AA — but market surveillance works with the newest version in practice, and the EU is updating the harmonised standards to 2.2. Build to WCAG 2.2 AA and you are covered for both.</p></div>
+<div class="card"><h3>What do levels A, AA and AAA mean?</h3><p>The levels are grades of difficulty and importance. Level A is the basics (without them many people cannot use the page), AA is the standard law and contracts point to, and AAA is the best level — rarely required in full, because some AAA criteria cannot be met for all types of content.</p></div>
+<div class="card"><h3>How do I check my page against the list fastest?</h3><p>The automatable criteria — contrast, alt text, labels, language, heading structure — can be checked for free with a scanner in minutes. The rest (focus order, keyboard navigation) is best done by hand. A free scan typically finds 80% of the errors users actually complain about.</p></div>
+    </div>
+    <div style="text-align:center;margin-top:24px;">
+      <a href="/scan" class="btn-primary">Start with a free scan &rarr;</a>
+    </div>
+  </div>
+</section>
+
+<div style="text-align:center;margin-top:16px;"><p>Related: <a href="/blog/wcag-22-what-changes" style="color:var(--color-accent);">What changed in WCAG 2.2?</a> &middot; <a href="/blog/wcag-contrast-checker" style="color:var(--color-accent);">Contrast checker</a> &middot; <a href="/blog/eaa-accessibility-checklist" style="color:var(--color-accent);">EAA checklist</a> &middot; <a href="/accessibility-statement-generator" style="color:var(--color-accent);">Statement generator</a></p></div>
+<section class="products">
+  <div class="container">
+    <p>Does your website need to stay online? <a href="/deskuptime/" style="color:var(--color-accent);">DeskUptime</a> is a free desktop app for uptime and SSL certificate monitoring on macOS, Linux and Windows.</p>
+  </div>
+</section>
+<!-- crosslink-related-da -->
+<div class="related-guides" style="border:1px solid #e5e7eb;border-radius:10px;padding:20px 24px;margin:32px 0;">
+  <h2 style="margin-top:0;">Related guides</h2>
+  <ul style="list-style:none;padding:0;margin:0;">
+    <li><a href="/blog/wcag-contrast-checker"><strong>WCAG Contrast Checker: How to Check Color Contrast for Free</strong></a><br><span style="color:#555;font-size:14px;">How to check color contrast against WCAG 2.1 AA and AAA for free: enter two colors, see the ratio instantly…</span></li>
+    <li><a href="/blog/eaa-compliance-scanner-desktop"><strong>EAA Compliance Scanner Desktop — Free, Offline WCAG 2.1 AA Scanner</strong></a></li>
+    <li><a href="/blog/drupal-wcag-accessibility"><strong>Drupal Accessibility: Meeting WCAG 2.1 AA and the EAA</strong></a><br><span style="color:#555;font-size:14px;">Drupal accessibility guide for the EAA and WCAG 2.1 AA.</span></li>
+  </ul>
+</div>
+
+<section class="products">
+  <div class="container">
+    <div class="problem-cards">
+      <div class="card"><span class="badge" style="font-size:0.75em;display:inline-block;margin-bottom:6px;">DANISH VERSION</span><h3>Working in Danish?</h3><p>The same list is available in <a href="/da/blog/wcag-22-krav-liste" hreflang="da" style="color:var(--color-accent);">Danish here</a>.</p></div>
+    </div>
+  </div>
+</section>
+
+<div class="book-cta" style="border:1px solid #ddd;border-radius:8px;padding:16px 20px;margin:32px 0;">
+  <h3>Free e-book: EAA Compliance Checklist for WordPress Sites</h3>
+  <p>The complete guide is available as a free EPUB — no signup required.</p>
+  <a href="/books/eaa-checklist" class="btn-primary">Get the free e-book →</a>
+
+  <p style="margin:12px 0 0;font-size:13px;color:#555;">Want all six guides? <a href="/books/compliance-bundle"><strong>Complete EU Compliance Bundle</strong></a> — all six listed together, each a free EPUB.</p>
+</div>
+
+<footer class="site-footer">
+  <div class="container">
+    <p><a href="/">← Home</a> · <a href="/scan">Free Scanner</a> · <a href="/#products">E-Books</a> · <a href="/blog">Blog</a></p>
+    <p>Mahope © 2026 · Practical EU compliance for small web agencies</p>
+  </div>
+</footer>
+
+<script>
+(function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';fetch('/api/track',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:p}),keepalive:true}).catch(function(){});document.addEventListener('click',function(ev){var a=ev.target&&ev.target.closest?ev.target.closest('a[href]'):null;if(!a)return;var h=a.href;if(h&&h.indexOf('chromewebstore.google.com')>-1){try{navigator.sendBeacon('/api/track',new Blob([JSON.stringify({path:p,event:'store-click'})],{type:'application/json'}));}catch(e){}}},true);}catch(e){}})();
+</script>
+<script>
+(function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';document.addEventListener('click',function(ev){var a=ev.target&&ev.target.closest?ev.target.closest('a[href]'):null;if(!a)return;var h=a.getAttribute('href')||'';var m=h.match(/^\/(?:da\/)?(blog|compliance-ai|scan|clean-copy-tool|page-profile|site-icons|text-diff|url-to-markdown|free-tools|compliance-report)(\.html)?(#[^#]*)?$/);if(!m)return;try{navigator.sendBeacon('/api/track',new Blob([JSON.stringify({path:p,event:'cta-'+m[1]})],{type:'application/json'}));}catch(e){}},true);}catch(e){}})();
+</script>
+<script>(function(){try{document.addEventListener('click',function(ev){var a=ev.target&&ev.target.closest?ev.target.closest('.ai-cta-link'):null;if(!a)return;var p=location.pathname.replace(/\.html$/,'')||'/';try{navigator.sendBeacon('/api/track',new Blob([JSON.stringify({path:p,event:'ai-cta'})],{type:'application/json'}));}catch(e){}},true);}catch(e){}})();</script>
+</body>
+</html>

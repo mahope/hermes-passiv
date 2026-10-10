@@ -5,10 +5,9 @@
   kan slettes, men push --delete er spærret (❓).
 - **CEO-kø #0** er færdig og merged; 0 åbent.
 - **10/10:** `/license-lookup` (EN+DA) slår den fundne nøgle ind i
-  frigørelsesformularen (`ceo/licensnogle-forudfyld`): et `setTimeout(…, 0)`
-  løb ud inden svaret kom, så kunden skrev de samme 32 tegn to gange, og
-  maskinlisten skrev «1 af undefined maskiner» uden `max_devices`. Begge
-  dømmes af funktionerne kørt i `tests/license-lookup.test.mjs`.
+  frigørelsesformularen (`ceo/licensnogle-forudfyld`): `setTimeout(…, 0)`
+  løb ud inden svaret kom, og maskinlisten skrev «1 af undefined maskiner».
+  Dømmes af `tests/license-lookup.test.mjs`.
 - **10/10:** `/contrast-checker` (EN+DA) viser APCA Lc ved siden af WCAG-
   forholdet (`ceo/apca-kontrasttjekker`); `site/apca.js` er en citatport af
   APCA 0.1.9, reference-værdierne i `tests/apca.test.mjs` er `apca-w3` egne.
@@ -19,14 +18,26 @@
   fire `example:`-montager på EN+DA, bog-prøvesider med «PDF report».
 - **10/10:** farveblindhedssimulatoren og artiklen deler én `cb-machado.js`
   i stedet for tre kopier (`ceo/farveblindhed-artikel`).
-- **Måling til feature 63:** 97 DA-artikler mod 95 EN; 3 DA mangler hreflang
-  (`kopier-tabel-hjemmeside-til-excel`, `nis2-guide-da`, `wcag-22-krav-liste`),
-  0 EN mangler DA-par; `/da/blog/` viser de danske guider.
+- **10/10:** feature 63 lukket — `wcag-22-krav-liste` fik en rigtig
+  EN-søskende (`ceo/wcag-en-kravliste`, hreflang begge veje);
+  `kopier-tabel-hjemmeside-til-excel` og `nis2-guide-da` fik hver et
+  «På engelsk»-link. Kildens tal rettet mod W3C TR/WCAG22: 86 kriterier
+  (31 A / 24 AA / 31 AAA), 55 på A+AA, 1 fjernet (4.1.1 Parsing);
+  tabellerne manglet 1.2.1, 1.3.3, 2.1.4, 2.2.2, 2.5.2 og havde 1.3.4,
+  2.5.3, 2.5.4 på forkert niveau.
 ## Åbne review-fund
 
 Ingen.
 
 ## Verificér deploy
+
+- **VERIFICÉR DEPLOY:** EN-søskende til WCAG 2.2-listen `ceo/wcag-en-kravliste`
+  10/10-2026 — tjek at live `https://mahope.tools/blog/wcag-22-requirements-checklist`
+  (200) viser de tre tabeller (6 nye + 29 niveau A + 20 niveau AA rækker) og
+  hreflang til `/da/blog/wcag-22-krav-liste`, at DA-siden
+  peger tilbage på EN-siden, at begge blog-indekser (`/blog/`, `/da/blog/`)
+  lister artiklen, og at `/da/blog/kopier-tabel-hjemmeside-til-excel` og
+  `/da/blog/nis2-guide-da` har et «På engelsk»-link.
 
 - **VERIFICÉR DEPLOY:** licensnøglen forudfyldt i frigørelsesformularen
   `ceo/licensnogle-forudfyld` 10/10-2026 — tjek at live
@@ -266,11 +277,26 @@ side; tallene er ikke vores egen trafik. Alt det leverede (1–44 og 45–60) st
         97 er leveret** — `/da/blog/` viser de 97 danske guider med link til
         EN-indekset (ikke længere «96 Danish guides»), 94 af 97 DA-artikler har
         `hreflang="en"` til sin modpart, og `tools/check_hreflang_pairs.py`
-        dømmer at hver EN-side har præcis én DA-søskende. Resten: giv de tre DA-
-        artikler uden par (`kopier-tabel-hjemmeside-til-excel`,
-        `nis2-guide-da`, `wcag-22-krav-liste`) hver deres rigtige EN-modpart og
-        skriv de tre `hreflang`-linjer i begge retninger. Datagrund: en DA-side
-        uden par er usynlig for Googles sprogvalg. *(Start her — 3 artikler.)*
+         dømmer at hver EN-side har præcis én DA-søskende. Resten **LEVERET**
+         `ceo/wcag-en-kravliste`: ingen af de tre var en oversættelse —
+         `kopier-tabel-til-excel` er allerede den rigtige DA-side for
+         `copy-table-from-website-to-excel` (samme fire overskrifter, samme
+         rækkefølge), og `nis2-beredskabstjek-2026` er allerede DA-siden for
+         `nis2-readiness-guide`. Derfor fik `wcag-22-krav-liste` en **rigtig**
+         EN-søskende skabt ud fra kilden (`/blog/wcag-22-requirements-checklist`,
+         de samme 50 kriterier i tre tabeller), med hreflang i begge retninger,
+         og de to danske originaler fik hver et «På engelsk»-link til nærmeste
+         EN-guide. Datagrund: en DA-side uden par er usynlig for Googles
+         sprogvalg; et hreflang-par mellem ikke-oversættelser var en løgn.
+         Undervejs rettet (W3C TR/WCAG22 som kilde): kildens tal var forkerte —
+         «87 kriterier (30/20/37)» og «50 krav på A+AA». WCAG 2.2 har 86
+         succeskriterier (31 A, 24 AA, 31 AAA), 55 på A+AA, seks nye på A/AA og
+         tre nye på AAA, og præcis ét (4.1.1 Parsing) er fjernet. Tabellerne
+         manglede desuden 1.2.1, 1.3.3, 2.1.4, 2.2.2 og 2.5.2 og placerede
+         1.3.4 under A samt 2.5.3/2.5.4 under AA; alt er flyttet og tilføjet, så
+         den nye EN-side og `/da/blog/wcag-22-krav-liste` nu begge viser 55
+         krav. `wcag-22-what-changes` + `wcag-22-aendringer` siger nu også ét
+         fjernet kriterie i stedet for fire.
 
  59. **Clean Copy: popup'en skal sælge Pro, ikke love «Soon».** Hvem: de 8–9
        besøg/7 d på de to mest hentede arkiver i familien (firefox 9, chrome 8).

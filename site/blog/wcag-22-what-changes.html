@@ -54,7 +54,7 @@
     <div class="problem-cards">
       <div class="card"><h3>EAA Enforcement</h3><p>Since June 2025, e-commerce, banking, transport and telecom services in the EU must be accessible. National market surveillance authorities can fine non-compliant businesses.</p></div>
       <div class="card"><h3>9 New Criteria</h3><p>WCAG 2.2 adds nine success criteria focused on cognitive accessibility, mobile interaction, and forms — areas where most sites fail today.</p></div>
-      <div class="card"><h3>4 Removed</h3><p>Four old criteria were removed because they overlapped with others. Sites built to 2.0 may find some requirements gone — but none got harder without replacement.</p></div>
+      <div class="card"><h3>1 Removed</h3><p>One criterion from WCAG 2.1 was removed in 2.2: 4.1.1 Parsing. Assistive technology no longer needs to parse HTML directly, and duplicate IDs are still caught by other criteria.</p></div>
     </div>  </div>
 </section>
 
@@ -76,9 +76,9 @@
 
 <section class="products">
   <div class="container">    <h2 id="What Was Removed">What Was Removed</h2>
-    <p>Four criteria from earlier versions were removed in 2.2 because they duplicated others or proved untestable:</p>
+    <p>One criterion from earlier versions was removed in 2.2 because it no longer had utility:</p>
     <p><strong>4.1.1 Parsing</strong> — removed; duplicate IDs and malformed markup still break assistive technology, but the requirement is covered by other criteria and browser parsing behaviour. Fix duplicate IDs anyway (our scanner checks for them).</p>
-    <p>Other requirements were reorganised: 2.4.10 Section Headings and parts of the colour-contrast guidance were consolidated rather than tightened.</p>
+    <p>2.4.10 Section Headings and parts of the colour-contrast guidance were reorganised rather than tightened.</p>
     <p>Practical takeaway: an audit against 2.0 will list failures that no longer exist, and miss failures that do. Re-baseline your audits against 2.2.</p>
   </div>
 </section>
