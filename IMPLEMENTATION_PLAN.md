@@ -9,6 +9,7 @@
   separate $69-kit. Fem sider lover nu en PDF, man kan udlevere.
 - **10/10:** STATUS kogt ned fra 33 til 14 linjer (plan-status-porten); de
   ældste punkter er flyttet til `docs/plan-arkiv.md`.
+- **10/10:** deskuptime.com kører ét eksempel-tjek ved sidevisning (`ceo/deskuptime-auto-tjek`); baseline 17 besøgende/28 d, 100 % bounce, 0 s.
 - **10/10:** dependabot-PR #3 (undici 7.29.0 → 7.30.0 i `desktop/`) landet og
   lukket: 2 høje + 8 moderate advisories væk fra lockfilen.
 - **10/10:** desktop-lockfilens sidste HØJE sårbarhed (`http-cache-semantics`
@@ -30,20 +31,24 @@ Ingen.
 
 ## Verificér deploy
 
-- **VERIFICÉR DEPLOY:** APCA Lc på kontrasttjekkeren
-  `ceo/apca-kontrasttjekker` 10/10-2026 — tjek at
-  `https://mahope.tools/contrast-checker` og `-da` henter `/apca.js`
-  (200) og udfylder `#apca-out` med et `Lc`-råd, og at batch-tabellen har
-  kolonnen «APCA Lc».
+- **VERIFICÉR DEPLOY:** eksempel-tjek på deskuptime.com
+  `ceo/deskuptime-auto-tjek` 10/10-2026 — tjek at live
+  `https://deskuptime.com/` og `/da/` erklærer `example: 'example.com'` i
+  `ONE_OFF_CHECK`, at `/one-off-check.js` (200) indeholder `autoNote`, og at
+  formularen stadig kører for læserens egen adresse.
 
-- **VERIFICÉR DEPLOY:** `http-cache-semantics` 4.3.0 i desktop-lockfil +
-  download-zip `ceo/desktop-http-cache` 10/10-2026 — tjek at
-  `https://mahope.tools/downloads/eaa-scanner-desktop-src-1.3.4.zip` indeholder
-  http-cache-semantics 4.3.0.
-- **VERIFICÉR DEPLOY:** undici 7.30.0 i `desktop/package-lock.json` +
-  download-zip `ceo/undici-sikkerhedsopdatering` 10/10-2026 — tjek at
-  `https://mahope.tools/downloads/eaa-scanner-desktop-src-1.3.4.zip` indeholder
-  undici 7.30.0.
+- **VERIFICÉR DEPLOY OK 10/10:** APCA Lc på kontrasttjekkeren
+  `ceo/apca-kontrasttjekker` 10/10-2026 — live EN+DA henter `/apca.js` (200),
+  har `#apca-out` og batch-tabellens kolonne «APCA Lc» + forklaringen i
+  hero-sektionen (set i live-HTML; JS-kørsel kan ikke curles).
+
+- **VERIFICÉR DEPLOY OK 10/10:** `http-cache-semantics` 4.3.0 i desktop-lockfil +
+  download-zip `ceo/desktop-http-cache` 10/10-2026 — live-zip'en er
+  byte-identisk med `desktop/package.json`+`package-lock.json`; lockfilen
+  resolver `http-cache-semantics` 4.3.0.
+- **VERIFICÉR DEPLOY OK 10/10:** undici 7.30.0 i `desktop/package-lock.json` +
+  download-zip `ceo/undici-sikkerhedsopdatering` 10/10-2026 — samme zip, lockfilen
+  resolver `node_modules/undici` 7.30.0.
 - **VERIFICÉR DEPLOY:** købsanker på gratis-downloads
   `ceo/free-downloads-paid-path` 9/10-2026 22:50 — **DEPLOY OK 10/10:** live
   `https://mahope.tools/free-downloads` viser sektionen «When the free files are
@@ -230,10 +235,18 @@ side; tallene er ikke vores egen trafik. Alt det leverede (1–44) står i
      simulatoren og videre til `/scan`/EUComply Pro. Accept: EN+DA-guide med
      målte tal. **LEVERET** `ceo/farveblindhed-artikel`.
 54. **`deskuptime.com`: 11 besøg, 100 % bounce, 0 s besøgstid.** Hvem: alle der
-     lander på forsideen. Tal: fra 0 s til en reel læsning, og CTR til CLI/Pro.
-     Accept: fundet og rettet hvad der får besøgende til at forlade siden med det
-     samme (0 s tyder på fejl før indholdet vises). Datagrund: Plausible
-     28 dage: besøgstid 0 s og bounce 100 % — den eneste af de tre måldomæner.
+      lander på forsideen. Tal: fra 0 s til en reel læsning, og CTR til CLI/Pro.
+      Accept: fundet og rettet hvad der får besøgende til at forlade siden med det
+      samme (0 s tyder på fejl før indholdet vises). Datagrund: Plausible
+      28 dage: besøgstid 0 s og bounce 100 % — den eneste af de tre måldomæner.
+      **LEVERET** `ceo/deskuptime-auto-tjek` (kunne ikke bevise en fejl: alle
+      aktiver 200, `/api/url-inspect` svarer). Rettet på den tætteste grund:
+      h1'en spurgte tre ting, og svaret ventede på et tastetryk ingen kom med.
+      EN+DA kører nu ét selvvalgt eksempel ved sidevisning (gennem
+      `example:` i `ONE_OFF_CHECK`), kortet siger at det er et eksempel, og
+      `#url=`-håndflek og et allerede afsendt submit annullerer det.
+      Dommerne i `tests/scan-clients.test.mjs` §22 (A–E) dømmer rødt på den gamle
+      kode: 608/608 kører grønt.
 55. **EUComply: kundeklar rapport ud af det frie multi-site-tjek.** Hvem: bureauer
       med kunder. Tal: flytter en $79/årslinje. Accept: rapport-knappen på
       checket der fører til `/paid-templates` eller Pro. Datagrund: spørger Mads
@@ -245,4 +258,20 @@ side; tallene er ikke vores egen trafik. Alt det leverede (1–44) står i
       både enkelt- og batch-tjekket. **LEVERET** `ceo/apca-kontrasttjekker`.
       Baseline: siden står ikke i Plausibles top-sider (ikke målelig fra
       promptens data), så effekten måles via PRO-tjek på `/api/stats` (❓).
+
+57. **mahope.tools `/`: fordsiden skal også svare sig selv.** Hvem: de 10
+      besøgende/28 d på `/` (89 % bounce — målt 10/10). Tal: fra bounce til et
+      set eksempel-svar, og videre til `/scan` og EUComply Pro ($79/år).
+      Accept: `/` erklærer `example:` så eksemplet kører ved sidevisning, på
+      sidens eget sprog. Datagrund: deskuptime.com sad i samme mønster (17
+      besøgende, 100 % bounce, 0 s) og er rettet i `ceo/deskuptime-auto-tjek` —
+      det er én linje i `ONE_OFF_CHECK`, ikke ny kode.
+
+58. **cleancopy.tools: konverteren indeni artiklerne.** Hvem: de 3+2+2 besøgende
+      på de tre html-to-markdown-artikler (bounce 50–67 %). Tal: brug af
+      konverteren og Clean Copy Pro ($19/år). Accept: artiklen kører den samme
+      kerne som `/clean-copy-tool` i browseren, med licenskontrol foran batch.
+      Datagrund: artiklerne linker til værktøjet, men indeholder det ikke —
+      mahope.tools' kontrastartikel har vist, at værktøjet i teksten er hvad der
+      flytter læseren fra læsning til brug.
 

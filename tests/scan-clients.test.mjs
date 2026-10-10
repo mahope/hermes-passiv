@@ -51,7 +51,12 @@ function el() {
     // læser `innerHTML` tilbage. Uden at `appendChild` gjorde noget, gav den
     // tomme strenge for *alt* gennem esc — også de URLs, resultatet viser, så
     // dommen «begge sites står i resultatet» kunne ikke se dem.
-    appendChild(child) { if (child && typeof child.textContent === 'string') { this._t += child.textContent; this._h = undefined; } },
+    appendChild(child) { if (child && typeof child.textContent === 'string') { this._t += child.textContent; this._h = undefined; } this.children.push(child); },
+    // `childNodes` er det DOM-navn de to fordoors-scripts læser: de spørger om
+    // rækken med links overhovedet har indhold, inden den hænges på. En stub uden
+    // den dør på render-vejen, og en stub hvor den altid er 0 ville fjerne halvdelen
+    // af resultatet — dommen ville så kigge på en side der ikke er den, der vises.
+    get childNodes() { return this.children; },
     removeChild() {}, setAttribute() {}, focus() {},
     getAttribute: () => null,
     addEventListener(t, fn) { (this._ls[t] = this._ls[t] || []).push(fn); },
@@ -319,11 +324,19 @@ function loadPage(path, fetchImpl, opts = {}) {
       }
     },
     NodeFilter: { SHOW_TEXT: 4 },
+    // `value instanceof Node` er måden `one-off-check.js` skelner et element fra
+    // en streng på. Uden klassen er det en ReferenceError på hele render-vejen,
+    // og dommen dør frem for at dømme.
+    Node: class Node {},
     navigator: { doNotTrack: '0' },
     location: { pathname: '/' + path.split('/').pop(), href: 'https://mahope.tools/', hash: '' },
   };
   sandbox.window = sandbox;
   sandbox.globalThis = sandbox;
+  // `<html lang>` bestemmer hvilket sprog de to fordoors-scripts taler. Stubben
+  // læste den aldrig, så en DA-side blev dømt på de engelske strenge — altså på
+  // en side ingen besøger ser. Nu sætter den den værdi browseren ville give.
+  sandbox.document.documentElement.lang = (/<html[^>]*\blang="([^"]+)"/.exec(html) || [])[1] || 'en';
   // Se forklaringen ved `st.begivenheder`: `trackEvent` skal findes **før**
   // sidens egen kode kører, ellers dømmer en dom kernen på en ReferenceError.
   st.begivenheder = [];
@@ -2940,9 +2953,106 @@ for (const [path, lang, knapTekst, undervejsTekst] of [
     mutation.st.begivenheder.length === 0,
     `den gamle kode sendte ${JSON.stringify(mutation.st.begivenheder)}`);
   const mutationMarkup = (mutation.nodes.get('result') || {}).innerHTML || '';
-  ok('dom E: mutationen (kernen uden CSS-linjen) fanges',
+  ok('dom E: mutationen (kernen uden CSS-linje) fanges',
     !mutationMarkup.includes('color: #'),
     'den gamle kode skrev en CSS-linje');
+}
+
+// --------------------------------------------------------------------------
+// 22. Forsiden svarede selv — og sagde at det var et eksempel.
+//
+// deskuptime.com er den ene side i familien med 0 s engageret tid og 100 %
+// bounce over 28 dage (Plausible, hentet 10/10). Overskriften stiller tre
+// spørgsmål om læserens site, og svaret ventede på et tastetryk ingen kom med.
+// Nu kører forsiden ét selvvalgt eksempel ved sidevisning — som `/url-inspector`
+// gør — og kortet siger at det er et eksempel, for en besøger der intet har
+// skrevet skal ikke læse et svar om sit eget site ud af det.
+//
+// Dommen er falsificerbar:
+//  A. Uden noget klik går præcis ét kald til /api/url-inspect ud, på den
+//     adresse siden selv har erklæret.
+//  B. Resultatkortet skriver at svaret er et eksempel, på sidens eget sprog.
+//  C. En side uden `example:` i konfigurationen laver intet kald — eksemplet
+//     kommer fra sidens erklæring, ikke fra scriptet (mutation).
+//  D. En besøger der kom med `#url=` fra en anden side får ingen auto-kørsel:
+//     den adresse de kom med må ikke overskrives af et eksempel.
+//  E. Formularen virker stadig bagefter: ét submit, ét kald, ét resultat.
+// --------------------------------------------------------------------------
+{
+  const OK = { status: 200, body: {
+    inspectUrl: 'https://example.com', finalUrl: 'https://example.com/',
+    finalStatus: 200, finalStatusText: 'OK', totalRedirects: 0, redirectChain: [],
+    ssl: { available: true, daysRemaining: 63, validTo: '2026-12-12T23:59:59Z',
+      issuer: 'DigiCert Global TLS RSA SHA256 2020 CA1', tlsVersion: 'TLSv1_3', chainTrusted: true },
+    securityHeaders: { 'strict-transport-security': 'max-age=31536000' },
+    securityHeadersChecked: ['strict-transport-security', 'content-security-policy',
+      'x-content-type-options', 'x-frame-options', 'x-xss-protection',
+      'referrer-policy', 'permissions-policy', 'access-control-allow-origin']
+  } };
+
+  // `one-off-check.js` er et deferred script i siden, så den kører som et
+  // preload. Sidens egen inline-kode erklærer `ONE_OFF_CHECK` efterfølgende,
+  // præcis som i en browser — og eksemplet læser konfigurationen *når tiden
+  // kommer*, så rækkefølgen ikke kan gøre en erklærende side til en tavs.
+  async function aabenForside(fil, svar, source) {
+    const opts = { skip: [/api\/track/], onCall: null };
+    const { fetchImpl, state } = responses(svar, opts);
+    const { sandbox, nodes } = loadPage(fil, fetchImpl, {
+      preload: ['site/one-off-check.js'],
+      match: /window\.ONE_OFF_CHECK = \{/,
+      source,
+    });
+    return { sandbox, nodes, state };
+  }
+
+  const SIDER = [
+    { f: 'site/deskuptime/index.html', sprog: 'EN', note: /example check/i },
+    { f: 'site/da/deskuptime/index.html', sprog: 'DA', note: /eksempel-tjek/i },
+  ];
+
+  for (const side of SIDER) {
+    const { nodes, state } = await aabenForside(side.f, [OK]);
+    await sleep(30);
+    ok(`dom A: ${side.sprog}-forsiden kørte ét eksempel-tjek uden noget klik`,
+      state.calls === 1 && String(state.urls[0] || '').includes('url=https%3A%2F%2Fexample.com'),
+      `kald=${state.calls} url=${JSON.stringify(state.urls)}`);
+    ok(`dom B: ${side.sprog}-kortet skriver at svaret er et eksempel`,
+      side.note.test((nodes.get('oc-check-result') || {}).textContent || ''),
+      `tekst=${JSON.stringify(((nodes.get('oc-check-result') || {}).textContent || '').slice(0, 120))}`);
+    ok(`dom B2: ${side.sprog}-eksemplet fylder formularens felt`,
+      (nodes.get('oc-check-url') || {}).value === 'https://example.com',
+      `værdi=${(nodes.get('oc-check-url') || {}).value}`);
+
+    // Dom E: formularen skal virke, selv efter auto-kørslen.
+    const foer = state.calls;
+    nodes.get('oc-check-url').value = 'https://eksempel-test.dk';
+    nodes.get('oc-check-form').submit();
+    await sleep(30);
+    ok(`dom E: ${side.sprog}-formularen kører stadig ét kald for læserens egen adresse`,
+      state.calls - foer === 1 && String(state.urls[state.calls - 1]).includes('eksempel-test.dk'),
+      `kald=${state.calls - foer}`);
+  }
+
+  // Dom D: `#url=` er læserens egen adresse; et eksempel må ikke overskrive den.
+  for (const side of SIDER) {
+    const { sandbox, state } = await aabenForside(side.f, [OK]);
+    sandbox.location.hash = '#url=https://example.com';
+    await sleep(30);
+    ok(`dom D: ${side.sprog} med en #url= fra en anden side kører intet eksempel`,
+      state.calls === 0, `kald=${state.calls}`);
+  }
+
+  // Dom C: mutationen er siden uden sin egen erklæring.
+  for (const side of SIDER) {
+    const source = readFileSync(join(root, side.f), 'utf8')
+      .replace(/\n\s*example: 'example\.com',/, '');
+    ok(`dom C: ${side.sprog}-mutationen har virkelig fjernet erklæringen`,
+      !source.includes("example: 'example.com'"), 'erstatningen ramte ikke');
+    const { state } = await aabenForside(side.f, [OK], source);
+    await sleep(30);
+    ok(`dom C: ${side.sprog}-uden erklæringen kører forsiden intet af sig selv`,
+      state.calls === 0, `kald=${state.calls}`);
+  }
 }
 
 console.log(`\nscan-clients: ${pass}/${pass + fail}`);

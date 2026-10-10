@@ -840,6 +840,9 @@ main.layout-wide > .crumbs + .container { padding-top: 0; }
 .oc-verdict.is-ok strong { color: var(--color-green); }
 .oc-verdict.is-warn strong { color: var(--color-yellow); }
 .oc-verdict-url { font-size: 0.85rem; color: var(--color-text-muted); overflow-wrap: anywhere; }
+/* The example check a page can run when it opens. Muted, above the verdict, so a
+   visitor who typed nothing cannot mistake it for an answer about their site. */
+.oc-auto-note { margin: 0 0 0.9rem; font-size: 0.9rem; color: var(--color-text-muted); max-width: 62ch; }
 .oc-rows { margin: 0; display: grid; gap: 0.1rem; }
 .oc-rows > div { display: grid; grid-template-columns: 1fr; gap: 0.1rem 1rem; padding: 0.5rem 0; border-top: 1px solid var(--color-border); }
 @media (min-width: 40rem) { .oc-rows > div { grid-template-columns: 11rem 1fr; } }

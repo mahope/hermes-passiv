@@ -206,6 +206,12 @@ npx github:mahope/deskuptime check https://dit-site.dk   # ingen installation, k
 </main>
 <script>/* Hvad dette tjek ikke kan, og hvor besøgenden går hen, er sidens egne ord — /one-off-check.js deles af alle siters forside, så den hårdkoder intet produkt. */
 window.ONE_OFF_CHECK = {
+  // Et svar uden et spørgsmål, der kan stille det: overskriften spørger tre ting,
+  // og uden dette ventede svarene på et tastetryk, ingen kom med — deskuptime.com
+  // lå på 0 s engageret tid og 100 % bounce over 28 dage (Plausible). Formularen
+  // heroover virker stadig for besøgendes egen adresse; dette viser bare, hvordan
+  // svaret ser ud, og kortet siger det selv.
+  example: 'example.com',
   then: 'Det var ét tjek, lige nu. Det siger intet om om sitet var nede for fem minutter siden eller vil være nede i morgen, og det kan ikke fortælle at sideindholdet er ændret. CLI\u0027en og desktop-appen kan det.',
   next: [{label: 'Installér CLI\u0027en', href: '#install'}, {label: 'Se desktop-appen', href: '#desktop'}]
 };</script>

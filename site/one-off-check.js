@@ -21,6 +21,15 @@
  * product is hard-coded here; a page that declares neither still renders the
  * verdict, cert and header chips, and simply has no follow-up.
  *
+ * A page can also declare `example: 'example.com'`, and then the front door
+ * answers itself when it opens: same check, same card, with a line that says it
+ * was an example. A visitor who lands on deskuptime.com leaves with 0 s
+ * engagement (Plausible, 28 d, 100 % bounce) without ever typing a URL — the
+ * h1 asks three questions and the answer waits for a keystroke nobody makes.
+ * `/url-inspector` has run an example on load for the same reason. It is opt-in
+ * per page, it never fires when the visitor already arrived with a `#url=`
+ * handoff from another page, and it never fires once someone has submitted.
+ *
  * The form is a real GET to /api/url-inspect, so without JavaScript it still
  * checks the site and shows the raw answer. Retry policy, and the rule that a
  * 429 is final and shows the server's own sentence, live in /net.js with the
@@ -63,6 +72,7 @@
     present: 'findes',
     missing: 'mangler',
     none: 'Ingen af de otte er med i svaret.',
+    autoNote: 'Dette er et eksempel-tjek. Vi kørte det, da siden åbnede, så du kan se, hvordan svaret ser ud — skriv din egen adresse ovenfor.',
     // De tre grunde serveren kan give for et certifikat, den ikke fik læst.
     sslNoHttps: 'Slutadressen er ikke HTTPS',
     sslUnavailable: 'Certifikat-opslaget var ikke tilgængeligt',
@@ -92,6 +102,7 @@
     present: 'present',
     missing: 'missing',
     none: 'None of the eight came back.',
+    autoNote: 'This is an example check. We ran it when the page opened, so you can see what the answer looks like — enter your own address above to check your own site.',
     sslNoHttps: 'The final address is not HTTPS',
     sslUnavailable: 'The certificate lookup was unavailable',
     sslFailed: 'The certificate lookup failed or timed out'
@@ -182,12 +193,15 @@
     return item.href + '#url=' + encodeURIComponent(u);
   }
 
-  function render(data) {
+  function render(data, auto) {
     out.textContent = '';
     var code = Number(data.finalStatus) || 0;
     var ok = code >= 200 && code < 300;
 
     var card = el('div', 'oc-card');
+    // An answer nobody asked for has to say so, or a visitor who did not type
+    // anything reads an example verdict as an answer about their own site.
+    if (auto) card.appendChild(el('p', 'oc-auto-note', T.autoNote));
     var head = el('p', 'oc-verdict ' + (ok ? 'is-ok' : 'is-warn'));
     // `createElement('strong')` stavet ud, så `check_built_css.py` kan se at
     // siden faktisk har et `strong` — porten læser kun bogstavelige
@@ -311,10 +325,10 @@
     return v;
   }
 
-  form.addEventListener('submit', function (e) {
-    e.preventDefault();
-    var url = normalise(input.value);
-    if (!url) { fail(T.failed); return; }
+  // The action is one function, because two paths call it: the form's submit and
+  // the example that runs on page load. `auto` only marks that the answer must
+  // say it is an example — the call itself is the same.
+  function runCheck(url, auto) {
     input.value = url;
     out.hidden = true;
     out.textContent = '';
@@ -326,7 +340,7 @@
       // The worker answers 200 with an `error` on a target it will not inspect,
       // so a body that names its own error is still an error.
       if (data && data.error) { fail(data.error); return; }
-      render(data);
+      render(data, auto);
       status.textContent = '';
     }, function (err) {
       // `net.js` already decided what is final. A 429 is final and its message
@@ -335,5 +349,32 @@
       fail(err.transport ? T.offline : (err.transient ? T.busy : (err.message || T.failed)));
       status.textContent = '';
     }).then(function () { btn.disabled = false; });
+  }
+
+  var submitted = false;
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    submitted = true;
+    var url = normalise(input.value);
+    if (!url) { fail(T.failed); return; }
+    runCheck(url, false);
   });
+
+  // The example runs 300 ms after the page settles — the same rhythm as
+  // `/url-inspector`. It is read from `window.ONE_OFF_CHECK` *here*, not where
+  // the script binds, because the page's own inline config runs after the
+  // deferred scripts: a page that declares `example` should not depend on the
+  // order scripts happen to appear in the document.
+  //
+  // It never runs when the reader already arrived with an address: seven guides
+  // link to `#url=…`, and an auto-check would overwrite the URL the reader came
+  // with — answering a different question than the one they arrived with.
+  setTimeout(function () {
+    if (submitted) return;
+    if (/#url=/.test(String((window.location && window.location.hash) || ''))) return;
+    var cfg = window.ONE_OFF_CHECK || {};
+    var url = normalise(cfg.example);
+    if (!url) return;
+    runCheck(url, true);
+  }, 300);
 })();

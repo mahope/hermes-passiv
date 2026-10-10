@@ -218,6 +218,12 @@ npx github:mahope/deskuptime check https://your-site.com   # no install, needs N
   own words — /one-off-check.js is shared by every site's front door, so it
   hard-codes no product. */
 window.ONE_OFF_CHECK = {
+  // An answer without a question to answer it: the h1 asks three questions, and
+  // without this the answers waited for a keystroke nobody made — deskuptime.com
+  // sat at 0 s engagement and 100 % bounce over 28 days (Plausible). The form
+  // above still works for the visitor's own URL; this only shows what the answer
+  // looks like, and the card says so itself.
+  example: 'example.com',
   then: 'That was one check, just now. It says nothing about whether the site was down five minutes ago or will be down tomorrow, and it cannot tell that the page content changed. The CLI and the desktop app can.',
   next: [{label: 'Install the CLI', href: '#install'}, {label: 'See the desktop app', href: '#desktop'}]
 };</script>
