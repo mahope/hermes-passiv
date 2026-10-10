@@ -77,6 +77,7 @@ function kør(fil) {
   sb.globalThis = sb;
   sb.window.location = sb.location;
   vm.createContext(sb);
+  vm.runInContext(readFileSync(new URL('../site/cb-machado.js', import.meta.url), 'utf8'), sb);
   vm.runInContext(readFileSync(new URL('../site/cb-share-core.js', import.meta.url), 'utf8'), sb);
   vm.runInContext(mainScript(html), sb);
   vm.runInContext(readFileSync(new URL('../site/cb-image.js', import.meta.url), 'utf8'), sb);

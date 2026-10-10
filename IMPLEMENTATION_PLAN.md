@@ -20,11 +20,23 @@
   har $19-købslinket; de tre cleancopy-guider indlæser `net.js` før
   `clean-copy-embed.js`; alle fire `example:`-montager kører på EN+DA; de
   fem bog-prøvesider siger «PDF report you can hand to a client».
+- **10/10:** farveblindhedssimulatoren og artiklen bruger nu én delt
+  `cb-machado.js` i stedet for tre kopier (`ceo/farveblindhed-artikel`):
+  simulatoren (EN+DA) og `/blog/color-blindness-simulation-check` indlæser
+  `/cb-machado.js` og eksponerer `CB_SIM` til billed- og kontrast-modulerne.
+  Alle tests grønne: `cb-share`, `cb-preview`, `cb-image`, `cb-contrast`.
 ## Åbne review-fund
 
 Ingen.
 
 ## Verificér deploy
+
+- **VERIFICÉR DEPLOY:** farveblindhed-simulator + artikel `ceo/farveblindhed-artikel`
+  10/10-2026 — tjek at live `https://mahope.tools/color-blindness-simulator`
+  og `/color-blindness-simulator-da` indlæser `/cb-machado.js` (200), at
+  tabellen viser 6 farver × 3 synstyper, at skifteren virker, og at
+  `https://mahope.tools/blog/color-blindness-simulation-check` viser den
+  indbyggede simulator med severity-slider og samme 6×3 gitter.
 
 - **VERIFICÉR DEPLOY:** page-profile 1.2.2 `--compare --json` `ceo/compare-json`
   10/10-2026 — tjek at live `https://mahope.tools/downloads/page-profile/

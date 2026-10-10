@@ -23,6 +23,19 @@
 <script type="application/ld+json">{"@context": "https://schema.org", "@type": "Article", "headline": "Color blindness simulation — how to test your palette before you ship", "description": "Simulate protanopia, deuteranopia and tritanopia on your colors and screenshots, with measured contrast numbers for each vision type, and what WCAG SC 1.4.1 requires.", "url": "https://hermes-passiv.pages.dev/blog/color-blindness-simulation-check", "datePublished": "2026-10-08", "dateModified": "2026-10-08", "author": {"@type": "Person", "name": "Mads Holst Jensen", "url": "https://mahoje.dk"}, "publisher": {"@type": "Organization", "name": "mahoje.dk", "url": "https://mahoje.dk"}}</script>
 <script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "What is the difference between a contrast checker and a color blindness simulator?", "acceptedAnswer": {"@type": "Answer", "text": "A contrast checker answers whether one color is readable on another — a single ratio. A simulator answers whether two colors stay distinguishable when color vision is impaired, by rendering both through a model of protanopia, deuteranopia or tritanopia. A pair can have plenty of contrast and still collapse into the same color, which is why both are needed."}}, {"@type": "Question", "name": "How accurate is the simulation?", "acceptedAnswer": {"@type": "Answer", "text": "The tool uses the Machado, Oliveira and Fernandes (2009) severity matrices, the same model professional design tools use, with an adjustable severity from 0 to 100 percent. It approximates how colors are perceived. Only a clinical test can diagnose color vision deficiency in a person."}}, {"@type": "Question", "name": "Which vision type should I check against?", "acceptedAnswer": {"@type": "Answer", "text": "Start with deuteranopia. It is by far the most common form, and red and green are the pair that fails. If your design still works for deuteranopia and tritanopia, it will almost always work for the rarer types as well."}}, {"@type": "Question", "name": "What does WCAG require for color?", "acceptedAnswer": {"@type": "Answer", "text": "SC 1.4.1 Use of Color: color must not be the only visual means of conveying information, indicating an action or distinguishing an element. The fix is never to remove the color — it is to add a second signal: a label, an icon, a pattern, or text that says what the color is saying."}}]}</script>
 <script defer src="/track.js"></script>
+<script src="/cb-machado.js"></script>
+<style>
+  .cb-embed { border:1px solid var(--color-border); border-radius:var(--radius); padding:24px; background:var(--color-surface); margin-top:20px; }
+  .cb-embed-controls { display:flex; flex-wrap:wrap; gap:12px; align-items:end; }
+  .cb-embed-controls label { font-size:.9rem; color:var(--color-text-muted); font-weight:600; display:flex; flex-direction:column; gap:6px; }
+  .cb-embed-controls input[type=range] { width:180px; accent-color:var(--color-accent); }
+  .cb-embed-grid { width:100%; border-collapse:collapse; }
+  .cb-embed-grid th, .cb-embed-grid td { padding:10px; border-bottom:1px solid var(--color-border); text-align:left; font-size:.92rem; }
+  .cb-embed-grid th { color:var(--color-text-muted); font-size:.8rem; text-transform:uppercase; letter-spacing:.04em; }
+  .cb-embed-chip { display:inline-block; width:64px; height:40px; border-radius:8px; vertical-align:middle; border:1px solid rgba(128,128,128,.4); }
+  .cb-embed-hex { font-family:ui-monospace,monospace; font-size:.82rem; display:block; margin-top:4px; color:var(--color-text-muted); }
+  @media (max-width:640px){ .cb-embed-chip{width:44px;height:30px} .cb-embed-grid td,.cb-embed-grid th{padding:7px;font-size:.85rem} }
+</style>
 </head>
 <body>
 <header class="hero">
@@ -68,11 +81,23 @@
 <section class="products" id="try-it">
   <div class="container">
     <h2>Try it on your own colors</h2>
-    <p style="margin-top:0">The <a href="/color-blindness-simulator" style="color:var(--color-accent);">color blindness simulator</a> is the tool this guide describes: a whole palette at once, adjustable severity, a screenshot mode, and the CSS or JSON back out. Nothing to install, no account, and the colors stay in your browser.</p>
-    <div class="problem-cards">
-      <div class="card"><span class="badge" style="font-size:0.75em;display:inline-block;margin-bottom:6px;">SIMULATOR</span><h3><a href="/color-blindness-simulator" style="color:var(--color-accent);text-decoration:none;">Color blindness simulator</a></h3><p>Protanopia, deuteranopia and tritanopia over a whole palette, with severity and a per-pixel screenshot mode.</p></div>
-      <div class="card"><span class="badge" style="font-size:0.75em;display:inline-block;margin-bottom:6px;">CONTRAST</span><h3><a href="/contrast-checker" style="color:var(--color-accent);text-decoration:none;">WCAG contrast checker</a></h3><p>The other half of the job: the ratio between two colors, with the AA and AAA thresholds spelled out.</p></div>
-      <div class="card"><span class="badge" style="font-size:0.75em;display:inline-block;margin-bottom:6px;">PALETTE</span><h3><a href="/palette-generator" style="color:var(--color-accent);text-decoration:none;">Accessible palette generator</a></h3><p>Builds a palette that holds together &mdash; useful when simulation tells you the one you have does not.</p></div>
+    <p style="margin-top:0">The simulator below runs the same Machado model as the full tool. Pick a severity and watch what happens to a palette of six common colors. Everything runs in your browser — nothing is uploaded.</p>
+    <div class="cb-embed" id="cb-embed">
+      <div class="cb-embed-controls">
+        <label for="cb-sev">Severity: <span id="cb-sev-label">100%</span></label>
+        <input type="range" id="cb-sev" min="0" max="100" value="100" aria-describedby="cb-sev-help">
+        <span id="cb-sev-help" style="font-size:.85rem;color:var(--color-text-muted)">0% = normal vision, 100% = full dichromacy</span>
+      </div>
+      <div style="overflow-x:auto;margin-top:16px">
+        <table class="cb-embed-grid" id="cb-embed-grid">
+          <caption style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden">Six common colors as seen with normal vision and under the three main types of color blindness</caption>
+          <thead>
+            <tr><th scope="col">Original</th><th scope="col">Protanomaly<br>(red-weak)</th><th scope="col">Deuteranomaly<br>(green-weak)</th><th scope="col">Tritanomaly<br>(blue-weak)</th></tr>
+          </thead>
+          <tbody id="cb-embed-body"></tbody>
+        </table>
+      </div>
+      <p style="margin-top:12px;font-size:.9rem;color:var(--color-text-muted)">Want to test your own palette, upload a screenshot, or export the result? <a href="/color-blindness-simulator" style="color:var(--color-accent);">Open the full simulator</a>.</p>
     </div>
   </div>
 </section>
@@ -185,6 +210,59 @@
 </script>
 <script>
 (function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';document.addEventListener('click',function(ev){var a=ev.target&&ev.target.closest?ev.target.closest('a[href]'):null;if(!a)return;var h=a.getAttribute('href')||'';var m=h.match(/^\/(?:da\/)?(color-blindness-simulator|palette-generator|contrast-checker|text-on-image-checker|scan|blog|books|free-tools|compliance-report)(\.html)?(#[^#]*)?$/);if(!m)return;try{navigator.sendBeacon('/api/track',new Blob([JSON.stringify({path:p,event:'cta-'+m[1]})],{type:'application/json'}));}catch(e){}},true);}catch(e){}})();
+</script>
+<script>
+(function () {
+  'use strict';
+  if (!globalThis.CB_MACHADO) return;
+  var parseHex = globalThis.CB_MACHADO.parseHex;
+  var toHex = globalThis.CB_MACHADO.toHex;
+  var simulate = globalThis.CB_MACHADO.simulate;
+
+  var colors = [
+    {hex:'#dc2626'}, {hex:'#16a34a'}, {hex:'#2563eb'},
+    {hex:'#f59e0b'}, {hex:'#7c3aed'}, {hex:'#111827'}
+  ];
+
+  var sevInput = document.getElementById('cb-sev');
+  var sevLabel = document.getElementById('cb-sev-label');
+  var tbody = document.getElementById('cb-embed-body');
+
+  function renderGrid() {
+    var sev = sevInput.value / 100;
+    tbody.innerHTML = '';
+    colors.forEach(function (item) {
+      var rgb = parseHex(item.hex);
+      var tr = document.createElement('tr');
+      function simTd(hex) {
+        var d = document.createElement('td');
+        var chip = document.createElement('span');
+        chip.className = 'cb-embed-chip';
+        chip.style.background = hex;
+        chip.title = hex;
+        d.appendChild(chip);
+        var code = document.createElement('code');
+        code.className = 'cb-embed-hex';
+        code.textContent = hex;
+        d.appendChild(code);
+        return d;
+      }
+      var orig = toHex(rgb);
+      tr.appendChild(simTd(orig));
+      ['protanomaly','deuteranomaly','tritanomaly'].forEach(function (t) {
+        tr.appendChild(simTd(toHex(simulate(rgb, t, sev))));
+      });
+      tbody.appendChild(tr);
+    });
+  }
+
+  sevInput.addEventListener('input', function () {
+    sevLabel.textContent = sevInput.value + '%';
+    renderGrid();
+  });
+
+  renderGrid();
+})();
 </script>
 </body>
 </html>

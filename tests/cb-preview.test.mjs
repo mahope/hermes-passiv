@@ -100,6 +100,7 @@ function kør(fil, hash = '') {
   sb.globalThis = sb;
   sb.window.location = sb.location;
   vm.createContext(sb);
+  vm.runInContext(readFileSync(new URL('../site/cb-machado.js', import.meta.url), 'utf8'), sb);
   vm.runInContext(readFileSync(new URL('../site/cb-share-core.js', import.meta.url), 'utf8'), sb);
   vm.runInContext(mainScript(html), sb);
   return { els, sb };
