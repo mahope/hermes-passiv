@@ -535,6 +535,41 @@ STEPS: tuple[Step, ...] = (
         argv=("python3", "tools/check_clean_copy_distribution.py", "--self-test"),
         inputs=("tools/check_clean_copy_distribution.py",),
     ),
+    # 10/10: de to mest hentede filer i familien (firefox-arkivet 9 og
+    # chrome-arkivet 8 besøg/7 d) havde en popup der fortalte en ny bruger at
+    # «Pro [Soon]» — mens Pro har været til salg siden 24/9 — og en licensside
+    # med en Activate-knap men intet købslink. Porten dømmer begge browsere i
+    # kilden *og* i det byggede arkiv, fordi en rettelse uden genbygning er
+    # det modsatte af hendes.
+    Step(
+        id="clean-copy-pro-popup",
+        argv=("node", "tests/clean-copy-pro-popup.test.mjs"),
+        inputs=(
+            "tests/clean-copy-pro-popup.test.mjs",
+            "tools/stripe_catalog.json",
+            "extension-clean-copy/**",
+            "extension-clean-copy-firefox/**",
+            "tools/build_clean_copy_archives.py",
+            "site/downloads/**",
+        ),
+    ),
+    # 58 (10/10): konverteren inde i cleancopy.tools' tre guider er ny kode
+    # (`site/clean-copy-embed.js`) og var ikke i gaten overhovedet. Testen
+    # indlæser den *shippede* kerne og `net.js` i en vm-sandkasse, så den
+    # dømmer licensgaten og DOM'en uden en browser.
+    Step(
+        id="clean-copy-embed",
+        argv=("node", "tests/clean-copy-embed.test.mjs"),
+        inputs=(
+            "tests/clean-copy-embed.test.mjs",
+            "site/clean-copy-embed.js",
+            "site/clean-copy-core.js",
+            "site/net.js",
+            "site/blog/html-to-markdown-cli.html",
+            "site/blog/html-to-markdown-vscode.html",
+            "site/blog/copy-as-markdown-chrome-extension.html",
+        ),
+    ),
     # Opgave 18: det publicerede desktop-kildearkiv skal være en regeneration
     # af `desktop/`. Før dette kendte ingen arkivet indhold — kun dets navn, så
     # et 1.3.0-arkiv kunne ligge under et 1.3.3-navn, og gaten var grøn.

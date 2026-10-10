@@ -1,5 +1,6 @@
 # STATUS
 
+- **10/10:** Clean Copy-popup'en lovede «Pro [Soon]» og licenssiden manglede købslink; rettet, arkiver genbygget (`ceo/popup-pro-koeb`).
 - **10/10:** cleancopy.tools' tre HTML-to-Markdown-guider kører konverteren i
   artiklen (`ceo/artikel-konverter`). Licensvalideringen går gennem
   `net.js`, så en 429 forbliver endelig; uden kernen holder syvdagesreglen.
@@ -28,6 +29,13 @@
 Ingen.
 
 ## Verificér deploy
+
+- **VERIFICÉR DEPLOY:** Clean Copy-popup + licenskøbslink `ceo/popup-pro-koeb`
+  10/10-2026 — tjek at live `https://mahope.tools/downloads/clean-copy-v1.5.3.zip`
+  og `/downloads/clean-copy-firefox-v1.5.4.zip` er byte-identiske med arkiverne i
+  `site/downloads/` (samme sha256), at arkivernes `popup.html` ikke indeholder
+  «Soon», og at `options.html` indeholder
+  `buy.stripe.com/6oU4gy76PgvgdBIdAXbMQ00`.
 
 - **VERIFICÉR DEPLOY:** konverteren i cleancopy.tools' tre artikler
   `ceo/artikel-konverter` 10/10-2026 — tjek at live
@@ -202,6 +210,21 @@ Ingen.
 Prioriteret efter hvor tæt den er på penge. Baseline er målt på den **byggede**
 side; tallene er ikke vores egen trafik. Alt det leverede (1–44) står i
 `docs/plan-arkiv.md`.
+
+ 59. **Clean Copy: popup'en skal sælge Pro, ikke love «Soon».** Hvem: de 8–9
+       besøg/7 d på de to mest hentede arkiver i familien (firefox 9, chrome 8).
+       Tal: klik til køb og Clean Copy Pro-aktiveringer. Accept: popup'en viser
+       PRO-badge uden «Soon», og licenssiden har ét købslink til $19/årslinket.
+       Datagrund: Pro har været til salg siden 24/9; en Activate-knap uden
+       købslink var det sidste brudte led i købsvejen for gratis-brugeren.
+       **LEVERET** `ceo/popup-pro-koeb` — badge rettet i `popup.js` og i den
+       statiske `popup.html`-fallback, Stripe-købslink på licenssiden (skjult
+       når Pro er aktiv), arkiver genbygget byte-identisk, og
+       `tests/clean-copy-pro-popup.test.mjs` dømmer både kilden og arkiverne
+       (12 fejl på gammel kode). Porten `check_stripe_ctas.py` sprang
+       klient-filer over i to retninger, fordi en MV3-side hverken kan indlæse
+       `/track.js` eller poste til same-origin `/api/track` — klikket måles på
+       Stripe-webhooken og på aktiveringen.
 
 51. **`/page-profile`: sammenlign to URL'er i browseren.** Hvem: SEO-bureauer.
       Tal: konvertering til Page Profile Pro ($19/år). Accept: to URL-felter, én

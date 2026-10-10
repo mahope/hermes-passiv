@@ -1280,7 +1280,21 @@ def check_buy_click_tracking(
             "kan melde fra — uanset hvilken begivenhed den ellers sender."
         )
     portal = catalog.get("billing_portal")
+    # En shipped klient er ikke en side på vores domæner. En
+    # MV3-udvidelsesside kan ikke indlæse `/track.js` (fjern-kode er forbudt
+    # i manifest v3) og kan ikke poste til `/api/track`, som med vilje kun
+    # tager imod same-origin-kald. Der er altså intet klik at måle inde i
+    # filen — klikket måles derimod nedstrøms, hvor det kan måles: Stripe-
+    # webhooken registrerer købet, og `/api/license/activate` registrerer
+    # aktiveringen, når nøglen kommer ibage. `check_client_purchase_targets`
+    # holder fast i, at købslinket skal være det rigtige ét fra katalogen, så
+    # der stadig er et køb at komme til.
+    client_files = {
+        str(path.relative_to(ROOT)) for path in client_sources()
+    }
     for relative, text in source_pages() if pages is None else pages:
+        if relative in client_files:
+            continue
         _, anchors = parse_page(text)
         checkouts = {
             href for href, _ in anchors
@@ -3016,6 +3030,14 @@ def check_offers(catalog: dict) -> tuple[list[str], list[dict]]:
                 problems.append(f"{offer['path']}: forbudt tekst {forbidden!r}")
 
     listed = {(offer.get("path"), offer.get("product")) for offer in offers if isinstance(offer, dict)}
+    # En shipped klient er ikke en public route: den har hverken domæne eller
+    # route, så den kan ikke stå i inventaret, og inventaret kan ikke dømme den.
+    # Tilladelsesretningen holder den dog fast i — et stripe-link i en klient
+    # skal stadig komme fra katalogen, hvilket `check_client_purchase_targets`
+    # kræver af enhver fil der beder brugeren købe.
+    client_files = {
+        str(path.relative_to(ROOT)) for path in client_sources()
+    }
     for path in scan_files():
         if path.suffix != ".html":
             continue
@@ -3035,7 +3057,7 @@ def check_offers(catalog: dict) -> tuple[list[str], list[dict]]:
             owner = link_owners(products).get(link)
             if owner is None:
                 problems.append(f"{relative}: synligt link {link} er ikke i allowlisten")
-            elif (relative, owner) not in listed:
+            elif (relative, owner) not in listed and relative not in client_files:
                 problems.append(f"{relative}: synlig købsknap for {owner} mangler i inventoryet")
     return problems, inventory
 

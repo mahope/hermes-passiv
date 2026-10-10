@@ -33,6 +33,7 @@ function setStatus(el, msg, cls) {
 function showLicensed(expiresAt, keyStored, cachedNote) {
   document.getElementById('lic-state').textContent = '✓ active';
   document.getElementById('lic-state').style.color = '#66bb6a';
+  document.getElementById('buy-hint').hidden = true;
   const st = document.getElementById('license-status');
   const base = expiresAt ? 'Pro active — valid until ' + String(expiresAt).slice(0, 10) : 'Pro active.';
   setStatus(st, cachedNote ? base + ' ' + cachedNote : base, 'ok');
@@ -44,6 +45,7 @@ function showLicensed(expiresAt, keyStored, cachedNote) {
 function showUnlicensed(msg) {
   document.getElementById('lic-state').textContent = 'not active';
   document.getElementById('lic-state').style.color = '';
+  document.getElementById('buy-hint').hidden = false;
   const st = document.getElementById('license-status');
   if (msg) setStatus(st, msg, 'error');
   document.getElementById('deactivate').hidden = true;
