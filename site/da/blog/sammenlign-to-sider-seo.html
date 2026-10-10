@@ -64,10 +64,20 @@
       <li>Eksportér som HTML-rapport, hvis resultatet skal deles med en kunde.</li>
     </ol>
     <p>I CLI fungerer det samme med
-    <code>python3 page_profile.py --compare &lt;url1&gt; &lt;url2&gt;</code> (Pro),
-    og JSON-API'et lader dig bygge sammenligningen ind i din egen CI:</p>
-    <pre style="background:#0f172a;color:#e2e8f0;padding:16px;border-radius:8px;overflow-x:auto;font-size:0.9rem;">$ curl -s "https://hermes-passiv.pages.dev/api/profile?url=https://a.dk" | jq .score
-$ curl -s "https://hermes-passiv.pages.dev/api/profile?url=https://b.dk" | jq .score</pre>
+    <code>python3 page_profile.py --compare &lt;url1&gt; &lt;url2&gt;</code> (Pro).
+    Tilføj <code>--json</code>, og du får forskellen som data — score, karakter, dom og
+    alle felter der afviger. Det er den udgave, du sætter i et CI-job, der skal fejle,
+    når staging halter efter produktionen:</p>
+    <pre style="background:#0f172a;color:#e2e8f0;padding:16px;border-radius:8px;overflow-x:auto;font-size:0.9rem;">$ python3 page_profile.py --compare https://prod.example.dk https://staging.example.dk --json
+{
+  "a": { "url": "https://prod.example.dk", "score": 92, "grade": "A" },
+  "b": { "url": "https://staging.example.dk", "score": 71, "grade": "C" },
+  "score_delta": 21,
+  "verdict": "A scores 21 higher",
+  "differences": [ { "field": "Title", "a": "…", "b": "…" } ],
+  "only_a_issues": [],
+  "only_b_issues": [ "manglende description" ]
+}</pre>
     <div style="text-align:center;margin-top:20px;">
       <a href="/da/page-profile" class="btn-primary">Start en sammenligning &rarr;</a>
     </div>

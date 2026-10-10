@@ -1,21 +1,7 @@
 # STATUS
 
-- **10/10:** Clean Copy-popup'en lovede «Pro [Soon]» og licenssiden manglede købslink; rettet, arkiver genbygget (`ceo/popup-pro-koeb`).
-- **10/10:** cleancopy.tools' tre HTML-to-Markdown-guider kører konverteren i
-  artiklen (`ceo/artikel-konverter`). Licensvalideringen går gennem
-  `net.js`, så en 429 forbliver endelig; uden kernen holder syvdagesreglen.
-- **10/10:** deskuptime.coms to sider og mahope.tools' to forsider kører ét
-  eksempel-tjek ved sidevisning (`ceo/deskuptime-auto-tjek`,
-  `ceo/forside-eksempel`); baselineer: deskuptime.com 17 besøgende/28 d,
-  100 % bounce, 0 s; `/`+`/da/` 10 besøgende, 89 % bounce. Donationen skal
-  nu ventes ind, til læseren selv har skrevet en adresse.
-- **10/10:** dependabot-PR #3 (undici 7.29.0 → 7.30.0 i `desktop/`) landet og
-  lukket: 2 høje + 8 moderate advisories væk fra lockfilen.
-- **10/10:** tekst-på-billede-tjekkeren (EN+DA og de to artikler) viser nu også
-  APCA Lc bag bogstaverne (`ceo/apca-tekst-billede`), så begge kontrastværktøjer
-  taler samme sprog; rådet følger sidens `<html lang>`.
 - 0 åbne review-fund. Sentry: 0 uløste fejl (14 dage). 0 åbne PR'er.
-- **PR-TJEK 10/10:** 0 åbne PR'er (undici-PR landet, se næste punkt).
+- **PR-TJEK 10/10:** 0 åbne PR'er (undici-PR landet, i arkivet).
   **BRANCH-TJEK 9/10:** `origin/ceo/hub-readme-note` kan slettes, men
   push --delete er spærret (❓).
 - **CEO-kø #0** er færdig og merged; 0 åbent.
@@ -24,27 +10,43 @@
   `site/apca.js` er en citatport af APCA 0.1.9 (W3, G-4g); de otte
   reference-værdier i `tests/apca.test.mjs` er regnet om med
   `Myndex/apca-w3@master` og stemmer tegn for tegn.
+- **10/10:** `page-profile --compare A B` giver nu diffet som data
+  (`--json`, `ceo/compare-json`): `differences` med rigtige værdier (en
+  manglende HSTS er `null`, ikke `—`), `score_delta` og `verdict`.
+  Download-kopien følger som 1.2.2, og 1.2.1 er lagt i
+  `tools/retired_downloads.json`.
+- **10/10:** seks deploy-noter verificeret live: Clean Copy-arkiverne er
+  byte-identiske med kilden, `popup.html` har ingen «Soon», `options.html`
+  har $19-købslinket; de tre cleancopy-guider indlæser `net.js` før
+  `clean-copy-embed.js`; alle fire `example:`-montager kører på EN+DA; de
+  fem bog-prøvesider siger «PDF report you can hand to a client».
 ## Åbne review-fund
 
 Ingen.
 
 ## Verificér deploy
 
-- **VERIFICÉR DEPLOY:** APCA Lc i tekst-på-billede-tjekkeren
+- **VERIFICÉR DEPLOY:** page-profile 1.2.2 `--compare --json` `ceo/compare-json`
+  10/10-2026 — tjek at live `https://mahope.tools/downloads/page-profile/
+  page-profile-1.2.2.tar.gz` er byte-identisk med `site/downloads/`, at
+  `page_profile.py` i downloaden har `__version__ = "1.2.2"`, og at
+  `https://mahope.tools/page-profile` linker til 1.2.2.
+
+- **VERIFICÉR DEPLOY OK 10/10:** APCA Lc i tekst-på-billede-tjekkeren
   `ceo/apca-tekst-billede` 10/10-2026 — tjek at live
   `https://mahope.tools/text-on-image-checker` og `/text-on-image-checker-da`
   samt `https://mahope.tools/blog/text-on-image-contrast-check` henter
   `/apca.js` FØR `/text-on-image-core.js`, at resultatet indeholder `APCA Lc`
   med et tal, og at rådet på den danske side står på dansk.
 
-- **VERIFICÉR DEPLOY:** Clean Copy-popup + licenskøbslink `ceo/popup-pro-koeb`
+- **VERIFICÉR DEPLOY OK 10/10:** Clean Copy-popup + licenskøbslink `ceo/popup-pro-koeb`
   10/10-2026 — tjek at live `https://mahope.tools/downloads/clean-copy-v1.5.3.zip`
   og `/downloads/clean-copy-firefox-v1.5.4.zip` er byte-identiske med arkiverne i
   `site/downloads/` (samme sha256), at arkivernes `popup.html` ikke indeholder
   «Soon», og at `options.html` indeholder
   `buy.stripe.com/6oU4gy76PgvgdBIdAXbMQ00`.
 
-- **VERIFICÉR DEPLOY:** konverteren i cleancopy.tools' tre artikler
+- **VERIFICÉR DEPLOY OK 10/10:** konverteren i cleancopy.tools' tre artikler
   `ceo/artikel-konverter` 10/10-2026 — tjek at live
   `https://cleancopy.tools/blog/{html-to-markdown-cli,html-to-markdown-vscode,
   copy-as-markdown-chrome-extension}` indeholder `<script src="/net.js"></script>`
@@ -53,14 +55,14 @@ Ingen.
   formularen i artiklen konverterer (JS-kørsel kan ikke curles — det samme
   script kører på `/clean-copy-tool`, som er verificeret).
 
-- **VERIFICÉR DEPLOY:** eksempel-tjek på mahope.tools' to forsider
+- **VERIFICÉR DEPLOY OK 10/10:** eksempel-tjek på mahope.tools' to forsider
   `ceo/forside-eksempel` 10/10-2026 — tjek at live `https://mahope.tools/` og
   `/da/` erklærer `example: 'example.com'` i `ONE_OFF_CHECK`, at kortet ved
   sidevisning siger «This is an example check»/«Dette er et eksempel-tjek» uden
   en donationslinje, og at formularen stadig kører ét kald for læserens egen
   adresse — med donationslinjen efter et rigtigt tjek.
 
-- **VERIFICÉR DEPLOY:** eksempel-tjek på deskuptime.com
+- **VERIFICÉR DEPLOY OK 10/10:** eksempel-tjek på deskuptime.com
   `ceo/deskuptime-auto-tjek` 10/10-2026 — tjek at live
   `https://deskuptime.com/` og `/da/` erklærer `example: 'example.com'` i
   `ONE_OFF_CHECK`, at `/one-off-check.js` (200) indeholder `autoNote`, og at
@@ -83,7 +85,7 @@ Ingen.
   `https://mahope.tools/free-downloads` viser sektionen «When the free files are
   not enough» med knappen «Buy EUComply Pro — $79/year per website», og både
   `/paid-templates` og `/compliance-report` svarer 200.
-- **VERIFICÉR DEPLOY:** bog-kopi «client-ready report» `ceo/bogproeve-kopi`
+- **VERIFICÉR DEPLOY OK 10/10:** bog-kopi «client-ready report» `ceo/bogproeve-kopi`
   10/10-2026 — tjek at `https://mahope.tools/books/preview-{nis2-for-agencies,
   gdpr-for-agencies, eaa-checklist, eaa-shopify, cookie-consent-guide}` ikke
   længere skriver «client-ready report», men en PDF-man-udlevere-formulering
@@ -215,8 +217,30 @@ Ingen.
 ## Feature-kø
 
 Prioriteret efter hvor tæt den er på penge. Baseline er målt på den **byggede**
-side; tallene er ikke vores egen trafik. Alt det leverede (1–44) står i
+side; tallene er ikke vores egen trafik. Alt det leverede (1–44 og 45–60) står i
 `docs/plan-arkiv.md`.
+
+ 61. **`/color-blindness-simulation-check` skal køre simulatoren i artiklen.**
+        Hvem: de 6 besøgende/28 d på `/color-blindness-simulator` (67 % bounce).
+        Tal: brug af simulatoren, PRO-tjek og videre til `/scan`/EUComply Pro
+        ($79/år). Accept: artiklen indlæser samme kerne som simulatoren og viser
+        resultatet i en figur, uden at forlade siden. Datagrund: præcis det
+        mønster der flyttede kontrastartiklen (`/blog/text-on-image-contrast-check`,
+        feature 60) og cleancopy' tre html-to-markdown-guider (feature 58); i dag
+        har artiklen intet `<script>` og sender læseren til værktøjet.
+ 62. **deskuptime.com: fler-URL-tjek på `/bulk-url-checker/`, med ét inputfelt.**
+        Hvem: de 16–17 besøgende/28 d på `/` (100 % bounce, 0 s). Tal: kørte
+        tjek og CTR til CLI/Pro ($19 engang). Accept: indsæt adresser én pr.
+        linje, kør dem i browseren, få én tabel med status/redirects/TLS. Default-
+        siden henviser ikke til denne rute i dag (1 besøgende). Datagrund: det er
+        det Pro-træk Produkt-køen allerede sælger (batch i CLI'en), og en gratis
+        smagsprøve er den billigste vej fra et 0-sekunds besøg til en læsning.
+ 63. **`site/blog/` opdeler sig på sprog i sitemap'et.** Hvem: dem der søger på
+        danske værktøjsord. Tal: danske indgange og DA-Pro-køb. Accept: hver
+        DA-artikel har et `hreflang`-par til sin EN-side, og `/da/blog/` indeks
+        viser de danske guider i stedet for «96 Danish guides». Datagrund: ❓-listen
+        peger allerede på, at påstanden om 96 guider er forkert (11 ligger på
+        cleancopy.tools).
 
  59. **Clean Copy: popup'en skal sælge Pro, ikke love «Soon».** Hvem: de 8–9
        besøg/7 d på de to mest hentede arkiver i familien (firefox 9, chrome 8).
@@ -271,9 +295,17 @@ side; tallene er ikke vores egen trafik. Alt det leverede (1–44) står i
      SARIF-outputet (feature 38) findes; kræver Marketplace-publicering (❓).
      **LEVERET** `ceo/eaa-github-action` — live på `/downloads` verificeret.
 48. **/page-profile: sammenlign to URL'er.** Hvem: SEO-bureauer. Tal: konvertering
-     til Page Profile Pro ($19/år). Accept: `page-profile --compare A B` giver
-     en diff. Datagrund: Pro-funktionen findes ikke endnu; CLI'en har allerede
-     score og grade.
+      til Page Profile Pro ($19/år). Accept: `page-profile --compare A B` giver
+      en diff. Datagrund: Pro-funktionen findes ikke endnu; CLI'en har allerede
+      score og grade.
+      **LEVERET** `ceo/compare-json` — `--compare A B --json` returnerer
+      `score_delta`, `verdict`, `differences` (med rigtige værdier) samt
+      `only_a_issues`/`only_b_issues`, så ét kald kan sættes i CI. Terminaludgaven
+      viser kun de felter der afviger plus «N af 12 fields identical».
+      Dommer: `page-profile/test_page_profile.py` §`PageProfileCompareTests`
+      (3 tests, dømmer rødt på 1.2.1). Download-kopien og arkivet er 1.2.2; de to
+      compare-artikler (EN/DA) lovede allerede `--json` i CI uden at kommandoen
+      fandtes.
 49. **Guide: farveblindhedssimulering.** Hvem: de 5 besøgende/28d på
      `/color-blindness-simulator` + 9 på kontrastartiklen. Tal: trafik til
      simulatoren og videre til `/scan`/EUComply Pro. Accept: EN+DA-guide med

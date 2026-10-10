@@ -13,8 +13,12 @@
       "reason": "1.3.3-arkivet indeholdt den urettede fejl fra opgave 38: index.html lovede \"$19/year\" for EAA-scanneren, som ikke har nogen product_key, og \"Purchase a license at hermes-passiv.pages.dev/clean-copy\" pegede på en side der ikke sælger den. `curl -sI` 26/9 viste 200 med 58052 byte, altså stadig hentbar med den løgn. 1.3.4 siger \"nothing to buy yet\"."
     },
     "/downloads/page-profile/page-profile-1.2.0.tar.gz": {
-      "replaced_by": "/downloads/page-profile/page-profile-1.2.1.tar.gz",
-      "reason": "1.2.0 sendte `Python-urllib/3.x` som User-Agent, som Cloudflare afviser med 403 Error 1010, så `page-profile --activate` aldrig nåede licensserveren: en betalt kunde kunne ikke aktivere sin nøgle. Målt 1/10 kl. 07:26 UTC — stadig 200 med 13588 byte, altså hentbar med den fejl. 1.2.1 sender `page-profile/1.2.1 (mahope.tools)`."
+      "replaced_by": "/downloads/page-profile/page-profile-1.2.2.tar.gz",
+      "reason": "1.2.0 sendte `Python-urllib/3.x` som User-Agent, som Cloudflare afviser med 403 Error 1010, så `page-profile --activate` aldrig nåede licensserveren: en betalt kunde kunne ikke aktivere sin nøgle. Målt 1/10 kl. 07:26 UTC — stadig 200 med 13588 byte, altså hentbar med den fejl."
+    },
+    "/downloads/page-profile/page-profile-1.2.1.tar.gz": {
+      "replaced_by": "/downloads/page-profile/page-profile-1.2.2.tar.gz",
+      "reason": "1.2.1 var den første udgave med User-Agent, men CLI'ens `--compare` skrev forskelle som tekst til terminalen: `A: True   B: —`, som hverken et script eller en kunde kan læse. 1.2.2 gør det samme kald til `--json`, der returnerer `differences` med rigtige værdier, og sætter navn på hvilken side der har et problem."
     }
   },
   "_gone": {

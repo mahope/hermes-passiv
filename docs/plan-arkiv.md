@@ -9686,3 +9686,12 @@ vilje (track.js' egen regel).
 - **10/10:** desktop-lockfilens sidste HØJE sårbarhed (`http-cache-semantics`
   4.2.0 → 4.3.0 via `overrides`) er lukket; `npm audit` 9 → 8 fund, alle
   moderate og kun i electron-build-kæden (`sprintf-js` har ingen rettet udgivelse).
+
+## STATUS-arkiv 10/10-2026 (it. `ceo/compare-json`)
+
+- **10/10:** Clean Copy-popup'en lovede «Pro [Soon]» og licenssiden manglede købslink; rettet, arkiver genbygget (`ceo/popup-pro-koeb`).
+- **10/10:** cleancopy.tools' tre HTML-to-Markdown-guider kører konverteren i artiklen (`ceo/artikel-konverter`). Licensvalideringen går gennem `net.js`, så en 429 forbliver endelig; uden kernen holder syvdagesreglen.
+- **10/10:** deskuptime.coms to sider og mahope.tools' to forsider kører ét eksempel-tjek ved sidevisning (`ceo/deskuptime-auto-tjek`, `ceo/forside-eksempel`); baselineer: deskuptime.com 17 besøgende/28 d, 100 % bounce, 0 s; `/`+`/da/` 10 besøgende, 89 % bounce. Donationen skal nu ventes ind, til læseren selv har skrevet en adresse.
+- **10/10:** dependabot-PR #3 (undici 7.29.0 → 7.30.0 i `desktop/`) landet og lukket: 2 høje + 8 moderate advisories væk fra lockfilen.
+- **10/10:** tekst-på-billede-tjekkeren (EN+DA og de to artikler) viser nu også APCA Lc bag bogstaverne (`ceo/apca-tekst-billede`).
+- **10/10:** `/contrast-checker` (EN+DA) viser nu også APCA Lc ved siden af WCAG-forholdet (`ceo/apca-kontrasttjekker`). `site/apca.js` er en citatport af APCA 0.1.9 (W3, G-4g); de otte reference-værdier i `tests/apca.test.mjs` er regnet om med `Myndex/apca-w3@master`.

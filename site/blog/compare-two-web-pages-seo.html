@@ -64,10 +64,20 @@
       <li>Export as an HTML report if the result needs to be shared with a client.</li>
     </ol>
     <p>In the CLI it works the same way with
-    <code>python3 page_profile.py --compare &lt;url1&gt; &lt;url2&gt;</code> (Pro),
-    and the JSON API lets you build comparisons into your own CI:</p>
-    <pre style="background:#0f172a;color:#e2e8f0;padding:16px;border-radius:8px;overflow-x:auto;font-size:0.9rem;">$ curl -s "https://hermes-passiv.pages.dev/api/profile?url=https://a.com" | jq .score
-$ curl -s "https://hermes-passiv.pages.dev/api/profile?url=https://b.com" | jq .score</pre>
+    <code>python3 page_profile.py --compare &lt;url1&gt; &lt;url2&gt;</code> (Pro).
+    Add <code>--json</code> and you get the diff as data — score, grade, verdict and every
+    field that differs — which is the version you put in a CI job that must fail when
+    staging drops behind production:</p>
+    <pre style="background:#0f172a;color:#e2e8f0;padding:16px;border-radius:8px;overflow-x:auto;font-size:0.9rem;">$ python3 page_profile.py --compare https://prod.example.com https://staging.example.com --json
+{
+  "a": { "url": "https://prod.example.com", "score": 92, "grade": "A" },
+  "b": { "url": "https://staging.example.com", "score": 71, "grade": "C" },
+  "score_delta": 21,
+  "verdict": "A scores 21 higher",
+  "differences": [ { "field": "Title", "a": "…", "b": "…" } ],
+  "only_a_issues": [],
+  "only_b_issues": [ "missing description" ]
+}</pre>
     <div style="text-align:center;margin-top:20px;">
       <a href="/page-profile" class="btn-primary">Run a comparison now &rarr;</a>
     </div>

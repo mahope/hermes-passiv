@@ -29,7 +29,7 @@ from urllib.error import URLError, HTTPError
 from urllib.parse import urlparse, urljoin
 from collections import OrderedDict
 
-__version__ = "1.2.1"
+__version__ = "1.2.2"
 
 LICENSE_API = "https://mahope.tools/api/license/"
 LICENSE_PRODUCT = "page-profile-pro"
@@ -837,60 +837,82 @@ def _profile_url(url, timeout=15):
     }
 
 
-def run_compare(url_a, url_b, timeout=15):
+COMPARE_FIELDS = (
+    ("Title", lambda p: p["result"].get("title")),
+    ("Description", lambda p: p["result"].get("meta_description")),
+    ("Canonical", lambda p: p["result"].get("canonical")),
+    ("Language", lambda p: p["result"].get("language")),
+    ("OG image", lambda p: p["result"].get("og", {}).get("image")),
+    ("Twitter card", lambda p: p["result"].get("twitter", {}).get("card")),
+    ("JSON-LD blocks", lambda p: p["result"].get("json_ld_count", 0)),
+    ("H1 count", lambda p: len(p["result"].get("headings", {}).get("h1", []))),
+    ("Images total", lambda p: p["result"].get("images", {}).get("total", 0)),
+    ("Images w/ alt", lambda p: p["result"].get("images", {}).get("with_alt", 0)),
+    ("HSTS", lambda p: p["result"].get("security", {}).get("hsts")),
+    ("CSP", lambda p: p["result"].get("security", {}).get("csp")),
+)
+
+
+def compare_profiles(a, b):
+    """Return the machine-readable diff between two profiled pages."""
+    differences = []
+    for label, field in COMPARE_FIELDS:
+        va, vb = field(a), field(b)
+        if va != vb:
+            differences.append({"field": label, "a": va, "b": vb})
+    delta = round(a["score"] - b["score"], 1)
+    only_a = [p for p in a["penalties"] if p not in b["penalties"]]
+    only_b = [p for p in b["penalties"] if p not in a["penalties"]]
+    return {
+        "a": {"url": a["url"], "status": a["status"], "score": a["score"],
+              "max_score": a["max_score"], "grade": a["grade"]},
+        "b": {"url": b["url"], "status": b["status"], "score": b["score"],
+              "max_score": b["max_score"], "grade": b["grade"]},
+        "score_delta": delta,
+        "verdict": (f"A scores {abs(delta)} higher" if delta > 0
+                    else f"B scores {abs(delta)} higher" if delta < 0
+                    else "Tie"),
+        "differences": differences,
+        "only_a_issues": only_a,
+        "only_b_issues": only_b,
+    }
+
+
+def run_compare(url_a, url_b, timeout=15, as_json=False):
     """Pro: side-by-side diff of two URLs' key signals."""
     a = _profile_url(url_a, timeout)
     b = _profile_url(url_b, timeout)
+    diff = compare_profiles(a, b)
 
-    def row(label, va, vb, ok_when_equal=True):
-        same = (va == vb)
-        icon = "✅" if (same == ok_when_equal or not ok_when_equal and same) else ("✅" if same else "⚠️ ")
-        return f"  {label:<22} {'=' if same else '≠'}  A: {_fmt_val(va)}   B: {_fmt_val(vb)}"
+    if as_json:
+        print(json.dumps(diff, indent=2, ensure_ascii=False))
+        return diff
 
-    lines = []
     sep = "─" * 78
-    lines.append("")
-    lines.append(f"  page-profile v{__version__} — COMPARE (Pro)")
-    lines.append(f"  A: {a['url']}  →  score {a['score']}/{a['max_score']} ({a['grade']})")
-    lines.append(f"  B: {b['url']}  →  score {b['score']}/{b['max_score']} ({b['grade']})")
+    lines = ["",
+             f"  page-profile v{__version__} — COMPARE (Pro)",
+             f"  A: {a['url']}  →  score {a['score']}/{a['max_score']} ({a['grade']})",
+             f"  B: {b['url']}  →  score {b['score']}/{b['max_score']} ({b['grade']})",
+             sep]
+    for difference in diff["differences"]:
+        lines.append(
+            f"  ≠ {difference['field']:<20} "
+            f"A: {str(_fmt_val(difference['a']))[:36]:<36} "
+            f"B: {str(_fmt_val(difference['b']))[:36]}   ← differs")
+    checked = len(COMPARE_FIELDS)
+    same = checked - len(diff["differences"])
+    lines.append(f"  {same} of {checked} fields identical")
     lines.append(sep)
-    pairs = [
-        ("Title", a["result"].get("title"), b["result"].get("title")),
-        ("Description", a["result"].get("meta_description"), b["result"].get("meta_description")),
-        ("Canonical", a["result"].get("canonical"), b["result"].get("canonical")),
-        ("Language", a["result"].get("language"), b["result"].get("language")),
-        ("OG image", a["result"].get("og", {}).get("image"), b["result"].get("og", {}).get("image")),
-        ("Twitter card", a["result"].get("twitter", {}).get("card"), b["result"].get("twitter", {}).get("card")),
-        ("JSON-LD blocks", a["result"].get("json_ld_count", 0), b["result"].get("json_ld_count", 0)),
-        ("H1 count", len(a["result"].get("headings", {}).get("h1", [])), len(b["result"].get("headings", {}).get("h1", []))),
-        ("Images total", a["result"].get("images", {}).get("total", 0), b["result"].get("images", {}).get("total", 0)),
-        ("Images w/ alt", a["result"].get("images", {}).get("with_alt", 0), b["result"].get("images", {}).get("with_alt", 0)),
-        ("HSTS", a["result"].get("security", {}).get("hsts"), b["result"].get("security", {}).get("hsts")),
-        ("CSP", a["result"].get("security", {}).get("csp"), b["result"].get("security", {}).get("csp")),
-    ]
-    for label, va, vb in pairs:
-        sa = _fmt_val(va)
-        sb = _fmt_val(vb)
-        marker = "=" if va == vb else "≠"
-        flag = "" if va == vb else ("   ← differs" )
-        lines.append(f"  {marker} {label:<20} A: {str(sa)[:38]:<38} B: {str(sb)[:38]}{flag}")
-    lines.append(sep)
-    d = round(a["score"] - b["score"], 1)
-    verdict = f"A scores {abs(d)} higher" if d > 0 else (f"B scores {abs(d)} higher" if d < 0 else "Tie")
-    lines.append(f"  Verdict: {verdict}")
-    only_a = [p for p in a["penalties"] if p not in b["penalties"]]
-    only_b = [p for p in b["penalties"] if p not in a["penalties"]]
-    if only_a:
-        lines.append(f"  Only A has issues:")
-        for p in only_a[:8]:
-            lines.append(f"    ⚠️  {p}")
-    if only_b:
-        lines.append(f"  Only B has issues:")
-        for p in only_b[:8]:
-            lines.append(f"    ⚠️  {p}")
+    lines.append(f"  Verdict: {diff['verdict']}")
+    for side, issues in (("A", diff["only_a_issues"]), ("B", diff["only_b_issues"])):
+        if issues:
+            lines.append(f"  Only {side} has issues:")
+            for p in issues[:8]:
+                lines.append(f"    ⚠️  {p}")
     lines.append(sep)
     lines.append("")
     print("\n".join(lines))
+    return diff
 
 
 def run_batch(urls, timeout=15):
@@ -1103,7 +1125,7 @@ def main():
 
     if args.compare:
         require_pro("compare mode")
-        run_compare(args.compare[0], args.compare[1], timeout=args.timeout)
+        run_compare(args.compare[0], args.compare[1], timeout=args.timeout, as_json=args.json)
         return
 
     if args.batch:

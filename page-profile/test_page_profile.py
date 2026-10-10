@@ -3,10 +3,11 @@ import importlib.util
 import io
 import json
 import os
+import sys
 import tempfile
 import time
 import unittest
-from contextlib import redirect_stderr
+from contextlib import redirect_stderr, redirect_stdout
 from pathlib import Path
 from unittest.mock import patch
 from urllib.error import HTTPError, URLError
@@ -244,6 +245,83 @@ class PageProfileLicenseTests(unittest.TestCase):
         self.assertNotIn("make_license_key", source)
         with self.assertRaises(ValueError):
             page_profile.normalize_license_key("PPRO-" + "A" * 32)
+
+
+class PageProfileCompareTests(unittest.TestCase):
+    """`page-profile --compare A B` must be usable by a human and by a script.
+
+    The web tool got side-by-side compare on 9/10; the CLI had the same rows
+    but printed them only for a reader, and a boolean field that differs
+    showed as `A: True   B: —`, which a script cannot act on.
+    """
+
+    def profile(self, url, title, hsts, score, penalties):
+        return {
+            "url": url, "status": 200, "redirects": [],
+            "result": {
+                "title": title, "meta_description": "same", "canonical": None,
+                "language": "en", "og": {"image": None}, "twitter": {"card": None},
+                "json_ld_count": 0, "headings": {"h1": ["one"]},
+                "images": {"total": 3, "with_alt": 3},
+                "security": {"hsts": hsts, "csp": None},
+            },
+            "score": score, "max_score": 100, "grade": "B",
+            "penalties": penalties,
+        }
+
+    @property
+    def a(self):
+        return self.profile("https://a.example", "A page", True, 90, ["missing hsts"])
+
+    @property
+    def b(self):
+        return self.profile("https://b.example", "B page", None, 80, ["thin title"])
+
+    def test_compare_json_is_a_stable_diff_a_script_can_read(self):
+        with patch.object(page_profile, "_profile_url", side_effect=[self.a, self.b]):
+            with io.StringIO() as out:
+                with redirect_stdout(out):
+                    page_profile.run_compare("a", "b", as_json=True)
+                payload = out.getvalue()
+        diff = json.loads(payload)
+        self.assertEqual(10, diff["score_delta"])
+        self.assertEqual("A scores 10 higher", diff["verdict"])
+        self.assertEqual("https://a.example", diff["a"]["url"])
+        self.assertEqual(80, diff["b"]["score"])
+        self.assertEqual(["missing hsts"], diff["only_a_issues"])
+        self.assertEqual(["thin title"], diff["only_b_issues"])
+        fields = {d["field"]: d for d in diff["differences"]}
+        self.assertEqual({"Title", "HSTS"}, set(fields))
+        # The value must stay a real boolean/null, not the "—" placeholder.
+        self.assertIs(True, fields["HSTS"]["a"])
+        self.assertIsNone(fields["HSTS"]["b"])
+
+    def test_compare_terminal_output_says_what_differs(self):
+        with patch.object(page_profile, "_profile_url", side_effect=[self.a, self.b]):
+            with io.StringIO() as out:
+                with redirect_stdout(out):
+                    page_profile.run_compare("a", "b")
+                text = out.getvalue()
+        self.assertIn("≠ Title", text)
+        self.assertIn("Verdict: A scores 10 higher", text)
+        self.assertIn("10 of 12 fields identical", text)
+        self.assertIn("Only A has issues", text)
+        self.assertIn("missing hsts", text)
+        # The removed helper wrote every row twice.
+        self.assertLess(text.count("differs"), 3)
+
+    def test_cli_wires_json_output_to_compare(self):
+        argv = ["page-profile", "--compare", "https://a.example", "https://b.example", "--json"]
+        with patch.object(page_profile, "require_pro", lambda feature: "key"):
+            with patch.object(page_profile, "_profile_url", side_effect=[self.a, self.b]):
+                with patch.object(sys, "argv", argv):
+                    with io.StringIO() as out:
+                        with redirect_stdout(out):
+                            page_profile.main()
+                        payload = out.getvalue()
+        diff = json.loads(payload)
+        self.assertEqual(2, len(diff["differences"]))
+        self.assertEqual("https://b.example", diff["b"]["url"])
 
 
 if __name__ == "__main__":
