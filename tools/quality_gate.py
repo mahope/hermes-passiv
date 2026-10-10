@@ -323,6 +323,21 @@ STEPS: tuple[Step, ...] = (
             "site/color-blindness-simulator-da.html",
         ),
     ),
+    # APCA-scoren på kontrasttjekkeren (EN + DA). WCAG 2-forholdet er blindt for
+    # polaritet, og WCAG 3-udkastet bygger på APCA i stedet. `site/apca.js` er
+    # referenceimplementeringen 0.1.9 (W3), og dommen holder dens Lc-tal op mod
+    # `apca-w3`'s egen testsuite samt begge *rigtige* sider, fordi den danske er
+    # en håndhævet kopi.
+    Step(
+        id="apca",
+        argv=("node", "tests/apca.test.mjs"),
+        inputs=(
+            "tests/apca.test.mjs",
+            "site/apca.js",
+            "site/contrast-checker.html",
+            "site/contrast-checker-da.html",
+        ),
+    ),
     # Farverne ud af et billede i paletgeneratoren (EN + DA). Generatoren tog
     # kun en hexfarve ind, men de fleste har deres brandfarve i et logo eller et
     # skærmbillede. `site/palette-image.js` læser billedet med canvas og

@@ -19,11 +19,22 @@
   **BRANCH-TJEK 9/10:** `origin/ceo/hub-readme-note` kan slettes, men
   push --delete er spærret (❓).
 - **CEO-kø #0** er færdig og merged; 0 åbent.
+- **10/10:** `/contrast-checker` (EN+DA) viser nu også APCA Lc ved siden af
+  WCAG-forholdet — polariteten 2.x-tallet smider ud (`ceo/apca-kontrasttjekker`).
+  `site/apca.js` er en citatport af APCA 0.1.9 (W3, G-4g); de otte
+  reference-værdier i `tests/apca.test.mjs` er regnet om med
+  `Myndex/apca-w3@master` og stemmer tegn for tegn.
 ## Åbne review-fund
 
 Ingen.
 
 ## Verificér deploy
+
+- **VERIFICÉR DEPLOY:** APCA Lc på kontrasttjekkeren
+  `ceo/apca-kontrasttjekker` 10/10-2026 — tjek at
+  `https://mahope.tools/contrast-checker` og `-da` henter `/apca.js`
+  (200) og udfylder `#apca-out` med et `Lc`-råd, og at batch-tabellen har
+  kolonnen «APCA Lc».
 
 - **VERIFICÉR DEPLOY:** `http-cache-semantics` 4.3.0 i desktop-lockfil +
   download-zip `ceo/desktop-http-cache` 10/10-2026 — tjek at
@@ -224,6 +235,14 @@ side; tallene er ikke vores egen trafik. Alt det leverede (1–44) står i
      samme (0 s tyder på fejl før indholdet vises). Datagrund: Plausible
      28 dage: besøgstid 0 s og bounce 100 % — den eneste af de tre måldomæner.
 55. **EUComply: kundeklar rapport ud af det frie multi-site-tjek.** Hvem: bureauer
-     med kunder. Tal: flytter en $79/årslinje. Accept: rapport-knappen på
-     checket der fører til `/paid-templates` eller Pro. Datagrund: spørger Mads
-     først (🟡 i ❓) — rapportkittet til $69 er den nærmeste eksisterende vej.
+      med kunder. Tal: flytter en $79/årslinje. Accept: rapport-knappen på
+      checket der fører til `/paid-templates` eller Pro. Datagrund: spørger Mads
+      først (🟡 i ❓) — rapportkittet til $69 er den nærmeste eksisterende vej.
+56. **`/contrast-checker`: APCA Lc ved siden af WCAG-forholdet.** Hvem: alle der
+      tjekker kontrast — kontrasttjekkeren er den mest brugte gratis indgang til
+      EUComply Pro. Tal: PRO-tjek på siden er en $79/årslinje, og Lc er det
+      WCAG-3-tal kunder spørger efter. Accept: både EN og DA viser Lc pr. par i
+      både enkelt- og batch-tjekket. **LEVERET** `ceo/apca-kontrasttjekker`.
+      Baseline: siden står ikke i Plausibles top-sider (ikke målelig fra
+      promptens data), så effekten måles via PRO-tjek på `/api/stats` (❓).
+

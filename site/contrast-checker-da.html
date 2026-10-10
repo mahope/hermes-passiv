@@ -38,6 +38,7 @@
   .cc-preview { margin-top:22px; padding:28px 22px; border-radius:var(--radius); line-height:1.5; border:1px solid var(--color-border); }
   .cc-preview .large { font-size:1.5rem; font-weight:700; }
   .cc-note { margin-top:18px; font-size:.88rem; color:var(--color-text-muted); }
+  .cc-apca { margin:0 0 16px; font-size:.92rem; color:var(--color-text-muted); }
   .cc-error { color:var(--color-red); font-size:.9rem; margin-top:10px; min-height:1.2em; }
   .cc-fix { margin-top:14px; padding:14px 16px; border:1px solid var(--color-border); border-radius:var(--radius); background:var(--color-surface-2); }
   .cc-fix-lead { margin:0 0 10px; font-size:.92rem; }
@@ -93,6 +94,7 @@
 
   <p class="cc-ratio" id="ratio-out">—</p>
   <p class="cc-verdict" id="verdict-out" aria-live="polite"></p>
+  <p class="cc-apca" id="apca-out" aria-live="polite"></p>
 
   <div id="cc-fix" class="cc-fix" hidden>
     <p class="cc-fix-lead" id="cc-fix-lead">Nærmeste tekstfarve der består AA (4,5:1):</p>
@@ -170,7 +172,7 @@
     <table class="cc-table">
       <caption style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden">Kontrastresultater for hvert farvepar</caption>
       <thead>
-        <tr><th scope="col">Forgrund</th><th scope="col">Baggrund</th><th scope="col">Ratio</th><th scope="col">AA</th><th scope="col">AAA</th></tr>
+        <tr><th scope="col">Forgrund</th><th scope="col">Baggrund</th><th scope="col">Ratio</th><th scope="col">APCA Lc</th><th scope="col">AA</th><th scope="col">AAA</th></tr>
       </thead>
       <tbody id="batch-tbody"></tbody>
     </table>
@@ -184,6 +186,13 @@
   (L1 + 0,05) / (L2 + 0,05), hvor L1 er den lyseste farve. En ratio på 1:1 betyder
   identiske farver; 21:1 er maksimum (sort på hvidt). Det matcher formlen i
   WCAG-specifikationen nøjagtigt.</p>
+  <p style="margin-top:10px">Nedenunder får du også en <strong>APCA Lc</strong>-score,
+  den perceptuelle model der er under udarbejdelse til WCAG 3. Den er fortægneladet:
+  et positivt tal betyder mørk tekst på lys baggrund, et negativt tal lys tekst på
+  mørk — den polaritet 2.x-ratioen ignorerer. Tallet er referenceberegningen
+  APCA&nbsp;0.1.9 (W3), og rådet ved siden af følger APCA's egne tærskler: 90 til
+  foretrukket brødtekst, 75 mindste for brødtekst, 60 til store overskrifter, 45 til
+  store eller fede tekster og 30 som det absolutte gulv.</p>
 </section>
 
 <p style="margin-top:10px"><a href="/da/blog/wcag-kontrast-checker">Guide: sådan tjekker du kontrast trin for trin</a></p>
@@ -214,6 +223,7 @@
   mahoje.dk · Gratis GDPR- &amp; tilgængelighedsværktøj i browseren
 </footer>
 
+<script src="/apca.js"></script>
 <script>
 (function () {
   'use strict';
@@ -352,6 +362,17 @@
     else if (r >= 3) { v.textContent = 'Begrænset — består kun for stor tekst og UI-komponenter.'; v.className = 'cc-verdict fail'; }
     else             { v.textContent = 'Dumpet i WCAG — ikke nok kontrast selv til stor tekst.'; v.className = 'cc-verdict fail'; }
 
+    // APCA, kandidaten til WCAG 3, som et supplement til forholdet. Det er
+    // den samme beregning som `tests/apca.test.mjs` holder op mod reference-
+    // værdierne; findes modulet ikke, tier vi frem for at gætte.
+    var apcaEl = $('apca-out');
+    if (window.APCA && typeof window.APCA.contrast === 'function') {
+      var lc = window.APCA.contrast(fg, bg);
+      apcaEl.textContent = window.APCA.label(lc, 'da');
+    } else {
+      apcaEl.textContent = '';
+    }
+
     // Rettelsen: farven tættest på den valgte der stadig består AA for
     // almindelig tekst. Vises kun når parret faktisk fejler — på et par der
     // består ville den være en knap uden opgave.
@@ -469,10 +490,13 @@
       var aa = r >= 4.5, aaa = r >= 7;
       if (aa) passAa++;
       var fgHex = toHex(rows[j].fg), bgHex = toHex(rows[j].bg);
+      var lcTxt = (window.APCA && typeof window.APCA.contrast === 'function')
+        ? window.APCA.contrast(rows[j].fg, rows[j].bg).toFixed(1) : '—';
       var tr = document.createElement('tr');
       tr.innerHTML = '<td><span class="cc-batch-sw" style="background:' + fgHex + '"></span><code>' + fgHex + '</code></td>' +
         '<td><span class="cc-batch-sw" style="background:' + bgHex + '"></span><code>' + bgHex + '</code></td>' +
         '<td>' + r.toFixed(2) + '</td>' +
+        '<td>' + lcTxt + '</td>' +
         '<td class="' + (aa ? 'pass' : 'fail') + '">' + (aa ? 'Bestået' : 'Dumpet') + '</td>' +
         '<td class="' + (aaa ? 'pass' : 'fail') + '">' + (aaa ? 'Bestået' : 'Dumpet') + '</td>';
       tbody.appendChild(tr);

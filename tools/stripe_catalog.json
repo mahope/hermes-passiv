@@ -2662,7 +2662,7 @@
       "free_features": [
         {
           "id": "ratio",
-          "where": "site/contrast-checker.html:187-200 luminance() og ratio() beregner WCAG-forholdet for det indtastede par og skriver det i DOM'en",
+          "where": "site/contrast-checker.html:254-265 luminance() og ratio() beregner WCAG-forholdet for det indtastede par og skriver det i DOM'en",
           "labels": {
             "en": [
               "The WCAG ratio for any pair of colors you type in"
@@ -2671,7 +2671,7 @@
         },
         {
           "id": "verdict",
-          "where": "site/contrast-checker.html:202-215 dommen sættes ud fra forholdet, og :4 gør kortet synligt efter første beregning",
+          "where": "site/contrast-checker.html:330-373 dommen sættes ud fra forholdet, og :341 gør kortet synligt efter første beregning",
           "labels": {
             "en": [
               "AA and AAA verdict, large-text threshold included"
@@ -2680,7 +2680,7 @@
         },
         {
           "id": "local",
-          "where": "site/contrast-checker.html:253-259 swap-knappen og farvefelterne er ren browserkode — siden henter ingen data, så intet uploades",
+          "where": "site/contrast-checker.html:397-408 swap-knappen og farvefelterne er ren browserkode — siden henter ingen data, så intet uploades",
           "labels": {
             "en": [
               "Runs entirely in your browser — nothing uploaded"
@@ -2691,7 +2691,7 @@
       "pro_features": [
         {
           "id": "crawl",
-          "where": "site/contrast-checker.html:205-207 «it reads the page from the server, runs the 15 accessibility checks» — målt mod `handleReport`s ene `cscFetch`-kald; dommen er `check_scan_page_claims.py` dom 5",
+          "where": "site/contrast-checker.html:214-216 «it reads the page from the server, runs the 15 accessibility checks» — målt mod `handleReport`s ene `cscFetch`-kald; dommen er `check_scan_page_claims.py` dom 5",
           "labels": {
             "en": [
               "It reads the page from the server too — response headers included, which a browser check cannot see"
@@ -2703,7 +2703,7 @@
         },
         {
           "id": "server-checks",
-          "where": "site/contrast-checker.html:205-207 «18 server-side GDPR, cookie, security and metadata checks on top, 33 in all»",
+          "where": "site/contrast-checker.html:214-216 «18 server-side GDPR, cookie, security and metadata checks on top, 33 in all»",
           "labels": {
             "en": [
               "18 server-side GDPR, cookie, security and metadata checks"
@@ -2715,7 +2715,7 @@
         },
         {
           "id": "pdf",
-          "where": "site/contrast-checker.html:205-207 «33 in all, in a PDF report you can hand to a client»",
+          "where": "site/contrast-checker.html:214-216 «33 in all, in a PDF report you can hand to a client»",
           "labels": {
             "en": [
               "The findings as a PDF report you can hand a client"
@@ -2737,7 +2737,7 @@
       "free_features": [
         {
           "id": "ratio",
-          "where": "site/contrast-checker-da.html:188-201 luminance() og ratio() beregner WCAG-forholdet for det indtastede par og skriver det i DOM'en",
+          "where": "site/contrast-checker-da.html:255-266 luminance() og ratio() beregner WCAG-forholdet for det indtastede par og skriver det i DOM'en",
           "labels": {
             "da": [
               "WCAG-forholdet for ethvert farvepar du indtaster"
@@ -2746,7 +2746,7 @@
         },
         {
           "id": "verdict",
-          "where": "site/contrast-checker-da.html:203-216 dommen sættes ud fra forholdet, og :5 gør kortet synligt efter første beregning",
+          "where": "site/contrast-checker-da.html:331-374 dommen sættes ud fra forholdet, og :342 gør kortet synligt efter første beregning",
           "labels": {
             "da": [
               "AA- og AAA-dom, tærskel for stor tekst med"
@@ -2755,7 +2755,7 @@
         },
         {
           "id": "local",
-          "where": "site/contrast-checker-da.html:254-260 byt-knappen og farvefelterne er ren browserkode — siden henter ingen data, så intet uploades",
+          "where": "site/contrast-checker-da.html:398-409 byt-knappen og farvefelterne er ren browserkode — siden henter ingen data, så intet uploades",
           "labels": {
             "da": [
               "Kører helt i din browser — intet uploades"
@@ -2766,7 +2766,7 @@
       "pro_features": [
         {
           "id": "crawl",
-          "where": "site/contrast-checker-da.html:204-208 «den læser siden fra serveren, kører de 15 tilgængelighedstjek» — målt mod `handleReport`s ene `cscFetch`-kald; dommen er `check_scan_page_claims.py` dom 5",
+          "where": "site/contrast-checker-da.html:214-217 «den læser siden fra serveren, kører de 15 tilgængelighedstjek» — målt mod `handleReport`s ene `cscFetch`-kald; dommen er `check_scan_page_claims.py` dom 5",
           "labels": {
             "en": [
               "It reads the page from the server too — response headers included, which a browser check cannot see"
@@ -2778,7 +2778,7 @@
         },
         {
           "id": "server-checks",
-          "where": "site/contrast-checker-da.html:204-208 «18 serverside-tjek for GDPR, cookies, sikkerhed og metadata oveni, i alt 33»",
+          "where": "site/contrast-checker-da.html:214-217 «18 serverside-tjek for GDPR, cookies, sikkerhed og metadata oveni, i alt 33»",
           "labels": {
             "en": [
               "18 server-side GDPR, cookie, security and metadata checks"
@@ -2790,7 +2790,7 @@
         },
         {
           "id": "pdf",
-          "where": "site/contrast-checker-da.html:204-208 «i alt 33, i en PDF-rapport du kan give en kunde»",
+          "where": "site/contrast-checker-da.html:214-217 «i alt 33, i en PDF-rapport du kan give en kunde»",
           "labels": {
             "en": [
               "The findings as a PDF report you can hand a client"

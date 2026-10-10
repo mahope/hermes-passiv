@@ -38,6 +38,7 @@
   .cc-preview { margin-top:22px; padding:28px 22px; border-radius:var(--radius); line-height:1.5; border:1px solid var(--color-border); }
   .cc-preview .large { font-size:1.5rem; font-weight:700; }
   .cc-note { margin-top:18px; font-size:.88rem; color:var(--color-text-muted); }
+  .cc-apca { margin:0 0 16px; font-size:.92rem; color:var(--color-text-muted); }
   .cc-error { color:var(--color-red); font-size:.9rem; margin-top:10px; min-height:1.2em; }
   .cc-fix { margin-top:14px; padding:14px 16px; border:1px solid var(--color-border); border-radius:var(--radius); background:var(--color-surface-2); }
   .cc-fix-lead { margin:0 0 10px; font-size:.92rem; }
@@ -93,6 +94,7 @@
 
   <p class="cc-ratio" id="ratio-out">—</p>
   <p class="cc-verdict" id="verdict-out" aria-live="polite"></p>
+  <p class="cc-apca" id="apca-out" aria-live="polite"></p>
 
   <div id="cc-fix" class="cc-fix" hidden>
     <p class="cc-fix-lead" id="cc-fix-lead">Nearest text colour that passes AA (4.5:1):</p>
@@ -170,7 +172,7 @@
     <table class="cc-table">
       <caption style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden">Contrast results for each colour pair</caption>
       <thead>
-        <tr><th scope="col">Foreground</th><th scope="col">Background</th><th scope="col">Ratio</th><th scope="col">AA</th><th scope="col">AAA</th></tr>
+        <tr><th scope="col">Foreground</th><th scope="col">Background</th><th scope="col">Ratio</th><th scope="col">APCA Lc</th><th scope="col">AA</th><th scope="col">AAA</th></tr>
       </thead>
       <tbody id="batch-tbody"></tbody>
     </table>
@@ -184,6 +186,13 @@
   (L1 + 0.05) / (L2 + 0.05), where L1 is the lighter color. A ratio of 1:1 means
   identical colors; 21:1 is the maximum (black on white). This matches the formula
   in the WCAG specification exactly.</p>
+  <p style="margin-top:10px">Underneath it you also get an <strong>APCA Lc</strong>
+  score, the perceptual model being drafted for WCAG 3. It is signed: a positive
+  number means dark text on a light background, a negative number means light text
+  on dark — the polarity the 2.x ratio ignores. The Lc figure is the reference
+  APCA&nbsp;0.1.9 calculation (W3), and the guidance next to it follows APCA's own
+  thresholds: 90 for preferred body text, 75 the minimum for body text, 60 for large
+  headings, 45 for large or bold text, and 30 the absolute floor.</p>
 </section>
 
 <p style="margin-top:26px"><a href="/free-tools">&larr; All free tools</a> · <a href="/text-on-image-checker">Text on image checker</a> ·
@@ -213,6 +222,7 @@
   mahoje.dk · Free browser-based GDPR &amp; accessibility tooling
 </footer>
 
+<script src="/apca.js"></script>
 <script>
 (function () {
   'use strict';
@@ -351,6 +361,17 @@
     else if (r >= 3) { v.textContent = 'Limited — passes only for large text and UI components.'; v.className = 'cc-verdict fail'; }
     else             { v.textContent = 'Fails WCAG — not enough contrast even for large text.'; v.className = 'cc-verdict fail'; }
 
+    // APCA, kandidaten til WCAG 3, som et supplement til forholdet. Det er
+    // den samme beregning som `tests/apca.test.mjs` holder op mod reference-
+    // værdierne; findes modulet ikke, tier vi frem for at gætte.
+    var apcaEl = $('apca-out');
+    if (window.APCA && typeof window.APCA.contrast === 'function') {
+      var lc = window.APCA.contrast(fg, bg);
+      apcaEl.textContent = window.APCA.label(lc, 'en');
+    } else {
+      apcaEl.textContent = '';
+    }
+
     // Rettelsen: farven tættest på den valgte der stadig består AA for
     // almindelig tekst. Vises kun når parret faktisk fejler — på et par der
     // består ville den være en knap uden opgave.
@@ -468,10 +489,13 @@
       var aa = r >= 4.5, aaa = r >= 7;
       if (aa) passAa++;
       var fgHex = toHex(rows[j].fg), bgHex = toHex(rows[j].bg);
+      var lcTxt = (window.APCA && typeof window.APCA.contrast === 'function')
+        ? window.APCA.contrast(rows[j].fg, rows[j].bg).toFixed(1) : '—';
       var tr = document.createElement('tr');
       tr.innerHTML = '<td><span class="cc-batch-sw" style="background:' + fgHex + '"></span><code>' + fgHex + '</code></td>' +
         '<td><span class="cc-batch-sw" style="background:' + bgHex + '"></span><code>' + bgHex + '</code></td>' +
         '<td>' + r.toFixed(2) + '</td>' +
+        '<td>' + lcTxt + '</td>' +
         '<td class="' + (aa ? 'pass' : 'fail') + '">' + (aa ? 'Pass' : 'Fail') + '</td>' +
         '<td class="' + (aaa ? 'pass' : 'fail') + '">' + (aaa ? 'Pass' : 'Fail') + '</td>';
       tbody.appendChild(tr);
