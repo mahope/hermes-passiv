@@ -9680,3 +9680,9 @@ kalde ruten gennem kernen. Embed-scriptet sender nu gennem `NET.postJSON`
 syvdagesreglen i det kanoniske licensmodul alligevel håndterer. De tre guides
 indlæser `net.js` foran embed-scriptet. `/api/track` forbliver en rå beacon med
 vilje (track.js' egen regel).
+
+## Arkiveret fra STATUS 10/10 (APCA i tekst-på-billede-tjekkeren)
+
+- **10/10:** desktop-lockfilens sidste HØJE sårbarhed (`http-cache-semantics`
+  4.2.0 → 4.3.0 via `overrides`) er lukket; `npm audit` 9 → 8 fund, alle
+  moderate og kun i electron-build-kæden (`sprintf-js` har ingen rettet udgivelse).

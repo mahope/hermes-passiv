@@ -828,6 +828,32 @@
       // `<button type="button">` og ikke et `<a href="#">`, fordi den gør
       // noget ved siden — ikke en ny side — og en anchor ville blive
       // genindlæst i historikken ved hvert tryk.
+      // APCA (WCAG 3-udkastet) ved siden af WCAG-forholdet — samme to tal som
+      // `/contrast-checker` viser for et farvepar, her for den værst tænkelige
+      // pixel bag bogstaverne. WCAG 2-forholdet er blindt for polaritet, og
+      // APCA er den perceptuelle model WCAG 3 bygger på. Modulet er
+      // `site/apca.js`; findes det ikke (en side der ikke henter det), står
+      // linjen bare ikke, præcis som `blok2Findes()` gør for blok 2.
+      //
+      // Værst = den mindste |Lc| af de to endepunkter, altså den pixel der
+      // ligner tekstfarven mest — samme "worst case"-princip som WCAG-tallet
+      // over. Sproget læses af `<html lang>`, så den danske side ikke får et
+      // engelsk råd: `label()` findes på begge sprog.
+      var apcaHtml = '';
+      if (global.APCA && typeof global.APCA.contrast === 'function') {
+        var apcaFg = hexToRgb(farveFelt(i).value);
+        var lcTal = null;
+        [effectiveBg(sample.bgMin, i), effectiveBg(sample.bgMax, i)].forEach(function (c) {
+          if (!c) return;
+          var lc = global.APCA.contrast(apcaFg, c);
+          if (lcTal === null || Math.abs(lc) < Math.abs(lcTal)) lcTal = lc;
+        });
+        if (lcTal !== null) {
+          var dokLang = (global.document && global.document.documentElement && global.document.documentElement.lang) || 'en';
+          apcaHtml = '<br><span class="ti-apca" data-ti-apca="' + lcTal.toFixed(1) + '">APCA '
+            + global.APCA.label(lcTal, String(dokLang).slice(0, 2).toLowerCase() === 'da' ? 'da' : 'en') + '</span>';
+        }
+      }
       // Kommer *før* tallet, ikke bagefter: badge'en siger PASS/FAIL, så en
       // læser der kun læser den første linje skal kunne se at tallet stammer
       // fra kernens eget eksempel. `data-ti-demo` er ikke pynt — det er den
@@ -842,6 +868,7 @@
         (passAA && !passAAA ? '<br>' + (s.aaNotAAA || '') + ' (' + fmt(aaaNeed) + ':1).' :
          passAAA ? '<br>' + (s.alsoAAA || '') :
           '<br>' + (s.tryFix || '')) +
+        apcaHtml +
         // Koden ligger lige under tallet og *før* de tre knapper, fordi den
         // er svaret på målingen — de tre er de næste handlinger. Den skriver
         // aldrig en værdi den ikke selv har målt: `hexNu` er farvefeltet.

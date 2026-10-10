@@ -2145,6 +2145,54 @@ function mutated(path, from, to) {
 }
 
 // --------------------------------------------------------------------------
+// 18. Tekst-på-billede-tjekkeren viste kun WCAG-forholdet. Det tal er blindt for
+//     polaritet — 4,5:1 lys-på-mørk læses anderledes end 4,5:1 mørk-på-lys — og
+//     `/contrast-checker` fik derfor APCA Lc ved siden af (feature 56). Den
+//     delte kerne får samme tal for den værst tænkelige pixel bag bogstaverne,
+//     så de fire sider der bruger kernen (`/text-on-image-checker` EN+DA og de
+//     to artikler) viser begge tal.
+//
+//     Falsifiable på den gamle kerne: `data-ti-apca` findes ikke i resultatet,
+//     og uden `/apca.js` preloadet står linjen heller ikke — så dommen er ikke
+//     grøn på hvad som helst. Sproget læses af `<html lang>`: hvert dansk råd
+//     indeholder «tekst» og intet engelsk gør, så en kern der altid svarede
+//     engelsk fanges på den danske side.
+// --------------------------------------------------------------------------
+{
+  const KERNE = 'site/text-on-image-core.js';
+  const SIDER = [
+    { side: 'site/text-on-image-checker.html', res: 'result', sprog: 'EN' },
+    { side: 'site/text-on-image-checker-da.html', res: 'result', sprog: 'DA' },
+    { side: 'site/blog/text-on-image-contrast-check.html', res: 'art-result', sprog: 'EN' },
+    { side: 'site/da/blog/tekst-paa-billede-kontrasttjek.html', res: 'art-result', sprog: 'DA' },
+  ];
+  for (const t of SIDER) {
+    const { nodes } = loadPage(t.side, responses([OK_SCAN]).fetchImpl,
+      { match: /TiContrast\.mount[\s\S]*prefix: '(?:art-|')/, canvas: true, levendeBilleder: true,
+        preload: ['site/apca.js', KERNE] });
+    await sleep(20);
+    const html = (nodes.get(t.res) || {}).innerHTML || '';
+    const m = /data-ti-apca="(-?\d+(?:\.\d+)?)"[^>]*>([^<]*)</.exec(html);
+    ok(`${t.sprog} (${t.side}): resultatet viser et APCA Lc-tal`, !!m,
+      'ingen data-ti-apca i resultatet');
+    // Selve rådteksten, ikke hele resultatet: `--color-text-muted` i en inline
+    // stil indeholder ordet «text» på begge sprog, så dommen skal læse label'en.
+    const raad = m ? m[2] : '';
+    ok(`${t.sprog} (${t.side}): APCA-rådet er på sidens eget sprog`,
+      t.sprog === 'DA' ? /tekst/.test(raad) : /text/.test(raad),
+      `rådet var «${raad}»`);
+  }
+  // Mutation: uden modulet står linjen ikke. Det er den ene ting der gør dommen
+  // ovenfor til en dom over *afhængigheden*, ikke over et fast tekststykke.
+  const uden = loadPage('site/text-on-image-checker.html', responses([OK_SCAN]).fetchImpl,
+    { match: /TiContrast\.mount[\s\S]*prefix: '(?:art-|')/, canvas: true, levendeBilleder: true, preload: [KERNE] });
+  await sleep(20);
+  ok('mutation: uden /apca.js står der intet Lc-tal',
+    !/data-ti-apca/.test((uden.nodes.get('result') || {}).innerHTML || ''),
+    'linjen stod uden modulet');
+}
+
+// --------------------------------------------------------------------------
 // 16. Værktøjet sagde «try a darker colour» og lod læseren regne det ud.
 //     Samme trafikgrund som sektion 15: `/blog/text-on-image-contrast-check` er
 //     mahope.tools' største indgangsside (8 af 18 besøgende, 100 % bounce), og

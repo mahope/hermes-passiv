@@ -11,9 +11,9 @@
   nu ventes ind, til læseren selv har skrevet en adresse.
 - **10/10:** dependabot-PR #3 (undici 7.29.0 → 7.30.0 i `desktop/`) landet og
   lukket: 2 høje + 8 moderate advisories væk fra lockfilen.
-- **10/10:** desktop-lockfilens sidste HØJE sårbarhed (`http-cache-semantics`
-  4.2.0 → 4.3.0 via `overrides`) er lukket; `npm audit` 9 → 8 fund, alle
-  moderate og kun i electron-build-kæden (`sprintf-js` har ingen rettet udgivelse).
+- **10/10:** tekst-på-billede-tjekkeren (EN+DA og de to artikler) viser nu også
+  APCA Lc bag bogstaverne (`ceo/apca-tekst-billede`), så begge kontrastværktøjer
+  taler samme sprog; rådet følger sidens `<html lang>`.
 - 0 åbne review-fund. Sentry: 0 uløste fejl (14 dage). 0 åbne PR'er.
 - **PR-TJEK 10/10:** 0 åbne PR'er (undici-PR landet, se næste punkt).
   **BRANCH-TJEK 9/10:** `origin/ceo/hub-readme-note` kan slettes, men
@@ -29,6 +29,13 @@
 Ingen.
 
 ## Verificér deploy
+
+- **VERIFICÉR DEPLOY:** APCA Lc i tekst-på-billede-tjekkeren
+  `ceo/apca-tekst-billede` 10/10-2026 — tjek at live
+  `https://mahope.tools/text-on-image-checker` og `/text-on-image-checker-da`
+  samt `https://mahope.tools/blog/text-on-image-contrast-check` henter
+  `/apca.js` FØR `/text-on-image-core.js`, at resultatet indeholder `APCA Lc`
+  med et tal, og at rådet på den danske side står på dansk.
 
 - **VERIFICÉR DEPLOY:** Clean Copy-popup + licenskøbslink `ceo/popup-pro-koeb`
   10/10-2026 — tjek at live `https://mahope.tools/downloads/clean-copy-v1.5.3.zip`
@@ -320,4 +327,15 @@ side; tallene er ikke vores egen trafik. Alt det leverede (1–44) står i
        konverteren; licensvalideringen går gennem `net.js` (guiderne indlæser
        det foran embed-scriptet), og `tests/clean-copy-embed.test.mjs` dømmer
        64 kontroller på den shippede kode med den rigtige kerne indlæst.
+
+ 60. **Tekst-på-billede-tjekkeren: APCA Lc bag bogstaverne.** Hvem: de 9+7
+       besøgende/28 d på `/blog/text-on-image-contrast-check` og
+       `/text-on-image-checker` (100 %/71 % bounce). Tal: PRO-tjek på siden er en
+       $79/årslinje, og Lc er det WCAG 3-tal kunder spørger efter. Accept: begge
+       tal står i resultatet på alle fire sider, og rådet følger sidens sprog.
+       Datagrund: `/contrast-checker` fik APCA 10/10 (feature 56); WCAG-forholdet
+       er blindt for polaritet dér, og tekst-på-billede-tjekkeren har samme hul —
+       det er den samme kerne og det samme `site/apca.js`.
+       **LEVERET** `ceo/apca-tekst-billede` — `tests/scan-clients.test.mjs` §18
+       dømmer tallet og sproget på alle fire sider samt mutationen uden modulet.
 

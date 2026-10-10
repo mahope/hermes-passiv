@@ -97,6 +97,33 @@ for (const [navn, fil] of SIDER) {
 }
 
 // ---------------------------------------------------------------------------
+// 4b. Tekst-på-billede-tjekkeren viser også APCA. WCAG-forholdet mod de rå
+//     billedpixels er blindt for polaritet, præcis som farvepar-tjekket var —
+//     så den delte kerne (`site/text-on-image-core.js`) får samme Lc-tal for
+//     den værst tænkelige pixel. Alle fire sider deler kernen, så de skal alle
+//     hente modulet *før* kernen; ellers står linjen bare ikke.
+// ---------------------------------------------------------------------------
+const TEXTPAA_BILLEDE = [
+  ['EN checker', '../site/text-on-image-checker.html'],
+  ['DA checker', '../site/text-on-image-checker-da.html'],
+  ['EN artikel', '../site/blog/text-on-image-contrast-check.html'],
+  ['DA artikel', '../site/da/blog/tekst-paa-billede-kontrasttjek.html'],
+];
+for (const [navn, fil] of TEXTPAA_BILLEDE) {
+  const html = readFileSync(new URL(fil, import.meta.url), 'utf8');
+  const apca = html.search(/<script[^>]+src="\/apca\.js"/);
+  const kerne = html.search(/<script[^>]+src="\/text-on-image-core\.js"/);
+  ok(`${navn}: henter /apca.js`, apca >= 0);
+  ok(`${navn}: henter /apca.js FØR kernen`, apca >= 0 && kerne >= 0 && apca < kerne,
+    `apca ${apca}, kerne ${kerne}`);
+}
+{
+  const kerne = readFileSync(new URL('../site/text-on-image-core.js', import.meta.url), 'utf8');
+  ok('kernen kalder APCA.contrast', /APCA\.contrast\(/.test(kerne));
+  ok('kernen skriver data-ti-apca i resultatet', /data-ti-apca=/.test(kerne));
+}
+
+// ---------------------------------------------------------------------------
 // 5. Modulet kan fejle: vend polariteten og se at et referencetal ændrer sig.
 //    (Beviser at dommen ovenfor ikke er grøn på hvad som helst.)
 // ---------------------------------------------------------------------------

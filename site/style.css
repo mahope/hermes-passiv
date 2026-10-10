@@ -660,6 +660,11 @@ a.ext::after { content: ""; display: inline-block; width: 0.65em; height: 0.65em
 .ti-pass { background: rgba(22,163,74,.12); border: 1px solid rgba(22,163,74,.45); }
 .ti-fail { background: rgba(220,38,38,.10); border: 1px solid rgba(220,38,38,.45); }
 .ti-badge { display: inline-block; padding: 2px 10px; border-radius: 999px; font-weight: 700; font-size: .8rem; color: #fff; }
+/* APCA (WCAG 3-udkastet) ved siden af WCAG-forholdet (10/10). Samme to tal som
+   `/contrast-checker` viser for et farvepar, her for den værst tænkelige pixel
+   bag bogstaverne. Det er en *måling*, ikke en handling — derfor dæmpet som
+   `.ti-note` og ikke en trykflade som `.ti-hex`. */
+.ti-apca { display: inline-block; margin-top: 6px; font-size: .85rem; color: var(--color-text-muted); }
 /* Den målte tekstfarve 3/10. Den ligner `.ti-badge` i form, fordi den står
    lige under den og er samme slags *svar* — ikke en knap i rækken af dem.
    44 px højde og synligt fokus, fordi den er en trykflade. Prøvefeltet er

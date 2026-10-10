@@ -248,6 +248,12 @@ STEPS: tuple[Step, ...] = (
         inputs=(
             "tests/scan-clients.test.mjs",
             "site/net.js",
+            "site/apca.js",
+            "site/text-on-image-core.js",
+            "site/text-on-image-checker.html",
+            "site/text-on-image-checker-da.html",
+            "site/blog/text-on-image-contrast-check.html",
+            "site/da/blog/tekst-paa-billede-kontrasttjek.html",
             "site/compliance-site-check.html",
             "site/da/compliance-site-check.html",
             "site/page-profile.html",
@@ -336,6 +342,14 @@ STEPS: tuple[Step, ...] = (
             "site/apca.js",
             "site/contrast-checker.html",
             "site/contrast-checker-da.html",
+            # APCA-tallet står nu også i tekst-på-billede-tjekkeren: den delte
+            # kerne viser Lc for den værst tænkelige pixel bag bogstaverne, og
+            # dommen læser de fire sider der bruger kernen.
+            "site/text-on-image-core.js",
+            "site/text-on-image-checker.html",
+            "site/text-on-image-checker-da.html",
+            "site/blog/text-on-image-contrast-check.html",
+            "site/da/blog/tekst-paa-billede-kontrasttjek.html",
         ),
     ),
     # Farverne ud af et billede i paletgeneratoren (EN + DA). Generatoren tog
