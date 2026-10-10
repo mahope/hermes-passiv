@@ -74,6 +74,11 @@ SITES: dict[str, dict] = {
             "da/activate/**",
             "extension-zips/**",
             "clean-copy-core.js",
+            # The converter inside the guides: same engine as /clean-copy-tool,
+            # one script that renders it into `#cc-embed`, with batch conversion
+            # behind the same license check. Next to the core because both are
+            # what an article loads next to its own config.
+            "clean-copy-embed.js",
             # Both belong next to the core: /readable.js is the article-finding
             # heuristic that used to be inline on /url-to-markdown and
             # /url-til-markdown, and /convert-check.js is the homepage's

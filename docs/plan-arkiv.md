@@ -9659,3 +9659,24 @@ Planen listede dem som åbne, men arbejdet fandtes:
   `74963e5c` verificeret live — gratis-downloads-knappen, `/da/license-lookup`,
   dansk webværktøj og de fem bog-prøvesider. De tre ældre VERIFICÉR-noter stod
   `DEPLOY OK`.
+
+## Feature-kø 58 — LEVERET 10/10 (`ceo/artikel-konverter`)
+
+cleancopy.tools' tre HTML-to-Markdown-guider (`/blog/html-to-markdown-cli`,
+`/blog/html-to-markdown-vscode`, `/blog/copy-as-markdown-chrome-extension`;
+3+2+2 besøgende/28 d, bounce 50–67 %) indeholder nu den samme konverter som
+`/clean-copy-tool` (`site/clean-copy-embed.js`, markeret `#cc-embed`,
+`window.CC_EMBED = { path: … }`), uden at teksten forlader browseren. Batch er
+Pro bag den samme syvdages-licensregel som værktøjet. Verificering:
+`tests/clean-copy-embed.test.mjs` (64 kontroller) indlæser den RIGTIGE kerne og
+den rigtige `net.js` i en vm-sandkasse, dømmer licensgaten (200/503/403/netfald/
+429), bevægelser i DOM'en, de tre guides' script-rækkefølge, og to mutationer der
+skal gå rød. Gaten: `quality_gate.py` GRØN, 188 steps.
+
+Fund undervejs: licensvalideringen `fetch`'ede `/api/license/validate` direkte,
+og `tools/check_net_copies.py` dømmer at en fil der bruger `NET` andetsteds skal
+kalde ruten gennem kernen. Embed-scriptet sender nu gennem `NET.postJSON`
+(429 endelig, 5xx typet); en side uden `/net.js` får status 0, som
+syvdagesreglen i det kanoniske licensmodul alligevel håndterer. De tre guides
+indlæser `net.js` foran embed-scriptet. `/api/track` forbliver en rå beacon med
+vilje (track.js' egen regel).

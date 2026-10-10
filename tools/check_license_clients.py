@@ -124,6 +124,12 @@ CLIENTS: dict[str, str] = {
     "tools/clean_copy_license.js": "clean-copy-pro",
     "site/clean-copy-tool.html": "clean-copy-pro",
     "site/da/clean-copy-tool.html": "clean-copy-pro",
+    # 10/10: konverteren inde i guiderne (clean-copy-embed.js). Validerer en
+    # nøgle der allerede er aktiveret på /clean-copy-tool — samme oprindelse,
+    # samme localStorage-nøgler — så den er en klient med samme produkt. Den
+    # aktiverer ikke selv, og derfor er der hellen ingen anden grund til at
+    # optræde her end at kontrakten håndhæves.
+    "site/clean-copy-embed.js": "clean-copy-pro",
     "site/compliance-report.html": "eucomply-pro",
     # Opgave 37: nøgleopslaget. Kalder `/api/license/lookup`, som er
     # *opslag* på en nøgle kunden allerede ejer — den kalder hverken
@@ -198,6 +204,10 @@ NOT_CLIENTS = {
     # klient for at dømme at den kalder `/api/license/lookup` — den *er* den
     # klients kode, ikke en kunde indlæser den.
     "tests/license-lookup.test.mjs",
+    # Opgave 58 (10/10): testen af konverteren i guiderne dømmer den shippede
+    # klient (`site/clean-copy-embed.js`) — den nævner ruten for at ramme den i
+    # sandkassen, ikke for at kalde den. Samme grund som de seks over den.
+    "tests/clean-copy-embed.test.mjs",
     # Opgave 3/10: porten over selvbetjent frigørelse af en licensplads. Den
     # læser både `_worker.js` og `/license-lookup` for at dømme at ruten er
     # POST-only, kræver nøglen, og at siden ikke melder succes uden serverens

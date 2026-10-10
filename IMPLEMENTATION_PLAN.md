@@ -1,10 +1,8 @@
 # STATUS
 
-- **10/10:** bog-prøvesiderne lovede en «client-ready report» (`ceo/bogproeve-kopi`).
-  Pro skriver et PDF-funddokument, ikke en færdig kunderapport — det er det
-  separate $69-kit. Fem sider lover nu en PDF, man kan udlevere.
-- **10/10:** STATUS kogt ned fra 33 til 14 linjer (plan-status-porten); de
-  ældste punkter er flyttet til `docs/plan-arkiv.md`.
+- **10/10:** cleancopy.tools' tre HTML-to-Markdown-guider kører konverteren i
+  artiklen (`ceo/artikel-konverter`). Licensvalideringen går gennem
+  `net.js`, så en 429 forbliver endelig; uden kernen holder syvdagesreglen.
 - **10/10:** deskuptime.coms to sider og mahope.tools' to forsider kører ét
   eksempel-tjek ved sidevisning (`ceo/deskuptime-auto-tjek`,
   `ceo/forside-eksempel`); baselineer: deskuptime.com 17 besøgende/28 d,
@@ -30,6 +28,15 @@
 Ingen.
 
 ## Verificér deploy
+
+- **VERIFICÉR DEPLOY:** konverteren i cleancopy.tools' tre artikler
+  `ceo/artikel-konverter` 10/10-2026 — tjek at live
+  `https://cleancopy.tools/blog/{html-to-markdown-cli,html-to-markdown-vscode,
+  copy-as-markdown-chrome-extension}` indeholder `<script src="/net.js"></script>`
+  FØR `<script src="/clean-copy-embed.js"></script>`, at
+  `https://cleancopy.tools/net.js` og `/clean-copy-embed.js` svarer 200, og at
+  formularen i artiklen konverterer (JS-kørsel kan ikke curles — det samme
+  script kører på `/clean-copy-tool`, som er verificeret).
 
 - **VERIFICÉR DEPLOY:** eksempel-tjek på mahope.tools' to forsider
   `ceo/forside-eksempel` 10/10-2026 — tjek at live `https://mahope.tools/` og
@@ -279,11 +286,15 @@ side; tallene er ikke vores egen trafik. Alt det leverede (1–44) står i
       har skrevet en adresse. Dommerne i `tests/scan-clients.test.mjs` §23
       (A/B/C/D) dømmer rødt på den gamle kode: 618/618 kører grønt.
 
-58. **cleancopy.tools: konverteren indeni artiklerne.** Hvem: de 3+2+2 besøgende
-      på de tre html-to-markdown-artikler (bounce 50–67 %). Tal: brug af
-      konverteren og Clean Copy Pro ($19/år). Accept: artiklen kører den samme
-      kerne som `/clean-copy-tool` i browseren, med licenskontrol foran batch.
-      Datagrund: artiklerne linker til værktøjet, men indeholder det ikke —
-      mahope.tools' kontrastartikel har vist, at værktøjet i teksten er hvad der
-      flytter læseren fra læsning til brug.
+ 58. **cleancopy.tools: konverteren indeni artiklerne.** Hvem: de 3+2+2 besøgende
+       på de tre html-to-markdownartikler (bounce 50–67 %). Tal: brug af
+       konverteren og Clean Copy Pro ($19/år). Accept: artiklen kører den samme
+       kerne som `/clean-copy-tool` i browseren, med licenskontrol foran batch.
+       Datagrund: artiklerne linker til værktøjet, men indeholder det ikke —
+       mahope.tools' kontrastartikel har vist, at værktøj i teksten er hvad der
+       flytter læseren fra læsning til brug.
+       **LEVERET** `ceo/artikel-konverter` — de tre guides indeholder
+       konverteren; licensvalideringen går gennem `net.js` (guiderne indlæser
+       det foran embed-scriptet), og `tests/clean-copy-embed.test.mjs` dømmer
+       64 kontroller på den shippede kode med den rigtige kerne indlæst.
 
