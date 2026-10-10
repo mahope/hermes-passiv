@@ -223,6 +223,11 @@
   egne ord, fordi /one-off-check.js er delt af alle forsider. Linkene peger på
   de scannere, der går dybere end ét HTTP-kald. */
 window.ONE_OFF_CHECK = {
+  // Samme grund som deskuptime.com: overskriften spørger, hvad besøgendes eget
+  // site svarer, og uden dette ventede svaret på et tastetryk. 10 besøgende og
+  // 89 % bounce over 28 dage (Plausible, 10/10) — ét eksempel-tjek svarer på
+  // sidens eget spørgsmål ved sidevisning, og kortet siger at det er et eksempel.
+  example: 'example.com',
   then: 'Det var ét kald lige nu. Det siger intet om, om sitet var nede for fem minutter siden, og det ser ikke på én eneste ting på siden — hverken kontrast, overskrifter eller cookies. Det gør scannerne.',
   next: [{label: 'Fuld WCAG-scanning', href: '/scan-da', takesUrl: true}, {label: 'Compliance-tjek', href: '/da/compliance-site-check', takesUrl: true}]
 };

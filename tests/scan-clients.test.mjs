@@ -51,12 +51,35 @@ function el() {
     // læser `innerHTML` tilbage. Uden at `appendChild` gjorde noget, gav den
     // tomme strenge for *alt* gennem esc — også de URLs, resultatet viser, så
     // dommen «begge sites står i resultatet» kunne ikke se dem.
-    appendChild(child) { if (child && typeof child.textContent === 'string') { this._t += child.textContent; this._h = undefined; } this.children.push(child); },
+    appendChild(child) {
+      if (child && typeof child.textContent === 'string') { this._t += child.textContent; this._h = undefined; }
+      // En flyttet node forlader sin gamle ejer — ellers læste `firstChild`
+      // den samme donationslinje for evigt og while-løkken aldrig stoppede.
+      if (child && child._flytterFra) child._flytterFra._h = null;
+      this.children.push(child);
+    },
     // `childNodes` er det DOM-navn de to fordoors-scripts læser: de spørger om
     // rækken med links overhovedet har indhold, inden den hænges på. En stub uden
     // den dør på render-vejen, og en stub hvor den altid er 0 ville fjerne halvdelen
     // af resultatet — dommen ville så kigge på en side der ikke er den, der vises.
     get childNodes() { return this.children; },
+    // `while (holder.firstChild)` er hvordan begge fordoors-scripts flytter
+    // donationslinjen ind i resultatkortet. Markupen er vores egen og fast —
+    // ét `<p class="oc-donate">` med en sætning og ét anker — og en stub uden
+    // `firstChild` kørte løkken aldrig, så enhver dom om donationens
+    // tilstedeværelse var grøn på al kode: der var intet at se. Getteren kan
+    // læses så mange gange den vil (som i en rigtig DOM) og giver først null,
+    // når noden rent faktisk er flyttet: `appendChild` rydder ejerens markup.
+    get firstChild() {
+      const m = /<p class="oc-donate"[^>]*>([\s\S]*?)<\/p>/.exec(String(this._h || ''));
+      if (!m) return null;
+      const ejer = this;
+      return {
+        textContent: m[1].replace(/<[^>]*>/g, ''),
+        _flytterFra: this,
+        remove() { ejer._h = null; },
+      };
+    },
     removeChild() {}, setAttribute() {}, focus() {},
     getAttribute: () => null,
     addEventListener(t, fn) { (this._ls[t] = this._ls[t] || []).push(fn); },
@@ -3052,6 +3075,80 @@ for (const [path, lang, knapTekst, undervejsTekst] of [
     await sleep(30);
     ok(`dom C: ${side.sprog}-uden erklæringen kører forsiden intet af sig selv`,
       state.calls === 0, `kald=${state.calls}`);
+  }
+}
+
+// --------------------------------------------------------------------------
+// 23. mahope.tools' forside svarer også sig selv — og beder ikke om donation
+//     på et svar, ingen bad om.
+//
+// `/` og `/da/` sad i samme mønster som deskuptime.com: 10 besøgende og 89 %
+// bounce over 28 dage (Plausible, 10/10). De to deskuptime-sider løste det med
+// ét eksempel-tjek ved sidevisning; denne dom holder den samme løsning til
+// reglen på den forside, de fleste af mahope.tools' besøgende lander på.
+//
+// Dommen er falsificerbar:
+//  A. Én sidevisning, ét kald til /api/url-inspect, på den erklærede adresse.
+//  B. Kortet skriver at svaret er et eksempel, på sidens eget sprog.
+//  C. Donationen kommer først, når læseren selv har skrevet en adresse. På det
+//     eksempel siden kører af sig selv er der ingen donationslinje: missionen
+//     siger den må aldrig blive påtrængende.
+//  D. Efter læserens eget submit er donationslinjen der igen. Denne dom er med
+//     for at bevise at C ikke bare er grøn fordi stubben aldrig fik vist
+//     donationen — de to hænger sammen.
+// --------------------------------------------------------------------------
+{
+  const OK = { status: 200, body: {
+    inspectUrl: 'https://example.com', finalUrl: 'https://example.com/',
+    finalStatus: 200, finalStatusText: 'OK', totalRedirects: 0, redirectChain: [],
+    ssl: { available: true, daysRemaining: 63, validTo: '2026-12-12T23:59:59Z',
+      issuer: 'DigiCert Global TLS RSA SHA256 2020 CA1', tlsVersion: 'TLSv1_3', chainTrusted: true },
+    securityHeaders: { 'strict-transport-security': 'max-age=31536000' },
+    securityHeadersChecked: ['strict-transport-security', 'content-security-policy',
+      'x-content-type-options', 'x-frame-options', 'x-xss-protection',
+      'referrer-policy', 'permissions-policy', 'access-control-allow-origin']
+  } };
+
+  // Ligger i denne blok, ikke i §22, så denne dom ikke kan afhænge af en
+  // hjælper en anden dom definerer.
+  async function aabenForside(fil, svar) {
+    const { fetchImpl, state } = responses(svar, { skip: [/api\/track/], onCall: null });
+    const { sandbox, nodes } = loadPage(fil, fetchImpl, {
+      preload: ['site/one-off-check.js'],
+      match: /window\.ONE_OFF_CHECK = \{/,
+    });
+    return { sandbox, nodes, state };
+  }
+
+  const FORSIDER = [
+    { f: 'site/index.html', sprog: 'EN', note: /example check/i, donation: /donation/i },
+    { f: 'site/da/index.html', sprog: 'DA', note: /eksempel-tjek/i, donation: /donation/i },
+  ];
+
+  for (const side of FORSIDER) {
+    const { sandbox, nodes, state } = await aabenForside(side.f, [OK]);
+    await sleep(30);
+    const kort = (nodes.get('oc-check-result') || {}).textContent || '';
+    ok(`dom A: ${side.sprog}-forsiden kørte ét eksempel-tjek uden noget klik`,
+      state.calls === 1 && String(state.urls[0] || '').includes('url=https%3A%2F%2Fexample.com'),
+      `kald=${state.calls} url=${JSON.stringify(state.urls)}`);
+    ok(`dom B: ${side.sprog}-eksemplet siger på kortet at det er et eksempel`,
+      side.note.test(kort), `tekst=${JSON.stringify(kort.slice(0, 120))}`);
+    ok(`dom C: ${side.sprog}-eksemplet kommer ikke med en donationslinje`,
+      !side.donation.test(kort), `tekst=${JSON.stringify(kort.slice(0, 200))}`);
+
+    // Dom D: læserens egen adresse — donationen må gerne være der igen.
+    const foer = state.calls;
+    nodes.get('oc-check-url').value = 'https://eksempel-test.dk';
+    nodes.get('oc-check-form').submit();
+    await sleep(30);
+    const eget = (nodes.get('oc-check-result') || {}).textContent || '';
+    ok(`dom D: ${side.sprog}-formularen kører stadig ét kald for læserens egen adresse`,
+      state.calls - foer === 1 && String(state.urls[state.calls - 1]).includes('eksempel-test.dk'),
+      `kald=${state.calls - foer}`);
+    ok(`dom D2: ${side.sprog}-et rigtigt tjek har donationslinjen igen`,
+      side.donation.test(eget) && !side.note.test(eget),
+      `tekst=${JSON.stringify(eget.slice(0, 200))}`);
   }
 }
 

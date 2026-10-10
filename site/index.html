@@ -228,6 +228,11 @@
   hard-codes no product. The links point at the scanners that go deeper than
   one HTTP request. */
 window.ONE_OFF_CHECK = {
+  // Same reason as deskuptime.com: the h1 asks what the visitor's own site
+  // answers, and without this the answer waited for a keystroke. 10 visitors and
+  // 89 % bounce over 28 days (Plausible, 10/10) — one example check answers the
+  // page's own question on load, and the card says it is an example.
+  example: 'example.com',
   then: 'That was one request, just now. It says nothing about whether the site was down five minutes ago, and it does not look at a single thing on the page — no contrast, no headings, no cookies. Those are the scanners.',
   next: [{label: 'Full WCAG scan', href: '/scan', takesUrl: true}, {label: 'Compliance check', href: '/compliance-site-check', takesUrl: true}]
 };

@@ -9655,3 +9655,7 @@ Planen listede dem som åbne, men arbejdet fandtes:
   dobbelt-donation på page-profile, STATUS 35 linjer.
 - **9/10:** page-profiles Pro-kort og fire guides siger nu at sammenligning i
   browseren er gratis (`ceo/page-profile-cta`, `ceo/forsider-pro-prajs`).
+- **10/10:** deployet er aktuelt igen (`bfd9889`/`7154b50a`): alt siden live-stand
+  `74963e5c` verificeret live — gratis-downloads-knappen, `/da/license-lookup`,
+  dansk webværktøj og de fem bog-prøvesider. De tre ældre VERIFICÉR-noter stod
+  `DEPLOY OK`.

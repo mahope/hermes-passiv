@@ -1,15 +1,15 @@
 # STATUS
 
-- **10/10:** deployet er aktuelt igen. CI blev grøn (`bfd9889`/`7154b50a`), og
-  alt siden live-stand `74963e5c` er verificeret live: gratis-downloads-knappen,
-  `/da/license-lookup`, det danske webværktøj og de fem bog-prøvesider. De tre
-  ældre VERIFICÉR-noter står nu `DEPLOY OK`.
 - **10/10:** bog-prøvesiderne lovede en «client-ready report» (`ceo/bogproeve-kopi`).
   Pro skriver et PDF-funddokument, ikke en færdig kunderapport — det er det
   separate $69-kit. Fem sider lover nu en PDF, man kan udlevere.
 - **10/10:** STATUS kogt ned fra 33 til 14 linjer (plan-status-porten); de
   ældste punkter er flyttet til `docs/plan-arkiv.md`.
-- **10/10:** deskuptime.com kører ét eksempel-tjek ved sidevisning (`ceo/deskuptime-auto-tjek`); baseline 17 besøgende/28 d, 100 % bounce, 0 s.
+- **10/10:** deskuptime.coms to sider og mahope.tools' to forsider kører ét
+  eksempel-tjek ved sidevisning (`ceo/deskuptime-auto-tjek`,
+  `ceo/forside-eksempel`); baselineer: deskuptime.com 17 besøgende/28 d,
+  100 % bounce, 0 s; `/`+`/da/` 10 besøgende, 89 % bounce. Donationen skal
+  nu ventes ind, til læseren selv har skrevet en adresse.
 - **10/10:** dependabot-PR #3 (undici 7.29.0 → 7.30.0 i `desktop/`) landet og
   lukket: 2 høje + 8 moderate advisories væk fra lockfilen.
 - **10/10:** desktop-lockfilens sidste HØJE sårbarhed (`http-cache-semantics`
@@ -30,6 +30,13 @@
 Ingen.
 
 ## Verificér deploy
+
+- **VERIFICÉR DEPLOY:** eksempel-tjek på mahope.tools' to forsider
+  `ceo/forside-eksempel` 10/10-2026 — tjek at live `https://mahope.tools/` og
+  `/da/` erklærer `example: 'example.com'` i `ONE_OFF_CHECK`, at kortet ved
+  sidevisning siger «This is an example check»/«Dette er et eksempel-tjek» uden
+  en donationslinje, og at formularen stadig kører ét kald for læserens egen
+  adresse — med donationslinjen efter et rigtigt tjek.
 
 - **VERIFICÉR DEPLOY:** eksempel-tjek på deskuptime.com
   `ceo/deskuptime-auto-tjek` 10/10-2026 — tjek at live
@@ -266,6 +273,11 @@ side; tallene er ikke vores egen trafik. Alt det leverede (1–44) står i
       sidens eget sprog. Datagrund: deskuptime.com sad i samme mønster (17
       besøgende, 100 % bounce, 0 s) og er rettet i `ceo/deskuptime-auto-tjek` —
       det er én linje i `ONE_OFF_CHECK`, ikke ny kode.
+      **LEVERET** `ceo/forside-eksempel`: EN+DA kører ét eksempel-tjek ved
+      sidevisning. Samme ændring flyttede donationslinjen: den kommer ikke mere
+      på et svar, siden kørte af sig selv — den kommer først, når læseren selv
+      har skrevet en adresse. Dommerne i `tests/scan-clients.test.mjs` §23
+      (A/B/C/D) dømmer rødt på den gamle kode: 618/618 kører grønt.
 
 58. **cleancopy.tools: konverteren indeni artiklerne.** Hvem: de 3+2+2 besøgende
       på de tre html-to-markdown-artikler (bounce 50–67 %). Tal: brug af

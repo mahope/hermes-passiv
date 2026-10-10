@@ -297,7 +297,11 @@
     // cannot show before there is a result, and it must never be a button. The
     // markup is ours, not the visitor's, so appending it is not an injection
     // path — same shape as `/scan` and `/url-inspector`.
-    if (window.OC_DONATE) {
+    //
+    // Not on the example a page runs by itself: asking for a donation before the
+    // visitor has done anything is the "never pushy" line, and the example card
+    // already says it is not an answer about their site.
+    if (window.OC_DONATE && !auto) {
       var holder = document.createElement('div');
       holder.innerHTML = window.OC_DONATE;
       while (holder.firstChild) card.appendChild(holder.firstChild);
