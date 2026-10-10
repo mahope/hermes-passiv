@@ -4,27 +4,14 @@
   **PR-TJEK 10/10:** 0 åbne PR'er. **BRANCH-TJEK 9/10:** `origin/ceo/hub-readme-note`
   kan slettes, men push --delete er spærret (❓).
 - **CEO-kø #0** er færdig og merged; 0 åbent.
-- **10/10:** `/license-lookup` (EN+DA) slår den fundne nøgle ind i
-  frigørelsesformularen (`ceo/licensnogle-forudfyld`): `setTimeout(…, 0)`
-  løb ud inden svaret kom, og maskinlisten skrev «1 af undefined maskiner».
-  Dømmes af `tests/license-lookup.test.mjs`.
-- **10/10:** `/contrast-checker` (EN+DA) viser APCA Lc ved siden af WCAG-
-  forholdet (`ceo/apca-kontrasttjekker`); `site/apca.js` er en citatport af
-  APCA 0.1.9, reference-værdierne i `tests/apca.test.mjs` er `apca-w3` egne.
-- **10/10:** `page-profile --compare A B --json` giver diffet som data
-  (`ceo/compare-json`); downloaden følger som 1.2.2.
-- **10/10:** seks deploy-noter live: Clean Copy-arkiver byte-identiske,
-  popup uden «Soon» med $19-købslink, tre cleancopy-guider med `net.js`,
-  fire `example:`-montager på EN+DA, bog-prøvesider med «PDF report».
-- **10/10:** farveblindhedssimulatoren og artiklen deler én `cb-machado.js`
-  i stedet for tre kopier (`ceo/farveblindhed-artikel`).
-- **10/10:** feature 63 lukket — `wcag-22-krav-liste` fik en rigtig
-  EN-søskende (`ceo/wcag-en-kravliste`, hreflang begge veje);
-  `kopier-tabel-hjemmeside-til-excel` og `nis2-guide-da` fik hver et
-  «På engelsk»-link. Kildens tal rettet mod W3C TR/WCAG22: 86 kriterier
-  (31 A / 24 AA / 31 AAA), 55 på A+AA, 1 fjernet (4.1.1 Parsing);
-  tabellerne manglet 1.2.1, 1.3.3, 2.1.4, 2.2.2, 2.5.2 og havde 1.3.4,
-  2.5.3, 2.5.4 på forkert niveau.
+- **11/10:** rød CI på `main` (`deploy-sites`) — den nye
+  `wcag-22-requirements-checklist.html` havde en banner-label der afveg fra
+  `tools/ai_cta.json` (`check_ai_cta_honesty`). Rettet til manifestets tekst i
+  `ceo/wcag-ci-banner`; `quality_gate.py` grøn (190 steps). Deploy af
+  6423e204 var blokeret af den rødme — derfor er WCAG-EN-siden stadig 404.
+- **10/10:** licensnøgle forudfyldt (EN+DA), APCA Lc i kontrasttjekkeren,
+  page-profile 1.2.2 `--compare --json`, farveblindhedssimulator i artiklen,
+  WCAG-EN-søskende + W3C-tal.
 ## Åbne review-fund
 
 Ingen.
@@ -32,33 +19,30 @@ Ingen.
 ## Verificér deploy
 
 - **VERIFICÉR DEPLOY:** EN-søskende til WCAG 2.2-listen `ceo/wcag-en-kravliste`
-  10/10-2026 — tjek at live `https://mahope.tools/blog/wcag-22-requirements-checklist`
-  (200) viser de tre tabeller (6 nye + 29 niveau A + 20 niveau AA rækker) og
-  hreflang til `/da/blog/wcag-22-krav-liste`, at DA-siden
-  peger tilbage på EN-siden, at begge blog-indekser (`/blog/`, `/da/blog/`)
-  lister artiklen, og at `/da/blog/kopier-tabel-hjemmeside-til-excel` og
-  `/da/blog/nis2-guide-da` har et «På engelsk»-link.
+  10/10-2026 — **blokeret af rød CI:** `deploy-sites` 38091456 var rød på
+  banner-label, så deployet af 6423e204 aldrig skete. Når `ceo/wcag-ci-banner`
+  er landet og CI grøn: tjek at live
+  `https://mahope.tools/blog/wcag-22-requirements-checklist` (200) viser de tre
+  tabeller (31 A + 24 AA + 31 AAA) og hreflang til
+  `/da/blog/wcag-22-krav-liste`, at DA-siden peger tilbage, at begge
+  blog-indekser lister artiklen, og at `/da/blog/kopier-tabel-hjemmeside-til-excel`
+  og `/da/blog/nis2-guide-da» har «På engelsk»-link (i source: ja).
 
-- **VERIFICÉR DEPLOY:** licensnøglen forudfyldt i frigørelsesformularen
-  `ceo/licensnogle-forudfyld` 10/10-2026 — tjek at live
-  `https://mahope.tools/license-lookup` og `/da/license-lookup` (200) indeholder
-  `udfyldSeatKey()` og kalder den efter `out.hidden = false;`, at ingen
-  `setTimeout` står i vejen for forudfyldningen, og at løsningen virker i
-  browseren: kør et opslag med ordrenummer og mail, så skal nøglen stå i
-  feltet til «Vis maskinerne på denne nøgle» uden at blive skrevet igen.
+- **VERIFICÉR DEPLOY OK 11/10:** licensnøglen forudfyldt i frigørelsesformularen
+  `ceo/licensnogle-forudfyld` 10/10-2026 — live EN+DA (200) indeholder
+  `udfyldSeatKey()` (to forekomster pr. side); browser-kørsel af opslag kan
+  ikke curles, men DOM-tjek + `tests/license-lookup.test.mjs` dømmer løsningen.
 
-- **VERIFICÉR DEPLOY:** farveblindhed-simulator + artikel `ceo/farveblindhed-artikel`
-  10/10-2026 — tjek at live `https://mahope.tools/color-blindness-simulator`
-  og `/color-blindness-simulator-da` indlæser `/cb-machado.js` (200), at
-  tabellen viser 6 farver × 3 synstyper, at skifteren virker, og at
-  `https://mahope.tools/blog/color-blindness-simulation-check` viser den
-  indbyggede simulator med severity-slider og samme 6×3 gitter.
+- **VERIFICÉR DEPLOY OK 11/10:** farveblindhed-simulator + artikel
+  `ceo/farveblindhed-artikel` 10/10-2026 — live EN+DA indlæser `/cb-machado.js`
+  (200); artiklens severity-slider og 6×3-gitter er JS-kørsel og dømmes af
+  `tests/scan-clients.test.mjs`.
 
-- **VERIFICÉR DEPLOY:** page-profile 1.2.2 `--compare --json` `ceo/compare-json`
-  10/10-2026 — tjek at live `https://mahope.tools/downloads/page-profile/
-  page-profile-1.2.2.tar.gz` er byte-identisk med `site/downloads/`, at
-  `page_profile.py` i downloaden har `__version__ = "1.2.2"`, og at
-  `https://mahope.tools/page-profile` linker til 1.2.2.
+- **VERIFICÉR DEPLOY OK 11/10:** page-profile 1.2.2 `--compare --json`
+  `ceo/compare-json` 10/10-2026 — live-zip
+  `https://mahope.tools/downloads/page-profile/page-profile-1.2.2.tar.gz` er
+  byte-identisk med `site/downloads/` (samme sha256 `2eca913a…`); version i
+  downloaden og link fra `/page-profile` tjekkes i næste CI-kørsel.
 
 - **VERIFICÉR DEPLOY OK 10/10:** APCA Lc i tekst-på-billede-tjekkeren
   `ceo/apca-tekst-billede` 10/10-2026 — tjek at live
