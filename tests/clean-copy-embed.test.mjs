@@ -348,6 +348,74 @@ const VALID = { status: 200, json: { ok: true, valid: true, plan: 'pro-yearly', 
 }
 
 // --------------------------------------------------------------------------
+// 7b. De to forsider på cleancopy.tools har den samme konvertering.
+//
+// Forsiden er sitets største side (24 besøgende/28 dage, Plausible 11/10,
+// 86 % bounce) og sender i dag læseren til /clean-copy-tool for at sætte
+// noget ind. Guiderne viste mønstret: konverteringen skal være der, hvor
+// læseren er. Tre domme pr. side — beholderen, stien og de to script-tags i
+// den rækkefølge licenskaldet har brug for — og de dømmer rødt på den gamle
+// forside, fordi den slet ikke indeholder `cc-embed`.
+// --------------------------------------------------------------------------
+{
+  // De fem domme en side skal bestå for at levere konverteringen. Skrevet som
+  // en funktion, fordi mutationerne nedenfor skal kunne spørge den om en side
+  // der ligner den rigtige, men mangler én del — ellers bevises det ikke at
+  // dommene bider.
+  function forsideFund(html, sti) {
+    const fund = [];
+    if (!/<div id="cc-embed"><\/div>/.test(html)) fund.push('beholderen');
+    if (html.indexOf(`window.CC_EMBED = { path: '${sti}' }`) === -1) fund.push('stien');
+    // Forsidens egne scripts er `defer` (guiderne står i bunden af body'en og
+    // har ikke brug for det), så tagget matches på src og ikke på en fast
+    // streng — ellers dømmer testen en notationsforskel som en manglende fil.
+    const harTag = (fil) => new RegExp('<script[^>]+src="/' + fil + '"').test(html);
+    if (!harTag('clean-copy-core.js') || !harTag('clean-copy-embed.js')) fund.push('script-tags');
+    else {
+      const netIdx = html.indexOf('src="/net.js"');
+      const embedIdx = html.indexOf('src="/clean-copy-embed.js"');
+      // net.js skal stå FØR embed-scriptet: licenskaldet kører med det samme.
+      if (netIdx === -1 || netIdx > embedIdx) fund.push('net.js-raekkefoelge');
+    }
+    return fund;
+  }
+
+  const forsider = [
+    ['site/clean-copy.html', '/'],
+    ['site/da/clean-copy.html', '/da/'],
+  ];
+  for (const [fil, sti] of forsider) {
+    const html = readFileSync(join(root, fil), 'utf8');
+    ok(`forside: ${fil} leverer konverteringen`, forsideFund(html, sti).length === 0,
+      forsideFund(html, sti).join(', '));
+    // To konverteringer på én side skal ikke lyve om hinanden: siden siger
+    // selv, at URL-konverteringen er den ene undtagelse, og at den nye
+    // indsætnings-konvertering ikke sender noget.
+    ok(`forside: ${fil} skelner de to konverteringer i privatlivsspørgsmålet`,
+      /one exception on this site|ene undtagelse på sitet/.test(html),
+      'privatlivsspørgsmålet nævner ikke undtagelsen');
+  }
+
+  // Mutationer: forside-koden uden ét af delene. Dommene herover skal være
+  // røde på den — en test der kun er grøn på koden den er skrevet med, ingen
+  // gør fåger.
+  const en = readFileSync(join(root, 'site/clean-copy.html'), 'utf8');
+  const udenTag = en.replace('<script defer src="/clean-copy-embed.js"></script>', '');  ok('mutation: embed-script-tagget kan fjernes fra kilden', udenTag !== en);
+  ok('mutation: uden script-tagget dømmes forside-dommen rød',
+    forsideFund(udenTag, '/').indexOf('script-tags') !== -1, forsideFund(udenTag, '/').join(', '));
+
+  const udenSti = en.replace("window.CC_EMBED = { path: '/' };", '');
+  ok('mutation: stien kan fjernes fra kilden', udenSti !== en);
+  ok('mutation: uden stien dømmes forside-dommen rød',
+    forsideFund(udenSti, '/').indexOf('stien') !== -1, forsideFund(udenSti, '/').join(', '));
+
+  const udenBeholder = en.replace('<div id="cc-embed"></div>', '');
+  ok('mutation: beholderen kan fjernes fra kilden', udenBeholder !== en);
+  ok('mutation: uden beholderen dømmes forside-dommen rød',
+    forsideFund(udenBeholder, '/').indexOf('beholderen') !== -1, forsideFund(udenBeholder, '/').join(', '));
+}
+
+// --------------------------------------------------------------------------
 // 8. Kaldet går gennem den rigtige net.js: en 429 er endelig og viser
 //    serverens egen sætning — ikke en genkaldt kvote.
 // --------------------------------------------------------------------------

@@ -57,10 +57,19 @@
       <a href="#install" class="btn-secondary">Installér</a>
       <a href="https://github.com/mahope/clean-copy" class="btn-secondary">Kildekode på GitHub</a>
     </div>
-    <span class="hero-note">Gratis og MIT-licenseret. Din tekst konverteres på din egen maskine — ingen konto, ingen server, ingen tekst sendes nogen steder hen. En Pro-licensnøgle tjekkes online mod mahope.tools.</span>
+    <span class="hero-note">Gratis og MIT-licenseret. Din tekst konverteres på din egen maskine — ingen konto, ingen server. Den ene undtagelse er URL-konverteringen ovenfor: vores server læser den side én gang, fordi en browser ikke selv kan hente en side på et andet domæne. En Pro-licensnøgle tjekkes online mod mahope.tools.</span>
     <p class="hero-note">Den gratis version er komplet, ikke en prøveversion. <a href="#priser">Se hvad Clean Copy Pro — $19/år tilføjer, side om side</a>.</p>
   </div>
 </div>
+
+<section id="indsat">
+  <div class="container">
+    <h2>Eller sæt det ind, du allerede har kopieret</h2>
+    <p>Kopiér en tabel, en kodeblok eller en del af en artikel på en vilkårlig side, og sæt den ind her. Det er den samme konvertering som ovenfor, den kører i denne fane, og resultatet er Markdown, du kan sætte direkte ind i Obsidian, en README, en ticket eller en mail.</p>
+    <div id="cc-embed"></div>
+    <script>window.CC_EMBED = { path: '/da/' };</script>
+  </div>
+</section>
 
 <section>
   <div class="container">
@@ -180,7 +189,7 @@ npx github:mahope/clean-copy-cli side.html   # kør uden at installere</code></p
     </details>
     <details>
       <summary>Sender den min tekst nogen steder hen?</summary>
-      <p>Den tekst, du konverterer, gør ikke. Extensionen har ingen server, og mens du kopierer, laver den overhovedet ingen netværkskald. CLI'en laver kun en request, når du beder den hente en URL. Konvertereren øverst på denne side er den ene undtagelse på sitet: den sender den adresse, du skriver, til vores server én gang, så den kan hente siden — en browser kan ikke selv hente en side på et andet domæne. HTML'en kommer tilbage og konverteres her i din fane, og vi gemmer hverken adressen eller siden.</p>
+      <p>Den tekst, du konverterer, gør ikke. Extensionen har ingen server, og mens du kopierer, laver den overhovedet ingen netværkskald. CLI'en laver kun en request, når du beder den hente en URL. URL-konvertereren øverst på denne side er den ene undtagelse på sitet: den sender den adresse, du skriver, til vores server én gang, så den kan hente siden — en browser kan ikke selv hente en side på et andet domæne. HTML'en kommer tilbage og konverteres her i din fane, og vi gemmer hverken adressen eller siden. Indsætnings-konvertereren længere nede sender ikke noget som helst.</p>
       <p><strong>Én undtagelse:</strong> hvis du aktiverer en Clean Copy Pro-licensnøgle, sendes nøglen og et tilfældigt enheds-id til <code>mahope.tools</code>, så licensen kan valideres. De sider du besøger og den tekst du kopierer sendes aldrig. Uden en Pro-nøgle sendes intet overhovedet.</p>
     </details>
     <details>
@@ -223,5 +232,6 @@ window.CC_DONATE = '<p class="oc-donate">Det er gratis at konvertere en side. Hv
 <script defer src="/clean-copy-core.js"></script>
 <script defer src="/readable.js"></script>
 <script defer src="/convert-check.js"></script>
+<script defer src="/clean-copy-embed.js"></script>
 </body>
 </html>

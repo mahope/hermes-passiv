@@ -9709,3 +9709,246 @@ vilje (track.js' egen regel).
 
 - **11/10:** feature 65 LEVERET (`ceo/eksempel-i-syne`). Plausible målte 19 besøgende, 100 % bounce og 0 s på deskuptime.com over 28 dage. Årsagen der kunne handles på: eksempel-tjekket kørte ved sidevisning (feature 57/54), men kortet med svaret starter under formularfeltet på en 390 px-skærm, så beviset aldrig blev set, og kortets to `next`-knapper var ankre til samme side. `site/one-off-check.js` har ny `bringExampleIntoView(auto, node)`: sidevisningens eget eksempel rulleres i syne med `scrollIntoView` (smooth, eller `auto` ved `prefers-reduced-motion``) kun når (1) kortet kom fra eksemplet, (2) `scrollY` er 0, (3) `getBoundingClientRect().top` ligger under `innerHeight - 80`. En læser der har skrevet en adresse selv flytter aldrig siden. `next` på EN+DA forsideen byder på `/blog/desktop-website-monitor-cli` — bygget spejler de fire `/blog/…`-links på siden allerede til `https://mahope.tools/...`, så linket ikke er en 404 (tjekket live: ruten findes på mahope.tools, men ikke i deskuptime-distet). Dommer: `tests/scan-clients.test.mjs` §24 (A/B/C × EN/DA) med stub-sandbox (kort under folden, `scrollY` 0, `matchMedia` reduce-motion sand); mutationen er funktionen uden de tre betingelser. Gate: 191 steps GRØN.
 - **11/10:** scan-rapporten (`ceo/scan-rapport`) verificeret live: `/scan` og `/scan-da` indlæser `/scan-report.js` (200) inden egen inline-kode, «Download the report»/«Hent rapporten» findes to gange pr. side (curl).
+
+---
+
+- `ITERATION_ID`: `forside-indsaet-konverter-2026-10-11`
+- `TITEL`: cleancopy.tools' to forsider får konverteren i siden.
+- `HVAD`: `site/clean-copy.html` (`/`) og `site/da/clean-copy.html` (`/da/`) indeholder nu `#cc-embed` + `window.CC_EMBED` + `clean-copy-core.js` og `clean-copy-embed.js` i den rækkefølge `net.js` har brug for. Samme kerne som `/clean-copy-tool`, fire tilstande, tekst konverteres i fanen. Hero-nottens og privatlivs-FAQ'ens løfte er rettet, så URL-konverteringen øverst på siden aldrig mere bliver kaldt "den ene undtagelse" uden at sige hvilken; den nye indsætnings-konverter nævnes som den, der intet sender. Pro-nudgen med batch kommer med scriptet, og dens købsknap peger på det rigtige Stripe-link (`6oU4gy76PgvgdBIdAXbMQ00`).
+- `GATE`: **GRØN.** `python3 tools/quality_gate.py` → **GRØN — 191 steps**. De fire missionens kommandoer hver for sig: `build_sites.py`, `seo_check.py`, `stripe-worker.test.mjs` (509/509), `check_inline_js.py`. `tests/clean-copy-embed.test.mjs` 74/74 (fra 64 — ti nye domme på forsiderne, inkl. tre mutationer der fjerner ét af delene fra kilden). `tools/check_url_handoff.py --self-test` 21/21 (fra 18): `BLOK_SLUT` lukker nu også en erklæring på én linje, og `vinduer()` dømmer alle `window.X`-blokke på siden i stedet for det første — ellers havde forsidens `CC_EMBED` sluget `CONVERT_CHECK`'s blok og fået dens `next`-poster tilskrevet. `tools/check_product_copy.py --self-test` 27/27 og fuld kørsel grøn. `quality_gate.py`s `inputs` og `deploy-sites.yml`s path-filter urørt (ingen ny testfil, ingen ny rute).
+- `MÅLING (før → efter)`: konverteringer i siden på cleancopy.tools' forsider: **0 → 1** pr. sprog. Baseline (Plausible 11/10): `/` 24 besøgende/28 d, 86 % bounce; `/da/` 2 besøgende. Målt i rigtig Chromium over en lokal `http.server` (ikke `file://` — der indlæses `style.css` ikke): 390 px og 1280 px, lys og mørk, 0 px vandret scroll på siden, `#cc-embed` fyldt, textarea til stede. `<pre class="term">` ruller internt (`overflow-x: auto`), det er ikke sidens egen scroll.
+- `DEAKTIVERET`: `file://`-måling gav 595 px `scrollWidth` og `overflow-x: visible` på `pre.term` — begge fordi stylesheetet ikke blev indlæst. Gengældt med `http.server`, hvor det viser 390/390 og `auto`.
+
+### Flyttet fra planens Feature-kø (alle LEVERET)
+
+side; tallene er ikke vores egen trafik. Alt det leverede (1–44 og 45–60) står i
+`docs/plan-arkiv.md`.
+
+  65. **deskuptime.com: svaret skal kunne ses, og der skal være et næste skridt.**
+         Hvem: de 19 besøgende/28 d på `/` (100 % bounce, 0 s). Tal: fra 0 s til
+         en set figur og CTR til artiklen, CLI'en og Pro ($19 engang). Accept:
+         eksemplet rulleres i syne ved sidevisning på 390 px, aldrig efter et
+         eget tryk, og kortets næste-trin rummer mindst én rigtig rute.
+         Datagrund: kortet starter under formularfeltet på en telefon, så beviset
+         aldrig bliver set, og de to knapper var ankre til samme side (Plausible,
+         11/10).
+         **LEVERET** `ceo/eksempel-i-syne` 11/10: `bringExampleIntoView` i
+         `site/one-off-check.js` — kun sidevisningens eget eksempel flyttes, kun
+         når læseren ikke har rullet (`scrollY` 0), kun når kortet starter under
+         viewporten, og `prefers-reduced-motion` får hoppet uden gliden. Kortets
+         `next` på EN+DA byder på `/blog/desktop-website-monitor-cli`, som
+         bygget spejler til mahope.tools i dist (de fire eksisterende
+         `/blog/…`-links på siden gør allerede det). `tests/scan-clients.test.mjs`
+         §24 (dom A/B/C, seks linjer) dømmer rødt uden betingelserne: mutationen
+         er funktionen uden tre betingelser.
+  61. **`/color-blindness-simulation-check` skal køre simulatoren i artiklen.**
+        Hvem: de 6 besøgende/28 d på `/color-blindness-simulator` (67 % bounce).
+        Tal: brug af simulatoren, PRO-tjek og videre til `/scan`/EUComply Pro
+        ($79/år). Accept: artiklen indlæser samme kerne som simulatoren og viser
+        resultatet i en figur, uden at forlade siden. Datagrund: præcis det
+        mønster der flyttede kontrastartikken (`/blog/text-on-image-contrast-check`,
+        feature 60) og cleancopy' tre html-to-markdown-guider (feature 58); i dag
+        har artiklen intet `<script>` og sender læseren til værktøjet.
+        **LEVERET** i `ceo/farveblindhed-artikel` (10/10): artiklen indlæser
+        `/cb-machado.js` og kører den samme simulering på 6 farver × 3 synstyper
+        med severity-slider, så læseren ser resultatet uden at forlade siden.
+ 62. **deskuptime.com: fler-URL-tjek på `/bulk-url-checker/`, med ét inputfelt.**
+        Hvem: de 16–17 besøgende/28 d på `/` (100 % bounce, 0 s). Tal: kørte
+        tjek og CTR til CLI/Pro ($19 engang). Accept: indsæt adresser én pr.
+        linje, kør dem i browseren, få én tabel med status/redirects/TLS. Default-
+        siden henviser ikke til denne rute i dag (1 besøgende). Datagrund: det er
+        det Pro-træk Produkt-køen allerede sælger (batch i CLI'en), og en gratis
+        smagsprøve er den billigste vej fra et 0-sekunds besøg til en læsning.
+        **LEVERET** (målt 10/10): ruten `/bulk-url-checker/` svarer 200 på
+        deskuptime.com, læser adresser én pr. linje (op til 10), kører dem i
+        browseren mod `deskuptime-quickcheck.mahope-eeb.workers.dev` (målt live:
+        CORS `*`, svar med status/responseMs/redirect/sslDaysRemaining) og skriver
+        én tabel; EN-forsiden (`/` sektionen «Free web tools») og DA-forsiden
+        linker til den, og `/tools/` gør det samme.
+ 63. **`site/blog/` opdeler sig på sprog i sitemap'et.** Hvem: dem der søger på
+        danske værktøjsord. Tal: danske indgange og DA-Pro-køb. Accept: **94 af
+        97 er leveret** — `/da/blog/` viser de 97 danske guider med link til
+        EN-indekset (ikke længere «96 Danish guides»), 94 af 97 DA-artikler har
+        `hreflang="en"` til sin modpart, og `tools/check_hreflang_pairs.py`
+         dømmer at hver EN-side har præcis én DA-søskende. Resten **LEVERET**
+         `ceo/wcag-en-kravliste`: ingen af de tre var en oversættelse —
+         `kopier-tabel-til-excel` er allerede den rigtige DA-side for
+         `copy-table-from-website-to-excel` (samme fire overskrifter, samme
+         rækkefølge), og `nis2-beredskabstjek-2026` er allerede DA-siden for
+         `nis2-readiness-guide`. Derfor fik `wcag-22-krav-liste` en **rigtig**
+         EN-søskende skabt ud fra kilden (`/blog/wcag-22-requirements-checklist`,
+         de samme 50 kriterier i tre tabeller), med hreflang i begge retninger,
+         og de to danske originaler fik hver et «På engelsk»-link til nærmeste
+         EN-guide. Datagrund: en DA-side uden par er usynlig for Googles
+         sprogvalg; et hreflang-par mellem ikke-oversættelser var en løgn.
+         Undervejs rettet (W3C TR/WCAG22 som kilde): kildens tal var forkerte —
+         «87 kriterier (30/20/37)» og «50 krav på A+AA». WCAG 2.2 har 86
+         succeskriterier (31 A, 24 AA, 31 AAA), 55 på A+AA, seks nye på A/AA og
+         tre nye på AAA, og præcis ét (4.1.1 Parsing) er fjernet. Tabellerne
+         manglede desuden 1.2.1, 1.3.3, 2.1.4, 2.2.2 og 2.5.2 og placerede
+         1.3.4 under A samt 2.5.3/2.5.4 under AA; alt er flyttet og tilføjet, så
+         den nye EN-side og `/da/blog/wcag-22-krav-liste` nu begge viser 55
+         krav. `wcag-22-what-changes` + `wcag-22-aendringer` siger nu også ét
+         fjernet kriterie i stedet for fire.
+
+ 59. **Clean Copy: popup'en skal sælge Pro, ikke love «Soon».** Hvem: de 8–9
+       besøg/7 d på de to mest hentede arkiver i familien (firefox 9, chrome 8).
+       Tal: klik til køb og Clean Copy Pro-aktiveringer. Accept: popup'en viser
+       PRO-badge uden «Soon», og licenssiden har ét købslink til $19/årslinket.
+       Datagrund: Pro har været til salg siden 24/9; en Activate-knap uden
+       købslink var det sidste brudte led i købsvejen for gratis-brugeren.
+       **LEVERET** `ceo/popup-pro-koeb` — badge rettet i `popup.js` og i den
+       statiske `popup.html`-fallback, Stripe-købslink på licenssiden (skjult
+       når Pro er aktiv), arkiver genbygget byte-identisk, og
+       `tests/clean-copy-pro-popup.test.mjs` dømmer både kilden og arkiverne
+       (12 fejl på gammel kode). Porten `check_stripe_ctas.py` sprang
+       klient-filer over i to retninger, fordi en MV3-side hverken kan indlæse
+       `/track.js` eller poste til same-origin `/api/track` — klikket måles på
+       Stripe-webhooken og på aktiveringen.
+
+51. **`/page-profile`: sammenlign to URL'er i browseren.** Hvem: SEO-bureauer.
+      Tal: konvertering til Page Profile Pro ($19/år). Accept: to URL-felter, én
+      diff med score-forskel pr. kontrollpunkt, Pro-funktionen bag licenskontrol.
+      Datagrund: CLI'en har allerede `--compare`; web-siden profilerte én URL.
+      **LEVERET** `ceo/page-profile-compare` — live verificeret 9/10 (to felter
+      + «Compare»).
+52. **`/free-downloads`: én købsknap til de betalte skabelonsæt.** Hvem: de 25
+      downloadbesøg/uge på mahope.tools. Tal: konvertering til de betalte
+      skabeloner ($29–$149) og EUComply Pro ($79/år). Accept: hubben viser pr.
+      gratis fil hvad den dækker og har én købsknap der virker. Datagrund:
+      privacy-policy-template.md (5) og ropa-template.md (3) er de mest hentede
+      filer, og hubben har i dag intet købsanker.
+      **LEVERET** `ceo/free-downloads-paid-path` — kortet «When the free files
+      are not enough» med én EUComply Pro-knap og vej til `/paid-templates`.
+
+53. **cleancopy.tools: dansk udgave af web-værktøjet.** Hvem: de 3 besøgende/28
+     dage på `/da/`-stierne. Tal: konvertering til Clean Copy Pro ($19/år).
+     Accept: `/da/clean-copy-tool` med batch og licensaktivering på dansk.
+     Datagrund: DA-forsiden lover batch-konvertering «i webværktøjet», men
+     værktøjet findes kun på engelsk. **LEVERET** `ceo/clean-copy-da-tool`.
+
+45. **e-bøger: læs kapitel 1 gratis i browseren.** Hvem: dem der laster de seks
+     EPUB'er (top-downloads). Tal: downloads og konvertering til $29-bundlet.
+     Accept: en prøveside der viser det første kapitel og linker til bundlet.
+     Datagrund: `/books/` er top-download, men der er ingen vej fra læsning til køb.
+     **LEVERET** `ceo/bog-proeveside` + `ceo/bog-forhaandsvisning` (seks prøvesider);
+     den betalte vej (EUComply Pro på `/compliance-report`) kom i
+     `ceo/bogproeve-betalt-vej` 9/10.
+46. **cleancopy.tools: batch-konverter i web-værktøjet.** Hvem: de 18 besøgende/28d
+     (bounce 81%). Tal: konvertering til Clean Copy Pro ($19/år). Accept: indsæt
+     flere HTML-bidder, få flere Markdown-bagter. Datagrund: Pro-funktion bag
+     licenskontrol (open-core), web-værktøjet er den gratis indgang.
+     **LEVERET** — batch-sektionen kører i EN og DA bag licenskontrollen.
+47. **GitHub Action for eaa-scanner.** Hvem: de 91 npm-downloads/uge. Tal:
+     adoption. Accept: `action.yml` der scanner og uploader SARIF. Datagrund:
+     SARIF-outputet (feature 38) findes; kræver Marketplace-publicering (❓).
+     **LEVERET** `ceo/eaa-github-action` — live på `/downloads` verificeret.
+48. **/page-profile: sammenlign to URL'er.** Hvem: SEO-bureauer. Tal: konvertering
+      til Page Profile Pro ($19/år). Accept: `page-profile --compare A B` giver
+      en diff. Datagrund: Pro-funktionen findes ikke endnu; CLI'en har allerede
+      score og grade.
+      **LEVERET** `ceo/compare-json` — `--compare A B --json` returnerer
+      `score_delta`, `verdict`, `differences` (med rigtige værdier) samt
+      `only_a_issues`/`only_b_issues`, så ét kald kan sættes i CI. Terminaludgaven
+      viser kun de felter der afviger plus «N af 12 fields identical».
+      Dommer: `page-profile/test_page_profile.py` §`PageProfileCompareTests`
+      (3 tests, dømmer rødt på 1.2.1). Download-kopien og arkivet er 1.2.2; de to
+      compare-artikler (EN/DA) lovede allerede `--json` i CI uden at kommandoen
+      fandtes.
+49. **Guide: farveblindhedssimulering.** Hvem: de 5 besøgende/28d på
+     `/color-blindness-simulator` + 9 på kontrastartiklen. Tal: trafik til
+     simulatoren og videre til `/scan`/EUComply Pro. Accept: EN+DA-guide med
+     målte tal. **LEVERET** `ceo/farveblindhed-artikel`.
+54. **`deskuptime.com`: 11 besøg, 100 % bounce, 0 s besøgstid.** Hvem: alle der
+      lander på forsideen. Tal: fra 0 s til en reel læsning, og CTR til CLI/Pro.
+      Accept: fundet og rettet hvad der får besøgende til at forlade siden med det
+      samme (0 s tyder på fejl før indholdet vises). Datagrund: Plausible
+      28 dage: besøgstid 0 s og bounce 100 % — den eneste af de tre måldomæner.
+      **LEVERET** `ceo/deskuptime-auto-tjek` (kunne ikke bevise en fejl: alle
+      aktiver 200, `/api/url-inspect` svarer). Rettet på den tætteste grund:
+      h1'en spurgte tre ting, og svaret ventede på et tastetryk ingen kom med.
+      EN+DA kører nu ét selvvalgt eksempel ved sidevisning (gennem
+      `example:` i `ONE_OFF_CHECK`), kortet siger at det er et eksempel, og
+      `#url=`-håndflek og et allerede afsendt submit annullerer det.
+      Dommerne i `tests/scan-clients.test.mjs` §22 (A–E) dømmer rødt på den gamle
+      kode: 608/608 kører grønt.
+55. **EUComply: kundeklar rapport ud af det frie multi-site-tjek.** Hvem: bureauer
+      med kunder. Tal: flytter en $79/årslinje. Accept: rapport-knappen på
+      checket der fører til `/paid-templates` eller Pro. Datagrund: spørger Mads
+      først (🟡 i ❓) — rapportkittet til $69 er den nærmeste eksisterende vej.
+56. **`/contrast-checker`: APCA Lc ved siden af WCAG-forholdet.** Hvem: alle der
+      tjekker kontrast — kontrasttjekkeren er den mest brugte gratis indgang til
+      EUComply Pro. Tal: PRO-tjek på siden er en $79/årslinje, og Lc er det
+      WCAG-3-tal kunder spørger efter. Accept: både EN og DA viser Lc pr. par i
+      både enkelt- og batch-tjekket. **LEVERET** `ceo/apca-kontrasttjekker`.
+      Baseline: siden står ikke i Plausibles top-sider (ikke målelig fra
+      promptens data), så effekten måles via PRO-tjek på `/api/stats` (❓).
+
+57. **mahope.tools `/`: fordsiden skal også svare sig selv.** Hvem: de 10
+      besøgende/28 d på `/` (89 % bounce — målt 10/10). Tal: fra bounce til et
+      set eksempel-svar, og videre til `/scan` og EUComply Pro ($79/år).
+      Accept: `/` erklærer `example:` så eksemplet kører ved sidevisning, på
+      sidens eget sprog. Datagrund: deskuptime.com sad i samme mønster (17
+      besøgende, 100 % bounce, 0 s) og er rettet i `ceo/deskuptime-auto-tjek` —
+      det er én linje i `ONE_OFF_CHECK`, ikke ny kode.
+      **LEVERET** `ceo/forside-eksempel`: EN+DA kører ét eksempel-tjek ved
+      sidevisning. Samme ændring flyttede donationslinjen: den kommer ikke mere
+      på et svar, siden kørte af sig selv — den kommer først, når læseren selv
+      har skrevet en adresse. Dommerne i `tests/scan-clients.test.mjs` §23
+      (A/B/C/D) dømmer rødt på den gamle kode: 618/618 kører grønt.
+
+ 58. **cleancopy.tools: konverteren indeni artiklerne.** Hvem: de 3+2+2 besøgende
+       på de tre html-to-markdownartikler (bounce 50–67 %). Tal: brug af
+       konverteren og Clean Copy Pro ($19/år). Accept: artiklen kører den samme
+       kerne som `/clean-copy-tool` i browseren, med licenskontrol foran batch.
+       Datagrund: artiklerne linker til værktøjet, men indeholder det ikke —
+       mahope.tools' kontrastartikel har vist, at værktøj i teksten er hvad der
+       flytter læseren fra læsning til brug.
+       **LEVERET** `ceo/artikel-konverter` — de tre guides indeholder
+       konverteren; licensvalideringen går gennem `net.js` (guiderne indlæser
+       det foran embed-scriptet), og `tests/clean-copy-embed.test.mjs` dømmer
+       64 kontroller på den shippede kode med den rigtige kerne indlæst.
+
+ 60. **Tekst-på-billede-tjekkeren: APCA Lc bag bogstaverne.** Hvem: de 9+7
+       besøgende/28 d på `/blog/text-on-image-contrast-check` og
+       `/text-on-image-checker` (100 %/71 % bounce). Tal: PRO-tjek på siden er en
+       $79/årslinje, og Lc er det WCAG 3-tal kunder spørger efter. Accept: begge
+       tal står i resultatet på alle fire sider, og rådet følger sidens sprog.
+       Datagrund: `/contrast-checker` fik APCA 10/10 (feature 56); WCAG-forholdet
+       er blindt for polaritet dér, og tekst-på-billede-tjekkeren har samme hul —
+       det er den samme kerne og det samme `site/apca.js`.
+       **LEVERET** `ceo/apca-tekst-billede` — `tests/scan-clients.test.mjs` §18
+       dømmer tallet og sproget på alle fire sider samt mutationen uden modulet.
+
+ 64. **`/scan`: den kunde, der bad om tjekket, skal kunne få et dokument.**
+         Hvem: de 16–19 besøgende/28 d på mahope.tools' scanner, som er den
+         frie indgang til den største linje (EUComply Pro, $79/år pr. website).
+         Tal: rapport-downloads, og Pro-kortets klick i samme øjeblik. Accept:
+         én knap på **begge** resultater (én side og flere) på EN+DA, der giver
+         én selvstændig HTML-fil med siderne, datoen i `Europe/Copenhagen`, ét
+         afsnit pr. side med fund + rettelse, de sider der ikke kunne læses som
+         ulæselige, og «hvad tjekket ikke kan finde». Datagrund: `window.print()`
+         udskriver hele siden *omkring* resultatet, og del-linket skal åbnes på
+         vores site — ingen af dem er noget, man kan vedlægge en mail. Dette er
+         den samme bevægelse som feature 58 og 61 (værktøjet indeni siden, hvor
+         læseren er), kun med det output læseren mangler.
+         **LEVERET** `ceo/scan-rapport` 11/10: `site/scan-report.js` (deles af
+         begge sprog, ingen tekst af egen — fund-teksten og rettelsen kommer fra
+         sidens egne MSG/FIX, scoren er den siden lige har tegnet, punkt 10),
+         filnavn reduceret til `[a-z0-9.-]`, `href` kun for `http(s)`,
+         `noindex` på filen. `tests/scan-report.test.mjs` 73 domme i fire lag
+         (kode / «kan ikke lyve» / læsertekst som markup / begge *rigtige*
+         sider kalder den); polaritet efterprøvet: modulet væk → dødt,
+         knappen væk mens modulet står → 14 røde linjer. Rettet i samme runde:
+         `esc()` gav `https://..` et download-navn der begynder med prikker,
+         FIX-linjen fik «Fix Fix: …», «1 advarsler» var dansk til grin, og en
+         død `76B`-linje lå over de to felter der allerede siger scoren.
+         axe ren ved 390 og 1280 px, ingen vandret scroll (billeder i
+         `/tmp/ui-scan-rapport/`, kun lokalt). Ny hændelse `scan-report` i
+         tragten — bevidst *ikke* i `RESULT_EVENTS`, fordi en download er et
+         forsøg og ikke et resultat.
+
+
+### Tilføjet 11/10
+
+  66. **cleancopy.tools' to forsider: konverteren skal være der, hvor læseren er.** Hvem: de 24 besøgende/28 d på `/` (86 % bounce) og 2 på `/da/`. Tal: brug af konverteren og videre til Clean Copy Pro ($19/år). Accept: begge forsider indeholder `#cc-embed` + `window.CC_EMBED` med sidens egen sti og indlæser kernen og embed-scriptet i den rækkefølge licenskaldet har brug for, og privatlivsløftet skelner de to konverteringer. Datagrund: de tre html-to-markdown-guider (feature 58) og mahope.tools' kontrastartikel viste mønstret; forsideen gjorde det modsatte — den lovede konvertering og sendte læseren til `/clean-copy-tool`, som har 2 besøgende. **LEVERET** `ceo/forside-indsaet-konverter` 11/10 (se ovenfor).

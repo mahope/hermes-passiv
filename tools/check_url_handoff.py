@@ -55,7 +55,7 @@ som `tools/check_front_door.py`. Derfor kan svaret ikke blive nyt på en måde
 porten ikke ser.
 
 Kør:  python3 tools/check_url_handoff.py            # dom alle forsider + site/
-      python3 tools/check_url_handoff.py --self-test # 18 kontroller
+      python3 tools/check_url_handoff.py --self-test # 21 kontroller
 """
 from __future__ import annotations
 
@@ -91,8 +91,12 @@ RAA = re.compile(r"/\*.*?\*/", re.DOTALL)
 # porten ikke kan se om den er i en streng — så `//` må stå alene på linjen.
 LINJEKOM = re.compile(r"(?m)^[ \t]*//[^\n]*")
 VINDUE = re.compile(r"window\.(?P<navn>[A-Z_]+)\s*=\s*\{")
-# `window.X = { … \n};` — blokke er flade, så den næste `\n};` lukker den.
-BLOK_SLUT = re.compile(r"\n\};")
+# `window.X = { … \n};` — blokke er flade, så den næste `\n};` lukker den. Den
+# anden arm er den form en erklæring på én linje har:
+# `<script>window.CC_EMBED = { path: '/' };</script>`. Uden den sluttede
+# én-linjer-blokken først ved næste `\n};` og slugde hele den næste
+# konfiguration på siden — så fik den dens `next`-poster tilskrevet.
+BLOK_SLUT = re.compile(r"\n\};|\};(?=\s*</script>)")
 NEXT_EGENSKAB = re.compile(r"next\s*:\s*\[")
 # Én post: `{label: '…', href: '…'}` med valgfri `takesUrl` imellem.
 POST = re.compile(
@@ -200,44 +204,55 @@ def dom_motor(kode: str, fil: str) -> list[str]:
     return fund
 
 
+def vinduer(tekst: str) -> list[tuple[str, str]]:
+    """Alle `window.X = { … }`-blokke på siden som (`navn`, `blok`).
+
+    Flere vinduer pr. side er virkelighed: cleancopy.tools' forside
+    erklærer både `CC_EMBED` (konverteringen inde i siden) og `CONVERT_CHECK`
+    (døren foran den). Læst kun det første, var den anden motor uden dom —
+    eller værre, dens `next`-poster blev tilskrevet den første.
+    """
+    ud: list[tuple[str, str]] = []
+    for m in VINDUE.finditer(tekst):
+        slut = BLOK_SLUT.search(tekst, m.end())
+        blok = tekst[m.start():slut.start()] if slut else tekst[m.start():]
+        ud.append((m.group("navn"), blok))
+    return ud
+
+
 def dom_forside(tekst: str, sti: str, motorer: dict[str, str],
                 laeser: dict[str, str | None]) -> tuple[list[str], int]:
     """Fund for én forside. `laeser` er rute -> målrutens kode (None = filen
     findes ikke). Returnerer fundene og antallet af handoffs."""
     fund: list[str] = []
     handoffs = 0
-    m = VINDUE.search(tekst)
-    if m is None:
-        return fund, 0
-    navn = m.group("navn")
-    slut = BLOK_SLUT.search(tekst, m.end())
-    blok = tekst[m.start():slut.start()] if slut else tekst[m.start():]
-    n = NEXT_EGENSKAB.search(blok)
-    if n is None:
-        return fund, 0
-    for post in POST.finditer(blok, n.end()):
-        href = post.group("href")
-        # `#install` er et anker på siden selv og `/da/…` er rod-relative
-        # ruter. Kun en rute i vores eget site er en handoff.
-        if not href.startswith("/") or href.startswith("//") or "#" in href:
+    for navn, blok in vinduer(tekst):
+        n = NEXT_EGENSKAB.search(blok)
+        if n is None:
             continue
-        rute = href.split("?")[0]
-        kode = laeser.get(rute, None)
-        if kode is None:
+        for post in POST.finditer(blok, n.end()):
+            href = post.group("href")
+            # `#install` er et anker på siden selv og `/da/…` er rod-relative
+            # ruter. Kun en rute i vores eget site er en handoff.
+            if not href.startswith("/") or href.startswith("//") or "#" in href:
+                continue
+            rute = href.split("?")[0]
+            kode = laeser.get(rute, None)
+            if kode is None:
+                fund.append(
+                    f"{sti}: `next`-linket peger på `{rute}`, og der er ingen "
+                    f"kildefil for den i site/ — linket fører ingen steder")
+                continue
+            if kode == "":
+                fund.append(f"{rute}: kildefilen er tom")
+                continue
+            if laes_urlfragment(kode):
+                handoffs += 1
+            fund.extend(dom_handoff(kode, f"{sti} -> {rute}", post.group("rest")))
+        if navn not in MOTORER:
             fund.append(
-                f"{sti}: `next`-linket peger på `{rute}`, og der er ingen "
-                f"kildefil for den i site/ — linket fører ingen steder")
-            continue
-        if kode == "":
-            fund.append(f"{rute}: kildefilen er tom")
-            continue
-        if laes_urlfragment(kode):
-            handoffs += 1
-        fund.extend(dom_handoff(kode, f"{sti} -> {rute}", post.group("rest")))
-    if navn not in MOTORER:
-        fund.append(
-            f"{sti}: `window.{navn}` er ikke erklæret i MOTORER i "
-            f"tools/check_url_handoff.py — motoren bag den er uden dom")
+                f"{sti}: `window.{navn}` er ikke erklæret i MOTORER i "
+                f"tools/check_url_handoff.py — motoren bag den er uden dom")
     return fund, handoffs
 
 
@@ -302,9 +317,7 @@ def dom_alle() -> list[str]:
 def alle_next_hrefs(tekst: str) -> list[str]:
     """Alle `href`-værdier i `next`-listerne på siden."""
     fund: list[str] = []
-    for m in VINDUE.finditer(tekst):
-        slut = BLOK_SLUT.search(tekst, m.end())
-        blok = tekst[m.start():slut.start()] if slut else tekst[m.start():]
+    for navn, blok in vinduer(tekst):
         n = NEXT_EGENSKAB.search(blok)
         if n is None:
             continue
@@ -330,6 +343,26 @@ FORside_ANKER = FORside.replace("href: '/scan'", "href: '#install'")
 FORside_FREMDE = FORside.replace("href: '/scan'", "href: 'https://example.com'")
 FORside_MANGEL = FORside.replace("href: '/scan'", "href: '/findes-ikke'")
 FORside_TOM = '<script>window.ONE_OFF_CHECK = {\n  then: "…"\n};</script>'
+# To konfigurationsvinduer på én side — den form cleancopy.tools' forside har,
+# hvor konverteringen i siden (`CC_EMBED`) og døren foran den (`CONVERT_CHECK`)
+# begge skal dømmes. Første arm skriver på flere linjer, anden på én.
+FORside_TO_VINDUER = (
+    '<script>window.CC_EMBED = {\n'
+    "  path: '/'\n"
+    "};</script>\n"
+    '<script>window.CONVERT_CHECK = {\n'
+    "  next: [{label: 'Full scan', href: '/scan', takesUrl: true}]\n"
+    "};</script>"
+)
+FORside_TO_VINDUER_ENLINJE = (
+    "<script>window.CC_EMBED = { path: '/' };</script>\n"
+    '<script>window.CONVERT_CHECK = {\n'
+    "  next: [{label: 'Full scan', href: '/scan', takesUrl: true}]\n"
+    "};</script>"
+)
+# Samme side, anden vinduets post ikke erklæret: ét fund, og det skal pege på
+# `CONVERT_CHECK` — ikke på `CC_EMBED`, der ingen `next` har.
+FORside_TO_VINDUER_IKKE_ERKLARET = FORside_TO_VINDUER_ENLINJE.replace(", takesUrl: true", "")
 
 SELFTEST = [
     ("post erklæret, målruten læser fragment", FORside, LAESER, 0),
@@ -340,6 +373,10 @@ SELFTEST = [
     ("post på en rute uden kildefil", FORside_MANGEL, {}, 1),
     ("forside uden `next` er ikke en fejl", FORside_TOM, {}, 0),
     ("side uden konfigurationsvindue", "<p>ingen tjek her</p>", {}, 0),
+    ("to vinduer dømmes begge", FORside_TO_VINDUER, LAESER, 0),
+    ("to vinduer, det andet på én linje", FORside_TO_VINDUER_ENLINJE, LAESER, 0),
+    ("to vinduer, posten i det andet ikke erklæret",
+     FORside_TO_VINDUER_IKKE_ERKLARET, LAESER, 1),
 ]
 
 MOTORTEST = [

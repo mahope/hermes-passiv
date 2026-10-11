@@ -289,12 +289,16 @@ SUPERSEDED_COPY = {
     ),
     "site/clean-copy.html": (
         "Runs entirely on your machine — no account, no server, no data sent anywhere.",
-        "Your text is converted on your own machine — no account, no server, no text sent anywhere. "
+        "Your text is converted on your own machine — no account, no server. "
+        "The one exception is the URL converter above: our server reads that page once, "
+        "because a browser cannot fetch a page on another domain itself. "
         "A Pro license key is checked online against mahope.tools.",
     ),
     "site/da/clean-copy.html": (
         "Kører udelukkende på din egen maskine — ingen konto, ingen server, ingen data sendes nogen steder hen.",
-        "Din tekst konverteres på din egen maskine — ingen konto, ingen server, ingen tekst sendes nogen steder hen. "
+        "Din tekst konverteres på din egen maskine — ingen konto, ingen server. "
+        "Den ene undtagelse er URL-konverteringen ovenfor: vores server læser den side én gang, "
+        "fordi en browser ikke selv kan hente en side på et andet domæne. "
         "En Pro-licensnøgle tjekkes online mod mahope.tools.",
     ),
 }
@@ -696,7 +700,7 @@ def self_test() -> int:
              "Your text never leaves this page.", "Your   text\n never leaves your device.", 1), *tool)),
         ("et løfte der kun er enlig med et tegn",
          check_text("landing", real["site/clean-copy.html"].replace(
-             "no text sent anywhere", "no data sent anywhere.", 1), *cases["site/clean-copy.html"])),
+             "no account, no server", "no data sent anywhere.", 1), *cases["site/clean-copy.html"])),
     ]
 
     # Bevis på de rigtige filer: de publicerede FAQ'er fra før rettelsen, i
