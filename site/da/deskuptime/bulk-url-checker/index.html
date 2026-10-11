@@ -57,6 +57,18 @@
 </div>
 
 </main>
+<section id="pro">
+  <div class="container">
+    <h2>Ét kørsel her, eller overvågning over tid</h2>
+    <p>Hver adresse tjekkes én gang, lige nu. DeskUptime Pro holder øje med
+    dine sites i baggrunden og giver besked, når et går ned — 19 USD én gang,
+    3 maskiner, intet abonnement.</p>
+    <p class="hero-cta">
+      <a href="https://buy.stripe.com/7sY9AS9eX3Iu418fJ5bMQ01" class="btn-primary" rel="nofollow noopener">Køb DeskUptime Pro — 19 USD én gang</a>
+      <a href="/da/#pro" class="btn-secondary">Sammenlign gratis og Pro</a>
+    </p>
+  </div>
+</section>
 <script defer src="/net.js"></script>
 <script>
 (function () {
@@ -150,6 +162,12 @@
     });
     table.appendChild(tbody);
     out.appendChild(table);
+    out.insertAdjacentHTML('beforeend',
+      '<p style="font-size:13px;color:var(--color-text-muted);margin:16px 0 0">' +
+      'Tjekket af op til 10 sites er gratis og kræver ingen konto. Hvis det ' +
+      'sparede dig tid, holder en lille ' +
+      '<a href="https://donate.stripe.com/7sYeVcbn50wieFM8gDbMQ0c" ' +
+      'rel="nofollow noopener">donation</a> det kørende.</p>');
   }
 
   function esc(s) {

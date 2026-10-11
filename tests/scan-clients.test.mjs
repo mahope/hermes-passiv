@@ -3279,8 +3279,8 @@ for (const [path, lang, knapTekst, undervejsTekst] of [
     ok(`dom C2: ${side.sprog}-ankrene til CLI og desktop-app forbliver`,
       hrefs.filter((h) => h && h[0] === '#').length >= 2,
       `links=${JSON.stringify(hrefs)}`);
-    ok(`dom C3: ${side.sprog}-kortet byder på fler-URL-tjekket`,
-      hrefs.includes('/bulk-url-checker'),
+    ok(`dom C3: ${side.sprog}-kortet byder på fler-URL-tjekket på sidens eget sprog`,
+      hrefs.includes(side.sprog === 'DA' ? '/da/bulk-url-checker' : '/bulk-url-checker'),
       `links=${JSON.stringify(hrefs)}`);
   }
 }

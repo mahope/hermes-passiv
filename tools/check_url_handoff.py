@@ -54,19 +54,24 @@ Forsiderne kommer fra **build-manifestet** (`frontpage_sources_or_empty()` i
 som `tools/check_front_door.py`. Derfor kan svaret ikke blive nyt på en måde
 porten ikke ser.
 
-Kør:  python3 tools/check_url_handoff.py            # dom alle forsider + site/
-      python3 tools/check_url_handoff.py --self-test # 21 kontroller
+    Kør:  python3 tools/check_url_handoff.py            # dom alle forsider + site/
+          python3 tools/check_url_handoff.py --self-test # 30 kontroller
 """
 from __future__ import annotations
 
 import argparse
 import re
 import sys
+from functools import lru_cache
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 SITE = ROOT / "site"
 sys.path.insert(0, str(ROOT / "tools"))
+# `build_sites` ligger i roden, og scriptet køres som `python3 tools/…`, så
+# roden er ikke automatisk på stien — uden den kan `domain_routes` ikke læse
+# manifestet. Samme to linjer som `check_article_paid_path.py` bruger.
+sys.path.insert(0, str(ROOT))
 
 # Hvilken motor der hører til hvilken konfigurationsvindue på forsiden. En
 # motor der mangler her får dom 3 på sin egen fil og en port-rød på forsiden,
@@ -103,6 +108,70 @@ POST = re.compile(
     r"""\{\s*label:\s*['"](?P<label>[^'"]*)['"]\s*,\s*href:\s*['"](?P<href>[^'"]+)['"]"""
     r"""(?P<rest>[^}]*)\}"""
 )
+
+
+def dest_rute(dest: str) -> str:
+    """`index.html` → `/`, `da/index.html` → `/da/`, `scan.html` → `/scan`,
+    `bulk-url-checker/index.html` → `/bulk-url-checker/`.
+
+    Samme form som `_route_of_dest` i `check_article_paid_path.py` — begge
+    læser destinationsruterne ud af build-manifestet, så de ser det samme sæt
+    filer.
+    """
+    if dest.endswith("index.html"):
+        base = dest[: -len("index.html")]
+    elif dest.endswith(".html"):
+        base = dest[: -len(".html")]
+    else:
+        return ""
+    return "/" if not base else ("/" + base if base.endswith("/") else "/" + base)
+
+
+@lru_cache(maxsize=1)
+def domain_routes() -> dict[str, dict[str, Path]]:
+    """Domæne → {rute: kildefil} for **alle** sider — fra build-manifestet.
+
+    `next`-links er rod-relative på det domæne de står på, men kilden under
+    `site/` er foldet efter sitets eget `remap`: deskuptime.com's ruter ligger
+    i `site/deskuptime/`, ikke direktør under `site/`. Den globale
+    `site/<rute>.html`-slåop der fandt mahope.tools' `/scan` fandt derfor
+    aldrig deskuptime.com's `/bulk-url-checker` — og kaldte et link der råber
+    på en eksisterende side for «fører ingen steder». Målt 11/10: CI rød efter
+    `ceo/deskuptime-flere-url` af den grund.
+
+    Kilden er `build_sites.SITES` + `select_files()` — den samme funktion der
+    afgør hvad der lander i `dist/<domæne>/`, så svaret ikke kan blive nyt på
+    en måde porten ikke ser. En rute registreres både med og uden
+    afsluttende skråstreg, fordi den deployerede side svarer på begge.
+    """
+    try:
+        import build_sites
+    except Exception:  # pragma: no cover - kun hvis importen brydes
+        return {}
+    sites = {d: build_sites.Site(d, c) for d, c in build_sites.SITES.items()}
+    build_sites.select_files(sites)
+    ud: dict[str, dict[str, Path]] = {}
+    for domain, site in sites.items():
+        ruter: dict[str, Path] = {}
+        for _key, (src, dest) in site.files.items():
+            rute = dest_rute(dest)
+            if not rute or rute == "/" or not Path(src).is_file():
+                continue
+            ruter.setdefault(rute, src)
+            ruter.setdefault(rute.rstrip("/"), src)
+        ud[domain] = ruter
+    return ud
+
+
+def find_rute(domaene: str, maal: str) -> Path | None:
+    """Kildefilen for en `next`-rute på ét domæne — fra manifestet først,
+    med `site/`-slåopen som fald tilbage for ruter intet manifest nævner."""
+    ruter = domain_routes().get(domaene, {})
+    fund = ruter.get(maal) or ruter.get(maal.rstrip("/")) or ruter.get(maal + "/")
+    if fund is not None:
+        return fund
+    kandidat = SITE / (maal.lstrip("/") + ".html")
+    return kandidat if kandidat.is_file() else None
 
 
 def laes_urlfragment(kode: str) -> bool:
@@ -292,9 +361,9 @@ def dom_alle() -> list[str]:
             laeser: dict[str, str | None] = {}
             for post_href in alle_next_hrefs(tekst):
                 maal = post_href.split("?")[0]
-                sti = SITE / (maal.lstrip("/") + ".html")
+                sti = find_rute(domaene, maal)
                 laeser[maal] = (sti.read_text(encoding="utf-8", errors="replace")
-                                if sti.is_file() else None)
+                                if sti is not None else None)
             side_fund, n = dom_forside(tekst, f"{domaene}{rute}", motor_kode, laeser)
             fund.extend(side_fund)
             handoffs += n
@@ -463,6 +532,41 @@ def selvtest() -> int:
         if not ok:
             for f in fund:
                 print("        ", f)
+
+    # Rute-slåop fra manifestet. `dom_alle` sluttede sig til at enhver
+    # `next`-rute lå i `site/<rute>.html`, så deskuptime.com's
+    # `/bulk-url-checker` — hvis kilde ligger i `site/deskuptime/` efter
+    # domænets eget `remap` — blev meldt som et link der «fører ingen
+    # steder». Målt 11/10 med rød CI. Derfor dømmes destinationsformerne og
+    # den rigtige slåop mod manifestet, ikke mod en gættekatalog.
+    for navn, dest, forventet in [
+        ("forsiden er `/`", "index.html", "/"),
+        ("`da/index.html` er `/da/`", "da/index.html", "/da/"),
+        ("`scan.html` er `/scan`", "scan.html", "/scan"),
+        ("`bulk-url-checker/index.html` er `/bulk-url-checker/`",
+         "bulk-url-checker/index.html", "/bulk-url-checker/"),
+        ("en ressource er ingen rute", "assets/site.css", ""),
+    ]:
+        ok = dest_rute(dest) == forventet
+        fejl += 0 if ok else 1
+        print(f"{'ok   ' if ok else 'FEJL '} destinationsform: {navn} "
+              f"(`{dest_rute(dest)}`, forventede `{forventet}`)")
+
+    ruter = domain_routes()
+    for navn, domaene, maal, aktiv in [
+        ("deskuptime.com's fler-URL-rute findes i manifestet",
+         "deskuptime.com", "/bulk-url-checker", True),
+        ("rudens danske rute findes i manifestet",
+         "deskuptime.com", "/da/bulk-url-checker", True),
+        ("den gamle `site/`-slåop virker stadig for mahope.tools",
+         "mahope.tools", "/scan", True),
+        ("en ruten uden kildefil er stadig None",
+         "deskuptime.com", "/findes-ikke", False),
+    ]:
+        sti = find_rute(domaene, maal)
+        ok = (sti is not None and sti.is_file()) if aktiv else sti is None
+        fejl += 0 if ok else 1
+        print(f"{'ok   ' if ok else 'FEJL '} rute-slåop: {navn} (`{sti}`)")
     total = len(SELFTEST) + len(MOTORTEST) + len(URIDECODER)
     print(f"check-url-handoff-selftest: {'OK' if fejl == 0 else 'RØD'} "
           f"({total - fejl}/{total} kontroller)")

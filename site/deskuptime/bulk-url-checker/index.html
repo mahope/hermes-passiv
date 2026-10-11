@@ -57,6 +57,18 @@
 </div>
 
 </main>
+<section id="pro">
+  <div class="container">
+    <h2>One run here, or watching over time</h2>
+    <p>Each address is checked once, right now. DeskUptime Pro keeps an eye on
+    your sites in the background and tells you when one goes down — $19 once,
+    3 machines, no subscription.</p>
+    <p class="hero-cta">
+      <a href="https://buy.stripe.com/7sY9AS9eX3Iu418fJ5bMQ01" class="btn-primary" rel="nofollow noopener">Buy DeskUptime Pro — 19 USD once</a>
+      <a href="/#pro" class="btn-secondary">Compare free and Pro</a>
+    </p>
+  </div>
+</section>
 <script defer src="/net.js"></script>
 <script>
 (function () {
@@ -150,6 +162,11 @@
     });
     table.appendChild(tbody);
     out.appendChild(table);
+    out.insertAdjacentHTML('beforeend',
+      '<p style="font-size:13px;color:var(--color-text-muted);margin:16px 0 0">' +
+      'Checking up to 10 sites is free and needs no account. If it saved you ' +
+      'time, a small <a href="https://donate.stripe.com/7sYeVcbn50wieFM8gDbMQ0c" ' +
+      'rel="nofollow noopener">donation</a> keeps it running.</p>');
   }
 
   function esc(s) {
