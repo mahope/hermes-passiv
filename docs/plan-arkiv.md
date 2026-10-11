@@ -9952,3 +9952,11 @@ side; tallene er ikke vores egen trafik. Alt det leverede (1–44 og 45–60) st
 ### Tilføjet 11/10
 
   66. **cleancopy.tools' to forsider: konverteren skal være der, hvor læseren er.** Hvem: de 24 besøgende/28 d på `/` (86 % bounce) og 2 på `/da/`. Tal: brug af konverteren og videre til Clean Copy Pro ($19/år). Accept: begge forsider indeholder `#cc-embed` + `window.CC_EMBED` med sidens egen sti og indlæser kernen og embed-scriptet i den rækkefølge licenskaldet har brug for, og privatlivsløftet skelner de to konverteringer. Datagrund: de tre html-to-markdown-guider (feature 58) og mahope.tools' kontrastartikel viste mønstret; forsideen gjorde det modsatte — den lovede konvertering og sendte læseren til `/clean-copy-tool`, som har 2 besøgende. **LEVERET** `ceo/forside-indsaet-konverter` 11/10 (se ovenfor).
+
+### Feature 66: deskuptime.com byder på fler-URL-tjekket
+- **Status:** Færdig 11/10 (`ceo/deskuptime-flere-url`)
+- **Hvem:** De 19 besøgende/28 d på deskuptime.com `/` (100 % bounce, 0 s)
+- **Hvad:** Kortets `next`-array linker til `/bulk-url-checker/`; ny side (EN+DA) med textarea, tabel og status
+- **Accept:** Kortets næste-trin på EN+DA rummer mindst én rute til fler-URL-tjekket
+- **Datagrund:** Feature 65 byder på CLI-artiklen; fler-URL-tjekket er Pro-funktionen der er gjort gratis, og intet peger på det fra svaret
+

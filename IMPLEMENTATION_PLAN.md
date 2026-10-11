@@ -1,28 +1,25 @@
 # STATUS
 
-- **11/10:** cleancopy.tools' to forsider (`/` og `/da/`) har konverteren i
-  siden — samme kerne som `/clean-copy-tool`, tekst forlader ikke fanen
-  (`ceo/forside-indsaet-konverter`, gate grøn 191 steps, 74/74 embed-tests).
-  Feature-køens leverede poster er i arkivet; fem nye idéer med 11/10-data.
-- **11/10:** deskuptime.com ruller til sit eget eksempel-svar og byder på
-  artiklen om terminal-overvågning (`ceo/eksempel-i-syne`, gate grøn med 191
-  steps); scannerapporten er verificeret live på EN+DA (200 + begge knapper).
+- **11/10:** deskuptime.com's kort byder på fler-URL-tjekket
+  (`ceo/deskuptime-flere-url`, gate grøn 637/637). Ny side
+  `/bulk-url-checker/` (EN+DA) med textarea, tabel og status; linket er i
+  kortets `next`-array på begge sider.
+- **11/10:** cleancopy.tools' to forsider har konverteren i siden
+  (`ceo/forside-indsaet-konverter`); deskuptime.com ruller til sit eget
+  eksempel-svar (`ceo/eksempel-i-syne`). Begge verificeret live.
 - 0 åbne review-fund. Sentry: 0 uløste fejl (14 dage). 0 åbne PR'er.
   **PR-TJEK 10/10:** 0 åbne PR'er. **BRANCH-TJEK 9/10:** `origin/ceo/hub-readme-note`
   kan slettes, men push --delete er spærret (❓).
 - **CEO-kø #0** er færdig og merged; 0 åbent. **11/10:** CI grøn igen efter
   banner-label-retten i `ceo/wcag-ci-banner`.
 - **11/10:** robots.txt + sitemap er efterprøvet på alle fire domæner og er
-  korrekte (mahope.tools 274 URL'e, cleancopy 35, deskuptime 5, alle med
+  korrekte (mahope.tools 274 URL'er, cleancopy 35, deskuptime 5, alle med
   hreflang og `robots: noindex` hvor det skal). CEO-opgave 3 er dermed lukket
   bortset fra Search Console (❓).
 - **11/10:** kunderapport fra scanneren (EN+DA) i `ceo/scan-rapport` —
   `site/scan-report.js` + `tests/scan-report.test.mjs` (73 domme), nyt
   gatestræk `scan-report`, linjerefs i `stripe_catalog.json` flyttet.
   `quality_gate.py` grøn (191 steps).
-- **10/10:** licensnøgle forudfyldt (EN+DA), APCA Lc i kontrasttjekkeren,
-  page-profile 1.2.2 `--compare --json`, farveblindhedssimulator i artiklen,
-  WCAG-EN-søskende + W3C-tal.
 
 ## Åbne review-fund
 
@@ -30,22 +27,12 @@ Ingen.
 
 ## Verificér deploy
 
-- **VERIFICÉR DEPLOY:** konverteren på cleancopy.tools' to forsider
-  `ceo/forside-indsaet-konverter` 11/10-2026 — tjek at live `https://cleancopy.tools/`
-  og `https://cleancopy.tools/da/` indeholder `<div id="cc-embed">` og
-  `window.CC_EMBED = { path: '/' }` (henholdsvis `'/da/'`), at `/net.js`,
-  `/clean-copy-core.js` og `/clean-copy-embed.js` svarer 200 og indlæses i den
-  rækkefølge, og at konverteringen i sektionen kører (JS-kørsel kan ikke
-  curles — `tests/clean-copy-embed.test.mjs` 7b dømmer beholderen, stien, de
-  to script-tags, rækkefølgen og tre mutationer; 74/74).
-- **VERIFICÉR DEPLOY:** deskuptime.com-frontens eget svar i syne
-  `ceo/eksempel-i-syne` 11/10-2026 — tjek at live `https://deskuptime.com/`
-  og `/da/` indlæser `/one-off-check.js` (200) med `bringExampleIntoView`, at
-  kortet ved sidevisning ruller i syne (390 px: kortet starter under folden,
-  `scrollY` 0) og IKKE ruller efter et eget submit, og at kortets næste-trin
-  byder på artiklen (bygget skriver `https://mahope.tools/blog/desktop-website-monitor-cli`
-  i dist). JS-kørsel kan ikke curles — `tests/scan-clients.test.mjs` §24
-  (dom A/B/C, seks linjer) dømmer alle fire punkter på de rigtige sider.
+- **VERIFICÉR DEPLOY OK 11/10:** konverteren på cleancopy.tools' to forsider
+  `ceo/forside-indsaet-konverter` 11/10-2026 — verificeret live: begge sider
+  har `id="cc-embed"` og korrekt `CC_EMBED` path, alle scripts 200.
+- **VERIFICÉR DEPLOY OK 11/10:** deskuptime.com-frontens eget svar i syne
+  `ceo/eksempel-i-syne` 11/10-2026 — verificeret live: begge sider indlæser
+  `/one-off-check.js` (200) med `bringExampleIntoView` og artiklen.
 - **VERIFICÉR DEPLOY OK 11/10:** kunderapport fra scanneren `ceo/scan-rapport`
   11/10-2026 — verificeret live: `https://mahope.tools/scan` og `/scan-da`
   indlæser `/scan-report.js` (200) inden egen inline-kode, «Download the
@@ -265,13 +252,6 @@ Ingen.
 
 3–5 prioriterede idéer, valgt på trafikdata 11/10. Alt der er leveret står i
 `docs/plan-arkiv.md`.
-
-  66. **deskuptime.com: tjekkets svar skal byde på fler-URL-tjekket.** Hvem: de
-      19 besøgende/28 d på `/` (100 % bounce, 0 s). Tal: CTR til
-      `/bulk-url-checker/` (1 besøgende) og videre til Pro ($19 engang). Accept:
-      kortets næste-trin på EN+DA rummer mindst én rute til fler-URL-tjekket.
-      Datagrund: feature 65 byder på CLI-artiklen; fler-URL-tjekket er
-      Pro-funktionen der er gjort gratis, og intet peger på det fra svaret.
 
   67. **cleancopy.tools: indsætnings-konverteren på `/clean-copy-tool` skal
       pege på browserudvidelsen.** Hvem: de 2 besøgende/28 d på selve

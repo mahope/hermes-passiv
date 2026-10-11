@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en" data-product="deskuptime">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bulk URL checker — check up to 10 websites at once — DeskUptime</title>
+<meta name="description" content="Paste up to 10 website addresses and see uptime, SSL expiry and response time for all of them in one run. Free, no account, no install.">
+<meta name="author" content="Mads Holst Jensen">
+<link rel="canonical" href="https://deskuptime.com/bulk-url-checker/">
+<link rel="alternate" hreflang="en" href="https://deskuptime.com/bulk-url-checker/">
+<link rel="alternate" hreflang="da" href="https://deskuptime.com/da/bulk-url-checker/">
+<link rel="alternate" hreflang="x-default" href="https://deskuptime.com/bulk-url-checker/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="DeskUptime">
+<meta property="og:title" content="Bulk URL checker — check up to 10 websites at once">
+<meta property="og:description" content="Paste up to 10 website addresses and see uptime, SSL expiry and response time for all of them in one run. Free, no account, no install.">
+<meta property="og:url" href="https://deskuptime.com/bulk-url-checker/">
+<meta property="og:image" href="https://deskuptime.com/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<script defer src="/track.js"></script>
+<style>
+  .bulk-textarea { width: 100%; min-height: 10rem; font-family: var(--font-mono, monospace); font-size: 0.85rem; padding: 0.75rem; border: 1px solid var(--color-border); border-radius: 4px; resize: vertical; }
+  .bulk-table { width: 100%; border-collapse: collapse; margin-top: 1rem; font-size: 0.9rem; }
+  .bulk-table th, .bulk-table td { text-align: left; padding: 0.5rem 0.75rem; border-bottom: 1px solid var(--color-border); vertical-align: top; }
+  .bulk-table th { font-weight: 600; color: var(--color-text-muted); }
+  .bulk-table td.status { white-space: nowrap; }
+  .bulk-table .ok { color: var(--color-success, #2a7); }
+  .bulk-table .err { color: var(--color-error, #c44); }
+  .bulk-status { margin-top: 0.5rem; font-size: 0.9rem; color: var(--color-text-muted); }
+</style>
+</head>
+<body>
+<main id="main">
+
+<div class="hero">
+  <div class="container">
+    <h1>Check up to 10 websites at once</h1>
+    <p>Paste one address per line. We check them all from our server and show
+    uptime, SSL expiry and response time for each — no account, no install, no key.</p>
+    <form id="bulk-form" method="get" action="/api/url-inspect">
+      <label for="bulk-urls">Website addresses</label>
+      <textarea id="bulk-urls" name="urls" class="bulk-textarea" spellcheck="false"
+        placeholder="https://example.com&#10;https://cloudflare.com&#10;https://github.com"
+        aria-describedby="bulk-hint" required></textarea>
+      <p class="oc-hint" id="bulk-hint">One address per line, up to 10. We add
+      <code>https://</code> if you leave it out.</p>
+      <div class="hero-cta" style="margin-top:1rem">
+        <button type="submit" class="btn-primary" id="bulk-btn">Check all</button>
+        <a href="/" class="btn-secondary">Back to single check</a>
+      </div>
+      <p class="bulk-status" id="bulk-status" role="status" aria-live="polite"></p>
+    </form>
+    <div id="bulk-result"></div>
+  </div>
+</div>
+
+</main>
+<script defer src="/net.js"></script>
+<script>
+(function () {
+  var form = document.getElementById('bulk-form');
+  var textarea = document.getElementById('bulk-urls');
+  var btn = document.getElementById('bulk-btn');
+  var status = document.getElementById('bulk-status');
+  var out = document.getElementById('bulk-result');
+
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var lines = textarea.value.split('\n').map(function (s) { return s.trim(); })
+      .filter(function (s) { return s.length > 0; });
+    if (lines.length === 0) { status.textContent = 'Enter at least one address.'; return; }
+    if (lines.length > 10) { status.textContent = 'Maximum 10 addresses at a time.'; return; }
+
+    btn.disabled = true;
+    status.textContent = 'Checking ' + lines.length + ' address(es)…';
+    out.textContent = '';
+
+    var done = 0;
+    var results = [];
+
+    lines.forEach(function (raw, i) {
+      var url = raw.replace(/^https?:\/\//, '');
+      url = 'https://' + url;
+      NET.askGet('/api/url-inspect?url=' + encodeURIComponent(url), 3, function () {
+        status.textContent = 'The server is not responding right now. Try again.';
+      }).then(function (data) {
+        done++;
+        results[i] = { url: url, data: data };
+        status.textContent = 'Done: ' + done + ' of ' + lines.length;
+        if (done === lines.length) { render(results); btn.disabled = false; }
+      }, function (err) {
+        done++;
+        results[i] = { url: url, error: err };
+        status.textContent = 'Done: ' + done + ' of ' + lines.length;
+        if (done === lines.length) { render(results); btn.disabled = false; }
+      });
+    });
+  });
+
+  function render(results) {
+    var table = document.createElement('table');
+    table.className = 'bulk-table';
+    var thead = document.createElement('thead');
+    var hr = document.createElement('tr');
+    ['Address', 'Status', 'SSL', 'Response'].forEach(function (h) {
+      var th = document.createElement('th');
+      th.textContent = h;
+      hr.appendChild(th);
+    });
+    thead.appendChild(hr);
+    table.appendChild(thead);
+
+    var tbody = document.createElement('tbody');
+    results.forEach(function (r) {
+      var tr = document.createElement('tr');
+      var tdUrl = document.createElement('td');
+      tdUrl.textContent = r.url;
+      tr.appendChild(tdUrl);
+
+      var tdStatus = document.createElement('td');
+      tdStatus.className = 'status';
+      var tdSsl = document.createElement('td');
+      var tdTime = document.createElement('td');
+
+      if (r.error) {
+        tdStatus.innerHTML = '<span class="err">Error</span>';
+        tdSsl.textContent = '—';
+        tdTime.textContent = '—';
+      } else if (r.data && r.data.error) {
+        tdStatus.innerHTML = '<span class="err">Error</span>';
+        tdSsl.textContent = '—';
+        tdTime.textContent = '—';
+      } else {
+        var d = r.data;
+        var ok = d.finalStatus >= 200 && d.finalStatus < 400;
+        tdStatus.innerHTML = ok
+          ? '<span class="ok">' + d.finalStatus + ' ' + esc(d.finalStatusText || 'OK') + '</span>'
+          : '<span class="err">' + d.finalStatus + ' ' + esc(d.finalStatusText || 'Error') + '</span>';
+        tdSsl.textContent = d.ssl && d.ssl.available
+          ? 'expires in ' + (d.ssl.daysRemaining || '?') + ' d'
+          : '—';
+        tdTime.textContent = d.responseTimeMs != null ? d.responseTimeMs + ' ms' : '—';
+      }
+      tr.appendChild(tdStatus);
+      tr.appendChild(tdSsl);
+      tr.appendChild(tdTime);
+      tbody.appendChild(tr);
+    });
+    table.appendChild(tbody);
+    out.appendChild(table);
+  }
+
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+})();
+</script>
+</body>
+</html>

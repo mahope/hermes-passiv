@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="da" data-product="deskuptime">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Flere-URL-tjek — tjek op til 10 hjemmesider på én gang — DeskUptime</title>
+<meta name="description" content="Indsæt op til 10 hjemmesideadresser og se uptid, SSL-udløb og responstid for alle i ét kørsel. Gratis, ingen konto, ingen installation.">
+<meta name="author" content="Mads Holst Jensen">
+<link rel="canonical" href="https://deskuptime.com/da/bulk-url-checker/">
+<link rel="alternate" hreflang="en" href="https://deskuptime.com/bulk-url-checker/">
+<link rel="alternate" hreflang="da" href="https://deskuptime.com/da/bulk-url-checker/">
+<link rel="alternate" hreflang="x-default" href="https://deskuptime.com/bulk-url-checker/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="DeskUptime">
+<meta property="og:title" content="Flere-URL-tjek — tjek op til 10 hjemmesider på én gang">
+<meta property="og:description" content="Indsæt op til 10 hjemmesideadresser og se uptid, SSL-udløb og responstid for alle i ét kørsel. Gratis, ingen konto, ingen installation.">
+<meta property="og:url" href="https://deskuptime.com/da/bulk-url-checker/">
+<meta property="og:image" href="https://deskuptime.com/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<script defer src="/track.js"></script>
+<style>
+  .bulk-textarea { width: 100%; min-height: 10rem; font-family: var(--font-mono, monospace); font-size: 0.85rem; padding: 0.75rem; border: 1px solid var(--color-border); border-radius: 4px; resize: vertical; }
+  .bulk-table { width: 100%; border-collapse: collapse; margin-top: 1rem; font-size: 0.9rem; }
+  .bulk-table th, .bulk-table td { text-align: left; padding: 0.5rem 0.75rem; border-bottom: 1px solid var(--color-border); vertical-align: top; }
+  .bulk-table th { font-weight: 600; color: var(--color-text-muted); }
+  .bulk-table td.status { white-space: nowrap; }
+  .bulk-table .ok { color: var(--color-success, #2a7); }
+  .bulk-table .err { color: var(--color-error, #c44); }
+  .bulk-status { margin-top: 0.5rem; font-size: 0.9rem; color: var(--color-text-muted); }
+</style>
+</head>
+<body>
+<main id="main">
+
+<div class="hero">
+  <div class="container">
+    <h1>Tjek op til 10 hjemmesider på én gang</h1>
+    <p>Indsæt én adresse pr. linje. Vi tjekker dem alle fra vores server og viser
+    uptid, SSL-udløb og responstid for hver — ingen konto, ingen installation, ingen nøgle.</p>
+    <form id="bulk-form" method="get" action="/api/url-inspect">
+      <label for="bulk-urls">Hjemmesideadresser</label>
+      <textarea id="bulk-urls" name="urls" class="bulk-textarea" spellcheck="false"
+        placeholder="https://example.com&#10;https://cloudflare.com&#10;https://github.com"
+        aria-describedby="bulk-hint" required></textarea>
+      <p class="oc-hint" id="bulk-hint">Én adresse pr. linje, op til 10. Vi tilføjer
+      <code>https://</code> hvis du lader det stå tomt.</p>
+      <div class="hero-cta" style="margin-top:1rem">
+        <button type="submit" class="btn-primary" id="bulk-btn">Tjek alle</button>
+        <a href="/da/" class="btn-secondary">Tilbage til enkelt-tjek</a>
+      </div>
+      <p class="bulk-status" id="bulk-status" role="status" aria-live="polite"></p>
+    </form>
+    <div id="bulk-result"></div>
+  </div>
+</div>
+
+</main>
+<script defer src="/net.js"></script>
+<script>
+(function () {
+  var form = document.getElementById('bulk-form');
+  var textarea = document.getElementById('bulk-urls');
+  var btn = document.getElementById('bulk-btn');
+  var status = document.getElementById('bulk-status');
+  var out = document.getElementById('bulk-result');
+
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var lines = textarea.value.split('\n').map(function (s) { return s.trim(); })
+      .filter(function (s) { return s.length > 0; });
+    if (lines.length === 0) { status.textContent = 'Indtast mindst én adresse.'; return; }
+    if (lines.length > 10) { status.textContent = 'Maks 10 adresser ad gangen.'; return; }
+
+    btn.disabled = true;
+    status.textContent = 'Checker ' + lines.length + ' adresse(r)…';
+    out.textContent = '';
+
+    var done = 0;
+    var results = [];
+
+    lines.forEach(function (raw, i) {
+      var url = raw.replace(/^https?:\/\//, '');
+      url = 'https://' + url;
+      NET.askGet('/api/url-inspect?url=' + encodeURIComponent(url), 3, function () {
+        status.textContent = 'Serveren svarer ikke lige nu. Prøv igen.';
+      }).then(function (data) {
+        done++;
+        results[i] = { url: url, data: data };
+        status.textContent = 'Færdig: ' + done + ' af ' + lines.length;
+        if (done === lines.length) { render(results); btn.disabled = false; }
+      }, function (err) {
+        done++;
+        results[i] = { url: url, error: err };
+        status.textContent = 'Færdig: ' + done + ' af ' + lines.length;
+        if (done === lines.length) { render(results); btn.disabled = false; }
+      });
+    });
+  });
+
+  function render(results) {
+    var table = document.createElement('table');
+    table.className = 'bulk-table';
+    var thead = document.createElement('thead');
+    var hr = document.createElement('tr');
+    ['Adresse', 'Status', 'SSL', 'Respons'].forEach(function (h) {
+      var th = document.createElement('th');
+      th.textContent = h;
+      hr.appendChild(th);
+    });
+    thead.appendChild(hr);
+    table.appendChild(thead);
+
+    var tbody = document.createElement('tbody');
+    results.forEach(function (r) {
+      var tr = document.createElement('tr');
+      var tdUrl = document.createElement('td');
+      tdUrl.textContent = r.url;
+      tr.appendChild(tdUrl);
+
+      var tdStatus = document.createElement('td');
+      tdStatus.className = 'status';
+      var tdSsl = document.createElement('td');
+      var tdTime = document.createElement('td');
+
+      if (r.error) {
+        tdStatus.innerHTML = '<span class="err">Fejl</span>';
+        tdSsl.textContent = '—';
+        tdTime.textContent = '—';
+      } else if (r.data && r.data.error) {
+        tdStatus.innerHTML = '<span class="err">Fejl</span>';
+        tdSsl.textContent = '—';
+        tdTime.textContent = '—';
+      } else {
+        var d = r.data;
+        var ok = d.finalStatus >= 200 && d.finalStatus < 400;
+        tdStatus.innerHTML = ok
+          ? '<span class="ok">' + d.finalStatus + ' ' + esc(d.finalStatusText || 'OK') + '</span>'
+          : '<span class="err">' + d.finalStatus + ' ' + esc(d.finalStatusText || 'Fejl') + '</span>';
+        tdSsl.textContent = d.ssl && d.ssl.available
+          ? 'udløber om ' + (d.ssl.daysRemaining || '?') + ' d'
+          : '—';
+        tdTime.textContent = d.responseTimeMs != null ? d.responseTimeMs + ' ms' : '—';
+      }
+      tr.appendChild(tdStatus);
+      tr.appendChild(tdSsl);
+      tr.appendChild(tdTime);
+      tbody.appendChild(tr);
+    });
+    table.appendChild(tbody);
+    out.appendChild(table);
+  }
+
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+})();
+</script>
+</body>
+</html>

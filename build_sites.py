@@ -133,8 +133,6 @@ SITES: dict[str, dict] = {
         # på forsiden — appen er den betalte del, 19 USD. Se
         # `site/deskuptime/tools/index.html`, som nu ligger der i stedet.
         "extra": [
-            (AUDITEDWP_DESKUPTIME / "bulk-url-checker" / "index.html",
-             "deskuptime/bulk-url-checker/index.html", "bulk-url-checker/index.html"),
             (AUDITEDWP_DESKUPTIME / "security-headers-checker" / "index.html",
              "deskuptime/security-headers-checker/index.html", "security-headers-checker/index.html"),
             (AUDITEDWP_ASSETS / "site.css", "assets/site.css", "assets/site.css"),
