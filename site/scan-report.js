@@ -1,0 +1,409 @@
+/* scan-report.js — the client-ready report file from the EAA/WCAG scanner
+  * (/scan and /scan-da).
+  *
+  * Why this exists: the reader of a scan is usually a bureau standing in front
+  * of a client who asked «what did you find?». Before this the page could
+  * print (`window.print()`, which prints the whole marketing page around the
+  * result) or hand over a share link (which the recipient has to open and read
+  * on our site, on our terms). Neither is a document. What was missing is the
+  * one artefact the reader actually needs: a file they can attach to an email.
+  *
+  * Everything in the file is produced from what the scan already measured:
+  *
+  *   - the prose (`{n} image(s) missing alt text`) and the fix line come from
+  *     the *page's own* MSG and FIX tables, passed in by the caller. The module
+  *     knows no rule text at all, so a report can never say anything the live
+  *     page would not say about the same finding. Two tables in two languages
+  *     stay two tables — and the report follows the page's language automatically
+  *     because the caller passes the tables it was going to render with.
+  *   - the score and the grade are the ones the page just painted. The page
+  *     computes them (three copies of a scoring formula is how a scorecard
+  *     ends up contradicting its own list — see `scan-share-core.js`), and this
+  *     module never recomputes either.
+  *
+  * Four rules, because the input is partly the reader's own text:
+  *   1. Every value that reaches the file is escaped (`esc()`), including the
+  *      scanned addresses, the finding prose and the platform. A URL is
+  *      reader-written and reaches the report inside `href`, `text` and a
+  *      `<code>` block at once.
+  *   2. The file references nothing external — no stylesheet, no font, no
+  *      script, no image. It has to open from a download folder in ten years,
+  *      which is exactly when a client asks for the audit again. Links to
+  *      mahope.tools are allowed and expected; they are only references.
+  *   3. `href` values are additionally checked to be `http(s)://`. An address
+  *      that fails is printed as text and gets no link, so nothing in the file
+  *      can be made clickable by anything but a real web address.
+  *   4. The report is honest about what it is not. The page already tells its
+  *      reader that automated checks catch roughly 30-40 % of accessibility
+  *      issues; a document that leaves that out — because it is going to a
+  *      client — is the worst possible place to leave it out, so the same
+  *      wording travels with it.
+  *
+  * The date is Europe/Copenhagen (point 4 of the quality list: a calendar day
+  * derived from a local midnight is off by one across the year), and it is
+  * injectable through `opts.now` so a test can pin it instead of asserting on
+  * whatever day it happens to be.
+  */
+(function (global) {
+  'use strict';
+
+  var MAX_PAGES = 25;
+  var MAX_URL = 2048;
+
+  // Both languages, one table, so `/scan` and `/scan-da` cannot ship a report
+  // that promises something one of them does not have. A key present in one
+  // language and missing in the other is a bug `tests/scan-report.test.mjs`
+  // fails on.
+  var T = {
+    en: {
+      docTitle: 'Accessibility check',
+      lede: 'Automated WCAG 2.2 AA check of {what}, generated {when}.',
+      scanned: 'What was checked',
+      pagesOne: '1 page',
+      pagesN: '{n} pages',
+      page: 'Page',
+      summary: 'Summary',
+      score: 'Score',
+      grade: 'Grade',
+      counts: function (e, w) { return e + ' error(s), ' + w + ' warning(s)'; },
+      clean: 'No issues found by the automated checks.',
+      findings: 'Findings',
+      cant: 'What this check cannot tell you',
+      cantBody: 'Automated checks catch roughly 30-40 % of accessibility issues. The ' +
+        'remaining 60-70 % need human judgement and are not in this report: keyboard ' +
+        'navigation and focus order, screen-reader flow, and whether the content itself ' +
+        'makes sense. Treat this as a starting point, not a certification.',
+      unreadable: 'Pages that could not be read',
+      unreadableNote: 'The server answered as follows. Nothing below is a finding about those pages.',
+      why: 'Why the score is not a grade',
+      whyBody: 'The score is 100 minus a fixed weight per finding — 12 for an error and 5 ' +
+        'for a warning. It is a way of ranking the work, not a certificate: WCAG itself ' +
+        'does not hand out scores.',
+      pro: 'Free and EUComply Pro',
+      proBody: 'This report is free and needs no account. EUComply Pro ($79/year per ' +
+        'website) adds the checks a browser cannot do — response headers, GDPR and cookie ' +
+        'review, security and metadata — the same findings as a PDF you can file, and ' +
+        'server-side runs over more pages than the five this free scan reads at a time.',
+      proCta: 'See what EUComply Pro adds',
+      source: 'Generated by the free EAA/WCAG scanner',
+      sourceUrl: 'https://mahope.tools/scan',
+      shareNote: 'A page can change after it was checked. Re-scan before acting on this report.'
+    },
+    da: {
+      docTitle: 'Tilgængelighedstjek',
+      lede: 'Automatiseret WCAG 2.2 AA-tjek af {what}, lavet {when}.',
+      scanned: 'Hvad der blev tjekket',
+      pagesOne: '1 side',
+      pagesN: '{n} sider',
+      page: 'Side',
+      summary: 'Sammendrag',
+      score: 'Score',
+      grade: 'Grade',
+      counts: function (e, w) {
+        return e + ' ' + (e === 1 ? 'fejl' : 'fejler') + ', '
+          + w + ' ' + (w === 1 ? 'advarsel' : 'advarsler');
+      },
+      clean: 'Ingen problemer fundet af de automatiske tjek.',
+      findings: 'Fund',
+      cant: 'Hvad dette tjek ikke kan fortælle',
+      cantBody: 'Automatiske tjek finder omkring 30-40 % af tilgængelighedsproblemerne. ' +
+        'De resterende 60-70 % kræver menneskelig vurdering og er ikke i denne rapport: ' +
+        'tastaturnavigation og fokusrækkefølge, skærmlæserflow, og om indholdet giver mening. ' +
+        'Tag den som et udgangspunkt, ikke som en certificering.',
+      unreadable: 'Sider der ikke kunne læses',
+      unreadableNote: 'Serveren svarede sådan. Intet nedenfor er et fund om de sider.',
+      why: 'Hvorfor scoren ikke er en karakter',
+      whyBody: 'Scoren er 100 minus en fast vægt pr. fund — 12 for en fejl og 5 for en ' +
+        'advarsel. Det er en måde at rangere arbejdet på, ikke et certifikat: WCAG uddeler ' +
+        'ikke scorer.',
+      pro: 'Gratis og EUComply Pro',
+      proBody: 'Denne rapport er gratis og kræver ingen konto. EUComply Pro (79 $ pr. ' +
+        'website pr. år) tilføjer de tjek en browser ikke kan lave — svarshovederskrifter, ' +
+        'GDPR- og cookie-gennemgang, sikkerhed og metadata — de samme fund som en PDF du ' +
+        'kan arkivere, og kørsel på serveren over flere sider end de fem dette gratis-tjek ' +
+        'læser ad gangen.',
+      proCta: 'Se hvad EUComply Pro tilføjer',
+      source: 'Lavet af den gratis EAA/WCAG-scanner',
+      sourceUrl: 'https://mahope.tools/scan-da',
+      shareNote: 'En side kan ændre sig efter den er tjekket. Scan igen før du går i gang med denne rapport.'
+    }
+  };
+
+  function esc(s) {
+    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+
+  // `Intl` with an explicit zone, so the printed day is the day in Denmark and
+  // not the day on the reader's machine or in UTC. `opts.now` exists so a test
+  // can pin it; `opts.tz` exists so the rule is one constant that is asserted,
+  // not a coincidence of where CI happens to run.
+  var ZONE = 'Europe/Copenhagen';
+
+  function when(now, tz) {
+    var d = new Date(typeof now === 'number' ? now : Date.now());
+    if (isNaN(d.getTime())) d = new Date();
+    try {
+      var f = new Intl.DateTimeFormat('en-GB', {
+        timeZone: tz || ZONE, year: 'numeric', month: 'long', day: 'numeric',
+        hour: '2-digit', minute: '2-digit'
+      });
+      return f.format(d);
+    } catch (e) {
+      return d.toISOString().slice(0, 16).replace('T', ' ');
+    }
+  }
+
+  // An address is data, not markup, and the report prints it in three places.
+  // Only `http(s)` becomes a link — anything else (a `javascript:` URL a reader
+  // pasted into the box, a `file:` one) is printed as plain text so the file
+  // carries no live payload.
+  function httpUrl(raw) {
+    if (typeof raw !== 'string') return null;
+    var v = raw.trim();
+    if (!v || v.length > MAX_URL) return null;
+    if (/[\u0000-\u001f\u007f]/.test(v)) return null;
+    if (!/^https?:\/\//i.test(v)) return null;
+    return v;
+  }
+
+  function host(raw) {
+    var v = httpUrl(raw);
+    if (!v) return String(raw == null ? '' : raw).slice(0, 120);
+    var m = /^https?:\/\/([^/?#]+)/i.exec(v);
+    return m ? m[1] : v.slice(0, 120);
+  }
+
+  function fill(str, n) { return String(str).replace(/\{n\}/g, String(n)); }
+
+  function counts(findings) {
+    var list = Array.isArray(findings) ? findings : [];
+    var e = 0, w = 0;
+    for (var i = 0; i < list.length; i++) {
+      var sev = String((list[i] || {}).sev || '').toLowerCase();
+      if (sev === 'error') e++;
+      else if (sev === 'warning') w++;
+    }
+    return { errors: e, warnings: w };
+  }
+
+  // Antallene skrives af sprogtabellen, fordi «1 advarsler» er dansk til grin.
+  // EN beholder sidens egen «1 warning(s)»-kortform, DA får rigtig en/flertal.
+  function countLine(t, findings) {
+    var c = counts(findings);
+    return typeof t.counts === 'function' ? t.counts(c.errors, c.warnings) : (c.errors + ' ' + t.errors);
+  }
+
+  function describe(id, n, msg) {
+    var t = msg && Object.prototype.hasOwnProperty.call(msg, id) ? msg[id] : null;
+    return t ? fill(t, n) : String(id);
+  }
+
+  function fixOf(id, fix) {
+    return fix && typeof fix[id] === 'string' ? fix[id] : '';
+  }
+
+  // The page owns the ranking — `SCANSHARE.rankFindings` — and the module takes
+  // it as an argument rather than a global, so a test can hand it a stub and a
+  // future ordering change lands in one place.
+  function rank(findings, opts) {
+    var fn = opts && opts.rankFindings;
+    var out = Array.isArray(findings) ? findings.slice() : [];
+    if (typeof fn === 'function') {
+      try { return fn(out); } catch (e) { /* fall through to the unsorted list */ }
+    }
+    return out;
+  }
+
+  function findingsList(findings, opts) {
+    var t = opts.t, msg = opts.msg, fix = opts.fix;
+    var ranked = rank(findings, opts);
+    if (!ranked.length) return '<p class="muted">' + esc(t.clean) + '</p>';
+    return '<ol class="fnd">' + ranked.map(function (f) {
+      var id = String((f || {}).id || '');
+      var n = Number((f || {}).count) || 0;
+      var sev = String((f || {}).sev || '').toLowerCase() === 'error' ? 'e' : 'w';
+      // Sidens egen rettelseslinje ordlyd. Der sættes **ingen** «Fix:» foran:
+      // FIX-linjen begynder selv med det, og etiketten oven på gav «Fix Fix: …»
+      // i output — samt en danske etikette foran en dansk sætning der siger
+      // «Fix». Formuleringen er side-NES og bliver stående.
+      var fixText = fixOf(id, fix);
+      return '<li class="' + sev + '">'
+        + '<p class="what">' + esc(describe(id, n, msg)) + '</p>'
+        + (fixText ? '<p class="how">' + esc(fixText) + '</p>' : '')
+        + '</li>';
+    }).join('') + '</ol>';
+  }
+
+  function card(title, state, opts) {
+    var t = opts.t;
+    return '<section class="card">'
+      + '<h2>' + esc(title) + '</h2>'
+      + '<p class="counts">' + esc(t.score) + ': <b>' + esc(String((state && state.score) != null ? state.score : '—'))
+      + '</b> · ' + esc(t.grade) + ': <b>' + esc(String((state && state.grade) || '—')) + '</b></p>'
+      + '<p class="counts">' + esc(countLine(t, state && state.findings)) + '</p>'
+      + '<h3>' + esc(t.findings) + '</h3>'
+      + findingsList(state && state.findings, opts)
+      + '</section>';
+  }
+
+  var CSS = [
+    'html{background:#fff;color:#111}',
+    'body{font:16px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;',
+    'max-width:44rem;margin:0 auto;padding:2.5rem 1.25rem 4rem}',
+    'h1{font-size:1.6rem;line-height:1.25;margin:0 0 .25rem}',
+    'h2{font-size:1.05rem;margin:2rem 0 .5rem;padding-top:1rem;border-top:1px solid #ddd}',
+    'h3{font-size:.95rem;margin:1.25rem 0 .35rem}',
+    '.lede{color:#444;margin:0 0 1.5rem}',
+    '.what{color:#111}',
+    'ol.fnd{margin:.25rem 0 0;padding-left:1.25rem}',
+    'ol.fnd li{margin-bottom:.9rem}',
+    'ol.fnd li.e > .what{font-weight:600}',
+    '.how{margin:.25rem 0 0;color:#333}',
+    '.lbl{display:inline-block;font-weight:600;color:#111}',
+    '.muted{color:#555}',
+    '.counts{margin:.15rem 0}',
+    '.card ul,.card ol{margin:.25rem 0}',
+    'code{background:#f2f2f2;padding:.1rem .3rem;border-radius:4px;word-break:break-all}',
+    'a{color:#0b4f9c}',
+    'footer{margin-top:3rem;padding-top:1rem;border-top:1px solid #ddd;color:#555;font-size:.9rem}',
+    'footer p{margin:.4rem 0}'
+  ].join('');
+
+  // One file, one document. `state` is exactly what the page painted:
+  // `{url, score, grade, findings, pages?[], mislykkedes?}`. Nothing is fetched,
+  // nothing is invented — a section that has no data is left out rather than
+  // filled with a plausible sentence.
+  function build(state, options) {
+    var opts = options || {};
+    var lang = (opts.lang === 'da' || opts.lang === 'en') ? opts.lang : 'en';
+    var t = T[lang];
+    var msg = opts.msg || {};
+    var fix = opts.fix || {};
+    var out = [];
+
+    var pages = (state && Array.isArray(state.pages) && state.pages.length)
+      ? state.pages.slice(0, MAX_PAGES) : null;
+    var headUrl = state && state.url ? String(state.url) : '';
+    var what = pages
+      ? fill(t.pagesN, pages.length) + ' — ' + host(pages[0].url)
+      : host(headUrl);
+
+    out.push('<!doctype html><html lang="' + lang + '"><head><meta charset="utf-8">');
+    out.push('<meta name="viewport" content="width=device-width,initial-scale=1">');
+    out.push('<title>' + esc(t.docTitle) + ' — ' + esc(what) + '</title>');
+    // Report generators add a `noindex` so a client's audit never enters a
+    // search index. It costs nothing and it is the difference between a file
+    // the reader owns and a page we appear to host.
+    out.push('<meta name="robots" content="noindex, nofollow">');
+    out.push('<style>' + CSS + '</style></head><body><main>');
+    out.push('<h1>' + esc(t.docTitle) + '</h1>');
+    out.push('<p class="lede">' + esc(fill(t.lede, '').replace('{what}', what).replace('{when}', when(opts.now, opts.tz))) + '</p>');
+
+    // ── Hvad der blev tjekket
+    out.push('<section class="card"><h2>' + esc(t.scanned) + '</h2>');
+    if (pages) {
+      out.push('<p>' + esc(fill(t.pagesN, pages.length)) + '</p><ul>');
+      for (var i = 0; i < pages.length; i++) {
+        var u = httpUrl((pages[i] || {}).url);
+        out.push('<li>' + (u ? '<a href="' + esc(u) + '">' + esc(u) + '</a>' : '<code>' + esc(String((pages[i] || {}).url || '')) + '</code>') + '</li>');
+      }
+      out.push('</ul>');
+    } else {
+      var hu = httpUrl(headUrl);
+      out.push('<p>' + (hu ? '<a href="' + esc(hu) + '">' + esc(hu) + '</a>' : '<code>' + esc(headUrl) + '</code>') + '</p>');
+    }
+    var bad = (state && Array.isArray(state.mislykkedes) && state.mislykkedes.length) ? state.mislykkedes : null;
+    if (bad) {
+      out.push('<h3>' + esc(t.unreadable) + '</h3>');
+      out.push('<p class="muted">' + esc(t.unreadableNote) + '</p><ul>');
+      for (var b = 0; b < bad.length && b < MAX_PAGES; b++) {
+        var bu = String((bad[b] || {}).url || '');
+        var bh = httpUrl(bu);
+        out.push('<li>' + (bh ? '<code>' + esc(bu) + '</code>' : esc(bu))
+          + ' — ' + esc(String((bad[b] || {}).error || '')) + '</li>');
+      }
+      out.push('</ul>');
+    }
+    out.push('</section>');
+
+    // ── Fund
+    if (pages) {
+      for (var p = 0; p < pages.length; p++) {
+        out.push(card(t.page + ' ' + (p + 1) + ' — ' + host((pages[p] || {}).url), pages[p], {
+          t: t, msg: msg, fix: fix, rankFindings: opts.rankFindings
+        }));
+      }
+    } else {
+      out.push(card(t.summary, state, { t: t, msg: msg, fix: fix, rankFindings: opts.rankFindings }));
+    }
+
+    // ── Ærligheden og resten
+    out.push('<section class="card"><h2>' + esc(t.cant) + '</h2><p>' + esc(t.cantBody) + '</p></section>');
+    out.push('<section class="card"><h2>' + esc(t.why) + '</h2><p>' + esc(t.whyBody) + '</p></section>');
+    out.push('<section class="card"><h2>' + esc(t.pro) + '</h2><p>' + esc(t.proBody) + '</p>'
+      + '<p><a href="https://mahope.tools/compliance-report">' + esc(t.proCta) + '</a></p></section>');
+
+    out.push('<footer><p>' + esc(t.source) + ' — <a href="' + esc(t.sourceUrl) + '">' + esc(t.sourceUrl) + '</a></p>');
+    out.push('<p>' + esc(t.shareNote) + '</p></footer>');
+    out.push('</main></body></html>');
+    return out.join('');
+  }
+
+  // Filename from the host only, and only `[a-z0-9.-]`. A host is attacker-
+  // controlled, so it is reduced rather than trusted: no slash, no `..`, no
+  // control characters, and a hard cap — otherwise a download name ending in
+  // `.html` is still a name the filesystem and the browser both have to agree on.
+  function filename(state, lang) {
+    var src = (state && state.url) ? String(state.url) : 'scan';
+    var m = /^https?:\/\/([^/?#]+)/i.exec(src.trim());
+    var h = (m ? m[1] : src).toLowerCase();
+    h = h.replace(/[^a-z0-9.-]+/g, '-')
+      // Bindestregerne og **prikkerne** i begge ender. `https://..` giver vært
+      // `..`, og et download-navn der begynder med `.` er en skjult fil — og i
+      // en fælles mappe et krav om at blive usynlig. Interpunktionen i *midten*
+      // (`www.a.dk` → `www.a.dk`) er almindelig i et filnavn og bliver stående.
+      .replace(/^[-.]+[-.]*$/, '')
+      .replace(/^[-.]+/, '')
+      .replace(/[-.]+$/, '')
+      .slice(0, 60);
+    if (!h) h = 'scan';
+    var suffix = (lang === 'da' ? 'da-' : '') + 'tilgaengelighedstjek';
+    return h + '-' + suffix + '.html';
+  }
+
+  // The download itself is a Blob + object URL, so nothing is uploaded and the
+  // report works with no network at all. `URL.createObjectURL` is behind a
+  // guard because the unit test runs the module in a bare `vm`.
+  function download(state, options) {
+    var opts = options || {};
+    var lang = opts.lang === 'da' ? 'da' : 'en';
+    var html = build(state, opts);
+    var doc = (typeof document !== 'undefined') ? document : null;
+    var win = (typeof window !== 'undefined') ? window : null;
+    if (!doc || !win || typeof win.Blob !== 'function' || !win.URL || !win.URL.createObjectURL) return null;
+    var blob = new win.Blob([html], { type: 'text/html;charset=utf-8' });
+    var url = win.URL.createObjectURL(blob);
+    var a = doc.createElement('a');
+    a.href = url;
+    a.download = filename(state, lang);
+    a.rel = 'noopener';
+    doc.body.appendChild(a);
+    a.click();
+    doc.body.removeChild(a);
+    // The object URL is revoked on the next tick: revoking it synchronously
+    // races the download in browsers that read it lazily, and never revoking
+    // leaks the blob for the life of the tab.
+    win.setTimeout(function () { try { win.URL.revokeObjectURL(url); } catch (e) { /* already gone */ } }, 0);
+    return a.download;
+  }
+
+  global.SCANREPORT = global.SCANREPORT || {};
+  global.SCANREPORT.build = build;
+  global.SCANREPORT.download = download;
+  global.SCANREPORT.filename = filename;
+  global.SCANREPORT.when = when;
+  global.SCANREPORT.esc = esc;
+  global.SCANREPORT.T = T;
+  global.SCANREPORT.ZONE = ZONE;
+})(typeof window !== 'undefined' ? window : globalThis);

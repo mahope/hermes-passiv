@@ -3,30 +3,44 @@
 - 0 åbne review-fund. Sentry: 0 uløste fejl (14 dage). 0 åbne PR'er.
   **PR-TJEK 10/10:** 0 åbne PR'er. **BRANCH-TJEK 9/10:** `origin/ceo/hub-readme-note`
   kan slettes, men push --delete er spærret (❓).
-- **CEO-kø #0** er færdig og merged; 0 åbent.
-- **11/10:** rød CI på `main` (`deploy-sites`) — den nye
-  `wcag-22-requirements-checklist.html` havde en banner-label der afveg fra
-  `tools/ai_cta.json` (`check_ai_cta_honesty`). Rettet til manifestets tekst i
-  `ceo/wcag-ci-banner`; `quality_gate.py` grøn (190 steps). Deploy af
-  6423e204 var blokeret af den rødme — derfor er WCAG-EN-siden stadig 404.
+- **CEO-kø #0** er færdig og merged; 0 åbent. **11/10:** CI grøn igen efter
+  banner-label-retten i `ceo/wcag-ci-banner`.
+- **11/10:** robots.txt + sitemap er efterprøvet på alle fire domæner og er
+  korrekte (mahope.tools 274 URL'e, cleancopy 35, deskuptime 5, alle med
+  hreflang og `robots: noindex` hvor det skal). CEO-opgave 3 er dermed lukket
+  bortset fra Search Console (❓).
+- **11/10:** kunderapport fra scanneren (EN+DA) i `ceo/scan-rapport` —
+  `site/scan-report.js` + `tests/scan-report.test.mjs` (73 domme), nyt
+  gatestræk `scan-report`, linjerefs i `stripe_catalog.json` flyttet.
+  `quality_gate.py` grøn (191 steps).
 - **10/10:** licensnøgle forudfyldt (EN+DA), APCA Lc i kontrasttjekkeren,
   page-profile 1.2.2 `--compare --json`, farveblindhedssimulator i artiklen,
   WCAG-EN-søskende + W3C-tal.
+
 ## Åbne review-fund
 
 Ingen.
 
 ## Verificér deploy
 
-- **VERIFICÉR DEPLOY:** EN-søskende til WCAG 2.2-listen `ceo/wcag-en-kravliste`
-  10/10-2026 — **blokeret af rød CI:** `deploy-sites` 38091456 var rød på
-  banner-label, så deployet af 6423e204 aldrig skete. Når `ceo/wcag-ci-banner`
-  er landet og CI grøn: tjek at live
-  `https://mahope.tools/blog/wcag-22-requirements-checklist` (200) viser de tre
-  tabeller (31 A + 24 AA + 31 AAA) og hreflang til
-  `/da/blog/wcag-22-krav-liste`, at DA-siden peger tilbage, at begge
-  blog-indekser lister artiklen, og at `/da/blog/kopier-tabel-hjemmeside-til-excel`
-  og `/da/blog/nis2-guide-da» har «På engelsk»-link (i source: ja).
+- **VERIFICÉR DEPLOY:** kunderapport fra scanneren `ceo/scan-rapport` 11/10-2026
+  — tjek at live `https://mahope.tools/scan` og `/scan-da` indlæser
+  `/scan-report.js` (200) FØR den egen inline-kode, at «Download the report»/
+  «Hent rapporten» findes **to** gange pr. side (én side + flere sider), at
+  `LAST` bærer `grade` på alle tre steder, at filen hedder
+  `<vært>-tilgaengelighedstjek.html` (DA: `-da-`), og at `dist/` indeholder
+  modulet på begge domæner. JS-kørsel kan ikke curles — `tests/scan-report.test.mjs`
+  (73 domme) dømmer knappen, sproget og tabellerne på de rigtige sider.
+
+- **VERIFICÉR DEPLOY OK 11/10:** EN-søskende til WCAG 2.2-listen
+  `ceo/wcag-en-kravliste` 10/10-2026 — efter rød CI-genløbet: live
+  `https://mahope.tools/blog/wcag-22-requirements-checklist` (200) har de tre
+  tabeller med **55** fund (29 A + 20 AA + 6 nye), hreflang `en`/`da`/
+  `x-default`, «DANISH VERSION»-kort til `/da/blog/wcag-22-krav-liste`, og
+  FAQ-JSON-LD siger «86 success criteria: 31 at level A, 24 at level AA and 31
+  at level AAA» (talt efter W3C). `/da/blog/wcag-22-krav-liste` (200) har
+  «Listen på engelsk» + link tilbage; begge blog-indekser lister artiklen; de to
+  danske originaler har hver sit «På engelsk»-link (curl, live 11/10).
 
 - **VERIFICÉR DEPLOY OK 11/10:** licensnøglen forudfyldt i frigørelsesformularen
   `ceo/licensnogle-forudfyld` 10/10-2026 — live EN+DA (200) indeholder
@@ -410,4 +424,32 @@ side; tallene er ikke vores egen trafik. Alt det leverede (1–44 og 45–60) st
        det er den samme kerne og det samme `site/apca.js`.
        **LEVERET** `ceo/apca-tekst-billede` — `tests/scan-clients.test.mjs` §18
        dømmer tallet og sproget på alle fire sider samt mutationen uden modulet.
+
+ 64. **`/scan`: den kunde, der bad om tjekket, skal kunne få et dokument.**
+         Hvem: de 16–19 besøgende/28 d på mahope.tools' scanner, som er den
+         frie indgang til den største linje (EUComply Pro, $79/år pr. website).
+         Tal: rapport-downloads, og Pro-kortets klick i samme øjeblik. Accept:
+         én knap på **begge** resultater (én side og flere) på EN+DA, der giver
+         én selvstændig HTML-fil med siderne, datoen i `Europe/Copenhagen`, ét
+         afsnit pr. side med fund + rettelse, de sider der ikke kunne læses som
+         ulæselige, og «hvad tjekket ikke kan finde». Datagrund: `window.print()`
+         udskriver hele siden *omkring* resultatet, og del-linket skal åbnes på
+         vores site — ingen af dem er noget, man kan vedlægge en mail. Dette er
+         den samme bevægelse som feature 58 og 61 (værktøjet indeni siden, hvor
+         læseren er), kun med det output læseren mangler.
+         **LEVERET** `ceo/scan-rapport` 11/10: `site/scan-report.js` (deles af
+         begge sprog, ingen tekst af egen — fund-teksten og rettelsen kommer fra
+         sidens egne MSG/FIX, scoren er den siden lige har tegnet, punkt 10),
+         filnavn reduceret til `[a-z0-9.-]`, `href` kun for `http(s)`,
+         `noindex` på filen. `tests/scan-report.test.mjs` 73 domme i fire lag
+         (kode / «kan ikke lyve» / læsertekst som markup / begge *rigtige*
+         sider kalder den); polaritet efterprøvet: modulet væk → dødt,
+         knappen væk mens modulet står → 14 røde linjer. Rettet i samme runde:
+         `esc()` gav `https://..` et download-navn der begynder med prikker,
+         FIX-linjen fik «Fix Fix: …», «1 advarsler» var dansk til grin, og en
+         død `76B`-linje lå over de to felter der allerede siger scoren.
+         axe ren ved 390 og 1280 px, ingen vandret scroll (billeder i
+         `/tmp/ui-scan-rapport/`, kun lokalt). Ny hændelse `scan-report` i
+         tragten — bevidst *ikke* i `RESULT_EVENTS`, fordi en download er et
+         forsøg og ikke et resultat.
 

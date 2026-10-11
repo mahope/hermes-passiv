@@ -420,6 +420,24 @@ STEPS: tuple[Step, ...] = (
             "site/scan-da.html",
         ),
     ),
+    # Kunderapporten fra scanneren (EN + DA). Før dette kunne læseren udskrive
+    # hele siden omkring resultatet eller dele et link — ingen af dem er et
+    # dokument, og den der står over for en kunde har brug for én fil at vedlægge.
+    # Fund-teksten og rettelsen kommer fra sidens *egne* MSG/FIX-tabeller, så
+    # modulet ikke kan skrive sine egne ord på mahope.tools, og scoren er den
+    # side lige har tegnet — den regnes ikke ud igen (punkt 10). Dommen læser
+    # codecen og begge *rigtige* sider, fordi codecen kan være perfekt mens den
+    # danske side har mistet knappen.
+    Step(
+        id="scan-report",
+        argv=("node", "tests/scan-report.test.mjs"),
+        inputs=(
+            "tests/scan-report.test.mjs",
+            "site/scan-report.js",
+            "site/scan.html",
+            "site/scan-da.html",
+        ),
+    ),
     # 1/10: `formatAnswer()` på `/compliance-ai` (EN + DA) skrev modellens svar
     # direkte i `innerHTML` med kun markdown-udskiftninger. Svaret er bygget af
     # det besøgende skrev i feltet, så `<img src=x onerror=…>` kunne blive til

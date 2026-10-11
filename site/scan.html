@@ -237,6 +237,7 @@
 </div></footer>
 
 <script src="/scan-share-core.js"></script>
+<script src="/scan-report.js"></script>
 <script>
 // De tre fund-tabeller — MSG (teksten), FIX (rettelsen) og PLATFORM_GUIDES
 // (platformens guide) — lå inde i `scan()` og lå derfor væk fra et *delt*
@@ -364,8 +365,10 @@ function render(state,opts){
     (state.findings.length?(opts.shared?'':rankBox(state))+'<ul class="findings">'+ranked.map(f=>
       '<li><span class="sev-'+f.sev+'">'+esc(describe(f.id,f.count))+'</span><br><small>'+esc(FIX[f.id]||'')+'</small></li>').join('')+'</ul>'
      :'<p>No issues found by automated checks.</p>')+
-    '<p style="text-align:center;margin-top:18px"><button type="button" onclick="window.print()" class="btn btn-secondary">Print / save as PDF</button> '+
+    '<p style="text-align:center;margin-top:18px"><button type="button" onclick="downloadReport()" class="btn btn-primary">Download the report</button> '+
+    '<button type="button" onclick="window.print()" class="btn btn-secondary">Print / save as PDF</button> '+
     '<button type="button" onclick="shareResult()" class="btn btn-secondary">Copy link to this result</button></p>'+
+    '<p class="hint">The report is one self-contained HTML file — no account, nothing uploaded. Hand it to whoever asked for the audit; it repeats the findings with the fix for each one.</p>'+
     '<p class="hint" id="shareStatus"></p>'+
     '<input type="text" id="shareLink" readonly hidden aria-label="Link to this result">'+
     '<p class="hint">The link carries the findings themselves, so whoever opens it reads this list without running a scan of their own. Nothing about the page is sent to us by opening it.</p>'+
@@ -397,6 +400,26 @@ async function shareResult(){
   if(box){box.hidden=false;box.value=url;box.focus();box.select();}
 }
 window.shareResult=shareResult;
+// Det dokument en læser med fund faktisk kan bruge. `window.print()` udskriver
+// hele siden omkring resultatet — navigation, «hvad tjekkeren», pro-kortet — så
+// det er ikke noget, man kan vedlægge en mail. Modulet får **siden egne** MSG-
+// og FIX-tabeller, så rapporten ikke kan sige noget om et fund som siden ikke
+// ville sige om det samme fund, og den får scoren og karakteren som netop blev
+// tegnet — den regnes ikke ud igen her (punkt 10: to beregninger af det samme tal
+// er hvordan et scorekort ender i at modsige sin egen liste).
+function downloadReport(){
+  if(!LAST||!window.SCANREPORT)return;
+  const st=document.getElementById('shareStatus');
+  const name=window.SCANREPORT.download(LAST,{lang:'en',msg:MSG,fix:FIX,rankFindings:window.SCANSHARE?window.SCANSHARE.rankFindings:null});
+  if(st)st.textContent=name
+    ?'The report is downloading as '+name+'. Nothing was uploaded.'
+    :'The report could not be created in this browser. Use Print / save as PDF instead.';
+  // Udfaldet, ikke forsøget — samme regel som resten af tragten. En browser
+  // uden `Blob` eller uden `createObjectURL` får beskeden «brug Print i stedet»,
+  // og den skal ikke tælles som en rapport der blev hentet.
+  if(name&&window.trackEvent)window.trackEvent('scan-report');
+}
+window.downloadReport=downloadReport;
 // Betalt vej. Samme produktrappe og samme ærlige tre punkter som
 // `/compliance-site-check` bruger, fordi de to scanneren er det samme tjek på
 // hver sin måde: dette læser den ene side brugeren indsatte, den anden følger
@@ -695,7 +718,7 @@ function visEn(html, url){
   const errors=findings.filter(f=>f.sev==='error').length,
         warnings=findings.filter(f=>f.sev==='warning').length;
   const score=window.SCANSHARE.scoreOf(findings);
-  LAST={url:url,score:score,errors:errors,warnings:warnings,findings:findings,platform:plat};
+  LAST={url:url,score:score,grade:gradeOf(score),errors:errors,warnings:warnings,findings:findings,platform:plat};
   render(LAST);
   if(window.SCANSHARE)window.SCANSHARE.remember(url,findings);
 }
@@ -744,6 +767,7 @@ function visFlere(pages, urls){
               findings:alle, platform:(sider.find(s=>s.platform)||{}).platform||null,
               pages:sider, mislykkedes:kunst};
   LAST=state;
+  state.grade=gradeOf(state.score);
   const out=document.getElementById('result');
   out.innerHTML = scorecard(state)
     +'<h3 style="margin:22px 0 8px;font-size:16px">%d pages scanned</h3>'.replace('%d',sider.length)
@@ -755,8 +779,10 @@ function visFlere(pages, urls){
         +'</section>').join('')
     +(kunst.length?'<h3 style="margin:22px 0 8px;font-size:16px">%d page(s) could not be read</h3>'.replace('%d',kunst.length)+'<p class="hint">The server said so, verbatim. Nothing below is a finding about those pages.</p>'
         +'<ul class="findings">'+kunst.map(p=>'<li><code>'+esc(p&&p.url||'')+'</code> — '+esc(p&&p.error||'')+'</li>').join('')+'</ul>':'')
-    +'<p style="text-align:center;margin-top:18px"><button type="button" onclick="window.print()" class="btn btn-secondary">Print / save as PDF</button> '
+    +'<p style="text-align:center;margin-top:18px"><button type="button" onclick="downloadReport()" class="btn btn-primary">Download the report</button> '
+    +'<button type="button" onclick="window.print()" class="btn btn-secondary">Print / save as PDF</button> '
     +'<button type="button" onclick="shareResult()" class="btn btn-secondary">Copy link to this result</button></p>'
+    +'<p class="hint">The report is one self-contained HTML file — no account, nothing uploaded. Hand it to whoever asked for the audit; it repeats the findings with the fix for each one.</p>'
     +'<p class="hint" id="shareStatus"></p>'
     // Samme felt som den ene side har, ellers siger statuslinjen «copy the link
     // below» om et felt der ikke findes, og et tastatur kan ikke kopierer over
@@ -796,7 +822,8 @@ if(bSitemap) bSitemap.addEventListener('click',function(){setSitemapMode(true);}
   if(shared){
     const field=document.getElementById('url');
     if(field)field.value=shared.url;
-    LAST={url:shared.url,score:shared.score,errors:shared.errors,warnings:shared.warnings,
+    LAST={url:shared.url,score:shared.score,grade:gradeOf(shared.score),
+          errors:shared.errors,warnings:shared.warnings,
           findings:shared.findings,platform:shared.platform};
     render(LAST,{shared:true});
     return;

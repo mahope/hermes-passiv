@@ -309,6 +309,7 @@ on:
       - 'tests/palette-image.test.mjs'
       - 'tests/palette-share.test.mjs'
       - 'tests/scan-share.test.mjs'
+      - 'tests/scan-report.test.mjs'
       - 'tests/clean-copy-pro-popup.test.mjs'
       - 'tests/clean-copy-embed.test.mjs'
       - 'site/cb-share-core.js'
