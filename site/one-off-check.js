@@ -309,6 +309,32 @@
 
     out.appendChild(card);
     out.hidden = false;
+    bringExampleIntoView(auto, out);
+  }
+
+  // The answer the page gives itself has to be seen, or the front door asked
+  // three questions and answered none of them. On a 390 px screen the card
+  // starts below the fold — deskuptime.com measured 19 visitors, 100 % bounce
+  // and 0 s engagement over 28 days (Plausible, 11/10), and the proof sits
+  // under the form.
+  //
+  // Three things keep this from being rude: it only moves the page's own
+  // example (a reader who typed an address is already looking at the form and
+  // pressed the button themselves), it only moves when they have not scrolled
+  // yet — a reader one line into the page must not be yanked down — and it only
+  // moves when the card really is out of sight. A reader with reduced-motion
+  // preference gets the jump, not the glide.
+  function bringExampleIntoView(auto, node) {
+    if (!auto) return;
+    if (typeof node.scrollIntoView !== 'function') return;
+    var w = window;
+    if (Number(w.scrollY) !== 0) return;
+    var height = Number(w.innerHeight) || 0;
+    var top = typeof node.getBoundingClientRect === 'function'
+      ? node.getBoundingClientRect().top : 0;
+    if (height && top < height - 80) return;
+    var reduceMotion = w.matchMedia && w.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    node.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' });
   }
 
   function fail(message) {

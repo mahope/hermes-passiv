@@ -1,5 +1,8 @@
 # STATUS
 
+- **11/10:** deskuptime.com ruller til sit eget eksempel-svar og byder på
+  artiklen om terminal-overvågning (`ceo/eksempel-i-syne`, gate grøn med 191
+  steps); scannerapporten er verificeret live på EN+DA (200 + begge knapper).
 - 0 åbne review-fund. Sentry: 0 uløste fejl (14 dage). 0 åbne PR'er.
   **PR-TJEK 10/10:** 0 åbne PR'er. **BRANCH-TJEK 9/10:** `origin/ceo/hub-readme-note`
   kan slettes, men push --delete er spærret (❓).
@@ -23,14 +26,20 @@ Ingen.
 
 ## Verificér deploy
 
-- **VERIFICÉR DEPLOY:** kunderapport fra scanneren `ceo/scan-rapport` 11/10-2026
-  — tjek at live `https://mahope.tools/scan` og `/scan-da` indlæser
-  `/scan-report.js` (200) FØR den egen inline-kode, at «Download the report»/
-  «Hent rapporten» findes **to** gange pr. side (én side + flere sider), at
-  `LAST` bærer `grade` på alle tre steder, at filen hedder
-  `<vært>-tilgaengelighedstjek.html` (DA: `-da-`), og at `dist/` indeholder
-  modulet på begge domæner. JS-kørsel kan ikke curles — `tests/scan-report.test.mjs`
-  (73 domme) dømmer knappen, sproget og tabellerne på de rigtige sider.
+- **VERIFICÉR DEPLOY:** deskuptime.com-frontens eget svar i syne
+  `ceo/eksempel-i-syne` 11/10-2026 — tjek at live `https://deskuptime.com/`
+  og `/da/` indlæser `/one-off-check.js` (200) med `bringExampleIntoView`, at
+  kortet ved sidevisning ruller i syne (390 px: kortet starter under folden,
+  `scrollY` 0) og IKKE ruller efter et eget submit, og at kortets næste-trin
+  byder på artiklen (bygget skriver `https://mahope.tools/blog/desktop-website-monitor-cli`
+  i dist). JS-kørsel kan ikke curles — `tests/scan-clients.test.mjs` §24
+  (dom A/B/C, seks linjer) dømmer alle fire punkter på de rigtige sider.
+- **VERIFICÉR DEPLOY OK 11/10:** kunderapport fra scanneren `ceo/scan-rapport`
+  11/10-2026 — verificeret live: `https://mahope.tools/scan` og `/scan-da`
+  indlæser `/scan-report.js` (200) inden egen inline-kode, «Download the
+  report»/«Hent rapporten» findes **to** gange pr. side (curl 11/10). De
+  resterende punkter (`LAST`-grade, filnavn, `dist/`) dømmes af
+  `tests/scan-report.test.mjs` (73 domme), JS-kørsel kan ikke curles.
 
 - **VERIFICÉR DEPLOY OK 11/10:** EN-søskende til WCAG 2.2-listen
   `ceo/wcag-en-kravliste` 10/10-2026 — efter rød CI-genløbet: live
@@ -246,7 +255,24 @@ Prioriteret efter hvor tæt den er på penge. Baseline er målt på den **bygged
 side; tallene er ikke vores egen trafik. Alt det leverede (1–44 og 45–60) står i
 `docs/plan-arkiv.md`.
 
- 61. **`/color-blindness-simulation-check` skal køre simulatoren i artiklen.**
+  65. **deskuptime.com: svaret skal kunne ses, og der skal være et næste skridt.**
+         Hvem: de 19 besøgende/28 d på `/` (100 % bounce, 0 s). Tal: fra 0 s til
+         en set figur og CTR til artiklen, CLI'en og Pro ($19 engang). Accept:
+         eksemplet rulleres i syne ved sidevisning på 390 px, aldrig efter et
+         eget tryk, og kortets næste-trin rummer mindst én rigtig rute.
+         Datagrund: kortet starter under formularfeltet på en telefon, så beviset
+         aldrig bliver set, og de to knapper var ankre til samme side (Plausible,
+         11/10).
+         **LEVERET** `ceo/eksempel-i-syne` 11/10: `bringExampleIntoView` i
+         `site/one-off-check.js` — kun sidevisningens eget eksempel flyttes, kun
+         når læseren ikke har rullet (`scrollY` 0), kun når kortet starter under
+         viewporten, og `prefers-reduced-motion` får hoppet uden gliden. Kortets
+         `next` på EN+DA byder på `/blog/desktop-website-monitor-cli`, som
+         bygget spejler til mahope.tools i dist (de fire eksisterende
+         `/blog/…`-links på siden gør allerede det). `tests/scan-clients.test.mjs`
+         §24 (dom A/B/C, seks linjer) dømmer rødt uden betingelserne: mutationen
+         er funktionen uden tre betingelser.
+  61. **`/color-blindness-simulation-check` skal køre simulatoren i artiklen.**
         Hvem: de 6 besøgende/28 d på `/color-blindness-simulator` (67 % bounce).
         Tal: brug af simulatoren, PRO-tjek og videre til `/scan`/EUComply Pro
         ($79/år). Accept: artiklen indlæser samme kerne som simulatoren og viser

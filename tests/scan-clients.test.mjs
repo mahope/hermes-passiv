@@ -3200,5 +3200,87 @@ for (const [path, lang, knapTekst, undervejsTekst] of [
   }
 }
 
+// --------------------------------------------------------------------------
+// 24. Frontdørens eget svar skal kunne ses, og kortet skal have et rigtigt
+//     næste-trin.
+//
+// Data (Plausible, 11/10): deskuptime.com målte 19 besøgende på `/`, 100 %
+// bounce og 0 s engagement over 28 dage. Kortet med svaret ligger under
+// formularfeltet — på en 390 px-skærm starter det under folden, så beviset
+// aldrig bliver set. Og de to knapper kortet byder på er ankre til samme side,
+// så en læser der *får* øjnene op for svaret ikke kommer videre.
+//
+// Dommen er falsificerbar:
+//  A. Eksemplet flyttes i syne, når kortet starter under viewporten og læseren
+//     ikke har rullet (probe: `getBoundingClientRect` under folden, `scrollY`
+//     0). Mutationen er `bringExampleIntoView` uden betingelserne.
+//  B. Læserens eget tryk flytter ikke siden — de står allerede ved formularen.
+//  C. deskuptime EN+DA: kortets næste-links rummer mindst én rigtig rute (ikke
+//     `#`), og ankerne til installation og desktop-app forbliver.
+// --------------------------------------------------------------------------
+{
+  const OK = { status: 200, body: {
+    inspectUrl: 'https://example.com', finalUrl: 'https://example.com/',
+    finalStatus: 200, finalStatusText: 'OK', totalRedirects: 0, redirectChain: [],
+    ssl: { available: true, daysRemaining: 63, validTo: '2026-12-12T23:59:59Z',
+      issuer: 'DigiCert Global TLS RSA SHA256 2020 CA1', tlsVersion: 'TLSv1_3', chainTrusted: true },
+    securityHeaders: { 'strict-transport-security': 'max-age=31536000' },
+    securityHeadersChecked: ['strict-transport-security', 'content-security-policy',
+      'x-content-type-options', 'x-frame-options', 'x-xss-protection',
+      'referrer-policy', 'permissions-policy', 'access-control-allow-origin']
+  } };
+
+  // Ligger i denne blok, så dommen ikke kan afhænge af en hjælper en anden
+  // dom definerer.
+  async function aabenForside22(fil, svar) {
+    const { fetchImpl, state } = responses(svar, { skip: [/api\/track/], onCall: null });
+    const { sandbox, nodes } = loadPage(fil, fetchImpl, {
+      preload: ['site/one-off-check.js'],
+      match: /window\.ONE_OFF_CHECK = \{/,
+    });
+    return { sandbox, nodes, state };
+  }
+
+  for (const side of [
+    { f: 'site/deskuptime/index.html', sprog: 'EN' },
+    { f: 'site/da/deskuptime/index.html', sprog: 'DA' },
+  ]) {
+    const { sandbox, nodes, state } = await aabenForside22(side.f, [OK]);
+
+    // Sådan ser en telefon ud: kortet starter et stykke under folderne.
+    const out = nodes.get('oc-check-result');
+    out.getBoundingClientRect = () => ({ top: 900, bottom: 1400, left: 0, right: 390, width: 390, height: 500 });
+    out.scrollIntoView = (o) => { out._scrolled = o; };
+    sandbox.scrollY = 0;
+    sandbox.innerHeight = 700;
+    sandbox.matchMedia = () => ({ matches: true });
+
+    await sleep(30);
+    ok(`dom A: ${side.sprog}-eksemplet flyttes i syne når det ligger under folden`,
+      state.calls === 1 && !!out._scrolled,
+      `kald=${state.calls} scrolled=${JSON.stringify(out._scrolled)}`);
+
+    // Dom B: læserens eget kald flytter ingen side.
+    out._scrolled = null;
+    nodes.get('oc-check-url').value = 'https://eksempel-test.dk';
+    nodes.get('oc-check-form').submit();
+    await sleep(30);
+    ok(`dom B: ${side.sprog}-læserens eget tjek flytter ikke siden`,
+      !out._scrolled && String(state.urls[state.calls - 1]).includes('eksempel-test.dk'),
+      `scrolled=${JSON.stringify(out._scrolled)}`);
+
+    // Dom C: et rigtigt næste-trin, og ankerne stadig der.
+    const html = readFileSync(join(root, side.f), 'utf8');
+    const m = /next: \[([^\]]*)\]/.exec(html);
+    const hrefs = [...String((m && m[1]) || '').matchAll(/href: '([^']*)'/g)].map((h) => h[1]);
+    ok(`dom C1: ${side.sprog}-kortet byder på mindst én rigtig rute, ikke kun ankre`,
+      hrefs.length >= 3 && hrefs.some((h) => h && h[0] !== '#'),
+      `links=${JSON.stringify(hrefs)}`);
+    ok(`dom C2: ${side.sprog}-ankrene til CLI og desktop-app forbliver`,
+      hrefs.filter((h) => h && h[0] === '#').length >= 2,
+      `links=${JSON.stringify(hrefs)}`);
+  }
+}
+
 console.log(`\nscan-clients: ${pass}/${pass + fail}`);
 process.exit(fail ? 1 : 0);
