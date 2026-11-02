@@ -1,0 +1,12 @@
+{
+  "schema_version": 2,
+  "iso_week": "2026-04",
+  "generated_at": "2026-01-13T06:00:00+00:00",
+  "traffic": {
+    "available": true,
+    "top_paths": [
+      {"path": "/case-converter", "visits": 9},
+      {"path": "/denne-rute-udgiver-fixturen-ikke", "visits": 40}
+    ]
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "schema_version": 2,
+  "iso_week": "2026-01",
+  "generated_at": "2026-01-05T06:00:00+00:00",
+  "traffic": {
+    "available": true,
+    "top_paths": [
+      {"path": "/", "visits": 20},
+      {"path": "/da/", "visits": 10},
+      {"path": "/clean-copy-tool", "visits": 7},
+      {"path": "/blog/fixture-klik-uden-knap", "visits": 6},
+      {"path": "/blog/fixture-med-knap", "visits": 5},
+      {"path": "/case-converter", "visits": 4},
+      {"path": "/bugbottle-demo", "visits": 3},
+      {"path": "/blog/fixture-blind", "visits": 3}
+    ]
+  }
+}

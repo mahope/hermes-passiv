@@ -1,0 +1,76 @@
+{
+  "note": "Faste testdata til `python3 tools/check_article_paid_path.py --self-test`. Selftesten dømmer portens EVNE (læse trafik, rangere, flåse), ikke dagens ugerapport: den læser derfor aldrig `reports/weekly/`, men denne lille syntetiske verden med kendte tal. Verden er `weekly/` (tre ugerapporter), `weekly-kontamineret/` (en rapport med en rute fixturen ikke udgiver, så den skal kasseres), `site/` (otte sider med kendt knaptal) og dette dokument (inventar, tilbud, begrundelser og de forventede svar). Ruterne i ugerapporterne skal stå i `inventory`, ellers kasserer `traffic_source` hele rapporten; det siger selftesten med rene ord. `mahope.tools` er domænet fixturen bruger som udgivet (selftesten tjekker at deploy-matricen stadig har det), og `dark.example` er et domæne ingen deploy-matrix kender. Det rigtige tjek (`article-paid-path`, uden `--self-test`) rører ikke denne mappe og dømmer stadig de rigtige ugerapporter, `site/` og `tools/*.json`-listerne. Ændres et tal her, skal `expected` følge med; ændres en ugerapport i `reports/weekly/`, skal intet her ændres.",
+  "today": "2026-01-14",
+  "inventory": {
+    "mahope.tools": [
+      "/",
+      "/da/",
+      "/clean-copy-tool",
+      "/case-converter",
+      "/palette-generator",
+      "/blog/fixture-klik-uden-knap",
+      "/blog/fixture-med-knap",
+      "/blog/fixture-blind",
+      "/blog/fixture-uden-laesere"
+    ],
+    "dark.example": [
+      "/",
+      "/da/",
+      "/bugbottle-demo"
+    ]
+  },
+  "offer_routes": ["/clean-copy-tool"],
+  "acknowledged": {
+    "click": [
+      {"file": "blog/fixture-klik-uden-knap.html", "reason": "fixture: artiklen har læsere og et klik til værktøjet, men ingen knap"}
+    ],
+    "page": [
+      {"route": "/case-converter", "reason": "fixture: siden har læsere og ingen købsknap"}
+    ]
+  },
+  "expected": {
+    "visits": {
+      "/": 12,
+      "/da/": 10,
+      "/clean-copy-tool": 7,
+      "/case-converter": 4,
+      "/bugbottle-demo": 3,
+      "/palette-generator": 2,
+      "/blog/fixture-klik-uden-knap": 8,
+      "/blog/fixture-med-knap": 5,
+      "/blog/fixture-blind": 3
+    },
+    "meta": {
+      "file": "2026-02.json",
+      "week": "2026-02",
+      "generated_at": "2026-01-12",
+      "age_days": 2,
+      "newer_without": 1,
+      "reports": 3,
+      "skipped": []
+    },
+    "kontamineret": {
+      "file": null,
+      "visits": {},
+      "skipped": 1
+    },
+    "articles": [
+      {"file": "blog/fixture-klik-uden-knap.html", "visits": 8, "knapper": 0, "paid": 1, "publiceret": true},
+      {"file": "blog/fixture-med-knap.html", "visits": 5, "knapper": 1, "paid": 2, "publiceret": true},
+      {"file": "blog/fixture-blind.html", "visits": 3, "knapper": 0, "paid": 0, "publiceret": true},
+      {"file": "blog/fixture-uden-laesere.html", "visits": null, "knapper": 0, "paid": 1, "publiceret": true}
+    ],
+    "click_class": ["blog/fixture-klik-uden-knap.html"],
+    "pages": [
+      {"route": "/", "visits": 12, "chrome": true, "delt": true, "knapper": null, "publiceret": true},
+      {"route": "/da", "visits": 10, "chrome": true, "delt": true, "knapper": null, "publiceret": true},
+      {"route": "/clean-copy-tool", "visits": 7, "chrome": false, "delt": false, "knapper": 2, "publiceret": true},
+      {"route": "/case-converter", "visits": 4, "chrome": false, "delt": false, "knapper": 0, "publiceret": true},
+      {"route": "/bugbottle-demo", "visits": 3, "chrome": false, "delt": false, "knapper": 0, "publiceret": false},
+      {"route": "/palette-generator", "visits": 2, "chrome": false, "delt": false, "knapper": 1, "publiceret": true}
+    ],
+    "page_class": ["/case-converter"],
+    "chrome_visits": 22,
+    "other_visits": 16
+  }
+}

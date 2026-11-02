@@ -1889,8 +1889,11 @@ STEPS: tuple[Step, ...] = (
     Step(
         id="article-paid-path-selftest",
         argv=("python3", "tools/check_article_paid_path.py", "--self-test"),
+        # Selftestens faste testdata (2/11-26): trafikken kommer fra fixturen, ikke
+        # fra `reports/weekly/`, så en ændring dér skal kunne rødme selftesten.
         inputs=("tools/check_article_paid_path.py", "build_sites.py",
-                "tools/check_weekly_history.py"),
+                "tools/check_weekly_history.py",
+                "tools/fixtures/article_paid_path/**"),
     ),
     # Opgave 3 (30/9): værktøjssiderne lå uden for portens dom, fordi
     # artikelportens dom 6 kræver *målte besøg* — og `/api/stats` har svaret

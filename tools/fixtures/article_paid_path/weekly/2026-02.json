@@ -1,0 +1,13 @@
+{
+  "schema_version": 2,
+  "iso_week": "2026-02",
+  "generated_at": "2026-01-12T06:00:00+00:00",
+  "traffic": {
+    "available": true,
+    "top_paths": [
+      {"path": "/", "visits": 12},
+      {"path": "/blog/fixture-klik-uden-knap", "visits": 8},
+      {"path": "/palette-generator", "visits": 2}
+    ]
+  }
+}
