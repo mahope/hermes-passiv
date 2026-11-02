@@ -690,7 +690,7 @@ def unpublished_routes(root: Path = SITE, inventory: dict | None = None,
     return out
 
 
-def rows(root: Path = SITE, catalog: dict | None = None,
+def rows(root: Path = SITE, catalog: dict | None = None, *,
          visits: dict[str, int] | None = None,
          inventory: dict | None = None) -> list[dict]:
     """Én række pr. artikel. `visits` og `inventory` er `None` i alt rigtigt
@@ -776,7 +776,7 @@ def _chrome(route: str) -> bool:
 
 
 def page_rows(root: Path = SITE, catalog: dict | None = None,
-              inventory: dict | None = None,
+              inventory: dict | None = None, *,
               visits: dict[str, int] | None = None) -> list[dict]:
     """Målingen af det porten *ikke* så: ruter der ikke er artikler.
 
@@ -1563,8 +1563,8 @@ def _self_test() -> int:
     fx_visits, fx_meta = traffic_source(FIXTURE / "weekly",
                                         today=date.fromisoformat(fx["today"]),
                                         published=fx_published)
-    fx_table = rows(fx_site, fx_catalog, fx_visits, fx_inventory)
-    fx_sider = page_rows(fx_site, fx_catalog, fx_inventory, fx_visits)
+    fx_table = rows(fx_site, fx_catalog, visits=fx_visits, inventory=fx_inventory)
+    fx_sider = page_rows(fx_site, fx_catalog, fx_inventory, visits=fx_visits)
     fx_click_doc = {"acknowledged": fx["acknowledged"]["click"]}
     fx_page_doc = {"acknowledged": fx["acknowledged"]["page"]}
 
@@ -2128,6 +2128,10 @@ def _self_test() -> int:
 
     # (f) Dogfooding: den målte tilstand i dag skal kunne vise alderen, ellers
     #     er hele rettelsen noget der kun virker på syntetiske rapporter.
+    #     Den ENE kontrol, der med vilje stadig læser `reports/weekly/`. Den
+    #     kræver ingen tal og intet øjebliksbillede, kun at mindst én rigtig
+    #     rapport med besøg kan læses og har en dato: uden den kan en uge, hvor
+    #     alle rapporter kasseres, gøre det rigtige tjek grønt på en tom måling.
     _, real_meta = traffic_source()
     check("rigtige rapporter giver en kilde med alder",
           isinstance(real_meta.get("file"), str)
@@ -2389,6 +2393,9 @@ def _self_test() -> int:
     # Sidste kontrol: dom 6 og dom 7 dækker de forskellige ting, så en forside
     # kan ikke slippe ud mellem dem. Dom 6 springer `chrome` over; dom 7 kræver
     # en række pr. publiceret domæne pr. forside-rute.
+    # Dom 7s rigtige forsider mod dom 6s chrome-ruter i fixturen. Det er en
+    # antagelse om at de to er `/` og `/da`; den tester at dom 6 *klassificerer*
+    # dem som chrome (via `_chrome`), ikke at de har trafik i dag.
     check("dom 6 og dom 7 dækker forsiderne mellem sig",
           {(r["route"].rstrip("/") or "/") for r in forsider if r["publiceret"]}
           == {(r["route"].rstrip("/") or "/")
