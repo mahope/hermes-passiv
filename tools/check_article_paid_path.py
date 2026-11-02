@@ -128,6 +128,18 @@ måles til **0** men dømmes ikke, fordi det ikke står i deploy-matricen; det e
 Ud over det printer porten hele ranglisten, fordi det er den næste iteration
 har brug for. Den behøver ikke selv at finde de mest linkede artikler.
 
+**Selftesten dømmer på faste testdata, ikke på dagens ugerapport (2/11-26).**
+`--self-test` låste før fire tal fra `reports/weekly/` (antal ruter, besøg på
+forsiderne og på de øvrige), så hver mandag, hvor ugerapport-workflowet
+committer en ny rapport uden gate, blev deploy-gaten rød af en test, der intet
+sagde om porten. Alt der handler om trafik læser nu
+`tools/fixtures/article_paid_path/`: tre ugerapporter, en kontamineret rapport,
+otte sider og `scenario.json` med de forventede svar, inkl. de negative tilfælde
+(uden begrundelse skal fixturens artikel og rute blive røde). Det rigtige tjek
+(uden `--self-test`) rører ikke fixturen og dømmer stadig `reports/weekly/`,
+`site/` og listerne i `tools/`; når en ny ugerapport bringer læsere til en side
+uden knap og uden begrundelse, er det tjekket, der bliver rødt, og det er meningen.
+
     python3 tools/check_article_paid_path.py             # rangliste + de tre domme
     python3 tools/check_article_paid_path.py --quiet     # kun dommene
     python3 tools/check_article_paid_path.py --write     # skriv listen fra målingen
@@ -165,6 +177,8 @@ PUBLISHED = ROOT / "tools" / "article_paid_path_published.json"
 CLICK_NO_BUTTON = ROOT / "tools" / "article_click_no_button.json"
 PAGE_NO_BUTTON = ROOT / "tools" / "article_page_paid_path.json"
 FRONTPAGE_NO_BUTTON = ROOT / "tools" / "frontpage_no_button.json"
+# Selftestens faste testdata. Se `scenario.json` dér for hvad verdenen rummer.
+FIXTURE = ROOT / "tools" / "fixtures" / "article_paid_path"
 
 # Punkt 1 og 2 ovenfor. Målt: 69 artikler linker til `/` og 32 til `/da/` fra
 # hele dokumentet, og begge er købssider i katalogens `offers`, fordi
@@ -435,9 +449,15 @@ def inbound_counts(root: Path = SITE) -> dict[str, set[str]]:
     return hits
 
 
-def traffic_source(reports: Path = REPORTS,
-                   today: date | None = None) -> tuple[dict[str, int], dict]:
+def traffic_source(reports: Path | None = None,
+                   today: date | None = None,
+                   published: set[str] | None = None) -> tuple[dict[str, int], dict]:
     """Besøg pr. rute **og hvor tallene kommer fra**.
+
+    `reports` og `published` er `None` i alt rigtigt brug, og så er de
+    `reports/weekly/` og inventaret. Selftesten giver dem begge eksplicit, så
+    den dømmer læseren på en committet fixture (`tools/fixtures/article_paid_path/`)
+    og ikke på den ugerapport, der skifter hver mandag.
 
     Uge 37 og 38 har `top_paths` med tal, 39 og 40 har ikke. Vi tager den
     nyeste der har tal, så porten bruger det bedste vi har uden at kræve at
@@ -469,12 +489,14 @@ def traffic_source(reports: Path = REPORTS,
     Rækkefølgen er bevidst: arkivporten `check_weekly_history.py` dømmer
     rapporten rød, og den her nægter at citere den.
     """
+    reports = REPORTS if reports is None else reports
     if not reports.is_dir():
         return {}, {"file": None, "week": None, "generated_at": None,
                     "age_days": None, "newer_without": 0, "reports": 0,
                     "skipped": []}
     today = today or date.today()
-    published = published_routes() or set()
+    if published is None:
+        published = published_routes() or set()
     best: dict[str, int] = {}
     parsed: list[tuple[Path, dict, list | None]] = []
     for path in sorted(reports.glob("*.json")):
@@ -668,12 +690,18 @@ def unpublished_routes(root: Path = SITE, inventory: dict | None = None,
     return out
 
 
-def rows(root: Path = SITE, catalog: dict | None = None) -> list[dict]:
+def rows(root: Path = SITE, catalog: dict | None = None, *,
+         visits: dict[str, int] | None = None,
+         inventory: dict | None = None) -> list[dict]:
+    """Én række pr. artikel. `visits` og `inventory` er `None` i alt rigtigt
+    brug, og så er de `traffic()` (`reports/weekly/`) og `route_inventory.json`;
+    selftesten giver fixturens eksplicit (se `traffic_source`)."""
     catalog = catalog if catalog is not None else json.loads(CATALOG.read_text(encoding="utf-8"))
     offers = offer_routes(catalog)
     inbound = inbound_counts(root)
-    visits = _visits_by_route(traffic())
-    dom = route_domain_map(json.loads(INVENTORY.read_text(encoding="utf-8")))
+    visits = _visits_by_route(traffic() if visits is None else visits)
+    dom = route_domain_map(inventory if inventory is not None else
+                           json.loads(INVENTORY.read_text(encoding="utf-8")))
     live = deployed_domains()
     out = []
     for path in article_files(root):
@@ -748,7 +776,8 @@ def _chrome(route: str) -> bool:
 
 
 def page_rows(root: Path = SITE, catalog: dict | None = None,
-              inventory: dict | None = None) -> list[dict]:
+              inventory: dict | None = None, *,
+              visits: dict[str, int] | None = None) -> list[dict]:
     """Målingen af det porten *ikke* så: ruter der ikke er artikler.
 
     Portens øvrige funktioner læser `site/blog/**` og `site/da/blog/**`.
@@ -777,7 +806,7 @@ def page_rows(root: Path = SITE, catalog: dict | None = None,
     live = deployed_domains()
     articles = {route_of(root, p) for p in article_files(root)}
     inbound = inbound_counts(root)
-    visits = _visits_by_route(traffic())
+    visits = _visits_by_route(traffic() if visits is None else visits)
     out = []
     for route, domains in dom.items():
         if route in articles:
@@ -1128,8 +1157,10 @@ def blind_now(root: Path = SITE, catalog: dict | None = None) -> list[str]:
     return sorted(r["file"] for r in rows(root, catalog) if not r["paid"])
 
 
-def judge(root: Path, catalog: dict) -> list[str]:
-    """Portens tre domme. Alle tre skal være grønne."""
+def blind_problems(root: Path, catalog: dict) -> list[str]:
+    """Blindlistens tre domme. Ingen af dem afhænger af trafik (`rows()` læser
+    den, men `paid` gør ikke), så selftesten kan dømme dem uden at gøre sig
+    afhængig af en ugerapport."""
     data = json.loads(BLIND.read_text(encoding="utf-8"))
     known = list(data["blind"])
     measured = blind_now(root, catalog)
@@ -1147,6 +1178,12 @@ def judge(root: Path, catalog: dict) -> list[str]:
         )
     if len(known) != len(set(known)):
         problems.append("listen har dubletter; den er en mængde, ikke en liste.")
+    return problems
+
+
+def judge(root: Path, catalog: dict) -> list[str]:
+    """Portens domme. Alle skal være grønne."""
+    problems = blind_problems(root, catalog)
     # Dom 4, publiceringsflåsen. Hænger på de tre ovenfor, fordi de alle er
     # "find den fejl der er opstået"; den her er "find den der *kunne* opstå",
     # og den må ikke gøre de tre røde af sig selv.
@@ -1509,6 +1546,52 @@ def _self_test() -> int:
     offers = offer_routes(catalog)
     tabel = rows(SITE, catalog)
 
+    # 0. Den faste verden. Alt der handler om *trafik* dømmes på en committet
+    #    fixture (`tools/fixtures/article_paid_path/`) med kendte tal og kendte
+    #    forventede svar, ikke på `reports/weekly/`. Målt 2/11-26: selftesten
+    #    havde låst fire tal fra ugerapporten (femten ruter, 45 og 51 besøg …),
+    #    og hver mandag, hvor workflowet committer en ny ugerapport uden gate,
+    #    blev deploy-gaten rød af en test der intet havde med porten at gøre.
+    #    Det rigtige tjek (`main`, uden `--self-test`) rører ikke fixturen: det
+    #    dømmer fortsat de rigtige rapporter, `site/` og listerne i `tools/`.
+    fx = json.loads((FIXTURE / "scenario.json").read_text(encoding="utf-8"))
+    fx_expect = fx["expected"]
+    fx_site = FIXTURE / "site"
+    fx_catalog = {"offers": [{"route": r} for r in fx["offer_routes"]]}
+    fx_inventory = fx["inventory"]
+    fx_published = {r.rstrip("/") or "/" for rs in fx_inventory.values() for r in rs}
+    fx_visits, fx_meta = traffic_source(FIXTURE / "weekly",
+                                        today=date.fromisoformat(fx["today"]),
+                                        published=fx_published)
+    fx_table = rows(fx_site, fx_catalog, visits=fx_visits, inventory=fx_inventory)
+    fx_sider = page_rows(fx_site, fx_catalog, fx_inventory, visits=fx_visits)
+    fx_click_doc = {"acknowledged": fx["acknowledged"]["click"]}
+    fx_page_doc = {"acknowledged": fx["acknowledged"]["page"]}
+
+    live_now_domains = deployed_domains()
+    check("fixturens forudsætning: mahope.tools udgives, dark.example gør ikke",
+          "mahope.tools" in live_now_domains and "dark.example" not in live_now_domains,
+          f"deploy-matricen: {sorted(live_now_domains)}")
+    check("fixturens ugerapporter blev læst (de er ikke kasseret af traffic_source)",
+          fx_meta["file"] is not None and fx_meta["skipped"] == [],
+          "OK" if fx_meta["file"] and not fx_meta["skipped"] else
+          f"FIXTUREN ER KASSERET: {fx_meta['skipped']} — en rute i "
+          f"tools/fixtures/article_paid_path/weekly/ mangler i `inventory` i scenario.json")
+    check("kilden regner fixturens tal rigtigt: nyeste rapport med tal vinder, ældre ruter bliver",
+          fx_visits == fx_expect["visits"],
+          f"fik {fx_visits}, forventede {fx_expect['visits']}")
+    check("kilden regner fixturens alder og nyere-uden-trafik rigtigt (today er fast)",
+          {k: fx_meta.get(k) for k in fx_expect["meta"]} == fx_expect["meta"],
+          f"fik {fx_meta}, forventede {fx_expect['meta']}")
+    kont_visits, kont_meta = traffic_source(FIXTURE / "weekly-kontamineret",
+                                            today=date.fromisoformat(fx["today"]),
+                                            published=fx_published)
+    check("negativt tilfælde: en fixture-rapport med en rute vi ikke udgiver kasseres helt",
+          kont_visits == fx_expect["kontamineret"]["visits"]
+          and kont_meta["file"] is None
+          and len(kont_meta["skipped"]) == fx_expect["kontamineret"]["skipped"],
+          f"fik {kont_visits} / {kont_meta['skipped']}")
+
     # 1. Porten læser filerne, ikke en kopi af dem. Uden denne kontrol kunne
     #    `_trackers`-læsningen fra de tre forrige iterationer have været grøn
     #    på en mutation af `site/`. Eksemplet vælges blandt de artikler der
@@ -1621,8 +1704,11 @@ def _self_test() -> int:
     #    hvilken. Uden `visits` ville porten have skjult at tallene er
     #    401-blokerede siden uge 37.
     table = rows(SITE, catalog)
-    check("rækker trafik fra rapporten når den findes",
-          any(r["visits"] for r in table))
+    check("rækker trafik fra rapporten når den findes (fixturens fire artikler, i rangeret rækkefølge)",
+          [{"file": r["file"], "visits": r["visits"], "knapper": r["knapper"],
+            "paid": len(r["paid"]), "publiceret": r["publiceret"]}
+           for r in fx_table] == fx_expect["articles"],
+          f"{[(r['file'], r['visits']) for r in fx_table]}")
     check("rækker links på alle artikler", all(r["links"] >= 0 for r in table))
 
     # 7. Dommeren: en liste der er for tom (alle artikler undtagen) skal give
@@ -1631,7 +1717,7 @@ def _self_test() -> int:
     #    afgøre om noget er en fejl, kan ikke være port.
     measured = blind_now(SITE, catalog)
     table = rows(SITE, catalog)
-    real_problems = judge(SITE, catalog)
+    real_problems = blind_problems(SITE, catalog)
     check("listen er i synk med målingen", not real_problems,
           f"{len(real_problems)} problem(er)")
     check("listen er ikke hele korpus (den ville være meningsløs)",
@@ -1673,7 +1759,10 @@ def _self_test() -> int:
     try:
         BLIND.write_text(json.dumps({"blind": patched}, ensure_ascii=False, indent=1),
                          encoding="utf-8")
-        check("død linje i listen giver rødt", bool(judge(SITE, catalog)))
+        hit8 = blind_problems(SITE, catalog)
+        check("død linje i listen giver rødt",
+              bool(dead_line) and any(dead_line in p or "dubletter" in p for p in hit8),
+              f"{len(hit8)} problem(er): {hit8[:1]}")
     finally:
         BLIND.write_text(saved, encoding="utf-8")
     check("listen genskabt efter mutationen",
@@ -1758,8 +1847,11 @@ def _self_test() -> int:
           bb is not None and bb["domain"] == "mahope.tools" and bb["publiceret"],
           f"domæne={bb['domain'] if bb else '?'} "
           f"udgivet={bb['publiceret'] if bb else '?'}")
-    check("rækken har trafik — flåsen skal kunne ramme præcis dem der har den",
-          bb is not None and bb["visits"], f"visits={bb['visits'] if bb else '?'}")
+    fx_klik = next((r for r in fx_table if r["file"] == "blog/fixture-klik-uden-knap.html"), None)
+    check("rækken har trafik — flåsen skal kunne ramme præcis dem der har den (fixturens artikel: 8 besøg, udgivet)",
+          fx_klik is not None and fx_klik["visits"] == 8 and fx_klik["publiceret"],
+          f"visits={fx_klik['visits'] if fx_klik else '?'} "
+          f"udgivet={fx_klik['publiceret'] if fx_klik else '?'}")
 
     # 10e. Dom 4b: et link til en artikel på et udpubliceret domæne er en død
     #      sti. Grønt på det målte tilstand — de fire guider ligger på
@@ -1827,9 +1919,21 @@ def _self_test() -> int:
     check("klassen 'klik uden knap' findes og måles (148 af 190)",
           len(lo) > 100,
           f"{len(lo)} af {len(table)}")
-    check("flåsen er grøn på det målte tilstand",
-          not click_no_button_problems(table),
-          f"{len(click_no_button_problems(table))} problem(er)")
+    check("fixturens klasse er præcis den ene artikel med læsere, klik og ingen knap",
+          [r["file"] for r in click_no_button(fx_table)] == fx_expect["click_class"],
+          f"{[r['file'] for r in click_no_button(fx_table)]}")
+    check("flåsen er grøn når fixturens række i klassen har en begrundelse",
+          not click_no_button_problems(fx_table, fx_click_doc, fx_meta),
+          f"{click_no_button_problems(fx_table, fx_click_doc, fx_meta)[:1]}")
+    # Negativt tilfælde gennem hele vejen fixture -> rapport -> rækker -> dom:
+    # uden begrundelsen skal porten blive rød, og linjen skal sige hvor mange
+    # besøg, hvilken ugerapport og hvor gammel den er.
+    rød12 = click_no_button_problems(fx_table, {"acknowledged": []}, fx_meta)
+    check("negativt tilfælde: uden begrundelse er fixturens artikel rød med besøg, kilde og alder",
+          len(rød12) == 1 and rød12[0].startswith("NY KLIK-UDEN-KNAP: blog/fixture-klik-uden-knap.html")
+          and "8 målte besøg" in rød12[0] and "2026-02" in rød12[0]
+          and "2 dage gammel" in rød12[0],
+          rød12[0][:160] if rød12 else "GRØN, men skulle være rød")
 
     # 12a. Den syntetiske række: målt trafik + publiceret rute + indirekte vej
     #      + nul knap. Den skal dømmes. Uden denne kontrol er porten grøn fordi
@@ -1850,8 +1954,8 @@ def _self_test() -> int:
           f"{len(click_no_button([synth]))} række(r)")
     check("den syntetiske række gør flåsen rød uden begrundelse",
           any("NY KLIK-UDEN-KNAP" in p
-              for p in click_no_button_problems([synth])),
-          f"{len(click_no_button_problems([synth]))} problem(er)")
+              for p in click_no_button_problems([synth], {"acknowledged": []}, fx_meta)),
+          f"{len(click_no_button_problems([synth], {'acknowledged': []}, fx_meta))} problem(er)")
 
     # 12b. Hvert af de fire krav skal kunne fjerne rækken. Målt på fire
     #      mutationer af *den samme* syntetiske række — ellers kunne porten være
@@ -1880,14 +1984,14 @@ def _self_test() -> int:
     #      fordi de fire årsager skal kunne skelnes: `blog/html-to-markdown-vscode`
     #      har 8 målte besøg, en publiceret rute og 1 købsknap, altså præcis en
     #      linje der har været i klassen og er faldet ud af den med *knappen*.
-    with_knap = next((r for r in table if r["visits"] and r["publiceret"]
+    with_knap = next((r for r in fx_table if r["visits"] and r["publiceret"]
                       and r["knapper"] and r["paid"]), None)
-    check("der findes en række på disk der er faldet ud af klassen med en knap",
+    check("fixturen har en række der er faldet ud af klassen med en knap",
           with_knap is not None,
           f"{with_knap['file'] if with_knap else '?'}")
     if with_knap:
-        hit = click_no_button_problems(table, {"acknowledged": [
-            {"file": with_knap["file"], "reason": "testbegrundelse"}]})
+        hit = click_no_button_problems(fx_table, {"acknowledged": [
+            {"file": with_knap["file"], "reason": "testbegrundelse"}]}, fx_meta)
         dead = [p for p in hit if "DØD LINJE" in p]
         check("død linje giver rødt og siger at årsagen er knappen",
               len(dead) == 1 and "købsknap" in dead[0],
@@ -1930,9 +2034,13 @@ def _self_test() -> int:
     check("klassen-filen findes med note, source og acknowledged",
           set(("note", "source", "acknowledged")) <= set(doc),
           f"{sorted(doc)}")
-    check("klassen-filen er grøn som den ligger på disk",
-          not click_no_button_problems(table, doc),
-          f"{len(click_no_button_problems(table, doc))} problem(er)")
+    # Filens *form* dømmes her (ingen tom grund, ingen dubletter). At hver linje
+    # også passer på dagens trafik dømmer det rigtige tjek (`judge`), ikke
+    # selftesten: ellers blev den rød af en ugerapport, ikke af en fejl i porten.
+    form12 = [p for p in click_no_button_problems([], doc, fx_meta)
+              if "`reason` er tom" in p or "dubletter" in p]
+    check("klassen-filen har ingen tom begrundelse og ingen dubletter",
+          not form12, f"{form12[:1]}")
 
     # 13. Kilden på de målte besøg. Målt 30/9: de tal porten rangerer på kom fra
     #     uge 38 (genereret 24/9) mens uge 39 og 40 stod med `available: false`,
@@ -2020,6 +2128,10 @@ def _self_test() -> int:
 
     # (f) Dogfooding: den målte tilstand i dag skal kunne vise alderen, ellers
     #     er hele rettelsen noget der kun virker på syntetiske rapporter.
+    #     Den ENE kontrol, der med vilje stadig læser `reports/weekly/`. Den
+    #     kræver ingen tal og intet øjebliksbillede, kun at mindst én rigtig
+    #     rapport med besøg kan læses og har en dato: uden den kan en uge, hvor
+    #     alle rapporter kasseres, gøre det rigtige tjek grønt på en tom måling.
     _, real_meta = traffic_source()
     check("rigtige rapporter giver en kilde med alder",
           isinstance(real_meta.get("file"), str)
@@ -2152,43 +2264,42 @@ def _self_test() -> int:
           isinstance(gammel_a["/"], str) and gammel_a["/"] != gammel_b["/"],
           f"rækkefølge A={gammel_a['/']} · rækkefølge B={gammel_b['/']}")
 
-    # 16. Dom 6, ikke-artikler. Formen *er* målt i dag, og tallene under er
-    #     opdateret 2/11-26 til ugerapport 2026-45 (før: 30/9, tre ruter og 461
-    #     besøg på forsiderne). `page_rows()` giver nu femten ruter: to forsider
-    #     og tretten andre. Seks af dem har trafik og ingen købsknap og står i
-    #     `tools/article_page_paid_path.json` med en grund. Tallene er et
-    #     øjebliksbillede af ugerapporten, så de skal følge den, når den skifter.
-    sider = page_rows()
+    # 16. Dom 6, ikke-artikler, på fixturens verden: seks ruter med trafik, to
+    #     delte forsider og fire andre, hvoraf én er udgivet uden knap, én er på
+    #     et domæne der ikke udgives, og to har en knap. Tallene her var før
+    #     hentet fra ugerapporten (femten ruter, 45 og 51 besøg, 2/11-26) og
+    #     skulle følge den hver gang den skiftede.
+    sider = fx_sider
     chrome_rows = [r for r in sider if r["chrome"]]
     andre = [r for r in sider if not r["chrome"]]
-    check("ikke-artiklerne måles: femten ruter med trafik, hvoraf to forsider",
-          len(sider) == 15 and len(chrome_rows) == 2
-          and {r["route"] for r in andre} == {
-              "/accessibility-statement-generator", "/activate", "/base64-encoder-decoder",
-              "/books/cookie-consent-guide", "/books/nis2-for-agencies", "/bugbottle-demo",
-              "/case-converter", "/clean-copy-tool", "/color-blindness-simulator",
-              "/color-blindness-simulator-da", "/contrast-checker-da", "/palette-generator",
-              "/text-on-image-checker"},
-          f"{len(sider)} ruter · {len(chrome_rows)} forside(r) · "
-          f"{sorted(r['route'] for r in andre)}")
-    check("forsidernes målte trafik er 45 besøg (de bærer ikke længere størsteparten: 51 på andre ruter)",
-          sum(r["visits"] for r in chrome_rows) == 45
-          and sum(r["visits"] for r in andre) == 51,
+    check("ikke-artiklerne måles: seks ruter med trafik, hvoraf to delte forsider",
+          [{k: r[k] for k in ("route", "visits", "chrome", "delt", "knapper", "publiceret")}
+           for r in sider] == fx_expect["pages"],
+          f"{[(r['route'], r['visits'], r['knapper'], r['publiceret']) for r in sider]}")
+    check("forsidernes målte trafik er 22 besøg, de øvrige ruters 16",
+          sum(r["visits"] for r in chrome_rows) == fx_expect["chrome_visits"]
+          and sum(r["visits"] for r in andre) == fx_expect["other_visits"],
           f"{sum(r['visits'] for r in chrome_rows)} besøg på forsiderne, "
           f"{sum(r['visits'] for r in andre)} på andre ruter")
-    check("flåsen er grøn på det målte tilstand (hver rute uden knap har en grund)",
-          not page_no_button_problems(sider),
-          f"{len(page_no_button_problems(sider))} problem(er)")
-    check("klassen er målt: seks publicerede ruter har ingen købsknap, resten har en knap eller et uudgivet domæne",
-          {r["route"]: (r["knapper"], r["publiceret"]) for r in andre}
-          == {"/accessibility-statement-generator": (0, True), "/activate": (1, True),
-              "/base64-encoder-decoder": (0, True), "/books/cookie-consent-guide": (0, True),
-              "/books/nis2-for-agencies": (0, True), "/bugbottle-demo": (0, False),
-              "/case-converter": (0, True), "/clean-copy-tool": (2, True),
-              "/color-blindness-simulator": (1, True), "/color-blindness-simulator-da": (1, True),
-              "/contrast-checker-da": (1, True), "/palette-generator": (1, True),
-              "/text-on-image-checker": (0, True)},
-          f"{[(r['route'], r['knapper'], r['publiceret']) for r in andre]}")
+    check("klassen er målt: kun den udgivne rute uden købsknap er i klassen (ikke den uudgivne, ikke dem med knap)",
+          [r["route"] for r in page_no_button(sider)] == fx_expect["page_class"],
+          f"{[r['route'] for r in page_no_button(sider)]}")
+    check("flåsen er grøn når ruten uden knap har en grund",
+          not page_no_button_problems(sider, fx_page_doc, fx_meta),
+          f"{page_no_button_problems(sider, fx_page_doc, fx_meta)[:1]}")
+    # Negative tilfælde gennem hele vejen fixture -> rapport -> rækker -> dom.
+    rød16 = page_no_button_problems(sider, {"acknowledged": []}, fx_meta)
+    nye16 = [p for p in rød16 if p.startswith("NY SIDE-UDEN-KNAP")]
+    check("negativt tilfælde: uden begrundelse er ruten rød med besøg, kilde og alder",
+          len(nye16) == 1 and "/case-converter" in nye16[0]
+          and "4 målte besøg" in nye16[0] and "2026-02" in nye16[0]
+          and "2 dage gammel" in nye16[0],
+          nye16[0][:160] if nye16 else "GRØN, men skulle være rød")
+    med_knap16 = [dict(r, knapper=1) if r["route"] == "/case-converter" else r for r in sider]
+    hit16 = page_no_button_problems(med_knap16, fx_page_doc, fx_meta)
+    check("får ruten en knap, bliver dens begrundelse en død linje (listen kan kun krympe)",
+          any("DØD LINJE" in p and "/case-converter" in p and "1 købsknap" in p for p in hit16),
+          f"{[p[:80] for p in hit16][:1]}")
 
     # 16a. Forsiderne er undtaget med vilje, og de skal stadig være
     #      genkendelige efter at ruterne er skrevet uden skråstreg. Uden denne
@@ -2282,12 +2393,15 @@ def _self_test() -> int:
     # Sidste kontrol: dom 6 og dom 7 dækker de forskellige ting, så en forside
     # kan ikke slippe ud mellem dem. Dom 6 springer `chrome` over; dom 7 kræver
     # en række pr. publiceret domæne pr. forside-rute.
+    # Dom 7s rigtige forsider mod dom 6s chrome-ruter i fixturen. Det er en
+    # antagelse om at de to er `/` og `/da`; den tester at dom 6 *klassificerer*
+    # dem som chrome (via `_chrome`), ikke at de har trafik i dag.
     check("dom 6 og dom 7 dækker forsiderne mellem sig",
           {(r["route"].rstrip("/") or "/") for r in forsider if r["publiceret"]}
           == {(r["route"].rstrip("/") or "/")
-              for r in page_rows() if r["chrome"]},
+              for r in fx_sider if r["chrome"]},
           f"dom 7={sorted({r['route'] for r in forsider if r['publiceret']})} "
-          f"dom 6={sorted({r['route'] for r in page_rows() if r['chrome']})}")
+          f"dom 6={sorted({r['route'] for r in fx_sider if r['chrome']})}")
 
     # 16b. En delt rute må ikke få *én* sides knaptal. Målt 30/9: `/` er fire
     #      forskellige filer — `site/clean-copy.html` (2 købsknapper),
@@ -2295,8 +2409,9 @@ def _self_test() -> int:
     #      `site/bugbottle.html` — og ét trafiktal summerer dem. Uden `None`
     #      skrev porten mahope.tools' forside som *siden* bag de 430 besøg.
     check("en delt rute måler ingen knapper, fordi den er flere sider",
-          all(r["knapper"] is None and r["file"] is None
-              for r in sider if r["delt"]),
+          any(r["delt"] for r in sider)
+          and all(r["knapper"] is None and r["file"] is None
+                  for r in sider if r["delt"]),
           f"{[(r['route'], r['knapper']) for r in sider if r['delt']]}")
 
     # 16c. Den syntetiske række: en ikke-artikel med læsere på en udgivet rute
@@ -2311,7 +2426,7 @@ def _self_test() -> int:
     check("sætter læseren en knap på, forsvinder rækken af klassen",
           not page_no_button([dict(synth6[0], knapper=1)]),
           f"klasse={len(page_no_button([dict(synth6[0], knapper=1)]))}")
-    linjer6 = page_no_button_problems(synth6, {"acknowledged": []}, real_meta)
+    linjer6 = page_no_button_problems(synth6, {"acknowledged": []}, fx_meta)
     check("den røde linje i dom 6 nævner ruten, besøgene og kildens alder",
           any("/scan" in p and "17 målte besøg" in p and "dage gammel" in p
               for p in linjer6),
