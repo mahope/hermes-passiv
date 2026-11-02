@@ -1,0 +1,1237 @@
+{
+  "schema_version": 2,
+  "iso_week": "2026-45",
+  "generated_at": "2026-11-02T06:01:43+00:00",
+  "health": {
+    "status": "partial",
+    "kv": true,
+    "traffic_status": "partial",
+    "visits_2d": 5,
+    "downloads_2d": 5,
+    "waitlist": 0,
+    "scans": 61
+  },
+  "traffic": {
+    "available": true,
+    "status": "partial",
+    "unique_status": "ok",
+    "window_days": 7,
+    "visits": null,
+    "domains": {
+      "cleancopy.tools": {
+        "status": "ok",
+        "visits": 37,
+        "top_paths": [
+          {
+            "path": "/",
+            "visits": 11
+          },
+          {
+            "path": "/blog/copy-as-markdown-chrome-extension",
+            "visits": 4
+          },
+          {
+            "path": "/blog/html-to-markdown-vscode",
+            "visits": 2
+          },
+          {
+            "path": "/blog/url-to-markdown-converter",
+            "visits": 2
+          },
+          {
+            "path": "/da/blog/html-til-markdown-api",
+            "visits": 2
+          },
+          {
+            "path": "/da/blog/tabeljustering-html-til-markdown",
+            "visits": 2
+          },
+          {
+            "path": "/blog/copy-from-chatgpt-into-word",
+            "visits": 1
+          },
+          {
+            "path": "/blog/html-to-markdown-api",
+            "visits": 1
+          }
+        ]
+      },
+      "deskuptime.com": {
+        "status": "unknown",
+        "visits": null,
+        "top_paths": []
+      },
+      "bugbottle.dev": {
+        "status": "unknown",
+        "visits": null,
+        "top_paths": []
+      },
+      "mahope.tools": {
+        "status": "ok",
+        "visits": 59,
+        "top_paths": [
+          {
+            "path": "/",
+            "visits": 3
+          },
+          {
+            "path": "/palette-generator",
+            "visits": 2
+          },
+          {
+            "path": "/blog/canonical-url-guide",
+            "visits": 1
+          },
+          {
+            "path": "/blog/check-url-redirect-chain",
+            "visits": 1
+          },
+          {
+            "path": "/blog/check-website-speed-without-lighthouse",
+            "visits": 1
+          },
+          {
+            "path": "/blog/cmp-comparison-2026",
+            "visits": 1
+          },
+          {
+            "path": "/blog/copy-clean-text-from-website",
+            "visits": 1
+          },
+          {
+            "path": "/blog/copy-table-from-website-to-excel",
+            "visits": 1
+          }
+        ]
+      }
+    },
+    "downloads": null,
+    "download_domains": {
+      "cleancopy.tools": {
+        "status": "ok",
+        "visits": 10,
+        "top_downloads": [
+          {
+            "file": "clean-copy-v1.5.3.zip",
+            "visits": 6
+          },
+          {
+            "file": "clean-copy-firefox-v1.5.4.zip",
+            "visits": 4
+          }
+        ]
+      },
+      "deskuptime.com": {
+        "status": "unknown",
+        "visits": null,
+        "top_downloads": []
+      },
+      "bugbottle.dev": {
+        "status": "unknown",
+        "visits": null,
+        "top_downloads": []
+      },
+      "mahope.tools": {
+        "status": "ok",
+        "visits": 54,
+        "top_downloads": [
+          {
+            "file": "privacy-policy-template-da.md",
+            "visits": 5
+          },
+          {
+            "file": "site-icons/site_icons.py",
+            "visits": 5
+          },
+          {
+            "file": "page-profile/page-profile-1.2.2.tar.gz",
+            "visits": 4
+          },
+          {
+            "file": "page-profile/page_profile.py",
+            "visits": 4
+          },
+          {
+            "file": "build-your-first-chrome-extension.epub",
+            "visits": 3
+          },
+          {
+            "file": "eaa-scanner-README.md",
+            "visits": 3
+          },
+          {
+            "file": "eaa_scanner-1.2.0.tar.gz",
+            "visits": 3
+          },
+          {
+            "file": "nis2-for-agencies.epub",
+            "visits": 3
+          }
+        ]
+      }
+    },
+    "top_paths": [
+      {
+        "path": "/",
+        "visits": 14
+      },
+      {
+        "path": "/blog/copy-as-markdown-chrome-extension",
+        "visits": 4
+      },
+      {
+        "path": "/blog/html-to-markdown-vscode",
+        "visits": 2
+      },
+      {
+        "path": "/blog/url-to-markdown-converter",
+        "visits": 2
+      },
+      {
+        "path": "/da/blog/html-til-markdown-api",
+        "visits": 2
+      },
+      {
+        "path": "/da/blog/tabeljustering-html-til-markdown",
+        "visits": 2
+      },
+      {
+        "path": "/palette-generator",
+        "visits": 2
+      },
+      {
+        "path": "/blog/canonical-url-guide",
+        "visits": 1
+      }
+    ],
+    "ranking_paths": {
+      "cleancopy.tools": {
+        "/": 11,
+        "/blog/url-to-markdown-converter": 2,
+        "/clean-copy-bookmarklet": 1,
+        "/da/blog/html-til-markdown-api": 2,
+        "/da/blog/html-til-markdown-cli": 1,
+        "/da/blog/tabeljustering-html-til-markdown": 2,
+        "/blog/html-to-markdown-vscode": 2,
+        "/da/activate": 1,
+        "/da/blog/url-til-markdown-konverter": 1,
+        "/da/clean-copy-tool": 1,
+        "/blog/copy-as-markdown-chrome-extension": 4,
+        "/blog/copy-from-chatgpt-into-word": 1,
+        "/blog/html-to-markdown-api": 1,
+        "/blog/install-obsidian-plugin-clean-copy": 1,
+        "/copy-clean-guide": 1,
+        "/da/blog/html-til-markdown-konverter": 1,
+        "/da/blog/inds%c3%a6t-i-obsidian-ren-markdown": 1,
+        "/da/blog/indsaet-som-markdown-i-vscode": 1,
+        "/da/blog/kopier-chatgpt-til-word": 1,
+        "/blog/html-to-markdown-cli": 1,
+        "/blog/building-html-to-markdown-converter": 1
+      },
+      "mahope.tools": {
+        "/": 3,
+        "/contrast-checker": 1,
+        "/downloads": 1,
+        "/json-formatter": 1,
+        "/palette-generator": 2,
+        "/blog/nis2-supply-chain-security": 1,
+        "/guides": 1,
+        "/blog/copy-clean-text-from-website": 1,
+        "/books/build-your-first-chrome-extension": 1,
+        "/text-on-image-checker": 2,
+        "/blog/canonical-url-guide": 1,
+        "/blog/check-url-redirect-chain": 1,
+        "/blog/check-website-speed-without-lighthouse": 1,
+        "/blog/copy-table-from-website-to-excel": 1,
+        "/blog/find-all-pages-on-a-website": 1,
+        "/blog/get-notified-when-website-goes-down": 1,
+        "/blog/hreflang-guide": 1,
+        "/blog/macos-menu-bar-website-monitor": 1,
+        "/blog/nis2-readiness-guide": 1,
+        "/blog/open-graph-checker": 1,
+        "/blog/paste-without-formatting-chrome": 1,
+        "/blog/squarespace-eaa-accessibility": 1,
+        "/blog/technical-seo-check-website": 1,
+        "/blog/test-your-zip-before-release": 1,
+        "/blog/wcag-22-what-changes": 1,
+        "/blog/webflow-vs-squarespace-accessibility": 1,
+        "/da/blog/7-gratis-dev-tekstvaerktoejer": 1,
+        "/da/blog/bugrapporter-i-ci-pipeline": 1,
+        "/da/blog/cookie-consent-gdpr-2026": 1,
+        "/da/blog/drupal-tilgaengelighed-eaa": 1,
+        "/da/blog/eaa-compliance-scanner-desktop-download": 1,
+        "/da/blog/faa-besked-naar-hjemmeside-er-nede": 1,
+        "/da/blog/find-oedelaegge-links-hjemmeside": 1,
+        "/da/blog/gdpr-hjemmeside-tjekliste": 1,
+        "/da/blog/gratis-compliance-tjek-hjemmeside": 1,
+        "/da/blog/http-headere-reference": 1,
+        "/da/blog/joomla-tilgaengelighed-bitv": 1,
+        "/da/blog/kopier-ren-tekst-fra-hjemmeside": 1,
+        "/da/blog/kopier-tabel-hjemmeside-til-notion": 1,
+        "/da/blog/kopier-tabel-til-excel": 1,
+        "/da/blog/nis2-beredskabstjek-2026": 1,
+        "/da/blog/nis2-leverandoerkaede-sikkerhed": 1,
+        "/da/blog/nis2-tjekliste-25-punkter": 1,
+        "/da/blog/release-integrity-hvad-er-det": 1,
+        "/da/blog/tilfoej-fejlrapport-formular-hjemmeside": 1,
+        "/da/blog/tjek-hastighed-uden-lighthouse": 1,
+        "/da/blog/typo3-tilgaengelighed-bitv": 1,
+        "/da/blog/wcag-22-krav-liste": 1,
+        "/da/blog/wix-tilgaengelighed-eaa": 1,
+        "/da/blog/wordpress-vs-wix-tilgaengelighed": 1,
+        "/da/compliance-ai": 1,
+        "/da/compliance-site-check": 1,
+        "/da/guides": 1,
+        "/da/paid-templates": 1,
+        "/blog/broken-link-checker-free": 1,
+        "/blog/bug-reports-in-ci-pipeline": 1,
+        "/blog/eaa-deadline-2026": 1,
+        "/blog/eaa-deadline-passed": 1,
+        "/blog/ghost-eaa-accessibility": 1,
+        "/blog/how-to-write-accessibility-statement": 1,
+        "/blog/http-headers-reference": 1,
+        "/blog/shopify-eaa-accessibility": 1,
+        "/blog/site-health-github-actions": 1,
+        "/blog/website-down-checker-free": 1,
+        "/blog/website-page-size-checker": 1,
+        "/blog/wordpress-vs-wix-accessibility": 1,
+        "/da/blog/compliance-tjek-github-action": 1,
+        "/da/blog/dbbaftale-webbureau": 1,
+        "/da/blog/find-alle-sider-paa-en-hjemmeside": 1,
+        "/da/blog/nis2-guide-da": 1,
+        "/da/blog/open-graph-tjekker-guide": 1,
+        "/da/blog/overvaag-hjemmeside-fra-terminalen": 1,
+        "/da/blog/overvaag-hjemmeside-mac-menu-bar": 1,
+        "/da/blog/squarespace-tilgaengelighed-eaa": 1,
+        "/da/blog/tilgaengeligheds-overlays-eaa": 1,
+        "/da/blog/tjek-om-hjemmeside-er-nede-gratis": 1,
+        "/da/blog/tjek-ssl-certifikat-udloeb": 1,
+        "/guides/comparison": 1,
+        "/guides/ghost-accessibility-check": 1,
+        "/guides/platforms": 1,
+        "/guides/prestashop-accessibility-check": 1,
+        "/guides/typo3-accessibility-check": 1,
+        "/guides/webflow-accessibility-check": 1,
+        "/guides/wordpress-accessibility-check": 1
+      }
+    },
+    "top_downloads": [
+      {
+        "file": "clean-copy-v1.5.3.zip",
+        "hits": 6
+      },
+      {
+        "file": "privacy-policy-template-da.md",
+        "hits": 5
+      },
+      {
+        "file": "site-icons/site_icons.py",
+        "hits": 5
+      },
+      {
+        "file": "clean-copy-firefox-v1.5.4.zip",
+        "hits": 4
+      },
+      {
+        "file": "page-profile/page-profile-1.2.2.tar.gz",
+        "hits": 4
+      },
+      {
+        "file": "page-profile/page_profile.py",
+        "hits": 4
+      },
+      {
+        "file": "build-your-first-chrome-extension.epub",
+        "hits": 3
+      },
+      {
+        "file": "eaa-scanner-README.md",
+        "hits": 3
+      }
+    ],
+    "sales": {
+      "available": false,
+      "status": "unknown"
+    },
+    "waitlist": 0,
+    "licenses_issued": null,
+    "ai_asks": null,
+    "scans": 61,
+    "checkout": {
+      "status": "ok",
+      "reason": null,
+      "window_days": 7,
+      "tracked_since": "2026-09-27",
+      "clicks": 0,
+      "domains": {
+        "cleancopy.tools": {
+          "status": "ok",
+          "clicks": 0
+        },
+        "deskuptime.com": {
+          "status": "ok",
+          "clicks": 0
+        },
+        "bugbottle.dev": {
+          "status": "ok",
+          "clicks": 0
+        },
+        "mahope.tools": {
+          "status": "ok",
+          "clicks": 0
+        }
+      },
+      "pages": [],
+      "offer_clicks": 0,
+      "other_clicks": 0,
+      "tracked_days": 7,
+      "untracked_days": 0,
+      "last_click_day": null
+    },
+    "ranking": {
+      "basis": "unknown",
+      "basis_reason": "deskuptime.com, bugbottle.dev har ikke et verificeret datagrundlag i de seneste syv fulde dage, så ingen side kan kaldes mest besøgt",
+      "period": {
+        "days": 7,
+        "kind": "last_7_full_days",
+        "start": "2026-10-26",
+        "end": "2026-11-01"
+      },
+      "thresholds": {
+        "min_total_pageviews": 30,
+        "min_pageviews_per_domain": 5
+      },
+      "total_pageviews": 117,
+      "observed_pageviews": 126,
+      "constant_pageviews": 9,
+      "constant_paths": {
+        "cleancopy.tools": [
+          "/clean-copy-bookmarklet",
+          "/copy-clean-guide",
+          "/da/blog/html-til-markdown-konverter",
+          "/da/blog/inds%c3%a6t-i-obsidian-ren-markdown",
+          "/da/blog/indsaet-som-markdown-i-vscode",
+          "/da/blog/url-til-markdown-konverter"
+        ],
+        "mahope.tools": [
+          "/json-formatter",
+          "/palette-generator"
+        ]
+      },
+      "ranked_domains": [],
+      "ranked_offer_pages": [],
+      "domains_below_threshold": [
+        {
+          "domain": "deskuptime.com",
+          "visits": null,
+          "reason": "ukendt datagrundlag i perioden"
+        },
+        {
+          "domain": "bugbottle.dev",
+          "visits": null,
+          "reason": "ukendt datagrundlag i perioden"
+        }
+      ],
+      "fallback": {
+        "kind": "core_product_pages_and_visible_offers",
+        "is_traffic_ranking": false,
+        "reason": "deskuptime.com, bugbottle.dev har ikke et verificeret datagrundlag i de seneste syv fulde dage, så ingen side kan kaldes mest besøgt",
+        "core_pages": [
+          {
+            "product": "clean-copy-pro",
+            "domain": "cleancopy.tools",
+            "route": "/",
+            "source": "site/clean-copy.html",
+            "why": "hovedsiden for Clean Copy: gratis værktøj mod Pro, første skridt i købsrejsen"
+          },
+          {
+            "product": "deskuptime-pro",
+            "domain": "deskuptime.com",
+            "route": "/",
+            "source": "site/deskuptime/index.html",
+            "why": "hjemmesiden for DeskUptime: lokal gratis overvågning mod online Pro-licens"
+          },
+          {
+            "product": "eucomply-pro",
+            "domain": "mahope.tools",
+            "route": "/compliance-report",
+            "source": "site/compliance-report.html",
+            "why": "eneste side med EUComply Pro-årsabonnementet"
+          },
+          {
+            "product": "page-profile-pro",
+            "domain": "mahope.tools",
+            "route": "/page-profile",
+            "source": "site/page-profile.html",
+            "why": "Page Profiles eneste produktside med gratis/Pro-sammenligning"
+          }
+        ],
+        "offer_pages": [
+          {
+            "domain": "cleancopy.tools",
+            "route": "/",
+            "products": [
+              "clean-copy-pro"
+            ],
+            "price": "$19/år"
+          },
+          {
+            "domain": "cleancopy.tools",
+            "route": "/activate",
+            "products": [
+              "clean-copy-pro"
+            ],
+            "price": "$19/år"
+          },
+          {
+            "domain": "cleancopy.tools",
+            "route": "/blog/html-to-markdown-cli",
+            "products": [
+              "clean-copy-pro"
+            ],
+            "price": "$19/år"
+          },
+          {
+            "domain": "cleancopy.tools",
+            "route": "/blog/html-to-markdown-vscode",
+            "products": [
+              "clean-copy-pro"
+            ],
+            "price": "$19/år"
+          },
+          {
+            "domain": "cleancopy.tools",
+            "route": "/clean-copy-tool",
+            "products": [
+              "clean-copy-pro"
+            ],
+            "price": "$19/år"
+          },
+          {
+            "domain": "cleancopy.tools",
+            "route": "/da",
+            "products": [
+              "clean-copy-pro"
+            ],
+            "price": "$19/år"
+          },
+          {
+            "domain": "cleancopy.tools",
+            "route": "/da/activate",
+            "products": [
+              "clean-copy-pro"
+            ],
+            "price": "$19/år"
+          },
+          {
+            "domain": "cleancopy.tools",
+            "route": "/da/blog/html-til-markdown-cli",
+            "products": [
+              "clean-copy-pro"
+            ],
+            "price": "$19/år"
+          },
+          {
+            "domain": "cleancopy.tools",
+            "route": "/da/blog/indsaet-som-markdown-i-vscode",
+            "products": [
+              "clean-copy-pro"
+            ],
+            "price": "$19/år"
+          },
+          {
+            "domain": "cleancopy.tools",
+            "route": "/da/clean-copy-tool",
+            "products": [
+              "clean-copy-pro"
+            ],
+            "price": "$19/år"
+          },
+          {
+            "domain": "deskuptime.com",
+            "route": "/",
+            "products": [
+              "deskuptime-pro"
+            ],
+            "price": "$19 engang"
+          },
+          {
+            "domain": "deskuptime.com",
+            "route": "/da",
+            "products": [
+              "deskuptime-pro"
+            ],
+            "price": "$19 engang"
+          },
+          {
+            "domain": "deskuptime.com",
+            "route": "/tools",
+            "products": [
+              "deskuptime-pro"
+            ],
+            "price": "$19 engang"
+          },
+          {
+            "domain": "mahope.tools",
+            "route": "/",
+            "products": [
+              "eucomply-pro"
+            ],
+            "price": "$79/år pr. website"
+          },
+          {
+            "domain": "mahope.tools",
+            "route": "/blog/bug-reports-in-ci-pipeline",
+            "products": [
+              "deskuptime-pro"
+            ],
+            "price": "$19 engang"
+          },
+          {
+            "domain": "mahope.tools",
+            "route": "/blog/check-url-redirect-chain",
+            "products": [
+              "page-profile-pro"
+            ],
+            "price": "$19/år"
+          },
+          {
+            "domain": "mahope.tools",
+            "route": "/blog/color-blindness-simulation-check",
+            "products": [
+              "eucomply-pro"
+            ],
+            "price": "$79/år pr. website"
+          },
+          {
+            "domain": "mahope.tools",
+            "route": "/blog/compliance-check-github-action",
+            "products": [
+              "eucomply-pro"
+            ],
+            "price": "$79/år pr. website"
+          },
+          {
+            "domain": "mahope.tools",
+            "route": "/blog/cookie-consent-gdpr-compliance",
+            "products": [
+              "eucomply-pro"
+            ],
+            "price": "$79/år pr. website"
+          },
+          {
+            "domain": "mahope.tools",
+            "route": "/blog/copy-clean-text-from-website",
+            "products": [
+              "clean-copy-pro"
+            ],
+            "price": "$19/år"
+          },
+          {
+            "domain": "mahope.tools",
+            "route": "/blog/copy-table-website-to-notion",
+            "products": [
+              "clean-copy-pro"
+            ],
+            "price": "$19/år"
+          },
+          {
+            "domain": "mahope.tools",
+            "route": "/blog/desktop-website-monitor-cli",
+            "products": [
+              "deskuptime-pro"
+            ],
+            "price": "$19 engang"
+          },
+          {
+            "domain": "mahope.tools",
+            "route": "/blog/eaa-accessibility-checklist",
+            "products": [
+              "eucomply-pro"
+            ],
+            "price": "$79/år pr. website"
+          },
+          {
+            "domain": "mahope.tools",
+            "route": "/blog/gdpr-vs-nis2-overlap",
+            "products": [
+              "eucomply-pro"
+            ],
+            "price": "$79/år pr. website"
+          },
+          {
+            "domain": "mahope.tools",
+            "route": "/blog/get-notified-when-website-goes-down",
+            "products": [
+              "deskuptime-pro"
+            ],
+            "price": "$19 engang"
+          },
+          {
+            "domain": "mahope.tools",
+            "route": "/blog/monitor-website-github-actions-free",
+            "products": [
+              "deskuptime-pro"
+            ],
+            "price": "$19 engang"
+          },
+          {
+            "domain": "mahope.tools",
+            "route": "/blog/nis2-readiness-guide",
+            "products": [
+              "eucomply-pro"
+            ],
+            "price": "$79/år pr. website"
+          },
+          {
+            "domain": "mahope.tools",
+            "route": "/blog/open-graph-checker",
+            "products": [
+              "page-profile-pro"
+            ],
+            "price": "$19/år"
+          },
+          {
+            "domain": "mahope.tools",
+            "route": "/blog/prestashop-eaa-accessibility",
+            "products": [
+              "eucomply-pro"
+            ],
+            "price": "$79/år pr. website"
+          },
+          {
+            "domain": "mahope.tools",
+            "route": "/blog/release-integrity-explained",
+            "products": [
+              "clean-copy-pro"
+            ],
+            "price": "$19/år"
+          },
+          {
+            "domain": "mahope.tools",
+            "route": "/blog/text-on-image-contrast-check",
+            "products": [
+              "eucomply-pro"
+            ],
+            "price": "$79/år pr. website"
+          },
+          {
+            "domain": "mahope.tools",
+            "route": "/blog/webflow-vs-squarespace-accessibility",
+            "products": [
+              "eucomply-pro"
+            ],
+            "price": "$79/år pr. website"
+          },
+          {
+            "domain": "mahope.tools",
+            "route": "/blog/wix-eaa-accessibility",
+            "products": [
+              "eucomply-pro"
+            ],
+            "price": "$79/år pr. website"
+          },
+          {
+            "domain": "mahope.tools",
+            "route": "/color-blindness-simulator",
+            "products": [
+              "eucomply-pro"
+            ],
+            "price": "$79/år pr. website"
+          },
+          {
+            "domain": "mahope.tools",
+            "route": "/color-blindness-simulator-da",
+            "products": [
+              "eucomply-pro"
+            ],
+            "price": "$79/år pr. website"
+          },
+          {
+            "domain": "mahope.tools",
+            "route": "/compliance-report",
+            "products": [
+              "eucomply-pro"
+            ],
+            "price": "$79/år pr. website"
+          },
+          {
+            "domain": "mahope.tools",
+            "route": "/da",
+            "products": [
+              "eucomply-pro"
+            ],
+            "price": "$79/år pr. website"
+          },
+          {
+            "domain": "mahope.tools",
+            "route": "/da/blog/bugrapporter-i-ci-pipeline",
+            "products": [
+              "deskuptime-pro"
+            ],
+            "price": "$19 engang"
+          },
+          {
+            "domain": "mahope.tools",
+            "route": "/da/blog/cmp-sammenligning-2026",
+            "products": [
+              "eucomply-report-kit"
+            ],
+            "price": "$69"
+          },
+          {
+            "domain": "mahope.tools",
+            "route": "/da/blog/compliance-tjek-github-action",
+            "products": [
+              "eucomply-pro"
+            ],
+            "price": "$79/år pr. website"
+          },
+          {
+            "domain": "mahope.tools",
+            "route": "/da/blog/cookie-consent-gdpr-2026",
+            "products": [
+              "eucomply-pro"
+            ],
+            "price": "$79/år pr. website"
+          },
+          {
+            "domain": "mahope.tools",
+            "route": "/da/blog/dbbaftale-webbureau",
+            "products": [
+              "eucomply-dpa"
+            ],
+            "price": "$59"
+          },
+          {
+            "domain": "mahope.tools",
+            "route": "/da/blog/eaa-tjekliste-2026",
+            "products": [
+              "eucomply-pro"
+            ],
+            "price": "$79/år pr. website"
+          },
+          {
+            "domain": "mahope.tools",
+            "route": "/da/blog/faa-besked-naar-hjemmeside-er-nede",
+            "products": [
+              "deskuptime-pro"
+            ],
+            "price": "$19 engang"
+          },
+          {
+            "domain": "mahope.tools",
+            "route": "/da/blog/farveblindhed-tjek",
+            "products": [
+              "eucomply-pro"
+            ],
+            "price": "$79/år pr. website"
+          },
+          {
+            "domain": "mahope.tools",
+            "route": "/da/blog/gdpr-vs-nis2-overlap-da",
+            "products": [
+              "eucomply-pro"
+            ],
+            "price": "$79/år pr. website"
+          },
+          {
+            "domain": "mahope.tools",
+            "route": "/da/blog/kopier-ren-tekst-fra-hjemmeside",
+            "products": [
+              "clean-copy-pro"
+            ],
+            "price": "$19/år"
+          },
+          {
+            "domain": "mahope.tools",
+            "route": "/da/blog/kopier-tabel-fra-pdf-til-excel",
+            "products": [
+              "clean-copy-pro"
+            ],
+            "price": "$19/år"
+          },
+          {
+            "domain": "mahope.tools",
+            "route": "/da/blog/kopier-tabel-hjemmeside-til-notion",
+            "products": [
+              "clean-copy-pro"
+            ],
+            "price": "$19/år"
+          },
+          {
+            "domain": "mahope.tools",
+            "route": "/da/blog/nis2-beredskabstjek-2026",
+            "products": [
+              "eucomply-pro"
+            ],
+            "price": "$79/år pr. website"
+          },
+          {
+            "domain": "mahope.tools",
+            "route": "/da/blog/open-graph-tjekker-guide",
+            "products": [
+              "page-profile-pro"
+            ],
+            "price": "$19/år"
+          },
+          {
+            "domain": "mahope.tools",
+            "route": "/da/blog/overvaag-hjemmeside-github-actions-gratis",
+            "products": [
+              "deskuptime-pro"
+            ],
+            "price": "$19 engang"
+          },
+          {
+            "domain": "mahope.tools",
+            "route": "/da/blog/prestashop-tilgaengelighed-eaa",
+            "products": [
+              "eucomply-pro"
+            ],
+            "price": "$79/år pr. website"
+          },
+          {
+            "domain": "mahope.tools",
+            "route": "/da/blog/release-integrity-hvad-er-det",
+            "products": [
+              "clean-copy-pro"
+            ],
+            "price": "$19/år"
+          },
+          {
+            "domain": "mahope.tools",
+            "route": "/da/blog/tekst-paa-billede-kontrasttjek",
+            "products": [
+              "eucomply-pro"
+            ],
+            "price": "$79/år pr. website"
+          },
+          {
+            "domain": "mahope.tools",
+            "route": "/da/blog/tilgaengelighedsscanner-cli",
+            "products": [
+              "eucomply-pro"
+            ],
+            "price": "$79/år pr. website"
+          },
+          {
+            "domain": "mahope.tools",
+            "route": "/da/blog/tjek-url-redirect-kaede",
+            "products": [
+              "page-profile-pro"
+            ],
+            "price": "$19/år"
+          },
+          {
+            "domain": "mahope.tools",
+            "route": "/da/blog/webflow-vs-squarespace-tilgaengelighed",
+            "products": [
+              "eucomply-pro"
+            ],
+            "price": "$79/år pr. website"
+          },
+          {
+            "domain": "mahope.tools",
+            "route": "/da/blog/wix-tilgaengelighed-eaa",
+            "products": [
+              "eucomply-pro"
+            ],
+            "price": "$79/år pr. website"
+          },
+          {
+            "domain": "mahope.tools",
+            "route": "/da/compliance-report",
+            "products": [
+              "eucomply-pro"
+            ],
+            "price": "$79/år pr. website"
+          },
+          {
+            "domain": "mahope.tools",
+            "route": "/da/page-profile",
+            "products": [
+              "page-profile-pro"
+            ],
+            "price": "$19/år"
+          },
+          {
+            "domain": "mahope.tools",
+            "route": "/da/paid-templates",
+            "products": [
+              "eu-compliance-ebook-bundle",
+              "eucomply-dpa",
+              "eucomply-eaa-statement",
+              "eucomply-nda-clauses",
+              "eucomply-nis2-clauses",
+              "eucomply-report-kit",
+              "eucomply-template-bundle"
+            ],
+            "price": "$149, $29, $39, $49, $59, $69"
+          },
+          {
+            "domain": "mahope.tools",
+            "route": "/da/support",
+            "products": [
+              "support-mahope-oss"
+            ],
+            "price": "fra 10 kr."
+          },
+          {
+            "domain": "mahope.tools",
+            "route": "/free-downloads",
+            "products": [
+              "eucomply-pro"
+            ],
+            "price": "$79/år pr. website"
+          },
+          {
+            "domain": "mahope.tools",
+            "route": "/page-profile",
+            "products": [
+              "page-profile-pro"
+            ],
+            "price": "$19/år"
+          },
+          {
+            "domain": "mahope.tools",
+            "route": "/paid-templates",
+            "products": [
+              "eu-compliance-ebook-bundle",
+              "eucomply-dpa",
+              "eucomply-eaa-statement",
+              "eucomply-nda-clauses",
+              "eucomply-nis2-clauses",
+              "eucomply-report-kit",
+              "eucomply-template-bundle"
+            ],
+            "price": "$149, $29, $39, $49, $59, $69"
+          },
+          {
+            "domain": "mahope.tools",
+            "route": "/palette-generator",
+            "products": [
+              "eucomply-pro"
+            ],
+            "price": "$79/år pr. website"
+          },
+          {
+            "domain": "mahope.tools",
+            "route": "/palette-generator-da",
+            "products": [
+              "eucomply-pro"
+            ],
+            "price": "$79/år pr. website"
+          },
+          {
+            "domain": "mahope.tools",
+            "route": "/support",
+            "products": [
+              "support-mahope-oss"
+            ],
+            "price": "fra 10 kr."
+          }
+        ]
+      }
+    }
+  },
+  "npm": {
+    "@mahope/clean-copy": {
+      "downloads": 3,
+      "note": null
+    },
+    "@mahope/deskuptime": {
+      "downloads": 5,
+      "note": null
+    },
+    "@mahope/transmute": {
+      "downloads": 3,
+      "note": null
+    },
+    "@mahope/eucomply-scanner": {
+      "downloads": 6,
+      "note": null
+    },
+    "@mahope/passiv-mcp": {
+      "downloads": 6,
+      "note": null
+    },
+    "@mahope/cookie-consent-banner": {
+      "downloads": 3,
+      "note": null
+    },
+    "bugbottle": {
+      "downloads": 378,
+      "note": null
+    }
+  },
+  "github": {
+    "mahope/eucomply-scanner": {
+      "product": "EUComply",
+      "open_issues": 2,
+      "pushed_at": "2026-09-07T18:19:28Z",
+      "stars": 0,
+      "latest_release": "v1.0.1",
+      "latest_release_at": "2026-09-07T18:23:15Z",
+      "latest_release_downloads": 0,
+      "release_downloads_total": 0
+    },
+    "mahope/clean-copy": {
+      "product": "Clean Copy",
+      "open_issues": 1,
+      "pushed_at": "2026-09-25T06:34:16Z",
+      "stars": 0,
+      "latest_release": "v1.5.2",
+      "latest_release_at": "2026-08-24T21:31:36Z",
+      "latest_release_downloads": 0,
+      "release_downloads_total": 15
+    },
+    "mahope/clean-copy-cli": {
+      "product": "Clean Copy",
+      "open_issues": 2,
+      "pushed_at": "2026-09-07T18:19:13Z",
+      "stars": 1,
+      "latest_release": "v1.5.3",
+      "latest_release_at": "2026-09-07T18:24:30Z",
+      "latest_release_downloads": 0,
+      "release_downloads_total": 31
+    },
+    "mahope/clean-copy-firefox": {
+      "product": "Clean Copy",
+      "open_issues": 1,
+      "pushed_at": "2026-09-25T06:34:22Z",
+      "stars": 0,
+      "latest_release": "v1.5.2-fx",
+      "latest_release_at": "2026-08-24T21:31:42Z",
+      "latest_release_downloads": 0,
+      "release_downloads_total": 0
+    },
+    "mahope/clean-copy-vscode": {
+      "product": "Clean Copy",
+      "open_issues": 0,
+      "pushed_at": "2026-09-07T12:49:29Z",
+      "stars": 0,
+      "latest_release": "v1.0.0",
+      "latest_release_at": "2026-08-25T06:26:01Z",
+      "latest_release_downloads": 2,
+      "release_downloads_total": 2
+    },
+    "mahope/clean-copy-obsidian": {
+      "product": "Clean Copy",
+      "open_issues": 1,
+      "pushed_at": "2026-11-01T21:38:28Z",
+      "stars": 0,
+      "latest_release": "1.0.10",
+      "latest_release_at": "2026-11-01T21:38:43Z",
+      "latest_release_downloads": 3,
+      "release_downloads_total": 41
+    },
+    "mahope/deskuptime": {
+      "product": "DeskUptime",
+      "open_issues": 0,
+      "pushed_at": "2026-09-29T20:03:27Z",
+      "stars": 0,
+      "latest_release": "v0.2.8",
+      "latest_release_at": "2026-09-07T18:23:15Z",
+      "latest_release_downloads": 0,
+      "release_downloads_total": 147
+    },
+    "mahope/transmute": {
+      "product": "Transmute",
+      "open_issues": 1,
+      "pushed_at": "2026-10-30T01:20:18Z",
+      "stars": 0,
+      "latest_release": "v0.2.1",
+      "latest_release_at": "2026-09-07T18:23:15Z",
+      "latest_release_downloads": 3,
+      "release_downloads_total": 7
+    },
+    "mahope/bugbottle": {
+      "product": "BugBottle",
+      "open_issues": 8,
+      "pushed_at": "2026-10-25T18:55:12Z",
+      "stars": 2,
+      "latest_release": "v1.1.0",
+      "latest_release_at": "2026-10-25T18:54:24Z",
+      "latest_release_downloads": 0,
+      "release_downloads_total": 0
+    },
+    "mahope/bugbottle-wordpress": {
+      "product": "BugBottle",
+      "open_issues": 1,
+      "pushed_at": "2026-09-08T11:37:06Z",
+      "stars": 0,
+      "latest_release": "v1.0.0",
+      "latest_release_at": "2026-09-08T11:37:33Z",
+      "latest_release_downloads": 5,
+      "release_downloads_total": 15
+    },
+    "mahope/bugbottle-action": {
+      "product": "BugBottle",
+      "open_issues": 0,
+      "pushed_at": "2026-09-07T11:48:06Z",
+      "stars": 0,
+      "latest_release": "v1.0.2",
+      "latest_release_at": "2026-08-25T23:17:22Z",
+      "latest_release_downloads": 0,
+      "release_downloads_total": 0
+    },
+    "mahope/hermes-passiv": {
+      "product": "mahope.tools",
+      "open_issues": 3,
+      "pushed_at": "2026-10-31T08:42:53Z",
+      "stars": 0,
+      "latest_release": "eaa-scanner-desktop-v1.3.3",
+      "latest_release_at": "2026-08-25T17:11:43Z",
+      "latest_release_downloads": 24,
+      "release_downloads_total": 36
+    },
+    "mahope/passiv-mcp": {
+      "product": "mahope.tools",
+      "open_issues": 2,
+      "pushed_at": "2026-09-07T18:19:33Z",
+      "stars": 0,
+      "latest_release": "v1.2.1",
+      "latest_release_at": "2026-09-07T18:23:22Z",
+      "latest_release_downloads": 0,
+      "release_downloads_total": 0
+    },
+    "mahope/cookie-consent-banner": {
+      "product": "mahope.tools",
+      "open_issues": 2,
+      "pushed_at": "2026-09-07T18:19:37Z",
+      "stars": 0,
+      "latest_release": "v1.0.1",
+      "latest_release_at": "2026-09-07T18:23:24Z",
+      "latest_release_downloads": 0,
+      "release_downloads_total": 0
+    }
+  },
+  "bugreports": {
+    "available": true,
+    "last_week": 0,
+    "stored_total": 0,
+    "by_host": {},
+    "by_type": {}
+  },
+  "uptime": {
+    "conclusion": "success",
+    "created_at": "2026-11-02T03:24:17Z",
+    "url": "https://github.com/mahope/deskuptime/actions/runs/41382915878",
+    "runs_last_week": 10,
+    "failures_last_week": 0
+  },
+  "links": {
+    "available": true,
+    "broken_total": 0,
+    "by_domain": {
+      "cleancopy.tools": 0,
+      "deskuptime.com": 0,
+      "bugbottle.dev": 0,
+      "mahope.tools": 0
+    },
+    "html_total": 338
+  },
+  "errors": [],
+  "ranking_basis": "unknown"
+}
