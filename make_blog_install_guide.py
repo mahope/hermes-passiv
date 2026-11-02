@@ -109,7 +109,7 @@ def build_page():
     <ol style="line-height:2;max-width:680px;">
       <li>Open the <a href="https://github.com/mahope/clean-copy-obsidian/releases/latest" rel="noopener">latest release page</a>.</li>
       <li>Download <code>main.js</code>, <code>manifest.json</code> and <code>styles.css</code>.</li>
-      <li>Create the folder <code>&lt;your-vault&gt;/.obsidian/plugins/clean-copy-obsidian/</code> and put all three files inside it.</li>
+      <li>Create the folder <code>&lt;your-vault&gt;/.obsidian/plugins/clean-copy-markdown/</code> and put all three files inside it.</li>
       <li>Restart Obsidian or reload community plugins, then enable <strong>Clean Copy</strong>.</li>
     </ol>
     <p>This method also works on Obsidian mobile — use any file manager to reach the vault folder.</p>
@@ -121,7 +121,7 @@ def build_page():
     <h2>Way 3 — One-click zip bundle</h2>
     <p>The same three files are bundled as a single download:</p>
     <p style="text-align:center;"><a href="/downloads/clean-copy-obsidian-v1.0.7.zip" class="btn-primary">Download v1.0.7 zip</a></p>
-    <p>Unzip it into <code>&lt;vault&gt;/.obsidian/plugins/</code> so you end up with a <code>clean-copy-obsidian</code> folder containing the three files, then enable the plugin as above.</p>
+    <p>Unzip it into <code>&lt;vault&gt;/.obsidian/plugins/</code> so you end up with a <code>clean-copy-markdown</code> folder containing the three files, then enable the plugin as above.</p>
   </div>
 </section>
 

@@ -14,7 +14,7 @@ Submission is pending. When approved: Settings → Community plugins → Browse 
 ### Manual install today
 
 1. Go to the [latest release](https://github.com/mahope/clean-copy-obsidian/releases/latest) and download `main.js`, `manifest.json` and `styles.css`.
-2. Put them in `<vault>/.obsidian/plugins/clean-copy-obsidian/`.
+2. Put them in `<vault>/.obsidian/plugins/clean-copy-markdown/`.
 3. Reload Obsidian, then enable **Clean Copy** under Settings → Community plugins.
 
 ### Via BRAT
@@ -45,7 +45,7 @@ Clean Copy is free and MIT-licensed, and it stays that way. If it saved you a bi
 
 ## Note on naming
 
-The community plugin id is `clean-copy-obsidian`; another developer uses the id `clean-copy` for a different plugin.
+The community plugin id is `clean-copy-markdown` (it was `clean-copy-obsidian` up to 1.0.9; Obsidian does not allow "obsidian" in an id). Another developer uses the name "Clean Copy" for a different plugin.
 
 ## Development
 

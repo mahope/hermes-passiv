@@ -31,7 +31,7 @@ def build_page():
     faq = [
         ("Er der et gratis plugin der indsætter som ren Markdown?",
          "Clean Copy til Obsidian er gratis: download main.js og manifest.json "
-         "fra udgivelsen, læg dem i <vault>/.obsidian/plugins/clean-copy-obsidian/, "
+         "fra udgivelsen, læg dem i <vault>/.obsidian/plugins/clean-copy-markdown/, "
          "aktivér plugin'et, og brug Ctrl/Cmd+Shift+V — så får du ren Markdown "
          "i stedet for HTML-rodd."),
         ("Fikser Ctrl+Shift+V allerede ikke det her?",
