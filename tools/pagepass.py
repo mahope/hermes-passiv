@@ -359,7 +359,7 @@ STRIP_HEAD_RE = [
     re.compile(r'\s*<meta\s+name="author"[^>]*>', re.I),
     re.compile(r'\s*<link\s+rel="stylesheet"\s+href="/style\.css"[^>]*>', re.I),
 ]
-TITLE_SUFFIX_RE = re.compile(r"\s*[|·—–-]\s*(mahoje\.dk|mahope\.tools|Hermes Passiv|Hermes Compliance Tools|Mahope)\s*$", re.I)
+TITLE_SUFFIX_RE = re.compile(r"\s*[|·—–-]\s*(mahoje\.dk|mahope\.tools|Hermes Passiv|Hermes Compliance Tools|Mahope|Mahoje)\s*$", re.I)
 TITLE_PAREN_RE = re.compile(r"\s*\((?:Guide|Updated)?\s*20\d\d\)\s*$", re.I)
 
 

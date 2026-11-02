@@ -181,7 +181,7 @@ SITES: dict[str, dict] = {
         "project": "mahope-tools",
         "plausible": "pa-eO7P8odw5NrYRHEUw8ZIQ",
         "product": "mahope",
-        "brand": "mahope.tools",
+        "brand": "Mahoje tools",
         "github": "https://github.com/mahope",
         "nav": {
             "en": [("Tools", "/free-tools"), ("Books", "/books/"), ("Blog", "/blog/"),
@@ -626,14 +626,14 @@ FAMILY = [
     ("DeskUptime", "DeskUptime", "https://deskuptime.com"),
     ("Transmute", "Transmute", "https://transmute.run"),
     ("BugBottle", "BugBottle", "https://bugbottle.dev"),
-    ("All tools", "mahope.tools", "https://mahope.tools"),
+    ("All tools", "Mahoje tools", "https://mahope.tools"),
 ]
 PRODUCTS = [(full, url) for _short, full, url in FAMILY]
 BUGBOTTLE_VERSION = "0.5.0"
 BUGBOTTLE_ENDPOINT = "https://mahope.tools/api/bugreport"
 L10N = {
     "en": dict(skip_label="Skip to content", nav_label="Main", menu_label="Menu", brand_by="by mahoje.dk",
-               family_label="Mahope tools:", family_heading="Family", site_heading="Site",
+               family_label="Mahoje tools:", family_heading="Family", site_heading="Site",
                privacy_link="Privacy", terms_link="Terms", support_link="Support the tools", security_link="Security", sitemap_link="Sitemap", report_link="Report a bug",
                report_subject="Bug%20report", bb_badge="Feedback powered by BugBottle",
                privacy_note="No cookies, no trackers — only an anonymous page-view counter we run ourselves.",
@@ -646,7 +646,7 @@ L10N = {
                home="Home", blog="Blog", guides="Guides", books="E-books", tools="Tools", pages="Pages",
                updated="Updated", read="min read", on_this_page="On this page", share="Copy link", newer="Newer", older="Older"),
     "da": dict(skip_label="Spring til indhold", nav_label="Hovedmenu", menu_label="Menu", brand_by="af mahoje.dk",
-               family_label="Mahope tools:", family_heading="Familien", site_heading="Sitet",
+               family_label="Mahoje tools:", family_heading="Familien", site_heading="Sitet",
                privacy_link="Privatliv", terms_link="Vilkår", support_link="Støt værktøjerne", security_link="Sikkerhed", sitemap_link="Sitemap", report_link="Rapportér en fejl",
                report_subject="Fejlrapport", bb_badge="Feedback drevet af BugBottle",
                privacy_note="Ingen cookies, ingen trackere — kun en anonym sidevisningstæller, vi selv kører.",

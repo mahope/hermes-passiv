@@ -7,7 +7,7 @@ Upload kræver en Firefox-konto + API-nøgle fra https://addons.mozilla.org/deve
 
 **VIGTIGT — navnet:** "Clean Copy" er optaget på AMO af et urelateret URL-rensnings-tilbehør
 (slug `clean-copy`, author Wavesonics, 2020) og endnu et "Clean Copy" (slug `clean-copy21`, 2025).
-Firefox-versionen hedder derfor **Clean Copy MD** med gecko-ID `clean-copy-md@mahope.dk`.
+Firefox-versionen hedder derfor **Clean Copy MD** med gecko-ID `clean-copy-md@mahoje.dk`.
 Chrome-versionen beholder navnet Clean Copy — der er slug'en ledig.
 
 ---
@@ -65,7 +65,7 @@ Works on any page you can select text on. No host permissions — Clean Copy MD 
 
 - MV3 in Firefox uses `"background": {"scripts": [...]}` event pages, not service workers.
 - New add-ons since Nov 3 2025 MUST declare `gecko.data_collection_permissions` or the submission is rejected.
-- MV3 signing requires an explicit add-on ID (`clean-copy-md@mahope.dk`).
+- MV3 signing requires an explicit add-on ID (`clean-copy-md@mahoje.dk`).
 - First submission can be unlisted/self-distributed with no GUID; listed submissions need the first upload done manually in Developer Hub, then V5 API automates updates.
 - All submissions get automated validation; signing typically < 24 h, manual review possible at any time.
 - AMO search API: https://services.addons.mozilla.org/api/v4/addons/search/?q=clean%20copy&app=firefox (brugt til at verificere navnekonflikt).

@@ -429,7 +429,7 @@ ok('400: heller ikke gentaget', ugyldigt.fetches === 1, 'fetches=' + ugyldigt.fe
 // 3c. Fanebladet skal sige det samme som overskriften. Målt 3/10 i Chromium mod
 //     den byggede side med `/api/stripe/fulfillment` svarende 400:
 //
-//       Faneblad  : Thanks for your purchase | Mahope tools
+//       Faneblad  : Thanks for your purchase | Mahoje tools
 //       <h1>     : We could not confirm your order
 //       status   : We could not find this order.
 //
@@ -448,12 +448,12 @@ for (const [label, side] of [['400', ugyldigt], ['404', ukendt], ['429', vedlige
   ok(`${label}: fanebladet siger at købet ikke er bekræftet, ikke at det er købt`,
     /^We could not confirm your order/.test(side.docTitle) && !/purchase/i.test(side.docTitle),
     JSON.stringify(side.docTitle));
-  ok(`${label}: fanebladet og <h1> er det samme`, side.docTitle === side.title.textContent + ' | Mahope tools',
+  ok(`${label}: fanebladet og <h1> er det samme`, side.docTitle === side.title.textContent + ' | Mahoje tools',
     `title=${JSON.stringify(side.docTitle)} h1=${JSON.stringify(side.title.textContent)}`);
 }
 for (const [label, side] of Object.entries(rendered)) {
   ok(`${label}: fanebladet følger den bekræftede overskrift, ikke markupkens`,
-    side.page.docTitle === side.page.title.textContent + ' | Mahope tools' && side.page.docTitle !== STATISK_TITLE,
+    side.page.docTitle === side.page.title.textContent + ' | Mahoje tools' && side.page.docTitle !== STATISK_TITLE,
     `title=${JSON.stringify(side.page.docTitle)} h1=${JSON.stringify(side.page.title.textContent)}`);
 }
 // Ratchet på *formen*: kun `titel()` må røre `<title>`, så de to elementer
@@ -558,12 +558,12 @@ ok('dansk browser får dansk h1 og kvitteringstekst',
 {
   const s = await render(null, [{ throw: true }], 'da-DK');
   ok('dansk h1 og faneblad er danske fra første maling',
-    s.første.h1 === 'Tak for dit køb!' && s.første.docTitle === 'Tak for dit køb! | Mahope tools'
+    s.første.h1 === 'Tak for dit køb!' && s.første.docTitle === 'Tak for dit køb! | Mahoje tools'
     && s.første.lang === 'da' && s.første.status === 'Vi finder din ordre…',
     JSON.stringify(s.første));
   const e = await render(null, [{ throw: true }], 'en-US');
   ok('engelsk h1 og faneblad er stadig engelske',
-    e.første.h1 === 'Thanks for your purchase!' && e.første.docTitle === 'Thanks for your purchase! | Mahope tools'
+    e.første.h1 === 'Thanks for your purchase!' && e.første.docTitle === 'Thanks for your purchase! | Mahoje tools'
     && e.første.status === 'Looking up your order…', JSON.stringify(e.første));
   ok('sproghåndgrebet kan ikke finde en sprogstreng uden for tabellen',
     (await render(null, [{ status: 400, body: { error: 'x' } }], 'xx-YY')).docLang === 'en',

@@ -25,7 +25,7 @@ POST = f"""<!DOCTYPE html>
 <link rel="canonical" href="https://hermes-passiv.pages.dev/blog/{SLUG}">
 <link rel="stylesheet" href="/style.css">
 <script type="application/ld+json">
-{{"@context":"https://schema.org","@type":"TechArticle","headline":"{TITLE}","description":"{DESC}","datePublished":"{datetime.utcnow().strftime('%Y-%m-%d')}","author":{{"@type":"Organization","name":"Mahope"}}}}
+{{"@context":"https://schema.org","@type":"TechArticle","headline":"{TITLE}","description":"{DESC}","datePublished":"{datetime.utcnow().strftime('%Y-%m-%d')}","author":{{"@type":"Organization","name":"Mahoje"}}}}
 </script>
 </head>
 <body>

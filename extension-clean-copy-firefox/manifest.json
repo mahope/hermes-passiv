@@ -5,7 +5,7 @@
   "description": "Copy any text as clean, formatted Markdown. No more messy pastes — just right-click and copy.",
   "browser_specific_settings": {
     "gecko": {
-      "id": "clean-copy-md@mahope.dk",
+      "id": "clean-copy-md@mahoje.dk",
       "strict_min_version": "115.0",
       "data_collection_permissions": {
         "required": [

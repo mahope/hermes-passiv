@@ -138,8 +138,8 @@ def build(lang):
            'headline': title, 'description': desc, 'url': url,
            'datePublished': TODAY, 'dateModified': TODAY,
            'inLanguage': lang,
-           'author': {'@type': 'Organization', 'name': 'Mahope Tools'},
-           'publisher': {'@type': 'Organization', 'name': 'Mahope Tools'}}
+           'author': {'@type': 'Organization', 'name': 'Mahoje Tools'},
+           'publisher': {'@type': 'Organization', 'name': 'Mahoje Tools'}}
     faq = {'@context': 'https://schema.org', '@type': 'FAQPage',
            'mainEntity': [{'@type': 'Question', 'name': re.sub('<[^>]+>', '', q),
                            'acceptedAnswer': {'@type': 'Answer',

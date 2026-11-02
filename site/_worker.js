@@ -4963,7 +4963,7 @@ const STRIPE_PRODUCTS = {
   'eucomply-report-kit': { name: 'Client Compliance Report Kit', kind: 'download', link: 'https://buy.stripe.com/00wdR8bn5a6S0OWeF1bMQ09', files: ['monthly-report-template.pdf', 'monthly-report-template.md', 'quarterly-narrative-template.pdf', 'quarterly-narrative-template.md', 'change-log-spec.pdf', 'change-log-spec.md'] },
   'eucomply-template-bundle': { name: 'EUComply Complete Template Bundle', kind: 'download', link: 'https://buy.stripe.com/eVqaEW0Iren855c68vbMQ0a', files: ['dpa-template.pdf', 'dpa-template.md', 'nis2-vendor-clauses.pdf', 'nis2-vendor-clauses.md', 'nda-clause-set.pdf', 'nda-clause-set.md', 'eaa-statement-template.pdf', 'eaa-statement-template.md', 'monthly-report-template.pdf', 'monthly-report-template.md', 'quarterly-narrative-template.pdf', 'quarterly-narrative-template.md', 'change-log-spec.pdf', 'change-log-spec.md'] },
   'eu-compliance-ebook-bundle': { name: 'EU Compliance E-book Bundle', kind: 'download', link: 'https://buy.stripe.com/fZu9AScr9a6SbtA68vbMQ0b', files: ['compliance-bundle.pdf', 'compliance-bundle-v1.0.zip'] },
-  'support-mahope-oss': { name: 'Support for Mahope open source', kind: 'donation' },
+  'support-mahope-oss': { name: 'Support for Mahoje open source', kind: 'donation' },
 };
 const DOWNLOAD_TTL_DAYS = 60;
 // Lifetime ("founding-pris", første 100 køb pr. produkt) sælges som en
@@ -4981,7 +4981,7 @@ function lifetimeField(rec) {
   return rec && rec.lifetime === true ? { lifetime: true } : {};
 }
 const SUBSCRIPTION_GRACE_DAYS = 7;
-const SALES_FROM = 'Mahope tools <orders@mahoje.dk>';
+const SALES_FROM = 'Mahoje tools <orders@mahoje.dk>';
 // Kundehenvendelser skal lande i produktets egen indbakke (support@<produktets domæne>)
 // og dermed læses som produktfeedback. `home` er katalogens autoritative domæne;
 // produkter uden `home` (downloads, donationer) bruger mahope.tools.
@@ -5371,11 +5371,11 @@ async function sendSaleEmail(env, to, r, sessionId) {
     text = `${thanksLine(r)}\n\nYour license key:\n${r.license_key}\n\nActivate it here: ${r.activate_url}\n`
       + hintText
       + `${uses}${renews}.\n`
-      + portalText + `\nKeep this email. Questions? Just reply.\n\nMads Holst Jensen, Mahope`;
+      + portalText + `\nKeep this email. Questions? Just reply.\n\nMads Holst Jensen, Mahoje`;
     html = `<p>${thanksLine(r, (n) => `<strong>${esc(n)}</strong>`)}</p><p>Your license key:</p>`
       + `<p style="font:16px monospace;background:#f4f4f5;padding:12px;border-radius:6px">${esc(r.license_key)}</p>`
       + `<p>Activate it here: <a href="${esc(r.activate_url)}">${esc(r.activate_url)}</a><br>${esc(uses)}${esc(renews)}.</p>`
-      + hintHtml + portalHtml + `<p>Keep this email. Questions? Just reply.</p><p>Mads Holst Jensen, Mahope</p>`;
+      + hintHtml + portalHtml + `<p>Keep this email. Questions? Just reply.</p><p>Mads Holst Jensen, Mahoje</p>`;
   } else {
     const list = (r.downloads || []).map(d => `${d.file}: ${d.url}`).join('\n');
     // En fil der mangler i KV ville give kunden en adresse der svarer 503. Den
@@ -5386,8 +5386,8 @@ async function sendSaleEmail(env, to, r, sessionId) {
     const listHtml = (r.downloads || []).map(d => `<li><a href="${esc(d.url)}">${esc(d.file)}</a></li>`).join('');
     const head = listHtml ? `<p>Your downloads (valid for ${DOWNLOAD_TTL_DAYS} days):</p><ul>${listHtml}</ul>` : '';
     const missHtml = missing ? `<p><strong>Not available for download right now:</strong> ${esc(r.downloads_missing.join(', '))}. Your payment went through — reply to this email and we will sort it out.</p>` : '';
-    text = `${thanksLine(r)}\n\n${list ? `Your downloads (valid for ${DOWNLOAD_TTL_DAYS} days):\n${list}\n` : ''}${missing}\n\nQuestions? Just reply.\n\nMads Holst Jensen, Mahope`;
-    html = `<p>${thanksLine(r, (n) => `<strong>${esc(n)}</strong>`)}</p>${head}${missHtml}<p>Questions? Just reply.</p><p>Mads Holst Jensen, Mahope</p>`;
+    text = `${thanksLine(r)}\n\n${list ? `Your downloads (valid for ${DOWNLOAD_TTL_DAYS} days):\n${list}\n` : ''}${missing}\n\nQuestions? Just reply.\n\nMads Holst Jensen, Mahoje`;
+    html = `<p>${thanksLine(r, (n) => `<strong>${esc(n)}</strong>`)}</p>${head}${missHtml}<p>Questions? Just reply.</p><p>Mads Holst Jensen, Mahoje</p>`;
   }
   try {
     const resp = await fetch('https://api.resend.com/emails', {

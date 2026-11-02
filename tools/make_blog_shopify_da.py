@@ -208,7 +208,7 @@ html = f'''<!DOCTYPE html>
 
 <footer style="padding:32px 24px;">
   <p><a href="/">Forside</a> &middot; <a href="/scan-da">EAA-scanner</a> &middot; <a href="/free-tools">Gratis værktøjer</a> &middot; <a href="/blog">Blog (EN)</a> &middot; <a href="{EN_URL}">Engelsk version</a></p>
-  <p>Mahope © 2026 · Praktisk EU-compliance for små webbureauer</p>
+  <p>Mahoje © 2026 · Praktisk EU-compliance for små webbureauer</p>
 </footer>
 <script>
 (function(){{try{{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\\.html$/,'')||'/';fetch('/api/track',{{method:'POST',headers:{{'Content-Type':'application/json'}},body:JSON.stringify({{path:p}}),keepalive:true}}).catch(function(){{}});}}catch(e){{}}}})();

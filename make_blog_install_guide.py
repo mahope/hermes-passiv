@@ -31,7 +31,7 @@ def build_page():
         'offers': {'@type': 'Offer', 'price': '0', 'priceCurrency': 'USD'},
         'softwareVersion': '1.0.7',
         'url': f'{BASE}/clean-copy',
-        'author': {'@type': 'Organization', 'name': 'Mahope'},
+        'author': {'@type': 'Organization', 'name': 'Mahoje'},
     }, ensure_ascii=False)
     faq = [
         ("Is it safe to install plugins from GitHub?",

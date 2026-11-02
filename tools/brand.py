@@ -49,12 +49,12 @@ BRANDS: dict[str, dict] = {
                     "da": "Fejlrapporter i appen, med beviserne vedhæftet."},
     },
     "mahope": {
-        "name": "mahope.tools",
+        "name": "Mahoje tools",
         "domain": "mahope.tools",
         "mark": "m",
         "accent": "#4a3fc4",
         "github": "https://github.com/mahope",
-        "summary": "mahope.tools collects free browser-based tools for developers and small web agencies: GDPR document "
+        "summary": "Mahoje tools collects free browser-based tools for developers and small web agencies: GDPR document "
                    "generators, WCAG colour and contrast tools, NIS2 assessments, developer utilities, plus guides, "
                    "blog posts and e-books. Everything runs in the browser; no account, no tracking cookies.",
         "install": [],

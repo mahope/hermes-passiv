@@ -20,7 +20,7 @@ EN = '''<!DOCTYPE html>
   "@type": "TechArticle",
   "headline": "Free Website Compliance Checker: Scan Any Site for 9 EU Compliance Items",
   "description": "Scan any website for privacy policy, cookie consent, accessibility statement, DPA, security headers, meta tags and more. Free, no signup.",
-  "publisher": { "@type": "Organization", "name": "Mahope" }
+  "publisher": { "@type": "Organization", "name": "Mahoje" }
 }
 </script>
 <script defer src="/track.js"></script>
@@ -69,7 +69,7 @@ EN = '''<!DOCTYPE html>
 </main>
 <footer class="site-footer"><div class="container">
   <p><a href="/">← Home</a> · <a href="/compliance-site-check">Compliance Checker</a> · <a href="/free-tools">More free tools</a> · <a href="/#blog">Blog</a></p>
-  <p>Mahope © 2026</p>
+  <p>Mahoje © 2026</p>
 </div></footer>
 </body>
 </html>

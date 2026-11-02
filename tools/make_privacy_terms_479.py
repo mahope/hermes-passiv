@@ -32,7 +32,7 @@ def page(title, desc, body, lang='en'):
 <style>{STYLE}</style>
 </head>
 <body>
-<header><a href="/" style="color:var(--text);text-decoration:none;font-weight:600;">Mahope Tools</a></header>
+<header><a href="/" style="color:var(--text);text-decoration:none;font-weight:600;">Mahoje Tools</a></header>
 <div class="container">
 {body}
 <footer><a href="/">Home</a> &middot; <a href="/privacy/">Privacy</a> &middot; <a href="/terms/">Terms</a></footer>
@@ -42,7 +42,7 @@ def page(title, desc, body, lang='en'):
 
 PRIVACY_EN = page(
     "Privacy Policy",
-    "Privacy policy for Mahope Tools products and websites.",
+    "Privacy policy for Mahoje Tools products and websites.",
     f"""
 <h1>Privacy Policy</h1>
 <p class="muted">Last updated: August 26, 2026</p>
@@ -82,7 +82,7 @@ PRIVACY_EN = PRIVACY_EN.replace('{CANON}', SITEURL + '/privacy/')
 
 TERMS_EN = page(
     "Terms of Service",
-    "Terms of service for Mahope Tools products and websites.",
+    "Terms of service for Mahoje Tools products and websites.",
     f"""
 <h1>Terms of Service</h1>
 <p class="muted">Last updated: September 25, 2026</p>

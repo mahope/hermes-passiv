@@ -81,8 +81,8 @@ RÆKKE = {"license": 0, "download": 1, "template": 1, "donation": 2}
 # med siden; resten af `TEKST` bruges af `byg_blok()`.
 TEKST = {
     "en": {
-        "title": "Pricing — every Mahope tool and template, in one list",
-        "description": ("Every paid Mahope product with its real price: Clean Copy Pro, "
+        "title": "Pricing — every Mahoje tool and template, in one list",
+        "description": ("Every paid Mahoje product with its real price: Clean Copy Pro, "
                         "DeskUptime Pro, EUComply Pro and Page Profile Pro, plus the paid "
                         "compliance templates. Free tools stay free."),
         "th_product": "Product",
@@ -111,8 +111,8 @@ TEKST = {
                           "stays free whether you give or not."),
     },
     "da": {
-        "title": "Priser — alle Mahope-værktøjer og -skabeloner samlet",
-        "description": ("Alle betalte Mahope-produkter med den rigtige pris: Clean Copy Pro, "
+        "title": "Priser — alle Mahoje-værktøjer og -skabeloner samlet",
+        "description": ("Alle betalte Mahoje-produkter med den rigtige pris: Clean Copy Pro, "
                         "DeskUptime Pro, EUComply Pro og Page Profile Pro, plus de betalte "
                         "compliance-skabeloner. Gratisværktøjerne bliver gratis."),
         "h1": "Hvad alt koster",

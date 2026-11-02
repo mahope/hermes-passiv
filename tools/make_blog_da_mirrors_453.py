@@ -515,7 +515,7 @@ def build(page):
 
 <footer style="padding:32px 24px;">
   <p><a href="/">Forside</a> &middot; <a href="/scan-da">EAA-scanner</a> &middot; <a href="/free-tools">Gratis værktøjer</a> &middot; <a href="/blog">Blog (EN)</a> &middot; <a href="{en_url}">Engelsk version</a></p>
-  <p>Mahope © 2026 · Praktisk EU-compliance for små webbureauer</p>
+  <p>Mahoje © 2026 · Praktisk EU-compliance for små webbureauer</p>
 </footer>
 <script>
 {TRACK_JS}

@@ -1,4 +1,4 @@
-/* shell.js — behaviour shared by every page of every Mahope product site.
+/* shell.js — behaviour shared by every page of every Mahoje product site.
    Theme button, mobile menu, search palette (+ /search/ page), copy buttons on code,
    share button, back-to-top, same-origin prefetch, TOC scroll-spy, sticky table heads,
    "Report a bug" footer link. No dependencies, no cookies. */

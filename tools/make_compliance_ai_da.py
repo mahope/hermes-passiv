@@ -96,8 +96,8 @@ REPLACEMENTS = [
      "text.toLowerCase().includes('not legal advice') || text.toLowerCase().includes('disclaimer') || text.toLowerCase().includes('ikke juridisk');"),
     ("<p class=\"disclaimer\">This is general guidance, not legal advice. Consult a qualified lawyer for your specific situation.</p>",
      "<p class=\"disclaimer\">Dette er generel vejledning, ikke juridisk rådgivning. Kontakt en kvalificeret advokat om din konkrete situation.</p>"),
-    ('<p>&copy; 2026 Mahope · Part of the <a href="/">Hermes Passiv</a> project</p>',
-     '<p>&copy; 2026 Mahope · En del af <a href="/da">Hermes Passiv</a>-projektet</p>'),
+    ('<p>&copy; 2026 Mahoje · Part of the <a href="/">Hermes Passiv</a> project</p>',
+     '<p>&copy; 2026 Mahoje · En del af <a href="/da">Hermes Passiv</a>-projektet</p>'),
     ('<p class="footer-small">Built for small web agencies. No legal advice — consult counsel for specific matters.</p>',
      '<p class="footer-small">Bygget til små webbureauer. Ikke juridisk rådgivning — kontakt en advokat om konkrete forhold.</p>'),
 ]

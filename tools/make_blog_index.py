@@ -119,7 +119,7 @@ def extract(path):
     title = html.unescape(re.sub(r'<[^>]+>|<br\s*/?>', ' ', src.group(1))).strip() if src else ''
     title = re.sub(r'\s+', ' ', title)
     # strip trailing " | ..." suffixes some titles carry
-    title = re.split(r'\s*[|—]\s*(?:Mahope|Hermes|Clean Copy)', title)[0].strip()
+    title = re.split(r'\s*[|—]\s*(?:Mahope|Mahoje|Hermes|Clean Copy)', title)[0].strip()
     desc = html.unescape(d.group(1).strip()) if d else ''
     return title, desc
 
@@ -241,7 +241,7 @@ def main(argv=None):
     out.append("""<p style="margin:48px 0;text-align:center"><a href="/" class="btn-secondary">&larr; Home</a> &nbsp; <a href="/free-tools" class="btn-primary">Browse all free tools &rarr;</a></p>
 </main>
 <footer style="padding:32px 24px;text-align:center;color:var(--color-text-muted)">
-  <p>&copy; 2026 Mahope &middot; <a href="/">Hermes Passiv</a></p>
+  <p>&copy; 2026 Mahoje &middot; <a href="/">Hermes Passiv</a></p>
 <div class="book-cta" style="border:1px solid #ddd;border-radius:8px;padding:16px 20px;margin:32px 0;">
   <h3>Free e-books: EU compliance guides</h3>
   <p>Six practical guides (NIS2, GDPR, EAA, cookies) &mdash; every complete book is a free EPUB download.</p>
@@ -335,7 +335,7 @@ def dansk_index(da_posts, da_grouped, n_en):
     out.append("""<p style="margin:48px 0;text-align:center"><a href="/da/" class="btn-secondary">&larr; Forside</a> &nbsp; <a href="/da/free-tools" class="btn-primary">Se alle v&aelig;rkt&oslash;j &rarr;</a></p>
 </main>
 <footer style="padding:32px 24px;text-align:center;color:var(--color-text-muted)">
-  <p>&copy; 2026 Mahope &middot; <a href="/da/">Hermes Passiv</a></p>
+  <p>&copy; 2026 Mahoje &middot; <a href="/da/">Hermes Passiv</a></p>
 <div class="book-cta" style="border:1px solid #ddd;border-radius:8px;padding:16px 20px;margin:32px 0;">
   <h3>Gratis e-b&oslash;ger om EU-compliance</h3>
   <p>Seks praktiske guider (NIS2, GDPR, EAA, cookies) &mdash; alle seks er en gratis EPUB-download. B&oslash;gerne er skrevet p&aring; engelsk.</p>

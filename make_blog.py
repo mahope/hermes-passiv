@@ -31,7 +31,7 @@ HEAD_TEMPLATE = '''<!DOCTYPE html>
   "@type": "Article",
   "headline": "{article_headline}",
   "description": "{article_desc}",
-  "publisher": {{ "@type": "Organization", "name": "Mahope" }}
+  "publisher": {{ "@type": "Organization", "name": "Mahoje" }}
 }}
 </script>
 <script defer src="/track.js"></script>
@@ -66,7 +66,7 @@ SECTION_BOTTOM = '''  </div>
 FOOTER = '''<footer class="site-footer">
   <div class="container">
     <p><a href="/">← Home</a> · <a href="/scan">Free Scanner</a> · <a href="/#products">E-Books</a> · <a href="/#blog">Blog</a></p>
-    <p>Mahope © 2026 · Practical EU compliance for small web agencies</p>
+    <p>Mahoje © 2026 · Practical EU compliance for small web agencies</p>
   </div>
 </footer>
 
