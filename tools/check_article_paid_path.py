@@ -2152,26 +2152,42 @@ def _self_test() -> int:
           isinstance(gammel_a["/"], str) and gammel_a["/"] != gammel_b["/"],
           f"rækkefølge A={gammel_a['/']} · rækkefølge B={gammel_b['/']}")
 
-    # 16. Dom 6, ikke-artikler. Formen *er* målt i dag — `page_rows()` giver tre
-    #     ruter, to forsider og `/clean-copy-tool` med to købsknapper — så
-    #     klassen er 0 af en målt grund og ikke fordi porten ingenting ser.
+    # 16. Dom 6, ikke-artikler. Formen *er* målt i dag, og tallene under er
+    #     opdateret 2/11-26 til ugerapport 2026-45 (før: 30/9, tre ruter og 461
+    #     besøg på forsiderne). `page_rows()` giver nu femten ruter: to forsider
+    #     og tretten andre. Seks af dem har trafik og ingen købsknap og står i
+    #     `tools/article_page_paid_path.json` med en grund. Tallene er et
+    #     øjebliksbillede af ugerapporten, så de skal følge den, når den skifter.
     sider = page_rows()
     chrome_rows = [r for r in sider if r["chrome"]]
     andre = [r for r in sider if not r["chrome"]]
-    check("ikke-artiklerne måles: fire ruter med trafik, hvoraf to forsider",
-          len(sider) == 4 and len(chrome_rows) == 2
-          and {r["route"] for r in andre} == {"/bugbottle-demo", "/clean-copy-tool"},
+    check("ikke-artiklerne måles: femten ruter med trafik, hvoraf to forsider",
+          len(sider) == 15 and len(chrome_rows) == 2
+          and {r["route"] for r in andre} == {
+              "/accessibility-statement-generator", "/activate", "/base64-encoder-decoder",
+              "/books/cookie-consent-guide", "/books/nis2-for-agencies", "/bugbottle-demo",
+              "/case-converter", "/clean-copy-tool", "/color-blindness-simulator",
+              "/color-blindness-simulator-da", "/contrast-checker-da", "/palette-generator",
+              "/text-on-image-checker"},
           f"{len(sider)} ruter · {len(chrome_rows)} forside(r) · "
           f"{sorted(r['route'] for r in andre)}")
-    check("forsiderne bærer størsteparten af den målte trafik",
-          sum(r["visits"] for r in chrome_rows) == 461,
-          f"{sum(r['visits'] for r in chrome_rows)} besøg")
-    check("flåsen er grøn på det målte tilstand (klassen er 0)",
+    check("forsidernes målte trafik er 45 besøg (de bærer ikke længere størsteparten: 51 på andre ruter)",
+          sum(r["visits"] for r in chrome_rows) == 45
+          and sum(r["visits"] for r in andre) == 51,
+          f"{sum(r['visits'] for r in chrome_rows)} besøg på forsiderne, "
+          f"{sum(r['visits'] for r in andre)} på andre ruter")
+    check("flåsen er grøn på det målte tilstand (hver rute uden knap har en grund)",
           not page_no_button_problems(sider),
           f"{len(page_no_button_problems(sider))} problem(er)")
-    check("klassen er 0 af to målte grunde: knap, eller domænet er ikke udgivet",
+    check("klassen er målt: seks publicerede ruter har ingen købsknap, resten har en knap eller et uudgivet domæne",
           {r["route"]: (r["knapper"], r["publiceret"]) for r in andre}
-          == {"/clean-copy-tool": (2, True), "/bugbottle-demo": (0, False)},
+          == {"/accessibility-statement-generator": (0, True), "/activate": (1, True),
+              "/base64-encoder-decoder": (0, True), "/books/cookie-consent-guide": (0, True),
+              "/books/nis2-for-agencies": (0, True), "/bugbottle-demo": (0, False),
+              "/case-converter": (0, True), "/clean-copy-tool": (2, True),
+              "/color-blindness-simulator": (1, True), "/color-blindness-simulator-da": (1, True),
+              "/contrast-checker-da": (1, True), "/palette-generator": (1, True),
+              "/text-on-image-checker": (0, True)},
           f"{[(r['route'], r['knapper'], r['publiceret']) for r in andre]}")
 
     # 16a. Forsiderne er undtaget med vilje, og de skal stadig være

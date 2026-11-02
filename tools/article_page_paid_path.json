@@ -1,6 +1,31 @@
 {
   "note": "Ruter der IKKE er artikler, men har målt trafik, ligger på et udgivet domæne og ingen synlig købsknap. Forsiderne er undtaget med vilje, fordi de er domænernes hovedsider og tælles i check_stripe_ctas.py i stedet. Klassen måler de læsere porten ellers ikke ser: målt 30/9 ligger 461 af 505 besøg på to forsider (se check_article_paid_path.py, dom 6 og page_rows). Listen er en ratchet: hver linje er en sides begrundelse for at have læsere uden en købsknap, og den skal fjernes når siden får en knap — listen må kun krympe. Filen skrives med en begrundelse pr. rute, aldrig af --write.",
   "source": "python3 tools/check_article_paid_path.py",
-  "measured": "2026-09-30",
-  "acknowledged": []
+  "measured": "2026-11-02",
+  "acknowledged": [
+    {
+      "route": "/accessibility-statement-generator",
+      "reason": "Ikke afklaret. Ugerapporterne 2026-42 til 2026-45 (genereret efter sidste grønne deploy 11/10-26) målte 1 besøg her, og siden har ingen købsknap. Opført 2/11-26 ved navneskiftet til Mahoje, så deploy-gaten ikke blev stående rød på trafiktal ingen havde nået at vurdere. Skal vurderes: sæt en knap på, eller skriv her hvorfor siden bevidst ikke har en."
+    },
+    {
+      "route": "/base64-encoder-decoder",
+      "reason": "Ikke afklaret. Ugerapporterne 2026-42 til 2026-45 (genereret efter sidste grønne deploy 11/10-26) målte 1 besøg her, og siden har ingen købsknap. Opført 2/11-26 ved navneskiftet til Mahoje, så deploy-gaten ikke blev stående rød på trafiktal ingen havde nået at vurdere. Skal vurderes: sæt en knap på, eller skriv her hvorfor siden bevidst ikke har en."
+    },
+    {
+      "route": "/books/cookie-consent-guide",
+      "reason": "Ikke afklaret. Ugerapporterne 2026-42 til 2026-45 (genereret efter sidste grønne deploy 11/10-26) målte 2 besøg her, og siden har ingen købsknap. Opført 2/11-26 ved navneskiftet til Mahoje, så deploy-gaten ikke blev stående rød på trafiktal ingen havde nået at vurdere. Skal vurderes: sæt en knap på, eller skriv her hvorfor siden bevidst ikke har en."
+    },
+    {
+      "route": "/books/nis2-for-agencies",
+      "reason": "Ikke afklaret. Ugerapporterne 2026-42 til 2026-45 (genereret efter sidste grønne deploy 11/10-26) målte 2 besøg her, og siden har ingen købsknap. Opført 2/11-26 ved navneskiftet til Mahoje, så deploy-gaten ikke blev stående rød på trafiktal ingen havde nået at vurdere. Skal vurderes: sæt en knap på, eller skriv her hvorfor siden bevidst ikke har en."
+    },
+    {
+      "route": "/case-converter",
+      "reason": "Ikke afklaret. Ugerapporterne 2026-42 til 2026-45 (genereret efter sidste grønne deploy 11/10-26) målte 2 besøg her, og siden har ingen købsknap. Opført 2/11-26 ved navneskiftet til Mahoje, så deploy-gaten ikke blev stående rød på trafiktal ingen havde nået at vurdere. Skal vurderes: sæt en knap på, eller skriv her hvorfor siden bevidst ikke har en."
+    },
+    {
+      "route": "/text-on-image-checker",
+      "reason": "Ikke afklaret. Ugerapporterne 2026-42 til 2026-45 (genereret efter sidste grønne deploy 11/10-26) målte 7 besøg her, og siden har ingen købsknap. Opført 2/11-26 ved navneskiftet til Mahoje, så deploy-gaten ikke blev stående rød på trafiktal ingen havde nået at vurdere. Skal vurderes: sæt en knap på, eller skriv her hvorfor siden bevidst ikke har en."
+    }
+  ]
 }
