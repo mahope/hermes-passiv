@@ -10,7 +10,7 @@ er ikke en side vi skylder nogen, men regex-porten vidste ikke det — så de 18
 positiver, og fordi porten aldrig fejlede, blev ingen af dem rettet i en måned.
 
 Denne gate går den anden vej: den parser det **byggede output** med
-`html.parser`, springer `pre`/`code`/`script`/`style` over, og kræver at hver
+`html.parser`, springer kodeeksemplers tekst og indholdet af `script`/`style` over, og kræver at hver
 rodrelativ reference peger på en fil der faktisk findes i det dist, den står i.
 Krydsdomæne-referencer til vores egne domæner tjekkes mod det domænes dist, så
 et link fra cleancopy.tools til mahope.tools ikke kan være en 404, fordi
@@ -68,7 +68,7 @@ def canonical_url(relpath: str) -> str:
 class RefParser(HTMLParser):
     """Samler referencer uden at se ind i kodeeksempler."""
 
-    SKIP_CONTENT = {"pre", "code", "script", "style", "textarea", "template"}
+    SKIP_CONTENT = {"script", "style", "textarea", "template"}
 
     def __init__(self, rel: str) -> None:
         super().__init__(convert_charrefs=True)
@@ -86,6 +86,7 @@ class RefParser(HTMLParser):
         self.reads_hash = False
         self._skip_depth = 0
         self._script_depth = 0
+        self._code_depth = 0
         self._line = 1
         self._newline_re = re.compile("\n")
 
@@ -119,6 +120,8 @@ class RefParser(HTMLParser):
     def handle_starttag(self, tag: str, attrs) -> None:  # noqa: D102
         self._line += 1
         a = self._attrs(attrs)
+        if tag in {"pre", "code"}:
+            self._code_depth += 1
         if tag == "script":
             self._script_depth += 1
         # `id` på elementet *selv* er et gyldigt fragmentmål, også på en
@@ -162,6 +165,8 @@ class RefParser(HTMLParser):
 
     def handle_endtag(self, tag: str) -> None:  # noqa: D102
         self._line += 1
+        if tag in {"pre", "code"} and self._code_depth:
+            self._code_depth -= 1
         if tag == "script" and self._script_depth:
             self._script_depth -= 1
         if tag in self.SKIP_CONTENT and self._skip_depth:
@@ -172,7 +177,7 @@ class RefParser(HTMLParser):
             if "location.hash" in data or "window.location.hash" in data:
                 self.reads_hash = True
             return
-        if self._skip_depth:
+        if self._skip_depth or self._code_depth:
             return
         # Kun urls i ren tekst (llms.txt, robots, txt-filer), ikke i markup.
         if "<" in data and ">" in data:
@@ -215,13 +220,11 @@ def split_target(ref: str) -> tuple[str, str, str, str]:
         return "skip", "", "", ""
     if ref.startswith("#"):
         return "same", "", "", unquote(ref[1:])
-    if "://" in ref:
+    if "://" in ref or ref.startswith("//"):
         parts = urlsplit(ref)
         if parts.netloc.lower() not in OUR_DOMAINS:
             return "external", parts.netloc.lower(), parts.path, unquote(parts.fragment)
         return "cross", parts.netloc.lower(), parts.path, unquote(parts.fragment)
-    if ref.startswith("//"):
-        return "external", "", ref, ""
     frag = unquote(ref.split("#", 1)[1]) if "#" in ref else ""
     if not ref.startswith("/"):
         return "rel", "", ref, frag
@@ -440,7 +443,7 @@ def check_domain(domain: str, dist: Path, dists: dict[str, Path], check_download
                 stem = ref_path.split("#")[0].split("?")[0]
                 target = base_dir / stem
                 if not (target.is_file() or (target / "index.html").is_file()
-                        or (base_dir / (ref_path + ".html")).is_file()):
+                        or (base_dir / (stem + ".html")).is_file()):
                     problems.append(f"{domain}: {rel}:{line}: relativ reference {ref!r} findes ikke")
                     continue
                 page = (target / "index.html") if (target / "index.html").is_file() else target
@@ -654,8 +657,7 @@ def self_test() -> int:
         for snippet in ('<pre><code>npm i /downloads/dod.zip</code></pre>',
                         '<code>&lt;img src="/img/cover.jpg"&gt;</code>',
                         '<script>var u="/api/nej";</script>',
-                        '<style>.a{background:url(/img/dod.png)}</style>',
-                        '<pre><a href="/findes-ikke">x</a></pre>'):
+                        '<style>.a{background:url(/img/dod.png)}</style>'):
             expect_clean("kodeeksempel", snippet)
 
         # 3. Det sunde krydsdomænelink skal fortsat være grønt, og et link til
