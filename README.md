@@ -64,11 +64,12 @@ The checker also resolves links between the four built domains. Its self-test
 injects dead links into temporary output to verify that the checker catches them.
 
 ```bash
-python3 tools/check_links.py
+python3 tools/check_links.py --skip-fragments
 python3 tools/check_links.py --self-test
 ```
 
-The full quality gate runs the build and these link checks:
+Run `python3 tools/check_links.py` to also validate fragment targets. The full
+quality gate runs the build and the link checker with fragment validation:
 
 ```bash
 python3 tools/quality_gate.py
@@ -76,6 +77,12 @@ python3 tools/quality_gate.py
 
 The build reads the sibling `../auditedwp` checkout for DeskUptime tool pages.
 Set `AUDITEDWP_DIR` if that checkout lives elsewhere.
+
+On GitHub, pushes to `main` that match the
+[`deploy-sites` workflow](/.github/workflows/deploy-sites.yml) path filter
+trigger the quality gate. With a passing gate and valid Cloudflare credentials,
+the workflow deploys mahope.tools, cleancopy.tools and deskuptime.com via
+Wrangler. A separate release serves bugbottle.dev.
 
 ## Support
 

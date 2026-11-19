@@ -32,14 +32,15 @@ import re
 import sys
 from html.parser import HTMLParser
 from pathlib import Path
-from urllib.parse import unquote, urlsplit
+from urllib.parse import unquote, urljoin, urlsplit
 
 ROOT = Path(__file__).resolve().parent.parent
 DIST = ROOT / "dist"
 # Domæner vi selv ejer. En reference til et af dem skal findes i *dets* dist.
 OUR_DOMAINS = ("cleancopy.tools", "deskuptime.com", "bugbottle.dev", "mahope.tools")
 # Ruter som workeren svarer på. Findes ikke som fil, og skal ikke fejle.
-WORKER_PREFIXES = ("/api/", "/scan-proxy", "/cdn-cgi/l/email-protection")
+WORKER_PREFIXES = ("/api/", "/scan-proxy")
+CLOUDFLARE_EMAIL_ROUTE = "/cdn-cgi/l/email-protection"
 # Interne søgemaskine- og 404-ruter, der findes i source men ikke som fil.
 DECLARED = ("/404", "/search", "/sitemap.xml", "/robots.txt", "/.well-known/security.txt",
             "/build-info.json", "/humans.txt", "/llms.txt", "/llms-full.txt",
@@ -203,32 +204,30 @@ def is_download(ref: str) -> bool:
     return path.lower().endswith(DOWNLOAD_EXT)
 
 
-def split_ref(ref: str) -> tuple[str, str, str]:
-    """(kind, domain, path) hvor kind er 'skip', 'external', 'root' eller 'rel'."""
-    kind, domain, path, _frag = split_target(ref)
-    return kind, domain, path
-
-
-def split_target(ref: str) -> tuple[str, str, str, str]:
-    """(kind, domain, path, fragment) — fragmentet er URL-dekodet.
-
-    `split_ref` tabte fragmentet, og det er derfor 199 krydsside-ankere aldrig
-    blev set af porten: `/#products` så ud som en gyldig reference til `/`.
-    """
+def split_target(ref: str, source_route: str) -> tuple[str, str, str, str]:
+    """Klassificér referencen og opløs stien mod kildesidens offentlige URL."""
     ref = ref.strip()
-    if not ref or ref.startswith(("data:", "javascript:", "mailto:", "tel:", "blob:")):
+    if not ref:
         return "skip", "", "", ""
     if ref.startswith("#"):
-        return "same", "", "", unquote(ref[1:])
-    if "://" in ref or ref.startswith("//"):
-        parts = urlsplit(ref)
-        if parts.netloc.lower() not in OUR_DOMAINS:
-            return "external", parts.netloc.lower(), parts.path, unquote(parts.fragment)
-        return "cross", parts.netloc.lower(), parts.path, unquote(parts.fragment)
-    frag = unquote(ref.split("#", 1)[1]) if "#" in ref else ""
-    if not ref.startswith("/"):
-        return "rel", "", ref, frag
-    return "root", "", ref.split("#")[0].split("?")[0], frag
+        return "same", "", source_route, unquote(ref[1:])
+    parts = urlsplit(ref)
+    if parts.scheme not in ("", "http", "https"):
+        return "skip", "", "", ""
+    domain = parts.hostname or ""
+    if parts.netloc:
+        default_port = 80 if parts.scheme == "http" else 443
+        if domain not in OUR_DOMAINS or parts.port not in (None, default_port):
+            return "external", domain, parts.path, unquote(parts.fragment)
+
+    # Opløs kun stien her. Værten er allerede klassificeret, og absolutte
+    # adresser uden sti peger på det pågældende domænes forside.
+    base = "/" if parts.netloc else source_route
+    path = parts.path
+    if path.startswith("/"):
+        base, path = "/", "." + path
+    path = urljoin(base, path)
+    return "cross" if domain else "local", domain, path, unquote(parts.fragment)
 
 
 # `#url=https%3A%2F%2F…` er ikke et anker, men en parameter siden læser af
@@ -255,7 +254,7 @@ def route_exists(domain_dist: Path, path: str) -> bool:
     clean = path.rstrip("/")
     if any(clean == d or clean.startswith(d + "/") for d in DECLARED):
         return True
-    if clean.startswith(WORKER_PREFIXES):
+    if path == CLOUDFLARE_EMAIL_ROUTE or clean.startswith(WORKER_PREFIXES):
         return True
     if not clean or clean == "/":
         return (domain_dist / "index.html").is_file()
@@ -300,7 +299,7 @@ def anchor_problem(domain: str, rel: str, line: int, ref: str, own: Path,
                    dist: Path, dists: dict[str, Path], own_ids: set[str],
                    own_reads_hash: bool = False) -> str | None:
     """Én fejltekst hvis fragmentet i ref ikke findes, ellers None."""
-    kind, ref_domain, ref_path, frag = split_target(ref)
+    kind, ref_domain, ref_path, frag = split_target(ref, canonical_url(rel))
     if not frag or kind in ("skip", "external"):
         return None
     if kind == "same":
@@ -315,17 +314,6 @@ def anchor_problem(domain: str, rel: str, line: int, ref: str, own: Path,
         # som om siden ikke læste sin egen hash. Den gjorde — den gør.
         ids, reads_hash = own_ids, own_reads_hash
         target = own
-    elif kind == "rel":
-        base = own.parent
-        stem = ref_path.split("#")[0].split("?")[0]
-        target = None
-        for cand in (base / stem, base / (stem + ".html"), base / stem / "index.html"):
-            if cand.is_file():
-                target = cand
-                break
-        if target is None:
-            return None  # stien er død; det er link-gatens job, ikke fragmentets
-        ids, reads_hash = page_anchors(target)
     else:
         target_dist = dists.get(ref_domain) if ref_domain else dist
         if target_dist is None:
@@ -411,7 +399,8 @@ def duplicate_problem(source: str, rel: str, line: int, ref: str,
     return None
 
 
-def check_domain(domain: str, dist: Path, dists: dict[str, Path], check_downloads: bool) -> list[str]:
+def check_domain(domain: str, dist: Path, dists: dict[str, Path], check_downloads: bool,
+                 *, check_fragments: bool = True) -> list[str]:
     problems: list[str] = []
     downloads: list[str] = []
     forms: list[tuple[str, int, str]] = []
@@ -429,8 +418,8 @@ def check_domain(domain: str, dist: Path, dists: dict[str, Path], check_download
         downloads += [(r, parser.rel) for r, _ in parser.downloads]
         forms += [(a, parser.rel, m) for a, _, m in parser.forms]
         for ref, line in parser.refs:
-            kind, ref_domain, ref_path = split_ref(ref)
-            if kind in ("skip", "external"):
+            kind, ref_domain, ref_path, _ = split_target(ref, canonical_url(rel))
+            if kind in ("skip", "external", "same"):
                 continue
 
             def flag_dup(target: Path, target_dist: Path) -> None:
@@ -438,18 +427,6 @@ def check_domain(domain: str, dist: Path, dists: dict[str, Path], check_download
                 if bad:
                     problems.append(bad)
 
-            if kind == "rel":
-                base_dir = (dist / rel).parent
-                stem = ref_path.split("#")[0].split("?")[0]
-                target = base_dir / stem
-                if not (target.is_file() or (target / "index.html").is_file()
-                        or (base_dir / (stem + ".html")).is_file()):
-                    problems.append(f"{domain}: {rel}:{line}: relativ reference {ref!r} findes ikke")
-                    continue
-                page = (target / "index.html") if (target / "index.html").is_file() else target
-                if page.is_file() and page.suffix.lower() in (".html", ".htm"):
-                    flag_dup(page, dist)
-                continue
             if ref_domain and ref_domain != domain:
                 # Kun domæner vi ejer *og* som faktisk er bygget i dette job.
                 other = dists.get(ref_domain)
@@ -469,15 +446,16 @@ def check_domain(domain: str, dist: Path, dists: dict[str, Path], check_download
             page = resolve_page(dist, ref_path)
             if page is not None:
                 flag_dup(page, dist)
-        for ref, line in parser.anchors:
-            bad = anchor_problem(domain, rel, line, ref, path, dist, dists,
-                                 parser.ids, parser.reads_hash)
-            if bad:
-                problems.append(bad)
+        if check_fragments:
+            for ref, line in parser.anchors:
+                bad = anchor_problem(domain, rel, line, ref, path, dist, dists,
+                                     parser.ids, parser.reads_hash)
+                if bad:
+                    problems.append(bad)
     if check_downloads:
         for ref, rel in downloads:
-            kind, ref_domain, ref_path = split_ref(ref)
-            if kind == "skip" or (kind == "external" and ref_domain not in OUR_DOMAINS):
+            kind, ref_domain, ref_path, _ = split_target(ref, canonical_url(rel))
+            if kind in ("skip", "external"):
                 continue
             target_dist = dists.get(ref_domain) if ref_domain else dist
             if target_dist is None or not route_exists(target_dist, ref_path):
@@ -488,8 +466,8 @@ def check_domain(domain: str, dist: Path, dists: dict[str, Path], check_download
     for action, rel, method in forms:
         if not action:
             continue
-        kind, ref_domain, ref_path = split_ref(action)
-        if kind == "skip":
+        kind, ref_domain, ref_path, _ = split_target(action, canonical_url(rel))
+        if kind in ("skip", "external"):
             continue
         target_dist = dists.get(ref_domain) if ref_domain else dist
         if target_dist is not None and not route_exists(target_dist, ref_path) \
@@ -498,7 +476,7 @@ def check_domain(domain: str, dist: Path, dists: dict[str, Path], check_download
     return problems
 
 
-def check(only: str | None = None) -> tuple[int, list[str]]:
+def check(only: str | None = None, *, check_fragments: bool = True) -> tuple[int, list[str]]:
     _ANCHORS.clear()
     _CANONICALS.clear()
     dists = built_domains()
@@ -512,7 +490,8 @@ def check(only: str | None = None) -> tuple[int, list[str]]:
         dists = {only: dists[only]}
     problems: list[str] = []
     for domain, dist in dists.items():
-        found = check_domain(domain, dist, built_domains(), check_downloads=True)
+        found = check_domain(domain, dist, built_domains(), check_downloads=True,
+                             check_fragments=check_fragments)
         problems += found
         print(f"check_links: {domain}: {'OK' if not found else str(len(found)) + ' fejl'}")
     return len(problems), problems
@@ -567,9 +546,9 @@ def self_test() -> int:
         probe = main_dist / "probe.html"
         original = "<!doctype html><body><p>ren tekst</p></body>"
 
-        def run(snippet: str, dist_map: dict[str, Path] | None = None):
+        def run(snippet: str, dist_map: dict[str, Path] | None = None, **options):
             probe.write_text(f"<!doctype html><body>{snippet}</body>", encoding="utf-8")
-            return check_domain(main_domain, main_dist, dist_map or dists, True)
+            return check_domain(main_domain, main_dist, dist_map or dists, True, **options)
 
         def expect(label: str, snippet: str, fragment: str) -> None:
             nonlocal ok
@@ -598,6 +577,21 @@ def self_test() -> int:
         expect_clean("side med query og fragment", '<a href="findes?ref=test#her">x</a>')
         expect_clean("Cloudflares mailbeskyttelse",
                      '<a href="/cdn-cgi/l/email-protection#123">mail</a>')
+        expect("standardport på eget domæne",
+               '<a href="https://mahope.tools:443/dead">x</a>', "/dead")
+        expect_clean("levende link med standardport", '<a href="//cleancopy.tools:443/findes">x</a>')
+        expect_clean("anden port er ekstern", '<a href="https://mahope.tools:8443/dead">x</a>')
+        (main_dist.parent / "outside.html").write_text("<p>uden for sitet</p>", encoding="utf-8")
+        expect("relativt link må ikke bruge nabofiler", '<a href="../outside">x</a>', "../outside")
+        expect_clean("relativt link normaliseres ved domænets rod", '<a href="../findes">x</a>')
+        expect("ukendt rute nær Cloudflares mailbeskyttelse",
+               '<a href="/cdn-cgi/l/email-protection-missing">x</a>', "email-protection-missing")
+        if run('<a href="#missing">x</a><a href="/findes#missing">y</a>', check_fragments=False):
+            print("FEJL: sidetjekket må ignorere fragmenter", file=sys.stderr)
+            ok = False
+        if not run('<a href="/dead#missing">x</a>', check_fragments=False):
+            print("FEJL: sidetjekket skal stadig finde en død sti med fragment", file=sys.stderr)
+            ok = False
         expect("død href", '<a href="/findes-ikke">x</a>', "/findes-ikke")
         expect("død asset", '<img src="/logo.png">', "/logo.png")
         expect("død stylesheet", '<link rel="stylesheet" href="/mangler.css">', "/mangler.css")
@@ -686,10 +680,11 @@ def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--only", help="kontrollér kun dette domæne")
     ap.add_argument("--self-test", action="store_true", help="bevis at gaten fanger fejlformen")
+    ap.add_argument("--skip-fragments", action="store_true", help="kontrollér stier uden at validere ankre")
     args = ap.parse_args(argv)
     if args.self_test:
         return self_test()
-    n, problems = check(args.only)
+    n, problems = check(args.only, check_fragments=not args.skip_fragments)
     if n:
         print(f"\ncheck_links: {n} uopklaret(e) reference(s):", file=sys.stderr)
         for p in problems[:40]:
