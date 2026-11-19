@@ -20,6 +20,8 @@ run_check() {
 cd "$DIR"
 run_check sitemap-tests python3 tools/test_check_sitemaps.py
 run_check build python3 build_sites.py
+run_check links python3 tools/check_links.py
+run_check link-tests python3 tools/check_links.py --self-test
 run_check sitemap python3 tools/check_sitemaps.py
 run_check seo python3 tools/seo_check.py
 run_check live-sitemaps python3 tools/check_live_sitemaps.py --attempts 1 --delay 0

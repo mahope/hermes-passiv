@@ -59,14 +59,23 @@ pip install -r requirements-build.txt
 python3 build_sites.py          # writes dist/ — never edit dist/ by hand
 ```
 
-The full quality gate, which is what CI runs before every deploy:
+After building all four domains, validate internal links in the generated HTML.
+The checker also resolves links between the four built domains. Its self-test
+injects dead links into temporary output to verify that the checker catches them.
+
+```bash
+python3 tools/check_links.py
+python3 tools/check_links.py --self-test
+```
+
+The full quality gate runs the build and these link checks:
 
 ```bash
 python3 tools/quality_gate.py
 ```
 
-`../auditedwp` is a sibling repository used as a build source. It has its own
-contract and is not modified from here.
+The build reads the sibling `../auditedwp` checkout for DeskUptime tool pages.
+Set `AUDITEDWP_DIR` if that checkout lives elsewhere.
 
 ## Support
 

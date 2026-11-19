@@ -10,8 +10,8 @@ er ikke en side vi skylder nogen, men regex-porten vidste ikke det — så de 18
 positiver, og fordi porten aldrig fejlede, blev ingen af dem rettet i en måned.
 
 Denne gate går den anden vej: den parser det **byggede output** med
-`html.parser`, springer kodeeksemplers tekst og indholdet af `script`/`style` over, og kræver at hver
-rodrelativ reference peger på en fil der faktisk findes i det dist, den står i.
+`html.parser`, springer kodeeksemplers tekst og indholdet af `script`/`style` over, og
+opløser relative, rodrelative og absolutte referencer til de byggede sites.
 Krydsdomæne-referencer til vores egne domæner tjekkes mod det domænes dist, så
 et link fra cleancopy.tools til mahope.tools ikke kan være en 404, fordi
 mahope.tools-distet ikke var bygget i det samme job.
@@ -39,7 +39,7 @@ DIST = ROOT / "dist"
 # Domæner vi selv ejer. En reference til et af dem skal findes i *dets* dist.
 OUR_DOMAINS = ("cleancopy.tools", "deskuptime.com", "bugbottle.dev", "mahope.tools")
 # Ruter som workeren svarer på. Findes ikke som fil, og skal ikke fejle.
-WORKER_PREFIXES = ("/api/", "/scan-proxy")
+WORKER_PREFIXES = ("/api/", "/scan-proxy", "/cdn-cgi/l/email-protection")
 # Interne søgemaskine- og 404-ruter, der findes i source men ikke som fil.
 DECLARED = ("/404", "/search", "/sitemap.xml", "/robots.txt", "/.well-known/security.txt",
             "/build-info.json", "/humans.txt", "/llms.txt", "/llms-full.txt",
@@ -596,6 +596,8 @@ def self_test() -> int:
         expect("død protokolrelativ href", '<a href="//cleancopy.tools/udenfor">x</a>', "udenfor")
         expect("aktivt link i kodeblok", '<pre><code><a href="/...">x</a></code></pre>', "/...")
         expect_clean("side med query og fragment", '<a href="findes?ref=test#her">x</a>')
+        expect_clean("Cloudflares mailbeskyttelse",
+                     '<a href="/cdn-cgi/l/email-protection#123">mail</a>')
         expect("død href", '<a href="/findes-ikke">x</a>', "/findes-ikke")
         expect("død asset", '<img src="/logo.png">', "/logo.png")
         expect("død stylesheet", '<link rel="stylesheet" href="/mangler.css">', "/mangler.css")
