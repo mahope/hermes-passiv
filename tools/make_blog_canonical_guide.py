@@ -19,7 +19,7 @@ ROOT = '/Users/madsholstjensen/hermes-passiv/site'
 
 FAQS_EN = [
     ('What is a canonical URL?',
-     'A canonical URL is a <link rel="canonical"> tag in the <head> of a page that tells '
+     'A canonical URL is a <code>&lt;link rel=&quot;canonical&quot;&gt;</code> tag in the <code>&lt;head&gt;</code> of a page that tells '
      'search engines which version of a page is the authoritative one. When you have '
      'duplicate or near-duplicate pages (same content at different URLs), the canonical '
      'tag prevents search engines from splitting ranking signals between them.'),
@@ -41,8 +41,8 @@ FAQS_EN = [
      'They solve different problems: canonical consolidates, noindex excludes. Combining '
      'them (canonical + noindex) is treated by Google as a noindex — the canonical is ignored.'),
     ('How do I check if my canonical URLs are correct?',
-     'The simplest way is to inspect the <head> of each page: look for '
-     '<code>&lt;link rel="canonical" href="..."&gt;</code>. For more than a handful of pages, '
+     'The simplest way is to inspect the <code>&lt;head&gt;</code> of each page: look for '
+     '<code>&lt;link rel=&quot;canonical&quot; href=&quot;...&quot;&gt;</code>. For more than a handful of pages, '
      'use a CLI tool like <a href="/page-profile">page-profile</a> which checks canonical '
      'presence, validity and conflicts across a list of URLs automatically.'),
     ('Can a canonical URL point to a different domain?',
@@ -76,7 +76,7 @@ FAQPAGE_EN = {
 
 FAQS_DA = [
     ('Hvad er en kanonisk URL?',
-     'En kanonisk URL er et <link rel="canonical">-tag i sidens <head>, der fortæller '
+     'En kanonisk URL er et <code>&lt;link rel=&quot;canonical&quot;&gt;</code>-tag i sidens <code>&lt;head&gt;</code>, der fortæller '
      'søgemaskinerne, hvilken version af en side der er den autoritative. Når du har '
      'duplikat- eller næsten-duplikatsider (samme indhold på forskellige URL\'er), '
      'forhindrer det kanoniske tag, at søgemaskinerne deler rangsignaler imellem dem.'),
@@ -94,8 +94,8 @@ FAQS_DA = [
      'Kombinerer du dem (canonical + noindex), behandler Google det som noindex — '
      'canonical ignoreres.'),
     ('Hvordan tjekker jeg om mine kanoniske URL\'er er korrekte?',
-     'Den enkleste metode er at inspicere <head> på hver side og lede efter '
-     '<code>&lt;link rel="canonical" href="..."&gt;</code>. Har du mere end en håndfuld sider, '
+     'Den enkleste metode er at inspicere <code>&lt;head&gt;</code> på hver side og lede efter '
+     '<code>&lt;link rel=&quot;canonical&quot; href=&quot;...&quot;&gt;</code>. Har du mere end en håndfuld sider, '
      'kan du bruge et CLI-værktøj som <a href="/da/page-profile">page-profile</a>, '
      'der automatisk tjekker canonical-tags på tværs af en liste af URL\'er.'),
     ('Kan en kanonisk URL pege på et andet domæne?',
@@ -195,7 +195,7 @@ en_body = f'''
 <section class="problem">
   <div class="container">
     <h2>Why canonical URLs matter</h2>
-    <p>A canonical URL (<code>&lt;link rel="canonical" href="..."&gt;</code>) tells search engines which version of a page is the definitive one. Without it, Google has to guess — and it often guesses wrong, especially on sites with URL parameters, multiple paths to the same content, or syndicated articles. The result is diluted ranking signals and lower organic performance.</p>
+    <p>A canonical URL (<code>&lt;link rel=&quot;canonical&quot; href=&quot;...&quot;&gt;</code>) tells search engines which version of a page is the definitive one. Without it, Google has to guess — and it often guesses wrong, especially on sites with URL parameters, multiple paths to the same content, or syndicated articles. The result is diluted ranking signals and lower organic performance.</p>
     <div class="problem-cards">
       <div class="card"><h3>🔗 Consolidates link equity</h3><p>All backlinks, shares and engagement on duplicate URLs should flow to one canonical page. Without a canonical, each duplicate competes rather than contributes.</p></div>
       <div class="card"><h3>📋 Prevents duplicate content</h3><p>Google penalises nothing for duplicate content — but it does split the index across duplicates, so none ranks as strongly as a single consolidated page would.</p></div>
@@ -293,7 +293,7 @@ da_body = f'''
 <section class="problem">
   <div class="container">
     <h2>Hvorfor kanoniske URL\'er betyder noget</h2>
-    <p>En kanonisk URL (<code>&lt;link rel="canonical" href="..."&gt;</code>) fortæller søgemaskinerne, hvilken version af en side der er den endegyldige. Uden den må Google gætte — og ofte gætter den forkert, især på sider med URL-parametre, flere stier til samme indhold eller syndikerede artikler. Resultatet er fortyndede rangsignaler og lavere organisk performance.</p>
+    <p>En kanonisk URL (<code>&lt;link rel=&quot;canonical&quot; href=&quot;...&quot;&gt;</code>) fortæller søgemaskinerne, hvilken version af en side der er den endegyldige. Uden den må Google gætte — og ofte gætter den forkert, især på sider med URL-parametre, flere stier til samme indhold eller syndikerede artikler. Resultatet er fortyndede rangsignaler og lavere organisk performance.</p>
     <div class="problem-cards">
       <div class="card"><h3>🔗 Samler link-ekuitet</h3><p>Alle backlinks, delinger og engagement på dublet-URL\'er bør flyde til én kanonisk side. Uden en canonical konkurrerer dubletterne i stedet for at bidrage.</p></div>
       <div class="card"><h3>📋 Forhindrer dubletindhold</h3><p>Google straffer intet for dubletindhold — men det splitter indekset på tværs af dubletter, så ingen rangerer så stærkt som én samlet side ville.</p></div>

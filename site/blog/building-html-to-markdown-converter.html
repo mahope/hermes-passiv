@@ -66,7 +66,7 @@
 
 <pre><code>html.replace(/&lt;h1&gt;(.*?)&lt;\/h1&gt;/gi, '# $1')
     .replace(/&lt;b&gt;(.*?)&lt;\/b&gt;/gi, '**$1**')
-    .replace(/&lt;img.*?src="(.*?)".*?&gt;/gi, '![]($1)')</code></pre>
+    .replace(/&lt;img.*?src=&quot;(.*?)&quot;.*?&gt;/gi, '![]($1)')</code></pre>
 
 <p>This works for <em>controlled</em> input — a README template, a note-taking app's limited HTML subset. But throw a real web page at it — Wikipedia, MDN docs, a news article — and the cracks appear immediately.</p>
 
