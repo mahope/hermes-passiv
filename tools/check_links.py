@@ -590,6 +590,9 @@ def self_test() -> int:
             ok = False
 
         # 1. Hver fejlform skal fanges.
+        expect("død protokolrelativ href", '<a href="//cleancopy.tools/udenfor">x</a>', "udenfor")
+        expect("aktivt link i kodeblok", '<pre><code><a href="/...">x</a></code></pre>', "/...")
+        expect_clean("side med query og fragment", '<a href="findes?ref=test#her">x</a>')
         expect("død href", '<a href="/findes-ikke">x</a>', "/findes-ikke")
         expect("død asset", '<img src="/logo.png">', "/logo.png")
         expect("død stylesheet", '<link rel="stylesheet" href="/mangler.css">', "/mangler.css")
