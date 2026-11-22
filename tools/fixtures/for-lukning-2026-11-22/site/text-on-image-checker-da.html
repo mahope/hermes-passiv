@@ -1,0 +1,285 @@
+<!doctype html>
+<html lang="da">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tekst-på-billede kontrasttjek — er din tekst læsbar?</title>
+<meta name="description" content="Upload et billede, placér teksten og få den reelle WCAG-kontrast målt mod de faktiske baggrundspixels bag teksten. Gratis, i browseren, intet uploades til nogen server.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Gratis tekst-på-billede kontrasttjek">
+<meta property="og:description" content="Mål WCAG-kontrasten mellem din overlay-tekst og de rigtige pixels bag den — direkte i browseren.">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/text-on-image-checker-da">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/text-on-image-checker-da">
+<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/text-on-image-checker">
+<link rel="alternate" hreflang="da" href="https://hermes-passiv.pages.dev/text-on-image-checker-da">
+<link rel="alternate" hreflang="en" href="https://hermes-passiv.pages.dev/text-on-image-checker">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebApplication","name":"Tekst-på-billede kontrasttjek","applicationCategory":"DeveloperApplication","operatingSystem":"Any","url":"https://hermes-passiv.pages.dev/text-on-image-checker-da","offers":{"@type":"Offer","price":"0","priceCurrency":"EUR"},"description":"Gratis browserværktøj der måler WCAG-kontrasten mellem tekst på et billede og de faktiske pixels bag teksten."}
+</script>
+<script defer src="/track.js"></script>
+  <meta property="og:image" content="https://hermes-passiv.pages.dev/cover.jpg">
+  <meta name="twitter:card" content="summary_large_image">
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Hvordan måles læsbarhed?", "acceptedAnswer": {"@type": "Answer", "text": "Værktøjet beregner WCAG-agtig kontrast mellem din tekstfarve og repræsentative baggrundsområder i billedet og markerer steder hvor forholdet er under 4,5:1 (almindelig tekst) eller 3:1 (stor tekst). Det er en tilnærmelse — vurdér også travle fotografiske områder visuelt."}}, {"@type": "Question", "name": "Hurtigste løsning på ulæselig tekst på et billede?", "acceptedAnswer": {"@type": "Answer", "text": "Tilføj en scrím: en halvgennemsigtig mørk overlay bag teksten, eller placér teksten på en ensfarvet bjælke. Begge dele hæver kontrasten markant uden at ændre billedet eller brandfarverne."}}, {"@type": "Question", "name": "Bliver mine billeder uploadet?", "acceptedAnswer": {"@type": "Answer", "text": "Nej. Alt kører lokalt i din browser via canvas — billedfilen forlader aldrig din enhed."}}, {"@type": "Question", "name": "Har det betydning for tilgængelighed?", "acceptedAnswer": {"@type": "Answer", "text": "Ja. WCAG 2.x kræver 4,5:1 kontrast for almindelig tekst uanset baggrund, og EU's tilgængelighedslov presser offentlige sider mod overholdelse. Tekst bagt ind i billeder kan desuden ikke zoomes, oversættes eller markeres — foretræk ægte HTML-tekst hvor det er muligt."}}]}
+</script>
+</head>
+<body>
+<header class="hero">
+  <div class="container">
+    <div class="badge">GRATIS VÆRKTØJ</div>
+    <h1>Tekst-på-billede kontrasttjek</h1>
+    <p class="tagline">Tekst ovenpå et foto er den almindeligste fejl. Mål det
+    reelle WCAG-forhold bag din tekst — intet uploades.</p>
+    <div class="hero-cta">
+      <a href="#tool-heading" class="btn-primary">Tjek et billede nu</a>
+    </div>
+  </div>
+</header>
+
+<main class="container">
+
+<section class="ti-card" aria-labelledby="tool-heading">
+  <h2 id="tool-heading">Tjek din tekstplacering</h2>
+
+  <div id="verdict" class="ti-verdict" data-ti-verdict hidden></div>
+
+  <div class="ti-row" style="margin-top:14px">
+    <div class="ti-field">
+      <label for="bgmode">1. Baggrund</label>
+      <select id="bgmode" class="ti-input">
+        <option value="image" selected>Et billede</option>
+        <option value="gradient">Et gradient</option>
+      </select>
+    </div>
+    <div class="ti-field">
+      <label for="file">2. Vælg et billede</label>
+      <input type="file" id="file" accept="image/*" class="ti-input">
+    </div>
+    <div class="ti-field">
+      <label for="text">3. Tekst på billedet</label>
+      <input type="text" id="text" class="ti-input" value="Din overskrift her">
+    </div>
+    <div class="ti-field">
+      <label for="fg">4. Tekstfarve</label>
+      <input type="color" class="ti-color" id="fg" value="#ffffff">
+    </div>
+    <div class="ti-field">
+      <label for="fontsize">Skriftstørrelse</label>
+      <select id="fontsize" class="ti-input">
+        <option value="small">&lt; 24 px (normal)</option>
+        <option value="large" selected>&ge; 24 px (stor)</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="ti-row" id="tigrad" style="margin-top:14px">
+    <div class="ti-field">
+      <label for="gfrom">Gradientens start</label>
+      <input type="color" class="ti-color" id="gfrom" value="#1e3a5f">
+    </div>
+    <div class="ti-field">
+      <label for="gto">Gradientens slutning</label>
+      <input type="color" class="ti-color" id="gto" value="#c9d8e4">
+    </div>
+    <div class="ti-field">
+      <label for="gang">Gradientens vinkel</label>
+      <input type="range" id="gang" class="ti-input" min="0" max="360" step="15" value="45">
+    </div>
+  </div>
+
+  <div class="ti-row" style="margin-top:14px">
+    <div class="ti-field">
+      <label for="text2">5. Anden tekst (valgfri)</label>
+      <input type="text" id="text2" class="ti-input" value="Din undertekst her">
+    </div>
+    <div class="ti-field">
+      <label for="fg2">6. Farve på den anden tekst</label>
+      <input type="color" class="ti-color" id="fg2" value="#ffffff">
+    </div>
+  </div>
+
+  <div class="ti-canvas-wrap">
+    <canvas id="cv" aria-label="Billedforhåndsvisning med flytbar tekst. Klik på billedet for at flytte den valgte tekst." role="img"></canvas>
+  </div>
+  <p style="font-size:.82rem;color:var(--color-text-muted);margin-top:8px">Klik hvor som helst på billedet (eller træk) for at placere den valgte tekst. Vælg hvilken med <em>Flyt denne tekst</em> i et resultat. Slip en billedfil her, eller indsæt et med Ctrl+V, for at indlæse det.</p>
+  <p class="ti-error" id="err" role="alert"></p>
+
+  <div id="result" class="ti-result ti-fail" role="status" aria-live="polite" hidden></div>
+  <div id="result2" class="ti-result ti-fail" role="status" aria-live="polite" hidden></div>
+  <button type="button" id="ti-share" class="btn-secondary ti-share" hidden>Del dette tjek</button>
+
+  <p class="ti-note">Sådan virker det: hvert bogstav samples på sine faktiske pixels —
+  vi aflæser baggrundens farver direkte under bogstaverne (tekstens egne pixels udeladt)
+  og bruger det dårligste par vi finder. Det værst-tænkelige forhold er dét en
+  svagtseende læser oplever, og dét er derfor også hvad WCAG måler.
+  Vælg <strong>Et gradient</strong> i stedet for et billede, så kører den samme måling
+  på de to stop og den vinkel du skriver ind — så du kan tjekke gradienten i dit
+  stylesheet uden først at tage et skærmbillede.
+  Til rene farvepar: brug <a href="/contrast-checker-da">kontrasttjekkeren</a>;
+  se hvordan hele paletten læses af farveblinde med
+  <a href="/color-blindness-simulator-da">farveblindhedssimulatoren</a>. Tjek en hel
+  live-side med den gratis <a href="/scan-da">tilgængelighedsscanner</a>.</p>
+</section>
+
+<section class="ti-card">
+  <h2>Reglerne kort</h2>
+  <ul style="margin-top:10px;line-height:1.7">
+    <li><strong>WCAG SC&nbsp;1.4.3</strong> kræver 4,5:1 for normal tekst og 3:1 for stor tekst (&ge;&nbsp;24&nbsp;px normal eller &ge;&nbsp;18,66&nbsp;px fed).</li>
+    <li><strong>SC&nbsp;1.4.11</strong> kræver desuden 3:1 for meningsbærende UI-dele og grafik.</li>
+    <li>En gradient eller et travlt foto kan bestå under halvdelen af bogstaverne og fejle under resten — mål altid det værste tilfælde, ikke gennemsnittet.</li>
+    <li>Får du ikke bestået: læg en semi-transparent skærm bag teksten, mørkned/lysnet billedet lokalt, eller brug en fast billedtekst-bjælke.</li>
+  </ul>
+</section>
+
+<p style="margin-top:10px"><a href="/da/blog/tekst-paa-billede-kontrasttjek">Guide: sådan tester du tekst på billeder trin for trin</a></p>
+<p style="margin-top:26px"><a href="/da/free-tools">&larr; Alle gratis værktøjer</a> ·
+<a href="/contrast-checker-da">Kontrasttjekker</a> ·
+<a href="/palette-generator-da">Paletgenerator</a> ·
+<a href="/text-on-image-checker">English version</a></p>
+<section style="margin:2.5rem 0;">
+  <h2>Ofte stillede spørgsmål</h2>
+  <div class="problem-cards" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1rem;">
+      <div class="card"><h3>Hvordan måles læsbarhed?</h3><p>Værktøjet beregner WCAG-agtig kontrast mellem din tekstfarve og repræsentative baggrundsområder i billedet og markerer steder hvor forholdet er under 4,5:1 (almindelig tekst) eller 3:1 (stor tekst). Det er en tilnærmelse — vurdér også travle fotografiske områder visuelt.</p></div>
+      <div class="card"><h3>Hurtigste løsning på ulæselig tekst på et billede?</h3><p>Tilføj en scrím: en halvgennemsigtig mørk overlay bag teksten, eller placér teksten på en ensfarvet bjælke. Begge dele hæver kontrasten markant uden at ændre billedet eller brandfarverne.</p></div>
+      <div class="card"><h3>Bliver mine billeder uploadet?</h3><p>Nej. Alt kører lokalt i din browser via canvas — billedfilen forlader aldrig din enhed.</p></div>
+      <div class="card"><h3>Har det betydning for tilgængelighed?</h3><p>Ja. WCAG 2.x kræver 4,5:1 kontrast for almindelig tekst uanset baggrund, og EU's tilgængelighedslov presser offentlige sider mod overholdelse. Tekst bagt ind i billeder kan desuden ikke zoomes, oversættes eller markeres — foretræk ægte HTML-tekst hvor det er muligt.</p></div>
+  </div>
+</section>
+
+<section class="ti-card" style="margin-top:2.5rem;">
+  <h2 style="margin-top:0">Dette tjek er gratis. At tjekke hele websitet er ikke.</h2>
+  <p style="color:var(--color-text-muted);margin-top:0">Du har tjekket ét billede. Intet på denne
+  side fortæller, om resten af websitet består — det kræver at siden læses fra serveren, og det er det
+  <a href="/da/compliance-report">EUComply Pro</a> gør: EAA/WCAG, cookie-samtykke og NIS2-fund i én
+  rapport, du kan give videre til en kunde.
+  <a href="/da/free-tools">Se alle gratis værktøjer</a>.</p>
+</section>
+</main>
+<footer class="container" style="padding:40px 24px;color:var(--color-text-muted);font-size:.85rem">
+  mahoje.dk · Gratis GDPR- &amp; tilgængelighedsværktøjer der kører i din browser
+</footer>
+
+<script src="/apca.js"></script>
+<script src="/text-on-image-core.js"></script>
+<script src="/text-on-image-share.js"></script>
+<script>
+/* Kort: kernen ligger i `/text-on-image-core.js`, og denne side giver den sin
+   egen tekst og sit eget pro-kort. Prisen og perioden står her i HTML, fordi
+   `check_own_prices` dømmer pr. fil — en pris i en `.js` er en pris ingen port
+   kan se. */
+(function () {
+  var PRO_CARD =
+      '<div class="pro-card">'
+    +'<h3>Du har tjekket ét billede. Et website er alle billeder.</h3>'
+    +'<!-- pro-table:start --> <div class="table-wrap"> <table class="compare pro-table"> <caption class="sr-only">Gratis og EUComply Pro, side mod side</caption> <thead> <tr><th scope="col"><span class="sr-only">Plan</span></th><th scope="col">Gratis</th><th scope="col">EUComply Pro</th></tr> </thead> <tbody> <tr><th scope="row">Hvad du får</th><td><ul><li>WCAG-kontrastforhold for den samplede tekst</li><li>AA- og AAA-dom, tærskel for stor tekst</li><li>Billedet læses i din browser — intet uploades</li></ul></td><td><ul><li>Den læser siden fra serveren også — svarheadere med, som et browsertjek ikke kan se</li><li>De 15 tilgængelighedsregler omkring hvert billede</li><li>En PDF-rapport du kan give en kunde</li></ul></td></tr> <tr><th scope="row">Pris</th><td><span class="pro-price">$0</span><span class="pro-note">ingen licensnøgle nødvendig</span></td><td><span class="pro-price">$79/år pr. website</span></td></tr> </tbody> </table> </div> <p class="pro-note">$149 én gang pr. website — livstid, første 100 køb</p> <p class="pro-note pro-limit">Inkluderer ikke DPA, NIS2-klausler eller andre dokumenter — sælges separat</p> <!-- pro-table:end -->'
+    +'<p><a class="btn" href="https://buy.stripe.com/eVq00i4YH6UG69g0ObbMQ03" rel="nofollow noopener">Køb EUComply Pro — $79/år pr. website</a></p>'
+    +'<p class="pro-card-note">Én licens pr. website. <a href="/da/compliance-report">Se hvad Pro tilføjer, før du køber</a>.</p>'
+    +'</div>';
+  var instance = window.TiContrast.mount({
+    prefix: '',
+    strings: {
+      dec: ',',
+      pass: 'BESTÅET', fail: 'IKKE BESTÅET',
+      worstCase: '(værste tilfælde bag din tekst)',
+      needs: 'kræver', forAA: 'for WCAG AA',
+      largeText: '(stor tekst)', normalText: '(normal tekst)',
+      aaNotAAA: 'Består AA men ikke AAA', alsoAAA: 'Består også AAA.',
+      tryFix: 'Prøv en mørkere/lysere tekstfarve, eller læg en halvtransparent skærm bag teksten.',
+      copyHex: 'Kopiér den målte tekstfarve',
+      copiedHex: 'Kopieret',
+      copyManual: 'Markeret — tryk Ctrl+C',
+      cssLabel: 'Sæt dette ind i din egen CSS — det er præcis hvad rettelsen ovenfor lavede:',
+      copyCss: 'Kopiér CSS\'en',
+      copiedCss: 'CSS kopieret',
+      fixBtn: 'Fiks det — sæt tekstfarven for mig',
+      fixed: 'Jeg satte tekstfarven til %s og målte igen. Du kan altid ændre den tilbage med farvefeltet ovenfor.',
+      fixedScrimDark: 'Jeg lagde et %s % mørkt lag bag teksten og målte igen. Du fjerner det med farvefeltet ovenfor.',
+      fixedScrimLight: 'Jeg lagde et %s % lyst lag bag teksten og målte igen. Du fjerner det med farvefeltet ovenfor.',
+      downloadBtn: 'Hent billedet',
+      markBtn: 'Hent det markerede tjek',
+      markTitle: 'Tegner en rød ramme om det dårligste sted og brænder dommen ind i billedet',
+      findSpot: 'Find det bedste sted',
+      pick: 'Flyt denne tekst',
+      movedSpot: 'Jeg flyttede din tekst til det sted der læses bedst, hvor den måles til %s. Træk den et andet sted for at prøve en anden placering.',
+      delta: 'Før dette målte den %s. Nu måler den %s.',
+      keptSpot: 'Det her er allerede det bedste sted på billedet: %s. Træk teksten for at sammenligne en anden placering.',
+      fileStem: 'tekst-paa-billede-kontrast',
+      measured: 'Målt mod de lyseste og mørkeste billedpixels under dine bogstaver.',
+      demoNote: 'Eksempelbillede, ikke dit — vælg et billede ovenfor for at måle dit eget.',
+      // Kortformen til dommen i folden (5/10) — samme regel som på engelsk.
+      verdictDemo: 'Målt på eksempelbilledet. Upload dit eget ovenfor.',
+      errNotImage: 'Vælg venligst en billedfil.',
+      errUnreadable: 'Kunne ikke læse den billedfil.',
+      proCard: PRO_CARD,
+      note: 'Tjekket er gratis og kører i din browser. Hvis det sparede dig en ombygning, holder en lille <a href="https://donate.stripe.com/7sYeVcbn50wieFM8gDbMQ0c" rel="nofollow noopener">donation</a> det kørende.',
+      shareBtn: 'Del dette tjek',
+      shareCopied: 'Link kopieret',
+      shareNote: 'Gradient-indstillinger og tekstpositioner deles. For billeder skal modtageren uploade deres eget.'
+    }
+  });
+
+  // Share link handling
+  if (instance && window.TEXT_ON_IMAGE_SHARE) {
+    // Apply share state from URL fragment on load
+    var loadedFromShare = false;
+    if (location.hash && location.hash.indexOf('#ti=') === 0) {
+      var share = window.TEXT_ON_IMAGE_SHARE.decode(location.hash);
+      instance.applyShareState(share);
+      // Don't set loadedFromShare yet - we want the first updateAll to sync the URL
+    }
+
+    // Wire up share button from markup
+    var shareBtn = document.getElementById('ti-share');
+    if (shareBtn) {
+      shareBtn.addEventListener('click', function () {
+        var state = instance.getShareState();
+        if (!state) return;
+        var link = location.origin + location.pathname + window.TEXT_ON_IMAGE_SHARE.encode(state);
+        if (navigator.clipboard) {
+          navigator.clipboard.writeText(link).then(function () {
+            var old = shareBtn.textContent;
+            shareBtn.textContent = instance.strings && instance.strings.shareCopied ? instance.strings.shareCopied : 'Link kopieret';
+            setTimeout(function () { shareBtn.textContent = old; }, 2000);
+          }).catch(function () {
+            prompt('Kopiér dette link:', link);
+          });
+        } else {
+          prompt('Kopiér dette link:', link);
+        }
+      });
+    }
+
+    // Update URL fragment when state changes (after user interaction, not on initial share load)
+    var origUpdateAll = instance.updateAll;
+    instance.updateAll = function () {
+      origUpdateAll();
+      var res = document.getElementById('result');
+      if (res && shareBtn) {
+        shareBtn.hidden = false;
+      }
+      // Update URL with current state (like palette generator does)
+      if (!loadedFromShare && window.history && history.replaceState) {
+        var state = instance.getShareState();
+        if (state) {
+          try { history.replaceState(null, '', window.TEXT_ON_IMAGE_SHARE.encode(state)); } catch (e) {}
+        }
+      }
+      // After first updateAll (which syncs the shared state to URL), allow future updates
+      loadedFromShare = true;
+    };
+
+    // Sync URL with shared state on initial load
+    instance.updateAll();
+  }
+})();
+</script>
+<script>
+(function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';fetch('/api/track',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:p}),keepalive:true}).catch(function(){});document.addEventListener('click',function(ev){var a=ev.target&&ev.target.closest?ev.target.closest('a[href]'):null;if(!a)return;var h=a.href;if(h&&h.indexOf('chromewebstore.google.com')>-1){try{navigator.sendBeacon('/api/track',new Blob([JSON.stringify({path:p,event:'store-click'})],{type:'application/json'}));}catch(e){}}},true);}catch(e){}})();
+</script>
+<script>
+(function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';document.addEventListener('click',function(ev){var a=ev.target&&ev.target.closest?ev.target.closest('a[href]'):null;if(!a)return;var h=a.getAttribute('href')||'';var m=h.match(/^\/(?:da\/)?(text-on-image-checker|color-blindness-simulator-da|palette-generator-da|contrast-checker-da|scan-da|scan|clean-copy-tool|page-profile|site-icons|text-diff|url-to-markdown|free-tools|compliance-report)(\.html)?(#[^#]*)?$/);if(!m)return;try{navigator.sendBeacon('/api/track',new Blob([JSON.stringify({path:p,event:'cta-'+m[1]})],{type:'application/json'}));}catch(e){}},true);}catch(e){}})();
+</script>
+</body>
+</html>

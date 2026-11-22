@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="da" data-product="cleancopy">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Clean Copy — kopiér websider som ren Markdown eller ren tekst</title>
+<meta name="description" content="Clean Copy laver enhver webside, markering eller HTML-fil om til ren Markdown eller ren tekst. Browser-extension, CLI, Obsidian- og VS Code-plugin, GitHub Action. Gratis, MIT-licens, intet forlader din maskine, mens du konverterer.">
+<meta name="author" content="Mads Holst Jensen">
+<link rel="canonical" href="https://cleancopy.tools/da/">
+<link rel="alternate" hreflang="en" href="https://cleancopy.tools/">
+<link rel="alternate" hreflang="da" href="https://cleancopy.tools/da/">
+<link rel="alternate" hreflang="x-default" href="https://cleancopy.tools/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Clean Copy">
+<meta property="og:title" content="Clean Copy — kopiér websider som ren Markdown eller ren tekst">
+<meta property="og:description" content="Browser-extension, CLI, Obsidian- og VS Code-plugin. Gratis, MIT-licens, kører lokalt.">
+<meta property="og:url" content="https://cleancopy.tools/da/">
+<meta property="og:image" content="https://cleancopy.tools/clean-copy/og-preview.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<script defer src="/track.js"></script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"SoftwareApplication","name":"Clean Copy","applicationCategory":"BrowserApplication","operatingSystem":"Chrome, Firefox, macOS, Linux, Windows","inLanguage":"da","description":"Clean Copy laver enhver webside, markering eller HTML-fil om til ren Markdown eller ren tekst. Browser-extension, CLI, Obsidian- og VS Code-plugin, GitHub Action. Gratis, MIT-licens, intet forlader din maskine, mens du konverterer.","offers":[{"@type":"Offer","price":"0","priceCurrency":"USD"},{"@type":"Offer","name":"Clean Copy Pro Lifetime (founding-pris, f\u00f8rste 100 k\u00f8b)","price":"39","priceCurrency":"USD","availability":"https://schema.org/InStock","url":"https://buy.stripe.com/aFadR81Mv6UGgNU68vbMQ0d"}],"license":"https://opensource.org/licenses/MIT","url":"https://cleancopy.tools/","author":{"@type":"Person","name":"Mads Holst Jensen","url":"https://mahoje.dk"}}
+</script>
+<style>
+  .surfaces { display: grid; gap: 0.5rem 1.5rem; grid-template-columns: 1fr; margin: 0; padding: 0; list-style: none; }
+  @media (min-width: 560px) { .surfaces { grid-template-columns: 1fr 1fr; } }
+  .surfaces li { display: flex; justify-content: space-between; gap: 1rem; border-bottom: 1px solid var(--color-border); padding: 0.45rem 0; margin: 0; }
+  .surfaces span { color: var(--color-text-muted); font-size: 0.9rem; }
+  .install h3 { margin-top: 1.75rem; }
+  .install ol { padding-left: 1.3em; }
+</style>
+</head>
+<body>
+<main id="main">
+
+<div class="hero" id="check">
+  <div class="container">
+    <h1>Kopiér enhver webside som ren Markdown eller ren tekst.</h1>
+    <p>Clean Copy tager det, du markerer i browseren — eller en hel side, eller en HTML-fil — og giver dig Markdown, der kan sættes direkte ind i Obsidian, en README, en ticket eller en mail. Typografiske anførselstegn, usynlige tegn og layout-støj fjernes undervejs.</p>
+    <form class="oc-form" id="cc-check-form" method="get" action="/da/url-til-markdown">
+      <label for="cc-check-url">Adresse på den side, der skal konverteres</label>
+      <div class="oc-row-wrap">
+        <input id="cc-check-url" name="url" type="text" inputmode="url" autocomplete="url"
+               spellcheck="false" placeholder="https://example.com/artikel" aria-describedby="cc-check-hint" required>
+        <button type="submit" class="btn-primary">Konvertér den nu</button>
+      </div>
+      <p class="oc-hint" id="cc-check-hint">Én adresse — en artikel eller en dokumentationsside
+      virker bedst. Vi sætter <code>https://</code> foran, hvis du lader den være. Hentningen går
+      gennem vores server, og det er også derfor en side bag en login eller en betalingsmur
+      kommer tom tilbage. Konverteringen sker så i denne fane.</p>
+    </form>
+    <p class="oc-status" id="cc-check-status" role="status" aria-live="polite"></p>
+    <div id="cc-check-result" hidden></div>
+    <div class="hero-cta">
+      <a href="#install" class="btn-secondary">Installér</a>
+      <a href="https://github.com/mahope/clean-copy" class="btn-secondary">Kildekode på GitHub</a>
+    </div>
+    <span class="hero-note">Gratis og MIT-licenseret. Din tekst konverteres på din egen maskine — ingen konto, ingen server. Den ene undtagelse er URL-konverteringen ovenfor: vores server læser den side én gang, fordi en browser ikke selv kan hente en side på et andet domæne. En Pro-licensnøgle tjekkes online mod mahope.tools.</span>
+    <p class="hero-note">Den gratis version er komplet, ikke en prøveversion. <a href="#priser">Se hvad Clean Copy Pro — $19/år tilføjer, side om side</a>.</p>
+  </div>
+</div>
+
+<section id="indsat">
+  <div class="container">
+    <h2>Eller sæt det ind, du allerede har kopieret</h2>
+    <p>Kopiér en tabel, en kodeblok eller en del af en artikel på en vilkårlig side, og sæt den ind her. Det er den samme konvertering som ovenfor, den kører i denne fane, og resultatet er Markdown, du kan sætte direkte ind i Obsidian, en README, en ticket eller en mail.</p>
+    <div id="cc-embed"></div>
+    <script>window.CC_EMBED = { path: '/da/' };</script>
+  </div>
+</section>
+
+<section>
+  <div class="container">
+    <h2>Hvad det gør</h2>
+    <p>Markér tekst på en side, højreklik, vælg <strong>Copy as Markdown</strong> eller <strong>Copy as clean text</strong>. Eller tryk <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>C</kbd>. Den samme converter kører i terminalen:</p>
+<pre class="term"><span class="p">$</span> curl -sL https://example.com/artikel | clean-copy
+<span class="dim"># Artiklens titel</span>
+
+<span class="dim">Afsnit bliver til afsnit. Links bliver til [tekst](url), overskrifter beholder
+deres niveau, kodeblokke bliver fenced, og tabeller bliver til pipe-tabeller
+med den oprindelige kolonnejustering.</span>
+
+<span class="p">$</span> clean-copy --url https://example.com/docs --text > docs.txt</pre>
+    <dl class="feature-list">
+      <div><dt>Markdown der matcher siden</dt><dd>Overskrifter, lister, links, billeder, fed og kursiv, fenced code blocks med sprog-tag, tabeller med justering, nummererede lister der beholder deres startnummer.</dd></div>
+      <div><dt>Typografisk oprydning</dt><dd>Krøllede anførselstegn bliver lige, hårde mellemrum bliver almindelige, zero-width og andre usynlige tegn fjernes.</dd></div>
+      <div><dt>Ren tekst</dt><dd>Når du kun vil have ordene: ingen Markdown-syntaks, bare afsnit og linjeskift.</dd></div>
+      <div><dt>Intet forlader din maskine</dt><dd>Converteren er én lille JavaScript-fil uden runtime-afhængigheder. Extensionen har ingen server; CLI'en åbner kun en netværksforbindelse, hvis du bruger <code>--url</code>. Den ene undtagelse er en Pro-licensnøgle, der valideres online — se spørgsmålet om privatliv nedenfor.</dd></div>
+    </dl>
+  </div>
+</section>
+
+<section>
+  <div class="container">
+    <h2>Hvem det er til</h2>
+    <p>Folk, der flytter tekst fra nettet ind i noget andet hver dag: udviklere der skriver docs og tickets, researchere med noter i Obsidian, skribenter der sætter kilder ind i et udkast — og alle, der har sat tekst fra en webside ind i en code editor og fået et krøllet anførselstegn i en string.</p>
+    <p>Det er én converter leveret i syv former, så du får samme resultat, uanset hvor du er:</p>
+    <ul class="surfaces">
+      <li>Chrome / Edge / Brave-extension <span>v1.5.3</span></li>
+      <li>Firefox-extension <span>v1.5.4, hedder Clean Copy MD</span></li>
+      <li>Kommandolinje <span>Homebrew eller npm</span></li>
+      <li>Obsidian-plugin <span>indsæt som Markdown</span></li>
+      <li>VS Code-extension <span>indsæt som Markdown</span></li>
+      <li>GitHub Action <span>konvertér URL'er eller filer i CI</span></li>
+      <li>Webværktøj og bookmarklet <span>uden installation</span></li>
+    </ul>
+  </div>
+</section>
+
+<section id="install" class="install">
+  <div class="container">
+    <h2>Installation</h2>
+    <p class="section-intro">Extensions ligger endnu ikke i Chrome Web Store eller på addons.mozilla.org, så de installeres fra en zip-fil. Det tager cirka et minut og kræver ingen developer-konto.</p>
+
+    <h3>Chrome, Edge, Brave</h3>
+    <ol>
+      <li>Download <a href="/downloads/clean-copy-v1.5.3.zip">clean-copy-v1.5.3.zip</a> og pak den ud.</li>
+      <li>Åbn <code>chrome://extensions</code> og slå <strong>Developer mode</strong> til.</li>
+      <li>Klik <strong>Load unpacked</strong> og vælg den udpakkede mappe.</li>
+    </ol>
+
+    <h3>Firefox</h3>
+    <ol>
+      <li>Download <a href="/downloads/clean-copy-firefox-v1.5.4.zip">clean-copy-firefox-v1.5.4.zip</a> og pak den ud.</li>
+      <li>Åbn <code>about:debugging#/runtime/this-firefox</code>, klik <strong>Load Temporary Add-on</strong> og vælg <code>manifest.json</code>.</li>
+      <li>Midlertidige add-ons fjernes, når Firefox lukkes. En signeret udgave til addons.mozilla.org er på vej.</li>
+    </ol>
+
+    <h3>Kommandolinje</h3>
+<pre><code>brew install mahope/tap/clean-copy      # macOS / Linux
+npm install -g github:mahope/clean-copy-cli
+npx github:mahope/clean-copy-cli side.html   # kør uden at installere</code></pre>
+    <p>Læser stdin eller en fil, skriver Markdown til stdout. <code>--url</code> henter en side og beholder selve artiklen, <code>--text</code> giver ren tekst, <code>--copy</code> lægger resultatet på clipboardet. Fuld oversigt: <a href="/clean-copy-cli-ref">CLI-reference</a> (engelsk).</p>
+
+    <h3>Obsidian</h3>
+    <p>Tilføj <code>mahope/clean-copy-obsidian</code> via <a href="https://github.com/TfTHacker/obsidian42-brat">BRAT</a>, eller kopiér <code>main.js</code>, <code>manifest.json</code> og <code>styles.css</code> fra <a href="https://github.com/mahope/clean-copy-obsidian/releases/latest">seneste release</a> til <code>.obsidian/plugins/clean-copy-markdown/</code>. Indsæt derefter med <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>V</kbd>. Optagelse i community plugins afventer.</p>
+
+    <h3>VS Code</h3>
+    <p>Download <code>.vsix</code>-filen fra <a href="https://github.com/mahope/clean-copy-vscode/releases/latest">seneste release</a> og kør <code>code --install-extension clean-copy-1.0.0.vsix</code>, eller brug <strong>Install from VSIX</strong> i Extensions-panelet. Indsæt HTML som Markdown med <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>V</kbd>.</p>
+
+    <h3>GitHub Action</h3>
+<pre><code>- uses: mahope/clean-copy-cli@v1
+  with:
+    url: https://example.com/changelog
+    output_file: docs/changelog.md</code></pre>
+    <p>Tager også <code>file:</code> eller rå <code>html:</code> som input og har fire output-modes: <code>markdown</code>, <code>plain</code>, <code>wikilinks</code> og <code>csv</code>.</p>
+
+    <h3>Uden installation</h3>
+    <p><a href="/da/clean-copy-tool">Webværktøjet</a> konverterer indsat HTML eller formateret tekst direkte i browserfanen. <a href="/clean-copy-bookmarklet">Bookmarkletten</a> virker i alle browsere. Der er også en <a href="/da/url-til-markdown">URL til Markdown</a>-side og et <a href="/clean-copy-api">HTTP-API</a> til scripts, der ikke kan køre Node.</p>
+  </div>
+</section>
+
+<section id="priser">
+  <div class="container">
+    <h2>Pris</h2>
+<!-- pro-table:start -->
+<div class="table-wrap">
+<table class="compare pro-table">
+  <caption class="sr-only">Gratis og Clean Copy Pro, side mod side</caption>
+  <thead>
+    <tr><th scope="col"><span class="sr-only">Plan</span></th><th scope="col">Gratis</th><th scope="col">Clean Copy Pro</th></tr>
+  </thead>
+  <tbody>
+    <tr><th scope="row">Hvad du får</th><td><ul><li>Alle konverteringsmoduler i udvidelsen og på webværktøjet</li><li>Ingen grænse på hvor meget tekst du indsætter</li></ul></td><td><ul><li>Batch-konvertering</li><li>Egne rense regler</li></ul></td></tr>
+    <tr><th scope="row">Pris</th><td><span class="pro-price">$0</span><span class="pro-note">ingen licensnøgle nødvendig</span></td><td><span class="pro-price">$19/år</span></td></tr>
+  </tbody>
+</table>
+</div>
+<p class="pro-note">$39 én gang — livstid, første 100 køb · Én licens dækker 5 enheder.</p>
+<p class="pro-note pro-limit">Batch-konvertering findes kun i webværktøjet. Egne rense regler er i browserudvidelsen og Obsidian-pluginet — CLI-værktøjet og VS Code-pluginet har ingen</p>
+<!-- pro-table:end -->
+    <p>Gratis. Alle udgaver er MIT-licenserede, og hele kildekoden ligger på <a href="https://github.com/mahope/clean-copy">GitHub</a>. Den gratis version er komplet — ikke en prøveversion. Du får alle konverteringsmoduler i udvidelsen og på webværktøjet, og ingen grænse på hvor meget tekst du indsætter.</p>
+    <p><strong>Clean Copy Pro — $19/år</strong> giver to ting til den gratis version: <em>batch-konvertering</em> af mange tekststykker på én gang i <a href="/da/clean-copy-tool">webværktøjet</a>, og <em>egne rense regler</em>, du definerer én gang i browserudvidelsen eller i Obsidian-pluginet og genbruger ved hver kopi. Pro giver også et år med større opdateringer, og din licens finansierer udviklingen af den gratis version. Én licens dækker 5 enheder.</p>
+    <p><a href="https://buy.stripe.com/6oU4gy76PgvgdBIdAXbMQ00" class="btn-primary" rel="nofollow noopener">Køb Clean Copy Pro — $19/år</a></p>
+    <p><strong>Eller betal én gang: Clean Copy Pro Lifetime — $39 én gang, for altid.</strong> Samme Pro-licens og samme 5 enheder, men nøglen udløber aldrig, og intet fornyes. Det er en founding-pris, der kun gælder de første 100 køb; derefter er Pro årsabonnementet ovenfor.</p>
+    <p><a href="https://buy.stripe.com/aFadR81Mv6UGgNU68vbMQ0d" class="btn-secondary" rel="nofollow noopener">Køb Clean Copy Pro Lifetime — $39 én gang</a></p>
+    <p class="hero-note">Sikker betaling via Stripe. Licensnøglen kommer på mail og på takkesiden; aktivér den dér, hvor du bruger Clean Copy — <a href="/da/activate/">aktiveringsguiden</a> dækker udvidelsen, Obsidian og webværktøjet.</p>
+  </div>
+</section>
+
+<section id="faq">
+  <div class="container">
+    <h2>Spørgsmål</h2>
+    <details>
+      <summary>Hvorfor ligger extensionen ikke i Chrome Web Store?</summary>
+      <p>Store-listningen kræver en developer-konto og en review-runde, som jeg ikke er færdig med. Load unpacked giver dig præcis samme kode; store-versionen bliver identisk, når den kommer.</p>
+    </details>
+    <details>
+      <summary>Sender den min tekst nogen steder hen?</summary>
+      <p>Den tekst, du konverterer, gør ikke. Extensionen har ingen server, og mens du kopierer, laver den overhovedet ingen netværkskald. CLI'en laver kun en request, når du beder den hente en URL. URL-konvertereren øverst på denne side er den ene undtagelse på sitet: den sender den adresse, du skriver, til vores server én gang, så den kan hente siden — en browser kan ikke selv hente en side på et andet domæne. HTML'en kommer tilbage og konverteres her i din fane, og vi gemmer hverken adressen eller siden. Indsætnings-konvertereren længere nede sender ikke noget som helst.</p>
+      <p><strong>Én undtagelse:</strong> hvis du aktiverer en Clean Copy Pro-licensnøgle, sendes nøglen og et tilfældigt enheds-id til <code>mahope.tools</code>, så licensen kan valideres. De sider du besøger og den tekst du kopierer sendes aldrig. Uden en Pro-nøgle sendes intet overhovedet.</p>
+    </details>
+    <details>
+      <summary>Hvor god er Markdown-outputtet?</summary>
+      <p>Godt på artikler, dokumentation og de fleste tabeller; kolonnejustering, sprog-tags på kodeblokke og nestede lister bevares. Det er ikke en browser-rendering-engine, så tungt scriptede sider eller indhold, der indsættes efter load, kan komme ufuldstændigt ud. Sæt resultatet ind i <a href="/da/clean-copy-tool">webværktøjet</a>, hvis du vil se, hvad converteren gør ved en bestemt side, før du installerer noget.</p>
+    </details>
+    <details>
+      <summary>Chrome advarer om extensions i developer mode.</summary>
+      <p>Den advarsel kommer for alle unpacked extensions. Den forsvinder, når store-listningen findes. Du kan læse hele extensionen igennem — det er nogle få filer uden build-step.</p>
+    </details>
+    <details>
+      <summary>Må jeg bruge converteren i mit eget projekt?</summary>
+      <p>Ja. <code>clean-copy-core.js</code> er ét modul uden afhængigheder under MIT-licens. CLI'en, extensions og plugins importerer det uændret, og en paritetstest sørger for, at de ikke driver fra hinanden.</p>
+    </details>
+  </div>
+</section>
+
+<section>
+  <div class="container">
+    <h2>Hvem står bag</h2>
+    <p>Clean Copy er bygget og vedligeholdt af Mads Holst Jensen, selvstændig udvikler i Odense, under navnet <a href="https://mahoje.dk">mahoje.dk</a>. Det begyndte som en løsning på en personlig irritation — at sætte tekst fra websider ind i Obsidian — og voksede til værktøjerne ovenfor. Fejlrapporter og pull requests er velkomne på <a href="https://github.com/mahope/clean-copy/issues">GitHub</a>.</p>
+    <p>Læs mere: <a href="/da/blog/html-til-markdown-cli">HTML til Markdown fra terminalen</a>, <a href="/da/blog/indsæt-i-obsidian-ren-markdown">indsæt i Obsidian som ren Markdown</a>, <a href="/da/blog/tabeljustering-html-til-markdown">tabeljustering fra HTML til Markdown</a>.</p>
+  </div>
+</section>
+
+</main>
+<script>/* Hvad tjekket ikke kan, og hvor læseren går hen, er denne sides egne ord —
+  /convert-check.js er en frontdørs-motor og hardkoder intet produkt, samme
+  kontrakt som /one-off-check.js på de to andre sites. Links peger på de to
+  veje videre, som dette korte uddrag ikke er. */
+window.CONVERT_CHECK = {
+  then: 'Det er den rigtige konverter, kørt på din side — den samme som extensionen, CLI’en og plugins bruger. Den læser det, der står i sidens HTML, så tekst et script indsætter efter indlæsningen kommer ud ufuldstændig, og den kan ikke åbne noget bag en login.',
+  next: [{label: 'Konvertér og kopiér hele teksten', href: '/da/url-til-markdown', takesUrl: true}, {label: 'Sæt HTML ind i stedet for en URL', href: '/clean-copy-tool'}]
+};
+/* Donationslinjen ligger i siden, ikke i motoren: den skal nå
+  tools/check_donation_paths.py, og den må ikke kunne vise sig før der er et
+  resultat. En sætning, aldrig en knap, og href er katalogens. */
+window.CC_DONATE = '<p class="oc-donate">Det er gratis at konvertere en side. Hvis det sparede dig tid, holder en lille <a href="https://donate.stripe.com/7sYeVcbn50wieFM8gDbMQ0c" rel="nofollow noopener">donation</a> den kørende.</p>';</script>
+<script defer src="/net.js"></script>
+<script defer src="/clean-copy-core.js"></script>
+<script defer src="/readable.js"></script>
+<script defer src="/convert-check.js"></script>
+<script defer src="/clean-copy-embed.js"></script>
+</body>
+</html>

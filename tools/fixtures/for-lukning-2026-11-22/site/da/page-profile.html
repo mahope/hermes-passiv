@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>page-profile — Tjek enhver hjemmeside på teknisk sundhed (gratis)</title>
+  <meta name="description" content="Indtast en URL og få med det samme en rapport om meta-tags, Open Graph, JSON-LD, overskrifter, alt-tekster og security headers — med score og karakter. Gratis, ingen tilmelding.">
+  <meta property="og:title" content="page-profile — Sundhedstjek af enhver webside">
+  <meta property="og:description" content="Meta-tags, Open Graph, JSON-LD, headings, alt-tekster, security headers — én URL ind, rapport ud. Gratis og uden tilmelding.">
+  <meta property="og:image" content="/page-profile/og.png">
+  <meta property="twitter:image" content="/page-profile/og.png">
+  <meta property="og:url" content="https://hermes-passiv.pages.dev/da/page-profile">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="canonical" href="https://hermes-passiv.pages.dev/da/page-profile">
+  <link rel="alternate" hreflang="en" href="https://hermes-passiv.pages.dev/page-profile">
+  <link rel="alternate" hreflang="da" href="https://hermes-passiv.pages.dev/da/page-profile">
+  <link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/page-profile">
+  <link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+  <link rel="stylesheet" href="/style.css">
+  <style>
+    .cli-demo {
+      background: #0f172a;
+      color: #e2e8f0;
+      border-radius: 12px;
+      padding: 1.5rem;
+      font-family: 'SF Mono', 'Monaco', 'Fira Code', monospace;
+      font-size: 0.85rem;
+      line-height: 1.6;
+      overflow-x: auto;
+      white-space: pre;
+    }
+    .cli-demo .prompt { color: #38bdf8; }
+    .cli-demo .output { color: #94a3b8; }
+    .cli-demo .highlight { color: #4ade80; }
+    .cli-demo .pass { color: #4ade80; }
+    .cli-demo .fail { color: #f87171; }
+    .cli-demo .warn { color: #fbbf24; }
+    .tier-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+      margin: 2rem 0;
+    }
+    @media (max-width: 640px) {
+      .tier-grid { grid-template-columns: 1fr; }
+    }
+    .tier-card {
+      background: var(--color-surface-2);
+      border-radius: 12px;
+      padding: 1.5rem;
+      border: 1px solid var(--color-border);
+    }
+    .tier-card.pro {
+      border-color: #38bdf8;
+      box-shadow: 0 0 20px rgba(56, 189, 248, 0.1);
+    }
+    .tier-card h3 { margin-top: 0; }
+    .tier-card .price { font-size: 2rem; font-weight: 700; color: var(--color-accent); }
+    .tier-card ul { padding-left: 1.2rem; }
+    .tier-card ul li { margin-bottom: 0.4rem; }
+    .tier-card .btn { display: block; text-align: center; margin-top: 1rem; }
+  </style>
+<script defer src="/net.js"></script>
+</head>
+<body>
+  <header class="hero" style="padding:3rem 1rem 2rem;text-align:center;">
+    <div class="badge">Nyt værktøj</div>
+    <h1>Tjek enhver websides tekniske sundhed</h1>
+    <p class="tagline" style="font-size:1.2rem;max-width:560px;margin:0 auto;">
+      Meta-tags, Open Graph, JSON-LD, overskrifter, alt-tekster og security headers — én URL ind, rapport ud.
+    </p>
+    <div style="margin-top:1.5rem;display:flex;gap:0.75rem;justify-content:center;flex-wrap:wrap;">
+      <a href="#prov" class="btn btn-primary">Prøv det nu →</a>
+      <a href="#cli" class="btn btn-secondary">Til terminal-brugere</a>
+    </div>
+  </header>
+
+  <main style="max-width:800px;margin:0 auto;padding:0 1rem 3rem;">
+    <!-- Live profiler -->
+    <section id="prov">
+      <h2>Prøv det nu — gratis og uden tilmelding</h2>
+      <p>Skriv en URL og få den samme rapport som CLI-værktøjet laver — direkte i browseren.</p>
+      <form id="profile-form" style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:1rem;">
+        <label for="profile-url" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);">URL der skal tjekkes</label>
+        <input type="url" id="profile-url" placeholder="https://din-hjemmeside.dk" required
+          style="flex:1;min-width:240px;padding:0.7rem 1rem;border-radius:8px;border:1px solid var(--color-border);background:var(--color-surface-2);color:var(--color-text);font-size:1rem;">
+        <button type="submit" class="btn btn-primary" style="text-decoration:none;">Tjek siden →</button>
+      </form>
+      <div id="profile-status" role="status" aria-live="polite" style="min-height:1.5rem;color:#94a3b8;"></div>
+      <div id="profile-result" class="cli-demo" hidden></div>
+      <noscript><p>Dette live-tjek kræver JavaScript. Brug i stedet CLI-værktøjet — se nederst på siden.</p></noscript>
+    </section>
+
+    <!-- What it checks -->
+    <section>
+      <h2>Hvad tjekker den?</h2>
+      <table style="width:100%;border-collapse:collapse;">
+        <tr><th scope="col" style="text-align:left;padding:0.5rem 0;border-bottom:1px solid var(--color-border);">Område</th><th scope="col" style="text-align:left;padding:0.5rem 0;border-bottom:1px solid var(--color-border);">Tjek</th></tr>
+        <tr><td style="padding:0.5rem 0;border-bottom:1px solid var(--color-border);"><strong>Status &amp; redirects</strong></td><td style="padding:0.5rem 0;border-bottom:1px solid var(--color-border);">HTTP-statuskode og redirect-kæde</td></tr>
+        <tr><td style="padding:0.5rem 0;border-bottom:1px solid var(--color-border);"><strong>Basis-meta</strong></td><td style="padding:0.5rem 0;border-bottom:1px solid var(--color-border);">Titel (længde), meta description (længde), canonical-URL, sprog, charset</td></tr>
+        <tr><td style="padding:0.5rem 0;border-bottom:1px solid var(--color-border);"><strong>Sociale medier</strong></td><td style="padding:0.5rem 0;border-bottom:1px solid var(--color-border);">Open Graph (og:title, og:description, og:image, og:type) og Twitter Card</td></tr>
+        <tr><td style="padding:0.5rem 0;border-bottom:1px solid var(--color-border);"><strong>Strukturerede data</strong></td><td style="padding:0.5rem 0;border-bottom:1px solid var(--color-border);">Antal JSON-LD-blokke og deres @types</td></tr>
+        <tr><td style="padding:0.5rem 0;border-bottom:1px solid var(--color-border);"><strong>Indhold</strong></td><td style="padding:0.5rem 0;border-bottom:1px solid var(--color-border);">Overskriftsstruktur (H1–H6) og alt-tekstdækning på billeder</td></tr>
+        <tr><td style="padding:0.5rem 0;border-bottom:1px solid var(--color-border);"><strong>Sikkerhed</strong></td><td style="padding:0.5rem 0;border-bottom:1px solid var(--color-border);">HSTS, CSP, X-Frame-Options, X-Content-Type-Options, Referrer-Policy</td></tr>
+        <tr><td style="padding:0.5rem 0;border-bottom:1px solid var(--color-border);"><strong>Flersproget</strong></td><td style="padding:0.5rem 0;border-bottom:1px solid var(--color-border);">Sprogangivelse og hreflang-alternativer</td></tr>
+        <tr><td style="padding:0.5rem 0;"><strong>Score</strong></td><td style="padding:0.5rem 0;">Vægtet 21-points score med bogstavkarakter (A–F) og konkrete anbefalinger</td></tr>
+      </table>
+    </section>
+
+    <!-- Why -->
+    <section>
+      <h2>Hvorfor bruge det?</h2>
+      <ul>
+        <li><strong>Universelt</strong> — virker på alle hjemmesider: WordPress, Shopify, Webflow, Wix, Next.js eller håndskrevet HTML. Intet skal installeres.</li>
+        <li><strong>På fem sekunder</strong> — hurtigere end at åbne DevTools. Perfekt til hurtig QA før du udgiver en side.</li>
+        <li><strong>Konkrete anbefalinger</strong> — ikke bare en score, men præcis hvad der mangler: "ingen meta description", "mangler HSTS", "3 billeder uden alt-tekst".</li>
+        <li><strong>Gratis kerne</strong> — web-tjekket er altid gratis, og terminalversionen gemmer din historik uden at det koster noget. Pro tilføjer sammenligningstilstand fra kommandolinjen, batch og en kunde-klar HTML-rapport.</li>
+      </ul>
+    </section>
+
+    <!-- CLI section -->
+    <section id="cli">
+      <h2>Til terminal-brugere</h2>
+      <p>Værktøjet findes også som et <strong>nul-dependencies Python-script</strong> — kun standardbiblioteket, én fil, Python 3.8+:</p>
+      <div class="cli-demo">
+        <div><span class="prompt">$</span> curl -O <span style="color:#38bdf8;">/downloads/page-profile/page_profile.py</span></div>
+        <div><span class="prompt">$</span> python3 page_profile.py https://din-hjemmeside.dk</div>
+        <div><span class="output">page-profile v1.2.2  —  https://example.com</span></div>
+        <div><span class="output"> status: HTTP 200</span></div>
+        <div><span class="output">──────────────────────────────────────────────────────</span></div>
+        <div><span class="output"> Title: Example Domain (14 chars)</span></div>
+        <div><span class="output"> Description: Missing</span></div>
+        <div><span class="output"> Open Graph: All missing</span></div>
+        <div><span class="output"> Security: No HSTS, no CSP</span></div>
+        <div><span class="output">  Score:        6.0/21.0  Grade: F</span></div>
+      </div>
+      <p style="margin-top:1rem;">Til CI-pipelines kan scriptet outputte JSON (<code>--json</code>), så du kan gate deploys på en minimumsscore.</p>
+      <div class="tier-grid">
+        <div class="tier-card">
+          <h3>Gratis</h3>
+          <div class="price">$0</div>
+          <ul>
+            <li>Alle tjek: basis-meta, sociale, struktur, sikkerhed, flersproget</li>
+            <li>Rapport i terminalen med score og karakter</li>
+            <li>JSON-output til pipelines</li>
+            <li>Redirect-kæde — du ser hele kæden af omdirigeringer, ikke kun den sidste statuskode</li>
+            <li>Historik — hver kørsel af én URL gemmes automatisk, så du kan se din score over tid. Gratis for alle</li>
+            <li>Nul dependencies — én Python-fil</li>
+            <li>Web-versionen ovenfor er altid gratis</li>
+          </ul>
+          <a href="/downloads/page-profile/page_profile.py" class="btn btn-secondary" style="text-decoration:none;">Download gratis →</a>
+        </div>
+        <div class="tier-card pro">
+          <h3>Pro</h3>
+          <div class="price">$19</div>
+          <span style="font-size:0.8rem;color:#94a3b8;">om året</span>
+          <ul>
+            <li>Alt i Gratis, plus:</li>
+            <li>Sammenligningstilstand fra kommandolinjen — diff to URL'er i terminalen</li>
+            <li>Batch-tilstand — tjek flere URLs, rangeret efter score</li>
+            <li>Kunde-klar HTML-rapport</li>
+            <li>Online aktivering og validering — ingen konto nødvendig</li>
+          </ul>
+          <a href="https://buy.stripe.com/9B6eVcgHp7YK69ggN9bMQ04" id="pp-buy-live" class="btn btn-primary" style="text-decoration:none;" rel="nofollow noopener">Køb Pro — $19/år →</a>
+          <span style="display:block;font-size:0.8rem;color:#94a3b8;margin-top:0.5rem;">Sikker betaling via Stripe. Licensnøglen kommer på mail. Aktivér den med <code>page-profile --activate DIN-NØGLE</code>.</span>
+          <p style="margin:1rem 0 0.4rem;font-size:0.9rem;"><strong>Eller betal én gang: $39 én gang, for altid.</strong> Samme Pro-licens uden fornyelse og uden udløb. Founding-pris, der kun gælder de første 100 køb.</p>
+          <a href="https://buy.stripe.com/8x2cN42Qz0wifJQgN9bMQ0e" id="pp-buy-lifetime" class="btn btn-secondary" style="text-decoration:none;" rel="nofollow noopener">Køb Pro Lifetime — $39 én gang →</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Gratis vs Pro sammenligning -->
+    <section>
+      <h2>Gratis vs Pro — side om side</h2>
+<!-- pro-table:start -->
+<div class="table-wrap">
+<table class="compare pro-table">
+  <caption class="sr-only">Gratis og Page Profile Pro, side mod side</caption>
+  <thead>
+    <tr><th scope="col"><span class="sr-only">Plan</span></th><th scope="col">Gratis</th><th scope="col">Page Profile Pro</th></tr>
+  </thead>
+  <tbody>
+    <tr><th scope="row">Hvad du får</th><td><ul><li>Historik</li><li>Alle tjek</li><li>Rapport i terminalen med score og karakter</li><li>JSON-output</li><li>Redirect-kæde</li></ul></td><td><ul><li>Sammenligningstilstand fra kommandolinjen</li><li>Batch-tilstand</li><li>Kunde-klar html-rapport</li></ul></td></tr>
+    <tr><th scope="row">Pris</th><td><span class="pro-price">$0</span><span class="pro-note">ingen licensnøgle nødvendig</span></td><td><span class="pro-price">$19/år</span></td></tr>
+  </tbody>
+</table>
+</div>
+<p class="pro-note">$39 én gang — livstid, første 100 køb · Én licens dækker 3 enheder.</p>
+<p class="pro-note pro-limit">Ingen alarmer eller notifikationer — tjek manuelt</p>
+<!-- pro-table:end -->
+      <p style="margin-top:0.75rem;font-size:0.9rem;color:#94a3b8;">Pro er én beslutning om året: aktivering og almindelige licenstjek kontakter mahope.tools, mens den seneste bekræftede Pro-status kan bruges i op til syv dage ved midlertidige serverfejl. Reviser du sider for kunder, betaler HTML-rapporten og batch-tilstanden sig på den første opgave.</p>
+    </section>
+
+    <!-- Example -->
+    <section>
+      <h2>Live eksempel</h2>
+      <p>Kørt mod dette site:</p>
+      <div class="cli-demo">
+        <div><span class="prompt">$</span> <span class="highlight">python3 page_profile.py https://hermes-passiv.pages.dev/</span></div>
+        <div><span class="output"> status: HTTP 200</span></div>
+        <div><span class="pass"> Title: EU Compliance Guides for Small Web Agencies</span></div>
+        <div><span class="warn"> Description: 214 chars (outside recommended 50-165)</span></div>
+        <div><span class="pass"> Canonical: </span></div>
+        <div><span class="pass"> OG: All three present</span></div>
+        <div><span class="pass"> JSON-LD: 1 block (Series)</span></div>
+        <div><span class="pass"> Images: 5/5 with alt text</span></div>
+        <div><span class="output"> Hreflang: 3 alternates</span></div>
+        <div><span class="output">  Score:        16.5/21.0  Grade: B</span></div>
+      </div>
+    
+<section class="products">
+  <div class="container">
+    <h2>Guides på dansk</h2>
+    <p>Læs guiden <a href="/da/blog/open-graph-tjekker-guide" style="color:var(--color-accent);">Open Graph-tjekker</a> — se hvordan dine links ser ud når de deles.</p>
+  </div>
+</section>
+</section>
+  </main>
+
+  <footer class="site-footer">
+    <p>page-profile af <a href="/da">Passiv</a> · MIT-licens · Pro-licens til kommerciel brug · <a href="/page-profile">English version</a></p>
+    <p><a href="/da/blog/teknisk-seo-tjek-hjemmeside">Guide: teknisk SEO-tjek af din hjemmeside</a> · <a href="/scan-da">Gratis tilgængelighedsscanner</a></p>
+  </footer>
+
+  <!-- FAQ -->
+  <section style="background:var(--color-surface);padding:2rem 1rem;" id="faq">
+    <div class="container" style="max-width:760px;margin:0 auto;">
+      <h2>Ofte stillede spørgsmål</h2>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <details>
+          <summary style="cursor:pointer;font-weight:600;padding:0.6rem 0;">Skal jeg installere noget?</summary>
+          <p>Nej. page-profile er en enkelt Python-fil som kun bruger standardbiblioteket. Download den og kør med Python 3.8+ — ingen pip install, ingen npm, ingen browser-automation.</p>
+        </details>
+        <details>
+          <summary style="cursor:pointer;font-weight:600;padding:0.6rem 0;">Hvad tjekker den på en side?</summary>
+          <p>HTTP-status og redirects, titel- og meta-beskrivelseslængde, canonical URL, sprog, Open Graph og Twitter Card tags, JSON-LD strukturerede data, overskrifts-hierarki, billeder med alt-tekst og sikkerheds-headers (HSTS, CSP, X-Frame-Options og flere).</p>
+        </details>
+        <details>
+          <summary style="cursor:pointer;font-weight:600;padding:0.6rem 0;">Virker den på alle hjemmesider?</summary>
+          <p>Ja. Den virker på alle offentlige URL'er uanset platform — WordPress, Shopify, Webflow, Next.js, Squarespace eller håndskrevet HTML. Intet installeres på målsiden.</p>
+        </details>
+        <details>
+          <summary style="cursor:pointer;font-weight:600;padding:0.6rem 0;">Kan jeg bruge den i CI-pipelines?</summary>
+          <p>Ja. Kør med <code>--json</code> for maskinlæsbart output med score og karakter, så du kan gate dine deploys på en minimumskvalitetsgrænse.</p>
+        </details>
+        <details>
+          <summary style="cursor:pointer;font-weight:600;padding:0.6rem 0;">Hvad er forskellen på Free og Pro?</summary>
+          <p>Free-versionen dækker alle tjek, terminalrapport med score og karakter samt JSON-output. Pro ($19/år) tilføjer sammenligningstilstand mellem to URL'er fra kommandolinjen, batch-tilstand og kundeklar HTML-rapport. Historik er gratis for alle.</p>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "SoftwareApplication",
+        "name": "page-profile",
+        "applicationCategory": "DeveloperApplication",
+        "operatingSystem": "Any",
+        "url": "https://hermes-passiv.pages.dev/da/page-profile",
+        "description": "Tjek meta-tags, Open Graph, JSON-LD, overskrifter, alt-tekster og security headers p\u00e5 enhver webside \u2014 med score og karakter.",
+        "offers": [
+          {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "USD"
+          },
+          {
+            "@type": "Offer",
+            "name": "Page Profile Pro Lifetime (founding-pris, første 100 køb)",
+            "price": "39",
+            "priceCurrency": "USD",
+            "availability": "https://schema.org/InStock",
+            "url": "https://buy.stripe.com/8x2cN42Qz0wifJQgN9bMQ0e"
+          }
+        ]
+      },
+      {
+        "@type": "FAQPage",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "Skal jeg installere noget?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Nej. page-profile er en enkelt Python-fil som kun bruger standardbiblioteket. Download den og k\u00f8r med Python 3.8+ \u2014 ingen pip install, ingen npm, ingen browser-automation."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Hvad tjekker den p\u00e5 en side?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "HTTP-status og redirects, titel- og meta-beskrivelsesl\u00e6ngde, canonical URL, sprog, Open Graph og Twitter Card tags, JSON-LD strukturerede data, overskrifts-hierarki, billeder med alt-tekst og sikkerheds-headers (HSTS, CSP, X-Frame-Options og flere)."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Virker den p\u00e5 alle hjemmesider?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Ja. Den virker p\u00e5 alle offentlige URL'er uanset platform \u2014 WordPress, Shopify, Webflow, Next.js, Squarespace eller h\u00e5ndskrevet HTML. Intet installeres p\u00e5 m\u00e5lsiden."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Kan jeg bruge den i CI-pipelines?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Ja. K\u00f8r med --json for maskinl\u00e6sbart output med score og karakter, s\u00e5 du kan gate dine deploys p\u00e5 en minimumskvalitetsgr\u00e6nse."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Hvad er forskellen p\u00e5 Free og Pro?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Free-versionen d\u00e6kker alle tjek, terminalrapport med score og karakter samt JSON-output. Pro ($19/\u00e5r) tilf\u00f8jer sammenligningstilstand mellem to URL'er fra kommandolinjen, batch-tilstand og kundeklar HTML-rapport. Historik er gratis for alle."
+            }
+          }
+        ]
+      }
+    ]
+  }
+  </script>
+  <script>
+  (function () {
+    var form = document.getElementById('profile-form');
+    var input = document.getElementById('profile-url');
+    var status = document.getElementById('profile-status');
+    var result = document.getElementById('profile-result');
+
+    function esc(s) {
+      var d = document.createElement('div');
+      d.textContent = s == null ? '' : String(s);
+      return d.innerHTML;
+    }
+    function line(html) { return html + '\n'; }
+    function mark(ok, warn) { return ok ? '<span class="pass">✅</span>' : (warn ? '<span class="warn">⚠️</span>' : '<span class="fail">❌</span>'); }
+
+    // Vores egen 5xx er ikke brugerens wifi: Cloudflare svarer en worker der er
+    // faldet ned med sin egen HTML-side, så et blindt `r.json()` kastede, og
+    // brugeren fik "Kunne ikke nå profileringstjenesten". Status læses først,
+    // forbigående svar genkaldes, og kun et rigtigt 4xx er endeligt — det ligger
+    // i /net.js sammen med de andre klienter, og `tools/check_net_copies.py`
+    // holder det som den eneste kopi. Her står kun antallet genkald.
+    var PROFILE_MAX_TRIES = 3;
+    function fetchProfile(target) {
+      // `ok:false` i et 200-svar er et rigtigt svar, ikke et blip: serveren kunne
+      // ikke hente sitet. NET lader den fejl gå igennem som et vellykket svar,
+      // så den dømmes her — efter genkalderne, aldrig før.
+      return NET.askGet('/api/profile?url=' + encodeURIComponent(target), PROFILE_MAX_TRIES)
+        .then(function (j) {
+          if (j && j.ok) return j;
+          // Uden `transient` er den endelig, så NET ikke prøver igen. Det er
+          // et svar serveren mente, ikke et blip.
+          throw new Error((j && j.error) || 'Forespørgslen fejlede.');
+        });
+    }
+
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var target = input.value.trim();
+      if (!target) return;
+      status.textContent = 'Henter og analyserer ' + target + ' …';
+      result.hidden = true;
+      fetchProfile(target)
+        .then(function (j) {
+          var out = '';
+          out += line('<span class="highlight">page-profile</span>  —  ' + esc(j.url));
+          out += line('  status: <span class="pass">HTTP ' + esc(j.status) + '</span>');
+          if (j.final_url && j.final_url !== j.url) out += line('  omdirigeret til: ' + esc(j.final_url));
+          out += line('──────────────────────────────────────────────');
+          if (j.title) {
+            var tOk = j.title_length >= 20 && j.title_length <= 70;
+            out += line('  Titel:        ' + mark(tOk, !tOk) + ' ' + esc(j.title).slice(0, 60));
+            out += line('                (' + j.title_length + ' tegn)');
+          } else {
+            out += line('  Titel:        <span class="fail">❌ Mangler</span>');
+          }
+          if (j.meta_description) {
+            var dOk = j.meta_description_length >= 50 && j.meta_description_length <= 165;
+            out += line('  Beskrivelse:  ' + mark(dOk, !dOk) + ' ' + esc(j.meta_description).slice(0, 50) + '…');
+            out += line('                (' + j.meta_description_length + ' tegn)');
+          } else {
+            out += line('  Beskrivelse:  <span class="fail">❌ Mangler</span>');
+          }
+          out += line('  Canonical:    ' + (j.canonical ? '<span class="pass">✅</span>' : '<span class="fail">❌</span>') + ' ' + esc(j.canonical || '—').slice(0, 45));
+          out += line('  Sprog:        ' + (j.language ? '<span class="pass">✅</span>' : '<span class="fail">❌</span>') + ' ' + esc(j.language || '—'));
+          out += line('  Charset:      ' + (j.charset ? '<span class="pass">✅</span>' : '<span class="fail">❌</span>') + ' ' + esc(j.charset || '—'));
+          out += line('──────────────────────────────────────────────');
+          var ogAll = j.og && j.og.title && j.og.description && j.og.image;
+          var ogSome = j.og && (j.og.title || j.og.description || j.og.image);
+          out += line('  Open Graph:   ' + mark(ogAll, ogSome) + ' ' + (ogAll ? 'Alle tre til stede' : (ogSome ? 'Delvist' : 'Alle mangler')));
+          out += line('  Twitter Card: ' + (j.twitter && j.twitter.card ? '<span class="pass">✅</span> ' + esc(j.twitter.card) : '<span class="fail">❌ Mangler</span>'));
+          out += line('  JSON-LD:      — ' + j.json_ld_count + ' blok(ke)' + (j.json_ld_types && j.json_ld_types.length ? ' (' + esc(j.json_ld_types.join(', ')).slice(0, 40) + ')' : ''));
+          var h1c = j.headings && j.headings.h1 ? j.headings.h1.length : 0;
+          if (h1c === 1) out += line('  Overskrifter: <span class="pass">✅</span> 1 H1 — ' + esc(j.headings.h1[0]).slice(0, 40));
+          else if (h1c > 1) out += line('  Overskrifter: <span class="warn">⚠️</span> ' + h1c + ' H1-tags');
+          else out += line('  Overskrifter: <span class="fail">❌</span> Ingen H1');
+          var imgs = j.images || { total: 0, with_alt: 0 };
+          if (imgs.total > 0) {
+            var iOk = imgs.with_alt / imgs.total >= 0.9;
+            out += line('  Billede-alt:  ' + mark(iOk, imgs.with_alt > 0) + ' ' + imgs.with_alt + '/' + imgs.total);
+          } else {
+            out += line('  Billede-alt:  — ingen billeder');
+          }
+          var secBits = [];
+          if (!j.security.hsts) secBits.push('ingen HSTS');
+          if (!j.security.csp) secBits.push('ingen CSP');
+          if (!j.security.xfo) secBits.push('ingen X-Frame-Options');
+          out += line('  Sikkerhed:    ' + (secBits.length ? '<span class="warn">⚠️</span> ' + esc(secBits.join(', ')) : '<span class="pass">✅</span> headers til stede'));
+          out += line('──────────────────────────────────────────────');
+          var gClass = j.grade === 'F' || j.grade === 'D' ? 'fail' : (j.grade === 'C' ? 'warn' : 'pass');
+          out += line('  Score:        ' + j.score + '/' + j.max_score + '  Karakter: <span class="' + gClass + '">' + esc(j.grade) + '</span>');
+          if (j.penalties && j.penalties.length) {
+            for (var p = 0; p < j.penalties.length; p++) {
+              out += line('  • <span class="warn">' + esc(j.penalties[p]) + '</span>');
+            }
+          }
+          out += '<p style="font-size:13px;color:#94a3b8;margin:16px 0 0">Denne profil er gratis og kræver ingen konto. Hvis den sparet dig tid, holder en lille <a href="https://donate.stripe.com/7sYeVcbn50wieFM8gDbMQ0c" rel="nofollow noopener">donation</a> den kørende.</p>';
+          status.textContent = '';
+          result.hidden = false;
+          result.innerHTML = out;
+          trackEvent();
+        })
+        .catch(function (err) {
+          status.textContent = '';
+          result.hidden = false;
+          var msg = err.transport
+            ? 'Vi kunne ikke nå profileringstjenesten. Tjek din forbindelse, eller brug CLI\'en.'
+            : (err.transient
+              ? 'Profileringstjenesten er midlertidigt utilgængelig. Prøv igen om et øjeblik.'
+              : (err.message || 'Forespørgslen fejlede.'));
+          result.innerHTML = line('<span class="fail">Fejl:</span> ' + esc(msg));
+        });
+    });
+
+    function trackEvent() {
+      try {
+        if (typeof window.__hpTrack === 'function') window.__hpTrack('profile');
+        else if (navigator.sendBeacon) navigator.sendBeacon('/api/track', new Blob([JSON.stringify({ path: '/da/page-profile', event: 'profile' })], { type: 'application/json' }));
+      } catch (e) { /* analytics må aldrig bryde værktøjet */ }
+    }
+  })();
+  </script>
+<script>
+(function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';fetch('/api/track',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:p}),keepalive:true}).catch(function(){});document.addEventListener('click',function(ev){var a=ev.target&&ev.target.closest?ev.target.closest('a[href]'):null;if(!a)return;var h=a.href;if(h&&h.indexOf('chromewebstore.google.com')>-1){try{navigator.sendBeacon('/api/track',new Blob([JSON.stringify({path:p,event:'store-click'})],{type:'application/json'}));}catch(e){}}},true);}catch(e){}})();
+</script>
+<script src="/track.js"></script>
+<script>
+(function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';document.addEventListener('click',function(ev){var a=ev.target&&ev.target.closest?ev.target.closest('a[href]'):null;if(!a)return;var h=a.getAttribute('href')||'';var m=h.match(/^\/(?:da\/)?(scan-da|scan|clean-copy-tool|page-profile|site-icons|text-diff|url-to-markdown|free-tools|compliance-report)(\.html)?(#[^#]*)?$/);if(!m)return;try{navigator.sendBeacon('/api/track',new Blob([JSON.stringify({path:p,event:'cta-'+m[1]})],{type:'application/json'}));}catch(e){}},true);}catch(e){}})();
+</script>
+</body>
+</html>

@@ -40,6 +40,12 @@ def inactive_keys(catalog: dict | None = None) -> set[str]:
     return {key for key, product in (catalog.get("products") or {}).items() if is_inactive(product)}
 
 
+def catalog_before_closure() -> dict:
+    """Katalogen som den var før lukningen — fixtur for selftests, der beviser
+    en regel på de tidligere købssider."""
+    return json.loads(before_closure("tools/stripe_catalog.json"))
+
+
 def before_closure(relative: str) -> str:
     """Den publicerede tekst for `relative` fra før salget lukkede."""
     path = SNAPSHOT / relative

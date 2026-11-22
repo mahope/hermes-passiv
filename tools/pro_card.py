@@ -18,7 +18,7 @@ Derfor er knappen her **generatorens**, ikke sidens:
     python3 tools/pro_card.py             # vis siderne og deres knap
     python3 tools/pro_card.py --check     # dom, exit 1 ved afvigelse
     python3 tools/pro_card.py --apply     # ret knappen, så den bliver katalogens
-    python3 tools/pro_card.py --self-test # 8 kontroller
+    python3 tools/pro_card.py --self-test # 9 kontroller
 
 Dommen er tre ting, fordi hver især kan være grøn mens den anden er rød:
 
@@ -34,9 +34,15 @@ Dommen er tre ting, fordi hver især kan være grøn mens den anden er rød:
      «Buy» på en dansk side være grøn, fordi porten bare valgte det samme sprog
      som den fandt. Sådan er `/da/cookie-check` dømt på sin egen tekst.
 
-Og en ratchet på **14 sider**: en side hvis pro-kort mister knappen, eller hvor
-knappen flyttes ud af kortet, skal være rød — ellers kunne en fejlretelse slette
-salgsmuligheden og porten være grøn.
+Og en ratchet på antallet af sider med en købsknap i pro-kortet: en side hvis
+pro-kort mister knappen, eller hvor knappen flyttes ud af kortet, skal være
+rød — ellers kunne en fejlretelse slette salgsmuligheden og porten være grøn.
+Ratchet'en var 14 indtil 22/11-2026, hvor salget af EUComply Pro og Clean Copy
+Pro blev lukket; nu er den 1 (`/url-inspector`, Page Profile Pro).
+
+  4. **Et lukket produkt må ikke sælges.** Et link til et produkt med
+     `"status": "inactive"` i katalogen er rødt i ethvert pro-kort — Stripe har
+     deaktiveret linket, så knappen ender blindt.
 
 Knappens `class` og `style` er sidens egen design (`btn` på nogen, `btn-primary`
 på andre) og røres ikke. Kun `href` og knapteksten er generatorens.
@@ -63,7 +69,11 @@ SITE = ROOT / "site"
 # 9/10: `/da/clean-copy-tool` er det samme værktøj på dansk med den samme
 # købsknap, så den tæller som den fjortende. Ratchet'en stiger kun, når en ny
 # side rent faktisk får en knap sat op.
-VÆRKTØJSSIDER = 14
+# 22/11-2026: salget af EUComply Pro og Clean Copy Pro er lukket, så de tretten
+# knapper er fjernet, og `/url-inspector` (Page Profile Pro) er den eneste side
+# tilbage med en købsknap i pro-kortet. Ratchet'en går ned med vilje her, og
+# dom 4 sørger for at de lukkede knapper ikke kommer tilbage.
+VÆRKTØJSSIDER = 1
 
 # Åbningen af et pro-kort: den `<div …>` hvis attributter indeholder `pro-card`.
 KORT_RE = re.compile(r'<div\b[^>]*\bclass="[^"]*\bpro-card\b[^"]*"[^>]*>', re.S)
@@ -174,6 +184,10 @@ def dom(kat: dict | None = None, rod: Path = SITE) -> list[str]:
                             f"det er ikke et payment_link for noget produkt")
                 continue
             nøgle, produkt = links[link]
+            if produkt.get("status") == "inactive":
+                fund.append(f"{rel}: pro-kortet sælger {nøgle}, som er lukket for salg "
+                            f"({produkt.get('closed')}) — fjern knappen")
+                continue
             lang = sprog(rel)
             forventet = knaptekst(nøgle, produkt, lang, perioder)
             if tekst != forventet:
@@ -250,29 +264,38 @@ def self_test() -> int:
         fil.write_text(tekst.replace(gammel, ny, 1), encoding="utf-8")
 
     CC = "https://buy.stripe.com/6oU4gy76PgvgdBIdAXbMQ00"
-    EU = "https://buy.stripe.com/eVq00i4YH6UG69g0ObbMQ03"
+    PP = "https://buy.stripe.com/9B6eVcgHp7YK69ggN9bMQ04"
+    SIDE = "url-inspector/index.html"
+    KNAP = "Buy Page Profile Pro — $19/year"
+    # Indtil 22/11-2026 kørte mutationerne på `/cookie-check` (EUComply Pro).
+    # Den side har ikke længere en købsknap, så de kører på den eneste side,
+    # der har: `/url-inspector`.
 
-    # 1. Et krydsprodukt: Clean Copys knap på /cookie-check. Kunden betaler så
-    #    for det forkerte produkt, og intet i koden siger det.
+    # 1. Et lukket produkt: Clean Copys knap i Page Profiles pro-kort. Linket
+    #    er deaktiveret i Stripe, så knappen fører ingen steder hen.
     with tempfile.TemporaryDirectory() as tmp:
-        rod = _kopi(Path(tmp), lambda rod: skriv(
-            rod, "cookie-check.html", EU, CC))
+        rod = _kopi(Path(tmp), lambda rod: skriv(rod, SIDE, PP, CC))
         fund = dom(kat, rod)
+        tjek("et lukket produkts link er rødt",
+             any("lukket for salg" in f and "clean-copy-pro" in f for f in fund), str(fund[:2]))
+
+    # 1b. Samme link i et katalog, hvor Clean Copy Pro stadig sælges: så er det
+    #     et krydsprodukt, og knapteksten skal være Clean Copys — kunden ville
+    #     ellers betale for det forkerte produkt.
+    åben = {**kat, "products": {**kat["products"], "clean-copy-pro": {
+        k: v for k, v in kat["products"]["clean-copy-pro"].items() if k != "status"}}}
+    with tempfile.TemporaryDirectory() as tmp:
+        rod = _kopi(Path(tmp), lambda rod: skriv(rod, SIDE, PP, CC))
+        fund = dom(åben, rod)
         tjek("krydsprodukt-link er rødt",
              any("Buy Clean Copy Pro" in f for f in fund), str(fund[:2]))
 
-    # 2. En håndskrevet pris i knappen. Det er præcis fejlen der lå i de
-    #    produktsider, og den lå i markup, hvor `check_own_prices.py` så den.
-    #    Her ligger den i et inline script, hvor ingen port så den.
-    #    Mutationen rammer **knappens egen tekst** og ikke den første `$79` på
-    #    siden: siden har nu også en genereret tabel med samme beløb, så en
-    #    almindelig erstatning ville ramt tabellen og ladt knappen urørt — og
-    #    porten ville være grøn uden at have dømt det den er skrevet for.
+    # 2. En håndskrevet pris i knappen. Mutationen rammer **knappens egen
+    #    tekst** og ikke den første `$19` på siden: siden har også en genereret
+    #    tabel med samme beløb, så en almindelig erstatning ville ramme tabellen.
     with tempfile.TemporaryDirectory() as tmp:
         rod = _kopi(Path(tmp), lambda rod: skriv(
-            rod, "cookie-check.html",
-            "Buy EUComply Pro — $79/year per website",
-            "Buy EUComply Pro — $29/year per website"))
+            rod, SIDE, KNAP, "Buy Page Profile Pro — $15/year"))
         fund = dom(kat, rod)
         tjek("håndskrevet pris i knappen er rød",
              any("katalogen siger" in f for f in fund), str(fund[:2]))
@@ -280,42 +303,41 @@ def self_test() -> int:
     # 3. Et link der ikke findes i katalogen — et dødt eller fremmed link.
     with tempfile.TemporaryDirectory() as tmp:
         rod = _kopi(Path(tmp), lambda rod: skriv(
-            rod, "cookie-check.html", EU, "https://buy.stripe.com/0UkIk4StpN"))
+            rod, SIDE, PP, "https://buy.stripe.com/0UkIk4StpN"))
         fund = dom(kat, rod)
         tjek("ukendt købslink er rødt",
              any("står ikke i katalogen" in f for f in fund), str(fund[:2]))
 
-    # 4. Dansk sti med engelsk tekst. Sproget læses fra stien, så en forkert
-    #    oversættelse på `/da/cookie-check` kan ikke være grøn ved at porten
-    #    bare følger den knap den finder.
+    # 4. Dansk sti med engelsk tekst. Sproget læses fra stien, så en engelsk
+    #    knap på en dansk side kan ikke være grøn ved at porten bare følger den
+    #    knap den finder. Der er ingen dansk side med pro-kort i dag, så
+    #    kopien lægges under `da/`.
+    def dansk_kopi(rod: Path) -> None:
+        (rod / "da" / "url-inspector").mkdir(parents=True, exist_ok=True)
+        shutil.copy2(rod / SIDE, rod / "da" / SIDE)
     with tempfile.TemporaryDirectory() as tmp:
-        rod = _kopi(Path(tmp), lambda rod: skriv(
-            rod, "cookie-check-da.html", "Køb EUComply Pro", "Buy EUComply Pro"))
+        rod = _kopi(Path(tmp), dansk_kopi)
         fund = dom(kat, rod)
         tjek("engelsk knap på dansk side er rød",
-             any("Køb EUComply Pro" in f for f in fund), str(fund[:2]))
+             any(f.startswith("da/url-inspector") and "Køb Page Profile Pro" in f for f in fund),
+             str(fund[:2]))
 
     # 5. Ratchet'en: knappen forsvinder fra et pro-kort. Uden denne tjek ville
-    #    dom 1–3 være grønne, fordi der så ikke var noget at domme — og den
+    #    dom 1–3 være grønne, fordi der så ikke var noget at dømme — og den
     #    tabte salgsmulighed ville være usynlig.
     with tempfile.TemporaryDirectory() as tmp:
-        rod = _kopi(Path(tmp), lambda rod: skriv(
-            rod, "cookie-check.html",
-            'Buy EUComply Pro — $79/year per website', 'Se hvad Pro tilføjer'))
+        rod = _kopi(Path(tmp), lambda rod: skriv(rod, SIDE, KNAP, "Se hvad Pro tilføjer"))
         fund = dom(kat, rod)
         tjek("tabt købsknap er rød",
              any("købsknap i sit pro-kort" in f for f in fund), str(fund[:2]))
 
     # 6. Et pro-kort med et **niveau mere** — som den genererede gratis-mod-
-    #    Pro-tabel i sin `.table-wrap`. Det er den fejlform denne port havde:
-    #    grænsen var «den første `</div>`», så indpakningen om tabellen blev
-    #    kortets afslutning, og knappen lå uden for det fundne kort. Målt 2/10 igen,
-    #    da de ni øvrige værktøjssider fik tabellen: porten var da grøn på 11 af
-    #    13. Uden denne tjek ville `--apply` bare have slået ratchet'en ned, og
-    #    tabet af en købsknap ville være usynligt.
+    #    Pro-tabel i sin `.table-wrap`. Grænsen var engang «den første
+    #    `</div>`», så indpakningen om tabellen blev kortets afslutning, og
+    #    knappen lå uden for det fundne kort.
     with tempfile.TemporaryDirectory() as tmp:
         rod = _kopi(Path(tmp), lambda rod: skriv(
-            rod, "cookie-check.html",
+            rod, SIDE,
             "<!-- pro-table:start -->",
             "<div class=\"table-wrap\"><table class=\"compare\"><tr>"
             "<td>free</td></tr></table></div>"
@@ -327,9 +349,7 @@ def self_test() -> int:
     # 7. Ret skal gøre det røde grønt igen — ellers er `--apply` død kode.
     with tempfile.TemporaryDirectory() as tmp:
         rod = _kopi(Path(tmp), lambda rod: skriv(
-            rod, "cookie-check.html",
-            "Buy EUComply Pro — $79/year per website",
-            "Buy EUComply Pro — $29/year per website"))
+            rod, SIDE, KNAP, "Buy Page Profile Pro — $15/year"))
         ret(kat, rod)
         tjek("ret gør en håndskrevet pris grøn igen", not dom(kat, rod),
              "; ".join(dom(kat, rod)[:2]))

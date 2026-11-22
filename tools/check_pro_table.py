@@ -31,7 +31,7 @@ Tabellen er derfor tegnet af katalogen, og denne port dommer den:
      det er det, der gjorde fire sider til fire svar.
 
     python3 tools/check_pro_table.py             # dom
-    python3 tools/check_pro_table.py --self-test # 28 kontroller
+    python3 tools/check_pro_table.py --self-test # 31 kontroller
 """
 from __future__ import annotations
 
@@ -47,6 +47,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import pro_table  # noqa: E402  — generatoren er den ene sandhed
+import closed_sales  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
 # Målt 2/10 på den niende side: produktets feature-liste passer ikke overalt.
@@ -55,7 +56,9 @@ ROOT = Path(__file__).resolve().parent.parent
 # browseren, der hverken gemmer historik eller kører i en terminal. Havde
 # listen bare været tegnet ind, ville den have løjet på 12 værktøjssider.
 # Derfor er der to slags sider, og dom 6 holder dem ude af hinanden.
-PRODUKTSIDE = 8
+# 22/11-2026: salget af Clean Copy Pro, DeskUptime Pro og EUComply Pro er
+# lukket, så kun Page Profile Pros to produktsider er tilbage (var 8).
+PRODUKTSIDE = 2
 
 # Målt 2/10: elleve af de tretten værktøjssider har et pro-kort, men ingen af dem
 # viste i en tabel hvad den **frie** udgave gør på netop det værktøj. Nu er alle
@@ -85,12 +88,20 @@ PRODUKTSIDE = 8
 # nævnte hverken 'interval' eller de tre gratis-funktioner. Derfor er de to
 # lister nu i overensstemmelse — den side lover præcis de fem Pro-labels, og
 # brødteksten siger det samme om ubegrænsede sites og 30-sekunders polling.
-VÆRKTØJSSIDE = 14
+# 22/11-2026: tretten af de fjorten værktøjssider solgte EUComply Pro eller
+# Clean Copy Pro, som er lukket for salg. `/url-inspector` er tilbage (var 14).
+VÆRKTØJSSIDE = 1
+
+# Selftesten beviser dommene på de 22 sider fra før lukningen (se
+# `tools/closed_sales.py`), så den sætter tallene og kilden midlertidigt til
+# den verden. `KILDE` er roden `_kopi` og `_scripts` læser fra.
+FØR_LUKNING = (8, 14)
+KILDE = ROOT
 
 
 def _scripts(rel: str) -> set[str]:
     """De filer siden selv indlæser med `<script src>`, som `site/`-stier."""
-    fil = ROOT / rel
+    fil = KILDE / rel
     if not fil.exists():
         return set()
     html = fil.read_text(encoding="utf-8")
@@ -104,7 +115,8 @@ def synlig_pris(tekst: str) -> set[str]:
     return set(re.findall(r"\$(\d+(?:\.\d+)?)", tekst))
 
 
-def dom(catalog: dict, root: Path = ROOT) -> list[str]:
+def dom(catalog: dict, root: Path | None = None) -> list[str]:
+    root = KILDE if root is None else root
     fund: list[str] = []
     perioder = catalog.get("billing_periods") or {}
     produkter = catalog.get("products") or {}
@@ -127,6 +139,10 @@ def dom(catalog: dict, root: Path = ROOT) -> list[str]:
         produkt = produkter.get(nøgle)
         if not isinstance(produkt, dict):
             fund.append(f"{rel}: ukendt produkt {nøgle!r}")
+            continue
+        if produkt.get("status") == "inactive":
+            fund.append(f"{rel}: {nøgle} er lukket for salg ({produkt.get('closed')}), "
+                        f"så siden må ikke have en gratis-mod-Pro-tabel med pris")
             continue
         if lang not in pro_table.TEKST:
             fund.append(f"{rel}: ukendt sprog {lang!r}")
@@ -351,13 +367,14 @@ def _kopi(root: Path, muter) -> Path:
     for post in json_sider():
         mål = root / post
         mål.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(ROOT / post, mål)
+        shutil.copy2(KILDE / post, mål)
     muter(root)
     return root
 
 
 def json_sider() -> list[str]:
-    return [post["path"] for post in pro_table.load()["pro_table_pages"]]
+    katalog = closed_sales.catalog_before_closure() if KILDE != ROOT else pro_table.load()
+    return [post["path"] for post in katalog["pro_table_pages"]]
 
 
 def _tegn(root: Path, catalog: dict) -> None:
@@ -387,7 +404,33 @@ def self_test() -> int:
         if not sand:
             fejl.append(f"{navn}{': ' + detalje if detalje else ''}")
 
-    catalog = pro_table.load()
+    # 1. Målingen på den virkelige site/ skal være grøn, ellers er den
+    #    ubrugelig — samme mutation som de andre porte.
+    rød = dom(pro_table.load())
+    tjek("målingen er grøn på site/", not rød, "; ".join(rød[:3]))
+
+    # Et lukket produkt i pro_table_pages er rødt — tabellen ville sælge det.
+    lukket = pro_table.load()
+    lukket = {**lukket, "pro_table_pages": lukket["pro_table_pages"][:-1] + [
+        {**lukket["pro_table_pages"][-1], "product": "clean-copy-pro"}]}
+    tjek("et lukket produkt i pro_table_pages er rødt",
+         any("lukket for salg" in f for f in dom(lukket)), str(dom(lukket)[:1]))
+
+    # Resten beviser dommene på de 22 sider og den katalog, der gjaldt før
+    # salget af Clean Copy Pro, DeskUptime Pro og EUComply Pro lukkede
+    # 22/11-2026 — de rigtige publicerede tabeller, ikke en opdigtet side.
+    global PRODUKTSIDE, VÆRKTØJSSIDE, KILDE
+    gemt_tal = (PRODUKTSIDE, VÆRKTØJSSIDE, KILDE)
+    PRODUKTSIDE, VÆRKTØJSSIDE = FØR_LUKNING
+    KILDE = closed_sales.SNAPSHOT
+    try:
+        return _self_test_før_lukning(fejl, talt, tjek)
+    finally:
+        PRODUKTSIDE, VÆRKTØJSSIDE, KILDE = gemt_tal
+
+
+def _self_test_før_lukning(fejl: list[str], talt: list[int], tjek) -> int:
+    catalog = closed_sales.catalog_before_closure()
 
     def skriv(rod: Path, rel: str, gammel: str, ny: str) -> None:
         fil = rod / rel
@@ -405,11 +448,6 @@ def self_test() -> int:
         assert m and gammel in m.group(0), (rel, gammel)
         fil.write_text(tekst[:m.start()] + m.group(0).replace(gammel, ny, 1)
                        + tekst[m.end():], encoding="utf-8")
-
-    # 1. Målingen på den virkelige site/ skal være grøn, ellers er den
-    #    ubrugelig — samme mutation som de andre porte.
-    rød = dom(catalog)
-    tjek("målingen er grøn på site/", not rød, "; ".join(rød[:3]))
 
     with tempfile.TemporaryDirectory() as tmp:
         rod_med = _kopi(Path(tmp), lambda rod: None)
@@ -574,7 +612,7 @@ def self_test() -> int:
     #     præcis den fejl dommen er skrevet for. Så her sætter vi skabelonen
     #     tilbage til den fra 2/10, tegner alle nitten sider forfra og spørger
     #     så dommen.
-    ægte = (ROOT / "site/compliance-report.html").read_text(encoding="utf-8")
+    ægte = (KILDE / "site/compliance-report.html").read_text(encoding="utf-8")
     ægte_blok = pro_table.EJER_RE.search(ægte).group(0)
     tjek("livstidsnoten på /compliance-report har omfanget med",
          "$149 once per website" in ægte_blok, "negativ kontrol")

@@ -371,6 +371,11 @@ def dom(cat: dict, dist: Path, site: Path | None = None) -> list[str]:
             continue
         if produkt.get("pricing_page") is False:
             continue  # bevidst udenfor, med en begrundelse i katalogen
+        if produkt.get("status") == "inactive":
+            # Lukket for salg (22/11-2026). Den står i «Sælges ikke længere»-
+            # linjen under tabellen, uden pris og uden købsside — og dom 1
+            # holder den dér, fordi blokken skal være `byg_blok`s output.
+            continue
         # Ikke på listen og ikke bevidst undtaget: så mangler den en
         # købsside, en pris — eller en undtagelse. Alle tre skal siges.
         fund.append(f"katalog: {nøgle} står ikke på /pricing og har ikke "
@@ -456,6 +461,17 @@ def self_test() -> int:
     rød = dom(cat, DIST)
     tjek("repoet er grøn", not rød, "; ".join(rød[:2]))
 
+    def genåbnet(*nøgler: str) -> dict:
+        """Katalogen, hvor `nøgler` sælges igen. Clean Copy Pro og EUComply Pro
+        blev lukket for salg 22/11-2026, men deres købssider på cleancopy.tools
+        og mahope.tools er stadig bygget — så de er de eneste rækker, der kan
+        bevise krydsdomæne-dommene (7 og 8)."""
+        kat = json.loads(json.dumps(cat))
+        for nøgle in nøgler:
+            for felt in ("status", "closed", "closed_note"):
+                kat["products"][nøgle].pop(felt, None)
+        return kat
+
     def med_filer(ændringer: list[tuple[str, str]], kat: dict | None = None) -> list[str]:
         """Kør `dom` mod en midlertidig kopi hvor filerne er ændret.
 
@@ -510,14 +526,14 @@ def self_test() -> int:
 
     # Dom 3: et Stripe-link på siden.
     fund = med_filer([("site/pricing.html",
-                       ('href="/paid-templates#eucomply-dpa"',
-                        'href="https://buy.stripe.com/bJe7sK8aT4My7dk7czbMQ05"'))])
+                       ('href="/page-profile#pp-buy-live"',
+                        'href="https://buy.stripe.com/9B6eVcgHp7YK69ggN9bMQ04"'))])
     tjek("direkte betaling er rød",
          any("sælger direkte" in f for f in fund), "; ".join(fund[:1]))
 
     # Dom 2: en død købsside i katalogens `pricing_link`.
     kat_død = json.loads(json.dumps(cat))
-    kat_død["products"]["clean-copy-pro"]["pricing_link"] = "/findes-ikke"
+    kat_død["products"]["page-profile-pro"]["pricing_link"] = "/findes-ikke"
     fund = med_filer([], kat_død)
     tjek("død købsside er rød",
          any("ikke findes i det byggede site" in f for f in fund),
@@ -592,17 +608,17 @@ def self_test() -> int:
     # Dom 7: et anker der ikke findes i den side det peger på. Det er den
     # mutation dom 7 er skrevet for: uden den er dommen en påstand, fordi
     # intet i repoetVille ændre et `id` på destinationssiden.
-    fund = med_filer([("dist/mahope.tools/paid-templates.html",
-                       ('id="eucomply-dpa"', 'id="eucomply-dpa-v2"'))])
+    fund = med_filer([("dist/mahope.tools/page-profile.html",
+                       ('id="pp-buy-live"', 'id="pp-buy-live-v2"'))])
     tjek("dødt anker er rødt",
-         any("har ingen `id=" in f and "eucomply-dpa" in f for f in fund),
+         any("har ingen `id=" in f and "page-profile-pro" in f for f in fund),
          "; ".join(fund[:1]))
 
     # Samme dom, krydsdomænet: `cleancopy.tools/#price` dømmes i **sit eget**
     # byggede site, ikke i mahope.tools'. Uden den mutation er det uafprøvet,
     # om dommen overhovedet læser det andet domæne.
     fund = med_filer([("dist/cleancopy.tools/index.html",
-                       ('id="price"', 'id="priser"'))])
+                       ('id="price"', 'id="priser"'))], genåbnet("clean-copy-pro"))
     tjek("dødt anker i et krydsdomæne er rødt",
          any("har ingen `id=" in f and "clean-copy-pro" in f for f in fund),
          "; ".join(fund[:1]))
@@ -641,7 +657,7 @@ def self_test() -> int:
     # Den sker som en **katalog**-mutation og ikke som en fil-ændring, fordi dom
     # 1 ellers ville være rød af sig selv og dække dommen — samme grund som
     # dom 2's mutationer. Sådan rammer den præcis sin egen dom.
-    kat_eng = json.loads(json.dumps(cat))
+    kat_eng = genåbnet("clean-copy-pro")
     kat_eng["products"]["clean-copy-pro"]["pricing_link"]["da"] = \
         kat_eng["products"]["clean-copy-pro"]["pricing_link"]["en"]
     fund = med_filer([], kat_eng)
@@ -656,7 +672,7 @@ def self_test() -> int:
     # på de otte mahope.tools-rækker var aldrig mulig, fordi `/da/ruten` er
     # afledt af den engelske rute; det er kun et **andet domæne** der kan glemme
     # det, og det er derfor dom 8 har brug for krydsdomænetabellen.
-    kat_lok = json.loads(json.dumps(cat))
+    kat_lok = genåbnet("eucomply-pro")
     kat_lok["products"]["eucomply-pro"]["pricing_link"] = \
         "https://mahope.tools/compliance-report#buy"
     fund = med_filer([], kat_lok)
@@ -669,7 +685,7 @@ def self_test() -> int:
     # dom 8 og dom 7 begge rødme, og rettelsen ville se ud som at man kan vælge
     # mellem dem.
     fund = med_filer([("dist/cleancopy.tools/da/index.html",
-                       ('id="priser"', 'id="priser-v2"'))])
+                       ('id="priser"', 'id="priser-v2"'))], genåbnet("clean-copy-pro"))
     tjek("dom 8 tier om et manglende anker",
          not any("cleancopy" in f and "lang=" in f for f in fund),
          "; ".join(fund[:1]))

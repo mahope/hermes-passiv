@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en" data-product="deskuptime">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Free website checks — one site, ten sites, or the security headers</title>
+<meta name="description" content="Three free DeskUptime checks you can run in the browser without installing anything: a single-site check, a bulk check for up to 10 URLs, and a security-headers grade. No account, no limits.">
+<meta name="author" content="Mads Holst Jensen">
+<link rel="canonical" href="https://deskuptime.com/tools/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="DeskUptime">
+<meta property="og:title" content="Free website checks — one site, ten sites, or the security headers">
+<meta property="og:description" content="Three free DeskUptime checks you can run in the browser without installing anything: a single-site check, a bulk check for up to 10 URLs, and a security-headers grade.">
+<meta property="og:url" content="https://deskuptime.com/tools/">
+<meta property="og:image" content="https://deskuptime.com/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<script defer src="/track.js"></script>
+<style>
+  /* Kortene her skal kunne holde en hel linje kode uden at gå vandret: den
+     tredje nøgle er 51 tegn, og den lå før i et `<ul>` der bredte sig. */
+  .tool-cards { display: grid; gap: 1rem; }
+  @media (min-width: 640px) { .tool-cards { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); } }
+  .tool-cards pre { margin: 0.6rem 0 0; font-size: 0.8rem; white-space: pre-wrap; overflow-wrap: anywhere; }
+  .tool-cards .card-links { margin-top: 0.75rem; }
+</style>
+</head>
+<body>
+<main id="main">
+
+<div class="hero">
+  <div class="container">
+    <h1>Three checks you can run right now, without installing anything</h1>
+    <p>Every tool on this page runs in your browser against our own server. No account, no
+    key, no install, and nothing about the URLs you paste is stored. Each one answers a
+    question about <em>one moment</em> — which is exactly what a check is, and exactly what
+    it is not.</p>
+    <div class="hero-cta">
+      <a href="#tools" class="btn-primary">Pick a check</a>
+      <a href="/#check" class="btn-secondary">Check a single site</a>
+    </div>
+    <span class="hero-note">None of these watch anything over time. That is the CLI's
+    <code>watch</code> mode and the desktop app, and the desktop app is part of
+    DeskUptime Pro.</span>
+    <p style="margin-top:1rem"><a href="https://buy.stripe.com/7sY9AS9eX3Iu418fJ5bMQ01" class="btn-secondary" rel="nofollow noopener">Buy DeskUptime Pro — 19 USD once, 3 machines</a></p>
+  </div>
+</div>
+
+<section id="tools">
+  <div class="container">
+    <h2>The three tools</h2>
+    <div class="tool-cards">
+
+      <article class="card">
+        <h3>One site, right now</h3>
+        <p>Paste one URL. We fetch it from our server — not your browser, so we see the site
+        the way the rest of the world does — and answer with the status it replied, how many
+        redirects it took, the live TLS certificate with the days left on it, and which of the
+        eight security headers came back.</p>
+        <p>About a second. Nothing is stored.</p>
+        <p class="card-links"><a class="btn btn-primary" href="/#check">Check one site</a></p>
+      </article>
+
+      <article class="card">
+        <h3>Up to 10 URLs at once</h3>
+        <p>Paste up to ten URLs, one per line, and get HTTP status, response time, redirect
+        count and SSL expiry for every one of them in a single pass. Built for the moment
+        after a deploy, when you want to know whether five client sites are still answering —
+        not one at a time.</p>
+        <pre>npx github:mahope/deskuptime check \
+  https://a.example https://b.example</pre>
+        <p class="card-links"><a class="btn btn-primary" href="/bulk-url-checker">Open the bulk checker</a></p>
+      </article>
+
+      <article class="card">
+        <h3>Security headers, graded</h3>
+        <p>Paste one URL and get an A–F grade plus every security header that came back or
+        did not: Content-Security-Policy, HSTS, clickjacking protection, referrer policy and
+        the rest, each with the header value to paste into your server config.</p>
+        <p>The same eight headers the single-site check reports, read one at a time instead
+        of ten.</p>
+        <p class="card-links"><a class="btn btn-primary" href="/security-headers-checker">Grade a site's headers</a></p>
+      </article>
+
+    </div>
+  </div>
+</section>
+
+<section id="free-vs-pro">
+  <div class="container">
+    <h2>Free and Pro, side by side</h2>
+<!-- pro-table:start -->
+<div class="table-wrap">
+<table class="compare pro-table" id="compare">
+  <caption class="sr-only">Free and DeskUptime Pro, side by side</caption>
+  <thead>
+    <tr><th scope="col"><span class="sr-only">Plan</span></th><th scope="col">Free</th><th scope="col">DeskUptime Pro</th></tr>
+  </thead>
+  <tbody>
+    <tr><th scope="row">What you get</th><td><ul><li>One-off checks — status, redirects, the live certificate and the eight security headers</li><li>SSL and content checks — SSL expiry on every check, content hashing in watch mode</li><li>Up to 10 URLs in one pass — status, response time, redirects and SSL expiry</li><li>A–F grade on the security headers, with every header value to paste in</li><li>JSON output from every check, plus a GitHub Action that puts a status table in the job summary</li></ul></td><td><ul><li>Desktop app that runs in the background, with notifications and webhook alerts</li><li>Unlimited sites, polling as often as every 30 seconds</li><li>A client-ready report in Markdown and JSON you can send to a client</li></ul></td></tr>
+    <tr><th scope="row">Price</th><td><span class="pro-price">$0</span><span class="pro-note">no licence key needed</span></td><td><span class="pro-price">$19 once</span></td></tr>
+  </tbody>
+</table>
+</div>
+<p class="pro-note">One licence covers 3 machines.</p>
+<p class="pro-note pro-limit">Alerts are desktop notifications and webhooks — no SMS, email or phone</p>
+<!-- pro-table:end -->
+    <p class="muted">The three checks on this page are free and always will be. What costs
+    money is watching a site over time, which is the closed-source desktop app.</p>
+  </div>
+</section>
+
+<section>
+  <div class="container">
+    <h2>What none of these three can do</h2>
+    <p>They answer one question at one moment. They cannot tell you whether a site was down
+    twenty minutes ago and is fine now, whether it will be down tomorrow, or whether the
+    content changed since you last looked — because there is no previous run to compare
+    against. A check that cannot remember is not monitoring.</p>
+    <p>Watching is the other half of DeskUptime. The free CLI's <code>watch</code> mode
+    re-checks on an interval, hashes the response body and tells you when it changes; it
+    covers up to three sites without a key. The desktop app does the same in the background
+    and adds unlimited sites, polling as often as every 30 seconds, notifications,
+    webhook alerts and a client-ready report you can hand a client — and it is the one
+    part that is paid, because it is closed source.
+    <a href="/#compare">See free and Pro side by side</a>.</p>  </div>
+</section>
+
+<section>
+  <div class="container">
+    <h2>Running the same checks without a browser</h2>
+    <p>All three answers are the same answers the CLI gives, so anything you paste into a
+    form here you can also run from a terminal, on a schedule, or in CI — where the exit code
+    fails the build instead of waiting for someone to read a page.</p>
+<pre><code>brew tap mahope/tap &amp;&amp; brew install deskuptime   # macOS / Linux
+npx github:mahope/deskuptime check https://your-site.com   # no install, needs Node 18+
+
+deskuptime check https://your-site.com --json   # machine-readable
+deskuptime watch https://your-site.com --interval 300   # keep checking</code></pre>
+    <p>MIT-licensed source, exit code 2 when a site is down, and a
+    <a href="https://github.com/mahope/deskuptime">GitHub Action</a> that puts a status
+    table in the job summary. The <a href="/#install">install page</a> has the details.</p>
+  </div>
+</section>
+
+</main>
+</body>
+</html>
