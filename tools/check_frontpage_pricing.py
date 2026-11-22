@@ -243,6 +243,13 @@ def dom() -> list[str]:
     return fund
 
 
+def før_lukningen(sti: Path) -> str:
+    """Forsiden fra før salget lukkede 22/11-2026 (se `tools/closed_sales.py`)."""
+    sys.path.insert(0, str(ROOT / "tools"))
+    import closed_sales  # noqa: E402
+    return closed_sales.before_closure(sti.relative_to(ROOT).as_posix())
+
+
 def self_test() -> int:
     fejl: list[str] = []
 
@@ -332,11 +339,18 @@ def self_test() -> int:
     # Mutationen læser den rigtige fil, kun på den del af sætningen der står
     # *før* knappen — så den holder hvis klassen eller teksten på knappen ændrer
     # sig, hvilket skete i mutation 1 (se kommentaren der).
+    #
+    # 22/11-2026: salget af Clean Copy Pro, DeskUptime Pro og EUComply Pro er
+    # lukket, og forsiden har ikke længere en «Not listed above»-sætning eller
+    # priser på Clean Copy og DeskUptime i listerne. Krav 4 skal stadig kunne
+    # fejle, så mutation 5, 7 og 8 kører på forsiderne fra før lukningen
+    # (`tools/closed_sales.py`). Den rigtige fil skrives altid tilbage.
     for sti, ny, gammel, sprog in (
         (EN_INDEX, ny_saetning_en, gammel_saetning_en, "EN"),
         (DA_INDEX, ny_saetning_da, gammel_saetning_da, "DA"),
     ):
-        original = sti.read_text(encoding="utf-8")
+        rigtig = sti.read_text(encoding="utf-8")
+        original = før_lukningen(sti)
         if ny not in original:
             fejl.append(f"{sprog}: mutation 5 kan ikke genindsætte den gamle "
                         f"sætning — den nuværende tekst er ikke den porten "
@@ -349,7 +363,7 @@ def self_test() -> int:
                  any("men den står i listerne over den" in f for f in fund),
                  "; ".join(fund))
         finally:
-            sti.write_text(original, encoding="utf-8")
+            sti.write_text(rigtig, encoding="utf-8")
 
     # Mutation 7: krav 4 skal se en vare hvis skrivemåde **afviger** mellem de
     # to overflader. `Page Profile` står i listerne ovenfor som sit slug —
@@ -367,7 +381,10 @@ def self_test() -> int:
         mutation_sætning_en = ("<p style=\"margin-bottom:0\">Not listed above: "
                                "Transmute Desktop, the compliance templates "
                                "and the report kits.")
-        original = EN_INDEX.read_text(encoding="utf-8")
+        original = før_lukningen(EN_INDEX)
+        if mutation_sætning_en not in original:
+            fejl.append("mutation 7 finder ikke sætningen den erstatter")
+            continue
         try:
             EN_INDEX.write_text(
                 original.replace(mutation_sætning_en, sætning, 1),
@@ -378,7 +395,7 @@ def self_test() -> int:
                      and forventet_navn in f for f in fund),
                  "; ".join(fund))
         finally:
-            EN_INDEX.write_text(original, encoding="utf-8")
+            EN_INDEX.write_text(en0, encoding="utf-8")
 
     # Mutation 8: den modsvarende falske positive skal **ikke** komme tilbage.
     # `EUComply Complete Template Bundle` er en katalognegen, og den *står ikke*
@@ -395,7 +412,9 @@ def self_test() -> int:
     mutation_sætning_en = ("<p style=\"margin-bottom:0\">Not listed above: "
                            "Transmute Desktop, the compliance templates and "
                            "the report kits.")
-    original = EN_INDEX.read_text(encoding="utf-8")
+    original = før_lukningen(EN_INDEX)
+    tjek("mutation 8 finder sætningen den erstatter",
+         mutation_sætning_en in original)
     try:
         EN_INDEX.write_text(
             original.replace(mutation_sætning_en, sand_sætning, 1),
@@ -405,14 +424,14 @@ def self_test() -> int:
              not any("men den står i listerne over den" in f for f in fund),
              "; ".join(fund))
     finally:
-        EN_INDEX.write_text(original, encoding="utf-8")
+        EN_INDEX.write_text(en0, encoding="utf-8")
 
     # Mutation 9: de rigtige filer skal være grønne — ellers lå porten i gaten
     # og rødmede deploys for en fejl der ikke findes.
     fund = dom()
     tjek("de rigtige filer er grønne", not fund, "; ".join(fund[:3]))
 
-    antal_kontroller = 10
+    antal_kontroller = 11
     for linje in fejl:
         print(f"  FEJL  {linje}")
     print(f"check-frontpage-pricing-selftest: {'OK' if not fejl else 'RØD'} "
