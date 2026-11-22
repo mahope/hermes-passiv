@@ -909,6 +909,24 @@
         ]
       }
     ],
+    "checkout_keys": {
+      "cc": "clean-copy-pro",
+      "du": "deskuptime-pro"
+    },
+    "release_pending": [
+      {
+        "path": "extension-clean-copy/options.html",
+        "why": "Låst til det publicerede arkiv site/downloads/clean-copy-v1.5.3.zip (check_clean_copy_distribution kræver byte-identitet). Købslinket fjernes ved næste udgivelse af udvidelsen; linket er deaktiveret i Stripe indtil da."
+      },
+      {
+        "path": "extension-clean-copy-firefox/options.html",
+        "why": "Låst til det publicerede arkiv site/downloads/clean-copy-firefox-v1.5.4.zip. Købslinket fjernes ved næste udgivelse; linket er deaktiveret i Stripe indtil da."
+      },
+      {
+        "path": "extension-clean-copy-firefox/README.md",
+        "why": "Ligger i Firefox-arkivet (FIREFOX_EXTRA) og følger samme udgivelse som options.html."
+      }
+    ],
     "former_offers": [
       {
         "path": "site/clean-copy.html",
