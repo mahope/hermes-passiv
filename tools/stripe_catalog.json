@@ -16,6 +16,9 @@
     "clean-copy-pro": {
       "name": "Clean Copy Pro",
       "kind": "license",
+      "status": "inactive",
+      "closed": "2026-11-22",
+      "closed_note": "Lukket for salg 22/11-2026 (Mads' beslutning: fokus på kunder med omsætning). Payment Linket er deaktiveret i Stripe, og ingen side, klient eller rute må sælge produktet. Licens-API'et, /thanks, webhooken og leveringen er uændrede, så eksisterende licenser og køb virker fortsat.",
       "price_usd": 19,
       "price": "$19/år",
       "price_note": "yearly subscription",
@@ -27,6 +30,7 @@
         "price": "$39 engang (lifetime)",
         "price_note": "one-time lifetime license, founding price, first 100 purchases",
         "payment_link": "https://buy.stripe.com/aFadR81Mv6UGgNU68vbMQ0d",
+        "status": "inactive",
         "limit": 100
       },
       "pro_features": [
@@ -63,9 +67,9 @@
             "en": [
               "every conversion mode in the extension and on the web tool"
             ],
-"da": [
-                "alle konverteringsmoduler i udvidelsen og på webværktøjet"
-              ]
+            "da": [
+              "alle konverteringsmoduler i udvidelsen og på webværktøjet"
+            ]
           }
         },
         {
@@ -97,6 +101,9 @@
     "deskuptime-pro": {
       "name": "DeskUptime Pro",
       "kind": "license",
+      "status": "inactive",
+      "closed": "2026-11-22",
+      "closed_note": "Lukket for salg 22/11-2026 (Mads' beslutning: fokus på kunder med omsætning). Payment Linket er deaktiveret i Stripe, og ingen side, klient eller rute må sælge produktet. Licens-API'et, /thanks, webhooken og leveringen er uændrede, så eksisterende licenser og køb virker fortsat.",
       "price_usd": 19,
       "price": "$19 engang",
       "price_note": "one-time, 3 machines",
@@ -248,6 +255,9 @@
     "transmute-desktop": {
       "name": "Transmute Desktop",
       "kind": "license",
+      "status": "inactive",
+      "closed": "2026-11-22",
+      "closed_note": "Lukket for salg 22/11-2026 (Mads' beslutning: fokus på kunder med omsætning). Payment Linket er deaktiveret i Stripe, og ingen side, klient eller rute må sælge produktet. Licens-API'et, /thanks, webhooken og leveringen er uændrede, så eksisterende licenser og køb virker fortsat.",
       "price_usd": 19,
       "price": "$19 engang",
       "price_note": "one-time, 3 machines",
@@ -259,6 +269,9 @@
     "eucomply-pro": {
       "name": "EUComply Pro",
       "kind": "license",
+      "status": "inactive",
+      "closed": "2026-11-22",
+      "closed_note": "Lukket for salg 22/11-2026 (Mads' beslutning: fokus på kunder med omsætning). Payment Linket er deaktiveret i Stripe, og ingen side, klient eller rute må sælge produktet. Licens-API'et, /thanks, webhooken og leveringen er uændrede, så eksisterende licenser og køb virker fortsat.",
       "price_usd": 79,
       "price": "$79/år pr. website",
       "price_note": "yearly subscription per website",
@@ -270,6 +283,7 @@
         "price": "$149 engang pr. website (lifetime)",
         "price_note": "one-time lifetime license per website, founding price, first 100 purchases",
         "payment_link": "https://buy.stripe.com/28E5kC3UDcf0btA2WjbMQ0f",
+        "status": "inactive",
         "limit": 100
       },
       "pro_features": [
@@ -540,6 +554,9 @@
     "eucomply-dpa": {
       "name": "GDPR DPA template",
       "kind": "download",
+      "status": "inactive",
+      "closed": "2026-11-22",
+      "closed_note": "Lukket for salg 22/11-2026 (Mads' beslutning: fokus på kunder med omsætning). Payment Linket er deaktiveret i Stripe, og ingen side, klient eller rute må sælge produktet. Licens-API'et, /thanks, webhooken og leveringen er uændrede, så eksisterende licenser og køb virker fortsat.",
       "price_usd": 59,
       "price": "$59",
       "price_note": "one-time",
@@ -549,6 +566,9 @@
     "eucomply-nis2-clauses": {
       "name": "NIS2 / DORA Vendor Clause Set",
       "kind": "download",
+      "status": "inactive",
+      "closed": "2026-11-22",
+      "closed_note": "Lukket for salg 22/11-2026 (Mads' beslutning: fokus på kunder med omsætning). Payment Linket er deaktiveret i Stripe, og ingen side, klient eller rute må sælge produktet. Licens-API'et, /thanks, webhooken og leveringen er uændrede, så eksisterende licenser og køb virker fortsat.",
       "price_usd": 49,
       "price": "$49",
       "price_note": "one-time",
@@ -558,6 +578,9 @@
     "eucomply-nda-clauses": {
       "name": "Mutual NDA Clause Set",
       "kind": "download",
+      "status": "inactive",
+      "closed": "2026-11-22",
+      "closed_note": "Lukket for salg 22/11-2026 (Mads' beslutning: fokus på kunder med omsætning). Payment Linket er deaktiveret i Stripe, og ingen side, klient eller rute må sælge produktet. Licens-API'et, /thanks, webhooken og leveringen er uændrede, så eksisterende licenser og køb virker fortsat.",
       "price_usd": 29,
       "price": "$29",
       "price_note": "one-time",
@@ -567,6 +590,9 @@
     "eucomply-eaa-statement": {
       "name": "EAA Accessibility Statement",
       "kind": "download",
+      "status": "inactive",
+      "closed": "2026-11-22",
+      "closed_note": "Lukket for salg 22/11-2026 (Mads' beslutning: fokus på kunder med omsætning). Payment Linket er deaktiveret i Stripe, og ingen side, klient eller rute må sælge produktet. Licens-API'et, /thanks, webhooken og leveringen er uændrede, så eksisterende licenser og køb virker fortsat.",
       "price_usd": 39,
       "price": "$39",
       "price_note": "one-time",
@@ -576,6 +602,9 @@
     "eucomply-report-kit": {
       "name": "Client Compliance Report Kit",
       "kind": "download",
+      "status": "inactive",
+      "closed": "2026-11-22",
+      "closed_note": "Lukket for salg 22/11-2026 (Mads' beslutning: fokus på kunder med omsætning). Payment Linket er deaktiveret i Stripe, og ingen side, klient eller rute må sælge produktet. Licens-API'et, /thanks, webhooken og leveringen er uændrede, så eksisterende licenser og køb virker fortsat.",
       "price_usd": 69,
       "price": "$69",
       "price_note": "one-time",
@@ -585,6 +614,9 @@
     "eucomply-template-bundle": {
       "name": "EUComply Complete Template Bundle",
       "kind": "download",
+      "status": "inactive",
+      "closed": "2026-11-22",
+      "closed_note": "Lukket for salg 22/11-2026 (Mads' beslutning: fokus på kunder med omsætning). Payment Linket er deaktiveret i Stripe, og ingen side, klient eller rute må sælge produktet. Licens-API'et, /thanks, webhooken og leveringen er uændrede, så eksisterende licenser og køb virker fortsat.",
       "price_usd": 149,
       "price": "$149",
       "price_note": "one-time",
@@ -594,6 +626,9 @@
     "eu-compliance-ebook-bundle": {
       "name": "EU Compliance E-book Bundle",
       "kind": "download",
+      "status": "inactive",
+      "closed": "2026-11-22",
+      "closed_note": "Lukket for salg 22/11-2026 (Mads' beslutning: fokus på kunder med omsætning). Payment Linket er deaktiveret i Stripe, og ingen side, klient eller rute må sælge produktet. Licens-API'et, /thanks, webhooken og leveringen er uændrede, så eksisterende licenser og køb virker fortsat.",
       "price_usd": 29,
       "price": "$29",
       "price_note": "one-time",
@@ -696,152 +731,6 @@
   },
   "offers": [
     {
-      "path": "site/clean-copy.html",
-      "domain": "cleancopy.tools",
-      "route": "/",
-      "lifetime": true,
-      "product": "clean-copy-pro",
-      "prices": [
-        "$0",
-        "$19",
-        "$39"
-      ],
-      "requires_text": [
-        "Buy Clean Copy Pro — $19/year",
-        "Buy Clean Copy Pro Lifetime — $39 once"
-      ]
-    },
-    {
-      "path": "site/da/clean-copy.html",
-      "domain": "cleancopy.tools",
-      "route": "/da/",
-      "lifetime": true,
-      "product": "clean-copy-pro",
-      "prices": [
-        "$0",
-        "$19",
-        "$39"
-      ],
-      "requires_text": [
-        "Køb Clean Copy Pro — $19/år",
-        "Køb Clean Copy Pro Lifetime — $39 én gang"
-      ]
-    },
-    {
-      "path": "site/clean-copy-tool.html",
-      "domain": "cleancopy.tools",
-      "route": "/clean-copy-tool",
-      "lifetime": true,
-      "product": "clean-copy-pro",
-      "prices": [
-        "$0",
-        "$19",
-        "$39"
-      ],
-      "requires_text": [
-        "Buy Clean Copy Pro — $19/year",
-        "Buy Clean Copy Pro Lifetime — $39 once"
-      ]
-    },
-    {
-      "path": "site/da/clean-copy-tool.html",
-      "domain": "cleancopy.tools",
-      "route": "/da/clean-copy-tool",
-      "lifetime": true,
-      "product": "clean-copy-pro",
-      "prices": [
-        "$0",
-        "$19",
-        "$39"
-      ],
-      "requires_text": [
-        "Køb Clean Copy Pro — $19/år",
-        "Køb Clean Copy Pro Lifetime — $39 én gang"
-      ]
-    },
-    {
-      "path": "site/activate/index.html",
-      "domain": "cleancopy.tools",
-      "route": "/activate/",
-      "product": "clean-copy-pro",
-      "prices": [
-        "$19"
-      ],
-      "requires_text": [
-        "Buy Clean Copy Pro — $19/year"
-      ]
-    },
-    {
-      "path": "site/da/activate/index.html",
-      "domain": "cleancopy.tools",
-      "route": "/da/activate/",
-      "product": "clean-copy-pro",
-      "prices": [
-        "$19"
-      ],
-      "requires_text": [
-        "Køb Clean Copy Pro — $19/år"
-      ]
-    },
-    {
-      "path": "site/deskuptime/index.html",
-      "domain": "deskuptime.com",
-      "route": "/",
-      "product": "deskuptime-pro",
-      "prices": [
-        "$0",
-        "$19"
-      ],
-      "requires_text": [
-        "Buy DeskUptime Pro — 19 USD",
-        "one-time, 3 machines"
-      ]
-    },
-    {
-      "path": "site/da/deskuptime/index.html",
-      "domain": "deskuptime.com",
-      "route": "/da/",
-      "product": "deskuptime-pro",
-      "prices": [
-        "$0",
-        "$19"
-      ],
-      "requires_text": [
-        "Køb DeskUptime Pro — 19 USD",
-        "én gang, 3 maskiner"
-      ]
-    },
-    {
-      "path": "site/deskuptime/tools/index.html",
-      "domain": "deskuptime.com",
-      "route": "/tools/",
-      "product": "deskuptime-pro",
-      "prices": [
-        "$0",
-        "$19"
-      ],
-      "prices_note": "Prisen står tre steder og de skal være ens: `$19 once` i Pro-søjlen i tabellen (linje 102), «19 USD once, 3 machines» i knappens ankertekst, og «One licence covers 3 machines» i noten under tabellen. `$0` er den frie søjles `pro-price` — den er synlig, fordi de tre værktøjer er gratis, så den er ikke en antagelse om hvad kunden ville betale.",
-      "requires_text": [
-        "Buy DeskUptime Pro — 19 USD once, 3 machines"
-      ]
-    },
-    {
-      "path": "site/blog/desktop-website-monitor-cli.html",
-      "domain": "mahope.tools",
-      "route": "/blog/desktop-website-monitor-cli",
-      "product": "deskuptime-pro",
-      "prices": [
-        "$19",
-        "$29",
-        "$34",
-        "$348",
-        "$348."
-      ],
-      "requires_text": [
-        "Buy DeskUptime Pro for $19"
-      ]
-    },
-    {
       "path": "site/page-profile.html",
       "domain": "mahope.tools",
       "route": "/page-profile",
@@ -874,197 +763,6 @@
       ]
     },
     {
-      "path": "site/index.html",
-      "domain": "mahope.tools",
-      "route": "/",
-      "product": "eucomply-pro",
-      "prices": [
-        "$19",
-        "$79"
-      ],
-      "requires_text": [
-        "Buy EUComply Pro — $79/year per website"
-      ],
-      "product_note": "Forsiden er den mest læste overflade vi har — `/` + `/da/` bærer 461 af 505 målte besøg — og den havde 0 buy.stripe.com, så hele sitet var en gratis demo. Valgt i sidens egen tekst: kortet under 'Larger tools → Sold here' beskriver allerede gratis/Pro-fordelingen i katalogens ordrede labels ('the accessibility checks', 'score and grade', 'the whole report on the page', 'pdf download', 'GDPR/cookie and NIS2/security checks'), så det eneste der manglede var knappen. Clean Copy Pro og DeskUptime Pro sælges på deres egne sites og har knap dér; en knap til dem her ville være en henvisning. Lifetime ($149) er bevidst ikke med — den hører til /compliance-report, hvor den står i en tier-tabel, og check_stripe_ctas dømmer en lifetime-knap uden \"lifetime\": true som rød."
-    },
-    {
-      "path": "site/da/index.html",
-      "domain": "mahope.tools",
-      "route": "/da/",
-      "product": "eucomply-pro",
-      "prices": [
-        "$19",
-        "$79"
-      ],
-      "requires_text": [
-        "Køb EUComply Pro — $79/år pr. website"
-      ],
-      "product_note": "Samme knap som den engelske forside, målt i sidens egen danske tekst: 'Gratis uden licensnøgle: tilgængelighedstjekkene, scoren og karakteren og hele rapporten på siden. Pro ($79/år pr. website) tilføjer hele pdf-rapporten samt GDPR/cookie- og NIS2/sikkerhedstjekkene.' Kortet havde ingen 'Se gratis/Pro-tabel'-knap som den engelske, så den danske forside havde ingen vej til købet overhovedet."
-    },
-    {
-      "path": "site/compliance-report.html",
-      "domain": "mahope.tools",
-      "route": "/compliance-report",
-      "lifetime": true,
-      "product": "eucomply-pro",
-      "prices": [
-        "$0",
-        "$69",
-        "$79",
-        "$149"
-      ],
-      "requires_text": [
-        "Buy EUComply Pro — $79/year",
-        "Buy EUComply Pro Lifetime — $149 once"
-      ]
-    },
-    {
-      "path": "site/free-downloads.html",
-      "domain": "mahope.tools",
-      "route": "/free-downloads",
-      "lifetime": false,
-      "product": "eucomply-pro",
-      "prices": [
-        "$0",
-        "$79"
-      ],
-      "requires_text": [
-        "Buy EUComply Pro — $79/year per website"
-      ]
-    },
-    {
-      "path": "site/da/compliance-report.html",
-      "domain": "mahope.tools",
-      "route": "/da/compliance-report",
-      "lifetime": true,
-      "product": "eucomply-pro",
-      "prices": [
-        "$0",
-        "$79",
-        "$149"
-      ],
-      "requires_text": [
-        "Køb EUComply Pro — $79/år",
-        "Køb EUComply Pro Lifetime — $149 én gang"
-      ]
-    },
-    {
-      "path": "site/blog/compliance-check-github-action.html",
-      "domain": "mahope.tools",
-      "route": "/blog/compliance-check-github-action",
-      "product": "eucomply-pro",
-      "prices": [
-        "$79"
-      ],
-      "requires_text": [
-        "Buy EUComply Pro — $79/year"
-      ]
-    },
-    {
-      "path": "site/da/blog/compliance-tjek-github-action.html",
-      "domain": "mahope.tools",
-      "route": "/da/blog/compliance-tjek-github-action",
-      "product": "eucomply-pro",
-      "prices": [
-        "$79"
-      ],
-      "requires_text": [
-        "Køb EUComply Pro — 79 $ pr. år"
-      ]
-    },
-    {
-      "path": "site/da/blog/gdpr-vs-nis2-overlap-da.html",
-      "domain": "mahope.tools",
-      "route": "/da/blog/gdpr-vs-nis2-overlap-da",
-      "product": "eucomply-pro",
-      "prices": [
-        "$79"
-      ],
-      "requires_text": [
-        "Køb EUComply Pro — 79 $ pr. år"
-      ]
-    },
-    {
-      "path": "site/blog/gdpr-vs-nis2-overlap.html",
-      "domain": "mahope.tools",
-      "route": "/blog/gdpr-vs-nis2-overlap",
-      "product": "eucomply-pro",
-      "prices": [
-        "$79"
-      ],
-      "requires_text": [
-        "Buy EUComply Pro — $79/year"
-      ]
-    },
-    {
-      "path": "site/da/blog/dbbaftale-webbureau.html",
-      "domain": "mahope.tools",
-      "route": "/da/blog/dbbaftale-webbureau",
-      "product": "eucomply-dpa",
-      "product_note": "Målt i artiklens egen tekst, ikke valgt efter følelse: artiklen handler om databehandleraftalen som dokument, og dens egen opsummering siger 'Lav én standard-DBA som bilag til dine serviceaftaler'. Den nævner hverken flere scanningsfund eller et rapport-download, så eucomply-pro ville være en vinkel artiklen ikke har. eucomply-dpa er et download-produkt (kind: 'download', uden pro_features/free_features), så portens gratis/Pro-krav gater det ikke — siden skal blot have præcis én synlig købsknap med det aftalte link.",
-      "prices": [
-        "$59"
-      ],
-      "prices_note": "Målt med price_tokens() på den rå fil før diffen: artiklen har ingen $-tokens overhovedet (bøderne står i euro og procent), så det eneste token er det nye købslink.",
-      "requires_text": [
-        "Køb GDPR-DPA-skabelon — 59 $"
-      ]
-    },
-    {
-      "path": "site/da/blog/cmp-sammenligning-2026.html",
-      "domain": "mahope.tools",
-      "route": "/da/blog/cmp-sammenligning-2026",
-      "product": "eucomply-report-kit",
-      "product_note": "Målt i artiklens egen tekst, ikke valgt efter følelse. Artiklens afgørende punkt 4 siger 'Dokumentation: du skal kunne vise hvornår samtykket blev givet. Logning er en del af produktet', og artiklens egen FAQ til et bureau med flere klienter siger 'Til betalte kundeleverancer anbefales en betalt plan — support og dokumentation er en del af det du sælger'. Den dokumentation er præcis leverancen: eucomply-report-kit leverer månedlig rapport-skabelon, kvartalsnarrativ-skabelon og changelog-specifikation (seks filer, tools/paid_content.json). eucomply-pro ville være emnemæssigt tættere på, men den er solgt i to iterationer i træk, og artiklen peger på scanneren via /cookie-check tre gange allerede — den vej er lukket. eucomply-report-kit er et download-produkt (kind: 'download', uden pro_features/free_features), så portens gratis/Pro-krav gater det ikke; siden skal blot have præcis én synlig købsknap med det aftalte link.",
-      "prices": [
-        "$10",
-        "$35",
-        "$69"
-      ],
-      "prices_note": "Målt med price_tokens() på den rå fil før diffen: artiklen nævner allerede to leverandørpriser i sammenligningstabellen ('fra ~$10/md' CookieYes, 'fra ~$35/md' Osano), så de skal være tilladte sammen med det nye købstoken.",
-      "requires_text": [
-        "Køb Client Compliance Report Kit — 69 $"
-      ]
-    },
-    {
-      "path": "site/da/blog/kopier-tabel-fra-pdf-til-excel.html",
-      "domain": "mahope.tools",
-      "route": "/da/blog/kopier-tabel-fra-pdf-til-excel",
-      "product": "clean-copy-pro",
-      "product_note": "Målt i artiklens egen tekst, ikke valgt efter følelse. Artiklens hele metode er Clean Copy-udvidelsen: 'Når en PDF åbnes i Chrome eller Firefox, er teksten rigtig tekst på siden — og det er præcis hvad Clean Copy-udvidelsen arbejder med', og siden beder læseren installere den i trin 1. Den eneste betalte sammenligning i artiklen er mod Acrobat og Excel Data, altså mod værktøjer der også gør tabeller &mdash; ikke mod compliance. De to Pro-funktioner er målt mod artiklens egne problemer: den siger at sidehoved, fodnoter og løbende tekst skal være væk ('Ingen sidehoveder, fodnotenumre eller løbende tekst'), og at manuelt arbejde ikke skalerer ('fint til tre rækker, ej til en årsrapport på 40 sider'). Det er egne rense regler og batch-konvertering, i den rækkefølge artiklen selv rejser problemet. clean-copy-pro er et licens-produkt med to pro_features og to free_features, så portens gratis/Pro-krav gater den strukturelt.",
-      "prices": [
-        "$19"
-      ],
-      "prices_note": "Målt med price_tokens() på den rå fil før diffen: artiklen havde ingen $-tokens overhovedet (den nævner Acrobat og Microsoft 365 uden pris), så det eneste token er det nye købslink.",
-      "requires_text": [
-        "Køb Clean Copy Pro — 19 $ pr. år"
-      ]
-    },
-    {
-      "path": "site/blog/text-on-image-contrast-check.html",
-      "domain": "mahope.tools",
-      "route": "/blog/text-on-image-contrast-check",
-      "product": "eucomply-pro",
-      "prices": [
-        "$79"
-      ],
-      "requires_text": [
-        "Buy EUComply Pro — $79/year"
-      ]
-    },
-    {
-      "path": "site/da/blog/tekst-paa-billede-kontrasttjek.html",
-      "domain": "mahope.tools",
-      "route": "/da/blog/tekst-paa-billede-kontrasttjek",
-      "product": "eucomply-pro",
-      "prices": [
-        "$79"
-      ],
-      "requires_text": [
-        "Køb EUComply Pro — 79 $ pr. år"
-      ]
-    },
-    {
       "path": "site/support.html",
       "domain": "mahope.tools",
       "route": "/support",
@@ -1085,502 +783,6 @@
       ]
     },
     {
-      "path": "site/paid-templates.html",
-      "domain": "mahope.tools",
-      "route": "/paid-templates",
-      "product": "eucomply-dpa",
-      "prices": [
-        "$149",
-        "$29",
-        "$39",
-        "$49",
-        "$59",
-        "$69"
-      ],
-      "requires_text": [
-        "GDPR DPA template"
-      ]
-    },
-    {
-      "path": "site/paid-templates.html",
-      "domain": "mahope.tools",
-      "route": "/paid-templates",
-      "product": "eucomply-nis2-clauses",
-      "prices": [
-        "$149",
-        "$29",
-        "$39",
-        "$49",
-        "$59",
-        "$69"
-      ],
-      "requires_text": [
-        "NIS2 / DORA Vendor Clause Set"
-      ]
-    },
-    {
-      "path": "site/paid-templates.html",
-      "domain": "mahope.tools",
-      "route": "/paid-templates",
-      "product": "eucomply-nda-clauses",
-      "prices": [
-        "$149",
-        "$29",
-        "$39",
-        "$49",
-        "$59",
-        "$69"
-      ],
-      "requires_text": [
-        "Mutual NDA Clause Set"
-      ]
-    },
-    {
-      "path": "site/paid-templates.html",
-      "domain": "mahope.tools",
-      "route": "/paid-templates",
-      "product": "eucomply-eaa-statement",
-      "prices": [
-        "$149",
-        "$29",
-        "$39",
-        "$49",
-        "$59",
-        "$69"
-      ],
-      "requires_text": [
-        "EAA Accessibility Statement"
-      ]
-    },
-    {
-      "path": "site/paid-templates.html",
-      "domain": "mahope.tools",
-      "route": "/paid-templates",
-      "product": "eucomply-report-kit",
-      "prices": [
-        "$149",
-        "$29",
-        "$39",
-        "$49",
-        "$59",
-        "$69"
-      ],
-      "requires_text": [
-        "Client Compliance Report Kit"
-      ]
-    },
-    {
-      "path": "site/paid-templates.html",
-      "domain": "mahope.tools",
-      "route": "/paid-templates",
-      "product": "eucomply-template-bundle",
-      "prices": [
-        "$149",
-        "$29",
-        "$39",
-        "$49",
-        "$59",
-        "$69"
-      ],
-      "requires_text": [
-        "EUComply Complete Template Bundle"
-      ]
-    },
-    {
-      "path": "site/paid-templates.html",
-      "domain": "mahope.tools",
-      "route": "/paid-templates",
-      "product": "eu-compliance-ebook-bundle",
-      "prices": [
-        "$149",
-        "$29",
-        "$39",
-        "$49",
-        "$59",
-        "$69"
-      ],
-      "requires_text": [
-        "EU Compliance E-book Bundle"
-      ]
-    },
-    {
-      "path": "site/da/paid-templates.html",
-      "domain": "mahope.tools",
-      "route": "/da/paid-templates",
-      "product": "eucomply-dpa",
-      "prices": [
-        "$149",
-        "$29",
-        "$39",
-        "$49",
-        "$59",
-        "$69"
-      ],
-      "requires_text": [
-        "GDPR-DPA-skabelon"
-      ]
-    },
-    {
-      "path": "site/da/paid-templates.html",
-      "domain": "mahope.tools",
-      "route": "/da/paid-templates",
-      "product": "eucomply-nis2-clauses",
-      "prices": [
-        "$149",
-        "$29",
-        "$39",
-        "$49",
-        "$59",
-        "$69"
-      ],
-      "requires_text": [
-        "NIS2 / DORA-leverandørklauselsæt"
-      ]
-    },
-    {
-      "path": "site/da/paid-templates.html",
-      "domain": "mahope.tools",
-      "route": "/da/paid-templates",
-      "product": "eucomply-nda-clauses",
-      "prices": [
-        "$149",
-        "$29",
-        "$39",
-        "$49",
-        "$59",
-        "$69"
-      ],
-      "requires_text": [
-        "Gensidigt NDA-klauselsæt"
-      ]
-    },
-    {
-      "path": "site/da/paid-templates.html",
-      "domain": "mahope.tools",
-      "route": "/da/paid-templates",
-      "product": "eucomply-eaa-statement",
-      "prices": [
-        "$149",
-        "$29",
-        "$39",
-        "$49",
-        "$59",
-        "$69"
-      ],
-      "requires_text": [
-        "EAA-tilgængelighedserklæring"
-      ]
-    },
-    {
-      "path": "site/da/paid-templates.html",
-      "domain": "mahope.tools",
-      "route": "/da/paid-templates",
-      "product": "eucomply-report-kit",
-      "prices": [
-        "$149",
-        "$29",
-        "$39",
-        "$49",
-        "$59",
-        "$69"
-      ],
-      "requires_text": [
-        "Kunderapporteringssæt"
-      ]
-    },
-    {
-      "path": "site/da/paid-templates.html",
-      "domain": "mahope.tools",
-      "route": "/da/paid-templates",
-      "product": "eucomply-template-bundle",
-      "prices": [
-        "$149",
-        "$29",
-        "$39",
-        "$49",
-        "$59",
-        "$69"
-      ],
-      "requires_text": [
-        "Komplet skabelonpakke"
-      ]
-    },
-    {
-      "path": "site/da/paid-templates.html",
-      "domain": "mahope.tools",
-      "route": "/da/paid-templates",
-      "product": "eu-compliance-ebook-bundle",
-      "prices": [
-        "$149",
-        "$29",
-        "$39",
-        "$49",
-        "$59",
-        "$69"
-      ],
-      "requires_text": [
-        "E-bogpakke, EU-compliance"
-      ]
-    },
-    {
-      "path": "site/blog/eaa-accessibility-checklist.html",
-      "domain": "mahope.tools",
-      "route": "/blog/eaa-accessibility-checklist",
-      "product": "eucomply-pro",
-      "prices": [
-        "$79"
-      ],
-      "requires_text": [
-        "Buy EUComply Pro — $79/year"
-      ]
-    },
-    {
-      "path": "site/da/blog/eaa-tjekliste-2026.html",
-      "domain": "mahope.tools",
-      "route": "/da/blog/eaa-tjekliste-2026",
-      "product": "eucomply-pro",
-      "prices": [
-        "$79"
-      ],
-      "requires_text": [
-        "Køb EUComply Pro — 79 $ pr. år"
-      ]
-    },
-    {
-      "path": "site/blog/nis2-readiness-guide.html",
-      "domain": "mahope.tools",
-      "route": "/blog/nis2-readiness-guide",
-      "product": "eucomply-pro",
-      "prices": [
-        "$79"
-      ],
-      "requires_text": [
-        "Buy EUComply Pro — $79/year"
-      ]
-    },
-    {
-      "path": "site/blog/wix-eaa-accessibility.html",
-      "domain": "mahope.tools",
-      "route": "/blog/wix-eaa-accessibility",
-      "product": "eucomply-pro",
-      "prices": [
-        "$79"
-      ],
-      "requires_text": [
-        "Buy EUComply Pro — $79/year"
-      ]
-    },
-    {
-      "path": "site/da/blog/wix-tilgaengelighed-eaa.html",
-      "domain": "mahope.tools",
-      "route": "/da/blog/wix-tilgaengelighed-eaa",
-      "product": "eucomply-pro",
-      "prices": [
-        "$79"
-      ],
-      "requires_text": [
-        "Køb EUComply Pro — 79 $ pr. år"
-      ]
-    },
-    {
-      "path": "site/blog/prestashop-eaa-accessibility.html",
-      "domain": "mahope.tools",
-      "route": "/blog/prestashop-eaa-accessibility",
-      "product": "eucomply-pro",
-      "prices": [
-        "$79"
-      ],
-      "requires_text": [
-        "Buy EUComply Pro — $79/year"
-      ]
-    },
-    {
-      "path": "site/da/blog/prestashop-tilgaengelighed-eaa.html",
-      "domain": "mahope.tools",
-      "route": "/da/blog/prestashop-tilgaengelighed-eaa",
-      "product": "eucomply-pro",
-      "prices": [
-        "$79"
-      ],
-      "requires_text": [
-        "Køb EUComply Pro — 79 $ pr. år"
-      ]
-    },
-    {
-      "path": "site/da/blog/nis2-beredskabstjek-2026.html",
-      "domain": "mahope.tools",
-      "route": "/da/blog/nis2-beredskabstjek-2026",
-      "product": "eucomply-pro",
-      "prices": [
-        "$79"
-      ],
-      "requires_text": [
-        "Køb EUComply Pro — 79 $ pr. år"
-      ]
-    },
-    {
-      "path": "site/blog/html-to-markdown-cli.html",
-      "domain": "cleancopy.tools",
-      "route": "/blog/html-to-markdown-cli",
-      "product": "clean-copy-pro",
-      "prices": [
-        "$19"
-      ],
-      "requires_text": [
-        "Buy Clean Copy Pro — $19/year"
-      ]
-    },
-    {
-      "path": "site/da/blog/html-til-markdown-cli.html",
-      "domain": "cleancopy.tools",
-      "route": "/da/blog/html-til-markdown-cli",
-      "product": "clean-copy-pro",
-      "prices": [
-        "$19"
-      ],
-      "requires_text": [
-        "Køb Clean Copy Pro — $19/år"
-      ]
-    },
-    {
-      "path": "site/blog/html-to-markdown-vscode.html",
-      "domain": "cleancopy.tools",
-      "route": "/blog/html-to-markdown-vscode",
-      "product": "clean-copy-pro",
-      "prices": [
-        "$19"
-      ],
-      "requires_text": [
-        "Buy Clean Copy Pro — $19/year"
-      ]
-    },
-    {
-      "path": "site/da/blog/indsaet-som-markdown-i-vscode.html",
-      "domain": "cleancopy.tools",
-      "route": "/da/blog/indsaet-som-markdown-i-vscode",
-      "product": "clean-copy-pro",
-      "prices": [
-        "$19"
-      ],
-      "requires_text": [
-        "Køb Clean Copy Pro — $19/år"
-      ]
-    },
-    {
-      "path": "site/blog/copy-table-website-to-notion.html",
-      "domain": "mahope.tools",
-      "route": "/blog/copy-table-website-to-notion",
-      "product": "clean-copy-pro",
-      "prices": [
-        "$19"
-      ],
-      "requires_text": [
-        "Buy Clean Copy Pro — $19/year"
-      ]
-    },
-    {
-      "path": "site/da/blog/kopier-tabel-hjemmeside-til-notion.html",
-      "domain": "mahope.tools",
-      "route": "/da/blog/kopier-tabel-hjemmeside-til-notion",
-      "product": "clean-copy-pro",
-      "prices": [
-        "$19"
-      ],
-      "requires_text": [
-        "Køb Clean Copy Pro — $19/år"
-      ]
-    },
-    {
-      "path": "site/blog/cookie-consent-gdpr-compliance.html",
-      "domain": "mahope.tools",
-      "route": "/blog/cookie-consent-gdpr-compliance",
-      "product": "eucomply-pro",
-      "prices": [
-        "$79"
-      ],
-      "requires_text": [
-        "Buy EUComply Pro — $79/year"
-      ]
-    },
-    {
-      "path": "site/da/blog/cookie-consent-gdpr-2026.html",
-      "domain": "mahope.tools",
-      "route": "/da/blog/cookie-consent-gdpr-2026",
-      "product": "eucomply-pro",
-      "prices": [
-        "$79"
-      ],
-      "requires_text": [
-        "Køb EUComply Pro — 79 $ pr. år"
-      ]
-    },
-    {
-      "path": "site/da/blog/tilgaengelighedsscanner-cli.html",
-      "domain": "mahope.tools",
-      "route": "/da/blog/tilgaengelighedsscanner-cli",
-      "product": "eucomply-pro",
-      "prices": [
-        "$79"
-      ],
-      "requires_text": [
-        "Køb EUComply Pro — 79 $ pr. år"
-      ]
-    },
-    {
-      "path": "site/blog/webflow-vs-squarespace-accessibility.html",
-      "domain": "mahope.tools",
-      "route": "/blog/webflow-vs-squarespace-accessibility",
-      "lifetime": true,
-      "product": "eucomply-pro",
-      "prices": [
-        "$79",
-        "$149"
-      ],
-      "requires_text": [
-        "Buy EUComply Pro — $79/year",
-        "Buy EUComply Pro Lifetime — $149 once"
-      ]
-    },
-    {
-      "path": "site/da/blog/webflow-vs-squarespace-tilgaengelighed.html",
-      "domain": "mahope.tools",
-      "route": "/da/blog/webflow-vs-squarespace-tilgaengelighed",
-      "lifetime": true,
-      "product": "eucomply-pro",
-      "prices": [
-        "$79",
-        "$149"
-      ],
-      "requires_text": [
-        "Køb EUComply Pro — 79 $ pr. år",
-        "Køb EUComply Pro Lifetime — 149 $ én gang"
-      ]
-    },
-    {
-      "path": "site/blog/copy-clean-text-from-website.html",
-      "domain": "mahope.tools",
-      "route": "/blog/copy-clean-text-from-website",
-      "product": "clean-copy-pro",
-      "prices": [
-        "$19"
-      ],
-      "requires_text": [
-        "Buy Clean Copy Pro — $19/year"
-      ]
-    },
-    {
-      "path": "site/da/blog/kopier-ren-tekst-fra-hjemmeside.html",
-      "domain": "mahope.tools",
-      "route": "/da/blog/kopier-ren-tekst-fra-hjemmeside",
-      "product": "clean-copy-pro",
-      "prices": [
-        "$19"
-      ],
-      "requires_text": [
-        "Køb Clean Copy Pro — 19 $ pr. år"
-      ]
-    },
-    {
       "path": "site/blog/check-url-redirect-chain.html",
       "domain": "mahope.tools",
       "route": "/blog/check-url-redirect-chain",
@@ -1593,38 +795,6 @@
       "requires_text": [
         "Buy Page Profile Pro — $19/year",
         "Buy Page Profile Pro Lifetime — $39 once"
-      ]
-    },
-    {
-      "path": "site/blog/release-integrity-explained.html",
-      "domain": "mahope.tools",
-      "route": "/blog/release-integrity-explained",
-      "lifetime": true,
-      "product": "clean-copy-pro",
-      "product_note": "Målt i artiklens egen tekst, ikke valgt efter følelse. Artiklen er en case study i Clean Copy-projektet selv: 'See the product, Clean Copy', den fortæller om clean_copy_core.js og de seks overflader der bruger den, og den afsluttes med to 'Try Clean Copy free'-knapper. De to Pro-funktioner er valgt mod artiklens egen læring, som er at generere og ikke kopiere: 'Custom cleanup rules' er den samme pointe anvendt på læserens eget arbejde (én definition af regler, der rejser med, i stedet for seks kopier), og 'batch conversion' er den samme pointe i mængde (én kørsel over en liste i stedet for et rituel pr. side). clean-copy-pro er et licens-produkt med to pro_features og to free_features; begge gratis-labels står i gratis-spalten, da check_free_features dømmer den manglende.",
-      "prices": [
-        "$19",
-        "$39"
-      ],
-      "prices_note": "Målt med price_tokens() på den rå fil før diffen: artiklen havde ingen $-tokens, så begge tokens er fra den nye sektion.",
-      "requires_text": [
-        "Buy Clean Copy Pro — $19/year",
-        "Buy Clean Copy Pro Lifetime — $39 once"
-      ]
-    },
-    {
-      "path": "site/da/blog/release-integrity-hvad-er-det.html",
-      "domain": "mahope.tools",
-      "route": "/da/blog/release-integrity-hvad-er-det",
-      "lifetime": true,
-      "product": "clean-copy-pro",
-      "prices": [
-        "$19",
-        "$39"
-      ],
-      "requires_text": [
-        "Køb Clean Copy Pro — 19 $ pr. år",
-        "Køb Clean Copy Pro Lifetime — 39 $ én gang"
       ]
     },
     {
@@ -1671,173 +841,515 @@
         "Køb Page Profile Pro — 19 $ pr. år",
         "Køb Page Profile Pro Lifetime — 39 $ én gang"
       ]
-    },
-    {
-      "path": "site/blog/monitor-website-github-actions-free.html",
-      "domain": "mahope.tools",
-      "route": "/blog/monitor-website-github-actions-free",
-      "product": "deskuptime-pro",
-      "prices": [
-        "$19",
-        "$10",
-        "$120",
-        "$7",
-        "$348."
-      ],
-      "requires_text": [
-        "Buy DeskUptime Pro — $19 once"
-      ]
-    },
-    {
-      "path": "site/da/blog/overvaag-hjemmeside-github-actions-gratis.html",
-      "domain": "mahope.tools",
-      "route": "/da/blog/overvaag-hjemmeside-github-actions-gratis",
-      "product": "deskuptime-pro",
-      "prices": [
-        "$19"
-      ],
-      "requires_text": [
-        "Køb DeskUptime Pro — 19 $ én gang"
-      ]
-    },
-    {
-      "path": "site/blog/bug-reports-in-ci-pipeline.html",
-      "domain": "mahope.tools",
-      "domain_note": "Målt 3/10: de to CI-artikler lå på bugbottle.dev, som deploy-matricen ikke udgiver, så de blev bygget hver kørsel og lagt ingen steder — og deres href i /blog/ var fire døde links. De ligger nu på mahope.tools, så nøglen skal følge med, ellers leder porten efter filen i dist/bugbottle.dev/, hvor den ikke findes længere.",
-      "route": "/blog/bug-reports-in-ci-pipeline",
-      "product": "deskuptime-pro",
-      "prices": [
-        "$19",
-        "$10",
-        "$2"
-      ],
-      "prices_note": "$10 og $2 er artiklens egne markedstal i 'What this replaces' ($10-15/month pr. site, $2,000-10,000 pr. audit). $2 er ikke en pris vi sælger til: PRICE_TOKEN i check_stripe_ctas.py er `\\$\\s?\\d[\\d.]*` og læser derfor '$2,000' som '$2'. Feltet er et pr. side-allowlist over de tal porten faktisk læser, ikke en produktprisliste.",
-      "requires_text": [
-        "Buy DeskUptime Pro — $19 once"
-      ]
-    },
-    {
-      "path": "site/da/blog/bugrapporter-i-ci-pipeline.html",
-      "domain": "mahope.tools",
-      "route": "/da/blog/bugrapporter-i-ci-pipeline",
-      "product": "deskuptime-pro",
-      "prices": [
-        "$19"
-      ],
-      "prices_note": "Den danske artikel skriver markedstallene i kroner (70-100 kr./md., 15.000-70.000 kr.). Målt med price_tokens(): filen har ingen $-tokens ud over den nye købsknap, så kun $19 står her.",
-      "requires_text": [
-        "Køb DeskUptime Pro — 19 $ én gang"
-      ]
-    },
-    {
-      "path": "site/da/blog/faa-besked-naar-hjemmeside-er-nede.html",
-      "domain": "mahope.tools",
-      "route": "/da/blog/faa-besked-naar-hjemmeside-er-nede",
-      "product": "deskuptime-pro",
-      "prices": [
-        "$10",
-        "$19"
-      ],
-      "requires_text": [
-        "Køb DeskUptime Pro — 19 $ én gang"
-      ]
-    },
-    {
-      "path": "site/blog/get-notified-when-website-goes-down.html",
-      "domain": "mahope.tools",
-      "route": "/blog/get-notified-when-website-goes-down",
-      "product": "deskuptime-pro",
-      "prices": [
-        "$10",
-        "$19",
-        "$348."
-      ],
-      "prices_note": "$10 er artiklens egen markedstal i 'What you pay' ($10-15/month pr. site). $348. er en pris i en relateret-artikel-linje nederst på siden ('a single Better Stack responder seat is $348') og er ikke en pris vi sælger til; PRICE_TOKEN i check_stripe_ctas.py er `\\$\\s?\\d[\\d.]*` og læser derfor '$348.' med sit punktum. Samme målemetode som bug-reports-in-ci-pipeline.",
-      "requires_text": [
-        "Buy DeskUptime Pro — $19 once"
-      ]
-    },
-    {
-      "path": "site/color-blindness-simulator.html",
-      "domain": "mahope.tools",
-      "route": "/color-blindness-simulator",
-      "product": "eucomply-pro",
-      "prices": [
-        "$0",
-        "$79"
-      ],
-      "requires_text": [
-        "Buy EUComply Pro — $79/year per website"
-      ],
-      "product_note": "Simulatoren beskriver EUComply Pro i sin egen pro-note, men havde ingen købsknap. Målt 7/10: de tre farveværktøjer (contrast-checker, palette-generator, color-blindness-simulator) fortæller den samme gratis/Pro-historie, og kun contrast-checker havde knappen."
-    },
-    {
-      "path": "site/palette-generator.html",
-      "domain": "mahope.tools",
-      "route": "/palette-generator",
-      "product": "eucomply-pro",
-      "prices": [
-        "$0",
-        "$79"
-      ],
-      "requires_text": [
-        "Buy EUComply Pro — $79/year per website"
-      ],
-      "product_note": "Paletgeneratoren beskriver EUComply Pro i sin pro-note, men havde ingen købsknap."
-    },
-    {
-      "path": "site/palette-generator-da.html",
-      "domain": "mahope.tools",
-      "route": "/palette-generator-da",
-      "product": "eucomply-pro",
-      "prices": [
-        "$0",
-        "$79"
-      ],
-      "requires_text": [
-        "Køb EUComply Pro — $79/år pr. website"
-      ],
-      "product_note": "Den danske paletgenerator fik samme synlige gratis/Pro-tabel og købsknap som den engelske 7/10, så en dansk læser ikke skal skifte sprog for at købe."
-    },
-    {
-      "path": "site/color-blindness-simulator-da.html",
-      "domain": "mahope.tools",
-      "route": "/color-blindness-simulator-da",
-      "product": "eucomply-pro",
-      "prices": [
-        "$0",
-        "$79"
-      ],
-      "requires_text": [
-        "Køb EUComply Pro — $79/år pr. website"
-      ],
-      "product_note": "Den danske farveblindhedssimulator fik samme synlige gratis/Pro-tabel og købsknap som den engelske 7/10."
-    },
-    {
-      "path": "site/blog/color-blindness-simulation-check.html",
-      "domain": "mahope.tools",
-      "route": "/blog/color-blindness-simulation-check",
-      "product": "eucomply-pro",
-      "prices": [
-        "$79"
-      ],
-      "requires_text": [
-        "Buy EUComply Pro — $79/year"
-      ]
-    },
-    {
-      "path": "site/da/blog/farveblindhed-tjek.html",
-      "domain": "mahope.tools",
-      "route": "/da/blog/farveblindhed-tjek",
-      "product": "eucomply-pro",
-      "prices": [
-        "$79"
-      ],
-      "requires_text": [
-        "Køb EUComply Pro — 79 $ pr. år"
-      ]
     }
   ],
+  "closed_sales": {
+    "date": "2026-11-22",
+    "_note": "Salget af disse produkter er lukket 22/11-2026. `tools/check_stripe_ctas.py` (check_closed_sales) dømmer at intet betalingslink for et `inactive` produkt står i site/ eller i en shippet klient, at ingen side i `former_offers` sælger dem igen, at forsiderne i `notice_pages` siger det, og at /api/checkout svarer 410 for dem.",
+    "products": [
+      "clean-copy-pro",
+      "deskuptime-pro",
+      "transmute-desktop",
+      "eucomply-pro",
+      "eucomply-dpa",
+      "eucomply-nis2-clauses",
+      "eucomply-nda-clauses",
+      "eucomply-eaa-statement",
+      "eucomply-report-kit",
+      "eucomply-template-bundle",
+      "eu-compliance-ebook-bundle"
+    ],
+    "notice_pages": [
+      {
+        "path": "site/clean-copy.html",
+        "domain": "cleancopy.tools",
+        "route": "/",
+        "lang": "en",
+        "product": "clean-copy-pro",
+        "requires_text": [
+          "Clean Copy Pro is no longer sold",
+          "free and MIT-licensed",
+          "support@mahope.tools"
+        ]
+      },
+      {
+        "path": "site/da/clean-copy.html",
+        "domain": "cleancopy.tools",
+        "route": "/da/",
+        "lang": "da",
+        "product": "clean-copy-pro",
+        "requires_text": [
+          "Clean Copy Pro sælges ikke længere",
+          "gratis og MIT-licenseret",
+          "support@mahope.tools"
+        ]
+      },
+      {
+        "path": "site/deskuptime/index.html",
+        "domain": "deskuptime.com",
+        "route": "/",
+        "lang": "en",
+        "product": "deskuptime-pro",
+        "requires_text": [
+          "DeskUptime Pro is no longer sold",
+          "free and MIT-licensed",
+          "support@mahope.tools"
+        ]
+      },
+      {
+        "path": "site/da/deskuptime/index.html",
+        "domain": "deskuptime.com",
+        "route": "/da/",
+        "lang": "da",
+        "product": "deskuptime-pro",
+        "requires_text": [
+          "DeskUptime Pro sælges ikke længere",
+          "gratis og MIT-licenseret",
+          "support@mahope.tools"
+        ]
+      }
+    ],
+    "former_offers": [
+      {
+        "path": "site/clean-copy.html",
+        "product": "clean-copy-pro",
+        "domain": "cleancopy.tools",
+        "route": "/"
+      },
+      {
+        "path": "site/da/clean-copy.html",
+        "product": "clean-copy-pro",
+        "domain": "cleancopy.tools",
+        "route": "/da/"
+      },
+      {
+        "path": "site/clean-copy-tool.html",
+        "product": "clean-copy-pro",
+        "domain": "cleancopy.tools",
+        "route": "/clean-copy-tool"
+      },
+      {
+        "path": "site/da/clean-copy-tool.html",
+        "product": "clean-copy-pro",
+        "domain": "cleancopy.tools",
+        "route": "/da/clean-copy-tool"
+      },
+      {
+        "path": "site/activate/index.html",
+        "product": "clean-copy-pro",
+        "domain": "cleancopy.tools",
+        "route": "/activate/"
+      },
+      {
+        "path": "site/da/activate/index.html",
+        "product": "clean-copy-pro",
+        "domain": "cleancopy.tools",
+        "route": "/da/activate/"
+      },
+      {
+        "path": "site/deskuptime/index.html",
+        "product": "deskuptime-pro",
+        "domain": "deskuptime.com",
+        "route": "/"
+      },
+      {
+        "path": "site/da/deskuptime/index.html",
+        "product": "deskuptime-pro",
+        "domain": "deskuptime.com",
+        "route": "/da/"
+      },
+      {
+        "path": "site/deskuptime/tools/index.html",
+        "product": "deskuptime-pro",
+        "domain": "deskuptime.com",
+        "route": "/tools/"
+      },
+      {
+        "path": "site/blog/desktop-website-monitor-cli.html",
+        "product": "deskuptime-pro",
+        "domain": "mahope.tools",
+        "route": "/blog/desktop-website-monitor-cli"
+      },
+      {
+        "path": "site/index.html",
+        "product": "eucomply-pro",
+        "domain": "mahope.tools",
+        "route": "/"
+      },
+      {
+        "path": "site/da/index.html",
+        "product": "eucomply-pro",
+        "domain": "mahope.tools",
+        "route": "/da/"
+      },
+      {
+        "path": "site/compliance-report.html",
+        "product": "eucomply-pro",
+        "domain": "mahope.tools",
+        "route": "/compliance-report"
+      },
+      {
+        "path": "site/free-downloads.html",
+        "product": "eucomply-pro",
+        "domain": "mahope.tools",
+        "route": "/free-downloads"
+      },
+      {
+        "path": "site/da/compliance-report.html",
+        "product": "eucomply-pro",
+        "domain": "mahope.tools",
+        "route": "/da/compliance-report"
+      },
+      {
+        "path": "site/blog/compliance-check-github-action.html",
+        "product": "eucomply-pro",
+        "domain": "mahope.tools",
+        "route": "/blog/compliance-check-github-action"
+      },
+      {
+        "path": "site/da/blog/compliance-tjek-github-action.html",
+        "product": "eucomply-pro",
+        "domain": "mahope.tools",
+        "route": "/da/blog/compliance-tjek-github-action"
+      },
+      {
+        "path": "site/da/blog/gdpr-vs-nis2-overlap-da.html",
+        "product": "eucomply-pro",
+        "domain": "mahope.tools",
+        "route": "/da/blog/gdpr-vs-nis2-overlap-da"
+      },
+      {
+        "path": "site/blog/gdpr-vs-nis2-overlap.html",
+        "product": "eucomply-pro",
+        "domain": "mahope.tools",
+        "route": "/blog/gdpr-vs-nis2-overlap"
+      },
+      {
+        "path": "site/da/blog/dbbaftale-webbureau.html",
+        "product": "eucomply-dpa",
+        "domain": "mahope.tools",
+        "route": "/da/blog/dbbaftale-webbureau"
+      },
+      {
+        "path": "site/da/blog/cmp-sammenligning-2026.html",
+        "product": "eucomply-report-kit",
+        "domain": "mahope.tools",
+        "route": "/da/blog/cmp-sammenligning-2026"
+      },
+      {
+        "path": "site/da/blog/kopier-tabel-fra-pdf-til-excel.html",
+        "product": "clean-copy-pro",
+        "domain": "mahope.tools",
+        "route": "/da/blog/kopier-tabel-fra-pdf-til-excel"
+      },
+      {
+        "path": "site/blog/text-on-image-contrast-check.html",
+        "product": "eucomply-pro",
+        "domain": "mahope.tools",
+        "route": "/blog/text-on-image-contrast-check"
+      },
+      {
+        "path": "site/da/blog/tekst-paa-billede-kontrasttjek.html",
+        "product": "eucomply-pro",
+        "domain": "mahope.tools",
+        "route": "/da/blog/tekst-paa-billede-kontrasttjek"
+      },
+      {
+        "path": "site/paid-templates.html",
+        "product": "eucomply-dpa",
+        "domain": "mahope.tools",
+        "route": "/paid-templates"
+      },
+      {
+        "path": "site/paid-templates.html",
+        "product": "eucomply-nis2-clauses",
+        "domain": "mahope.tools",
+        "route": "/paid-templates"
+      },
+      {
+        "path": "site/paid-templates.html",
+        "product": "eucomply-nda-clauses",
+        "domain": "mahope.tools",
+        "route": "/paid-templates"
+      },
+      {
+        "path": "site/paid-templates.html",
+        "product": "eucomply-eaa-statement",
+        "domain": "mahope.tools",
+        "route": "/paid-templates"
+      },
+      {
+        "path": "site/paid-templates.html",
+        "product": "eucomply-report-kit",
+        "domain": "mahope.tools",
+        "route": "/paid-templates"
+      },
+      {
+        "path": "site/paid-templates.html",
+        "product": "eucomply-template-bundle",
+        "domain": "mahope.tools",
+        "route": "/paid-templates"
+      },
+      {
+        "path": "site/paid-templates.html",
+        "product": "eu-compliance-ebook-bundle",
+        "domain": "mahope.tools",
+        "route": "/paid-templates"
+      },
+      {
+        "path": "site/da/paid-templates.html",
+        "product": "eucomply-dpa",
+        "domain": "mahope.tools",
+        "route": "/da/paid-templates"
+      },
+      {
+        "path": "site/da/paid-templates.html",
+        "product": "eucomply-nis2-clauses",
+        "domain": "mahope.tools",
+        "route": "/da/paid-templates"
+      },
+      {
+        "path": "site/da/paid-templates.html",
+        "product": "eucomply-nda-clauses",
+        "domain": "mahope.tools",
+        "route": "/da/paid-templates"
+      },
+      {
+        "path": "site/da/paid-templates.html",
+        "product": "eucomply-eaa-statement",
+        "domain": "mahope.tools",
+        "route": "/da/paid-templates"
+      },
+      {
+        "path": "site/da/paid-templates.html",
+        "product": "eucomply-report-kit",
+        "domain": "mahope.tools",
+        "route": "/da/paid-templates"
+      },
+      {
+        "path": "site/da/paid-templates.html",
+        "product": "eucomply-template-bundle",
+        "domain": "mahope.tools",
+        "route": "/da/paid-templates"
+      },
+      {
+        "path": "site/da/paid-templates.html",
+        "product": "eu-compliance-ebook-bundle",
+        "domain": "mahope.tools",
+        "route": "/da/paid-templates"
+      },
+      {
+        "path": "site/blog/eaa-accessibility-checklist.html",
+        "product": "eucomply-pro",
+        "domain": "mahope.tools",
+        "route": "/blog/eaa-accessibility-checklist"
+      },
+      {
+        "path": "site/da/blog/eaa-tjekliste-2026.html",
+        "product": "eucomply-pro",
+        "domain": "mahope.tools",
+        "route": "/da/blog/eaa-tjekliste-2026"
+      },
+      {
+        "path": "site/blog/nis2-readiness-guide.html",
+        "product": "eucomply-pro",
+        "domain": "mahope.tools",
+        "route": "/blog/nis2-readiness-guide"
+      },
+      {
+        "path": "site/blog/wix-eaa-accessibility.html",
+        "product": "eucomply-pro",
+        "domain": "mahope.tools",
+        "route": "/blog/wix-eaa-accessibility"
+      },
+      {
+        "path": "site/da/blog/wix-tilgaengelighed-eaa.html",
+        "product": "eucomply-pro",
+        "domain": "mahope.tools",
+        "route": "/da/blog/wix-tilgaengelighed-eaa"
+      },
+      {
+        "path": "site/blog/prestashop-eaa-accessibility.html",
+        "product": "eucomply-pro",
+        "domain": "mahope.tools",
+        "route": "/blog/prestashop-eaa-accessibility"
+      },
+      {
+        "path": "site/da/blog/prestashop-tilgaengelighed-eaa.html",
+        "product": "eucomply-pro",
+        "domain": "mahope.tools",
+        "route": "/da/blog/prestashop-tilgaengelighed-eaa"
+      },
+      {
+        "path": "site/da/blog/nis2-beredskabstjek-2026.html",
+        "product": "eucomply-pro",
+        "domain": "mahope.tools",
+        "route": "/da/blog/nis2-beredskabstjek-2026"
+      },
+      {
+        "path": "site/blog/html-to-markdown-cli.html",
+        "product": "clean-copy-pro",
+        "domain": "cleancopy.tools",
+        "route": "/blog/html-to-markdown-cli"
+      },
+      {
+        "path": "site/da/blog/html-til-markdown-cli.html",
+        "product": "clean-copy-pro",
+        "domain": "cleancopy.tools",
+        "route": "/da/blog/html-til-markdown-cli"
+      },
+      {
+        "path": "site/blog/html-to-markdown-vscode.html",
+        "product": "clean-copy-pro",
+        "domain": "cleancopy.tools",
+        "route": "/blog/html-to-markdown-vscode"
+      },
+      {
+        "path": "site/da/blog/indsaet-som-markdown-i-vscode.html",
+        "product": "clean-copy-pro",
+        "domain": "cleancopy.tools",
+        "route": "/da/blog/indsaet-som-markdown-i-vscode"
+      },
+      {
+        "path": "site/blog/copy-table-website-to-notion.html",
+        "product": "clean-copy-pro",
+        "domain": "mahope.tools",
+        "route": "/blog/copy-table-website-to-notion"
+      },
+      {
+        "path": "site/da/blog/kopier-tabel-hjemmeside-til-notion.html",
+        "product": "clean-copy-pro",
+        "domain": "mahope.tools",
+        "route": "/da/blog/kopier-tabel-hjemmeside-til-notion"
+      },
+      {
+        "path": "site/blog/cookie-consent-gdpr-compliance.html",
+        "product": "eucomply-pro",
+        "domain": "mahope.tools",
+        "route": "/blog/cookie-consent-gdpr-compliance"
+      },
+      {
+        "path": "site/da/blog/cookie-consent-gdpr-2026.html",
+        "product": "eucomply-pro",
+        "domain": "mahope.tools",
+        "route": "/da/blog/cookie-consent-gdpr-2026"
+      },
+      {
+        "path": "site/da/blog/tilgaengelighedsscanner-cli.html",
+        "product": "eucomply-pro",
+        "domain": "mahope.tools",
+        "route": "/da/blog/tilgaengelighedsscanner-cli"
+      },
+      {
+        "path": "site/blog/webflow-vs-squarespace-accessibility.html",
+        "product": "eucomply-pro",
+        "domain": "mahope.tools",
+        "route": "/blog/webflow-vs-squarespace-accessibility"
+      },
+      {
+        "path": "site/da/blog/webflow-vs-squarespace-tilgaengelighed.html",
+        "product": "eucomply-pro",
+        "domain": "mahope.tools",
+        "route": "/da/blog/webflow-vs-squarespace-tilgaengelighed"
+      },
+      {
+        "path": "site/blog/copy-clean-text-from-website.html",
+        "product": "clean-copy-pro",
+        "domain": "mahope.tools",
+        "route": "/blog/copy-clean-text-from-website"
+      },
+      {
+        "path": "site/da/blog/kopier-ren-tekst-fra-hjemmeside.html",
+        "product": "clean-copy-pro",
+        "domain": "mahope.tools",
+        "route": "/da/blog/kopier-ren-tekst-fra-hjemmeside"
+      },
+      {
+        "path": "site/blog/release-integrity-explained.html",
+        "product": "clean-copy-pro",
+        "domain": "mahope.tools",
+        "route": "/blog/release-integrity-explained"
+      },
+      {
+        "path": "site/da/blog/release-integrity-hvad-er-det.html",
+        "product": "clean-copy-pro",
+        "domain": "mahope.tools",
+        "route": "/da/blog/release-integrity-hvad-er-det"
+      },
+      {
+        "path": "site/blog/monitor-website-github-actions-free.html",
+        "product": "deskuptime-pro",
+        "domain": "mahope.tools",
+        "route": "/blog/monitor-website-github-actions-free"
+      },
+      {
+        "path": "site/da/blog/overvaag-hjemmeside-github-actions-gratis.html",
+        "product": "deskuptime-pro",
+        "domain": "mahope.tools",
+        "route": "/da/blog/overvaag-hjemmeside-github-actions-gratis"
+      },
+      {
+        "path": "site/blog/bug-reports-in-ci-pipeline.html",
+        "product": "deskuptime-pro",
+        "domain": "mahope.tools",
+        "route": "/blog/bug-reports-in-ci-pipeline"
+      },
+      {
+        "path": "site/da/blog/bugrapporter-i-ci-pipeline.html",
+        "product": "deskuptime-pro",
+        "domain": "mahope.tools",
+        "route": "/da/blog/bugrapporter-i-ci-pipeline"
+      },
+      {
+        "path": "site/da/blog/faa-besked-naar-hjemmeside-er-nede.html",
+        "product": "deskuptime-pro",
+        "domain": "mahope.tools",
+        "route": "/da/blog/faa-besked-naar-hjemmeside-er-nede"
+      },
+      {
+        "path": "site/blog/get-notified-when-website-goes-down.html",
+        "product": "deskuptime-pro",
+        "domain": "mahope.tools",
+        "route": "/blog/get-notified-when-website-goes-down"
+      },
+      {
+        "path": "site/color-blindness-simulator.html",
+        "product": "eucomply-pro",
+        "domain": "mahope.tools",
+        "route": "/color-blindness-simulator"
+      },
+      {
+        "path": "site/palette-generator.html",
+        "product": "eucomply-pro",
+        "domain": "mahope.tools",
+        "route": "/palette-generator"
+      },
+      {
+        "path": "site/palette-generator-da.html",
+        "product": "eucomply-pro",
+        "domain": "mahope.tools",
+        "route": "/palette-generator-da"
+      },
+      {
+        "path": "site/color-blindness-simulator-da.html",
+        "product": "eucomply-pro",
+        "domain": "mahope.tools",
+        "route": "/color-blindness-simulator-da"
+      },
+      {
+        "path": "site/blog/color-blindness-simulation-check.html",
+        "product": "eucomply-pro",
+        "domain": "mahope.tools",
+        "route": "/blog/color-blindness-simulation-check"
+      },
+      {
+        "path": "site/da/blog/farveblindhed-tjek.html",
+        "product": "eucomply-pro",
+        "domain": "mahope.tools",
+        "route": "/da/blog/farveblindhed-tjek"
+      }
+    ]
+  },
   "built_offers": [],
   "redirects": [
     {
@@ -1859,193 +1371,14 @@
   ],
   "core_pages": [
     {
-      "product": "clean-copy-pro",
-      "domain": "cleancopy.tools",
-      "route": "/",
-      "path": "site/clean-copy.html",
-      "why": "hovedsiden for Clean Copy: gratis værktøj mod Pro, første skridt i købsrejsen"
-    },
-    {
-      "product": "deskuptime-pro",
-      "domain": "deskuptime.com",
-      "route": "/",
-      "path": "site/deskuptime/index.html",
-      "why": "hjemmesiden for DeskUptime: lokal gratis overvågning mod online Pro-licens"
-    },
-    {
       "product": "page-profile-pro",
       "domain": "mahope.tools",
       "route": "/page-profile",
       "path": "site/page-profile.html",
       "why": "Page Profiles eneste produktside med gratis/Pro-sammenligning"
-    },
-    {
-      "product": "eucomply-pro",
-      "domain": "mahope.tools",
-      "route": "/compliance-report",
-      "path": "site/compliance-report.html",
-      "why": "eneste side med EUComply Pro-årsabonnementet"
     }
   ],
   "pro_table_pages": [
-    {
-      "path": "site/clean-copy.html",
-      "product": "clean-copy-pro",
-      "lang": "en",
-      "why": "hovedsiden: første skridt i købsrejsen, og den eneste sted en læser kan se gratis mod Pro før knappen"
-    },
-    {
-      "path": "site/clean-copy-tool.html",
-      "product": "clean-copy-pro",
-      "lang": "en",
-      "why": "Webværktøjet er den eneste måde at bruge Clean Copy uden installation, og dets pro-kort siger «See what Pro adds before you buy» og linker til #free-vs-pro. Målt 2/10: tabellen under det anker var den ENESTE gratis-mod-Pro-tabel i familien der lå uden for pro_table_pages — skrevet i hånden i markup med «19 USD per year», så ingen port dømte den og prisen var ikke katalogens.",
-      "kind": "tool",
-      "layout": "block",
-      "free_features": [
-        {
-          "id": "modes",
-          "where": "site/clean-copy-tool.html:533-538 CleanCopyCore.htmlToWikilinks/htmlToCsv/htmlToMarkdown og cleanText — de fire tilstande konverterer i browseren",
-          "labels": {
-            "en": [
-              "The four conversion modes on this page — Markdown, WikiLinks, CSV, plain text"
-            ]
-          }
-        },
-        {
-          "id": "unlimited",
-          "where": "site/clean-copy-tool.html:171 input-box er en hel textarea; serveren læser den ikke, den sender ingen tekst nogen steder",
-          "labels": {
-            "en": [
-              "No limit on how much text you paste"
-            ]
-          }
-        }
-      ],
-      "pro_features": [
-        {
-          "id": "batch",
-          "where": "site/clean-copy-tool.html:289 <details id=\"batch-details\" hidden> — én linje pr. snippet, gemt bag Pro",
-          "labels": {
-            "en": [
-              "Batch conversion — many snippets at once, one per line"
-            ]
-          }
-        },
-        {
-          "id": "rules",
-          "where": "site/clean-copy-tool.html:508 proCard() «In the browser extension: define your own rules once and reuse them on every site.»",
-          "labels": {
-            "en": [
-              "Custom cleanup rules you define once, in the browser extension"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "path": "site/da/clean-copy.html",
-      "product": "clean-copy-pro",
-      "lang": "da",
-      "why": "samme sammenligning på dansk — danske læsere er de der køber Clean Copy Pro"
-    },
-    {
-      "path": "site/deskuptime/index.html",
-      "product": "deskuptime-pro",
-      "lang": "en",
-      "why": "hjemmesiden: lokal gratis CLI mod online Pro-licens",
-      "anchor": "compare"
-    },
-    {
-      "path": "site/da/deskuptime/index.html",
-      "product": "deskuptime-pro",
-      "lang": "da",
-      "why": "samme sammenligning på dansk",
-      "anchor": "compare"
-    },
-    {
-      "path": "site/deskuptime/tools/index.html",
-      "product": "deskuptime-pro",
-      "lang": "en",
-      "why": "Navens «Tools» peger her, så denne side er det første en læser ser når de vil et værktøj. Målt 5/10: den rute lå med `../auditedwp`s egen forside, som linkede **0** af de to værktøjer der faktisk ligger på domænet. Nu er den her, og siden sælger Pro — så den skal kunne vise hvad gratis og Pro hver giver, ligesom `/` gør.",
-      "kind": "tool",
-      "anchor": "compare",
-      "free_features": [
-        {
-          "id": "one-off-checks",
-          "where": "site/deskuptime/tools/index.html:56-62 «One site, right now» — kortet på /#check, som læser én adresse pr. kald og svarer med status, redirects, certifikat og de otte headers",
-          "labels": {
-            "en": [
-              "One-off checks — status, redirects, the live certificate and the eight security headers"
-            ]
-          }
-        },
-        {
-          "id": "ssl-content-checks",
-          "where": "site/deskuptime/tools/index.html:57-60 «the live TLS certificate with the days left on it» — SSL-udløb er i det frie svar; content hashen sker i watch-mode, som også er frit",
-          "labels": {
-            "en": [
-              "SSL and content checks — SSL expiry on every check, content hashing in watch mode"
-            ]
-          }
-        },
-        {
-          "id": "ten-sites",
-          "where": "site/deskuptime/tools/index.html:66-74 «up to ten URLs, one per line» — /bulk-url-checker tager dem i én passage",
-          "labels": {
-            "en": [
-              "Up to 10 URLs in one pass — status, response time, redirects and SSL expiry"
-            ]
-          }
-        },
-        {
-          "id": "headers-grade",
-          "where": "site/deskuptime/tools/index.html:77-83 «A–F grade» — /security-headers-checker karakteren kommer af de samme otte headers",
-          "labels": {
-            "en": [
-              "A–F grade on the security headers, with every header value to paste in"
-            ]
-          }
-        },
-        {
-          "id": "json-output",
-          "where": "site/deskuptime/tools/index.html:139 «--json   # machine-readable» — CLI'en kan JSON uden nøgle, og GitHub Action'en gør det samme i et job",
-          "labels": {
-            "en": [
-              "JSON output from every check, plus a GitHub Action that puts a status table in the job summary"
-            ]
-          }
-        }
-      ],
-      "pro_features": [
-        {
-          "id": "desktop-alerts",
-          "where": "site/deskuptime/tools/index.html:123-125 «webhook alerts and a client-ready report» — desktop-app'en er den betalte del",
-          "labels": {
-            "en": [
-              "Desktop app that runs in the background, with notifications and webhook alerts"
-            ]
-          }
-        },
-        {
-          "id": "unlimited-sites-interval",
-          "where": "site/deskuptime/tools/index.html:124 «unlimited sites, polling as often as every 30 seconds» — FREE.urlLimit 3 -> PRO Infinity og PRO.minIntervalSeconds 30",
-          "labels": {
-            "en": [
-              "Unlimited sites, polling as often as every 30 seconds"
-            ]
-          }
-        },
-        {
-          "id": "client-report",
-          "where": "site/deskuptime/tools/index.html:125 «a client-ready report you can hand a client»",
-          "labels": {
-            "en": [
-              "A client-ready report in Markdown and JSON you can send to a client"
-            ]
-          }
-        }
-      ]
-    },
     {
       "path": "site/page-profile.html",
       "product": "page-profile-pro",
@@ -2057,822 +1390,6 @@
       "product": "page-profile-pro",
       "lang": "da",
       "why": "samme sammenligning på dansk"
-    },
-    {
-      "path": "site/compliance-report.html",
-      "product": "eucomply-pro",
-      "lang": "en",
-      "why": "eneste side med EUComply Pro-årssubscriptionet"
-    },
-    {
-      "path": "site/da/compliance-report.html",
-      "product": "eucomply-pro",
-      "lang": "da",
-      "why": "samme sammenligning på dansk"
-    },
-    {
-      "path": "site/text-on-image-checker.html",
-      "product": "eucomply-pro",
-      "lang": "en",
-      "kind": "tool",
-      "layout": "inline",
-      "why": "Andet mest besøgte værktøj (2/10 Plausible: 2 af 18 besøgende efter artiklen). Kortet lovede de tre ting Pro tilføjer, men sagde ikke hvad det gratis tjek gør.",
-      "free_features": [
-        {
-          "id": "ratio",
-          "where": "site/text-on-image-core.js:120-141 updateAll() — sample.ratio -> res.innerHTML, alt i browseren",
-          "labels": {
-            "en": [
-              "WCAG contrast ratio of the sampled text"
-            ],
-            "da": [
-              "WCAG-kontrastforhold for den samplede tekst"
-            ]
-          }
-        },
-        {
-          "id": "aaa",
-          "where": "site/text-on-image-core.js:124-141 — aaaNeed og alsoAAA giver AAA-framærgningen",
-          "labels": {
-            "en": [
-              "AA and AAA verdict, large-text threshold"
-            ],
-            "da": [
-              "AA- og AAA-dom, tærskel for stor tekst"
-            ]
-          }
-        },
-        {
-          "id": "image-local",
-          "where": "site/text-on-image-core.js:186-201 loadFile() — FileReader-objektet læses i browseren, der er ingen upload",
-          "labels": {
-            "en": [
-              "Image read in your browser — nothing uploaded"
-            ],
-            "da": [
-              "Billedet læses i din browser — intet uploades"
-            ]
-          }
-        }
-      ],
-      "pro_features": [
-        {
-          "id": "whole-site",
-          "where": "site/text-on-image-checker.html:151-155 «that needs the page read from the server, and it is what EUComply Pro does»",
-          "labels": {
-            "en": [
-              "It reads the page from the server too — response headers included, which a browser check cannot see"
-            ],
-            "da": [
-              "Den læser siden fra serveren også — svarheadere med, som et browsertjek ikke kan se"
-            ]
-          }
-        },
-        {
-          "id": "fifteen-checks",
-          "where": "site/text-on-image-checker.html:153-155 «EAA/WCAG, cookie consent and NIS2 findings in one report you can hand to a client»",
-          "labels": {
-            "en": [
-              "The 15 accessibility rules around each image"
-            ],
-            "da": [
-              "De 15 tilgængelighedsregler omkring hvert billede"
-            ]
-          }
-        },
-        {
-          "id": "pdf",
-          "where": "site/text-on-image-checker.html:153-155 «in one report you can hand to a client»",
-          "labels": {
-            "en": [
-              "A PDF report you can hand a client"
-            ],
-            "da": [
-              "En PDF-rapport du kan give en kunde"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "path": "site/text-on-image-checker-da.html",
-      "product": "eucomply-pro",
-      "lang": "da",
-      "kind": "tool",
-      "layout": "inline",
-      "why": "Samme værktøj på dansk. Uden tabellen svarede de to sprog på to måder, og det er præcis fejlformen dom 6 blev skrevet for.",
-      "free_features": [
-        {
-          "id": "ratio",
-          "where": "site/text-on-image-core.js:120-141 updateAll() — sample.ratio -> res.innerHTML, alt i browseren",
-          "labels": {
-            "en": [
-              "WCAG contrast ratio of the sampled text"
-            ],
-            "da": [
-              "WCAG-kontrastforhold for den samplede tekst"
-            ]
-          }
-        },
-        {
-          "id": "aaa",
-          "where": "site/text-on-image-core.js:124-141 — aaaNeed og alsoAAA giver AAA-framærgningen",
-          "labels": {
-            "en": [
-              "AA and AAA verdict, large-text threshold"
-            ],
-            "da": [
-              "AA- og AAA-dom, tærskel for stor tekst"
-            ]
-          }
-        },
-        {
-          "id": "image-local",
-          "where": "site/text-on-image-core.js:186-201 loadFile() — FileReader-objektet læses i browseren, der er ingen upload",
-          "labels": {
-            "en": [
-              "Image read in your browser — nothing uploaded"
-            ],
-            "da": [
-              "Billedet læses i din browser — intet uploades"
-            ]
-          }
-        }
-      ],
-      "pro_features": [
-        {
-          "id": "whole-site",
-          "where": "site/text-on-image-checker-da.html:152-156 «det kræver at siden læses fra serveren, og det er det EUComply Pro gør»",
-          "labels": {
-            "en": [
-              "It reads the page from the server too — response headers included, which a browser check cannot see"
-            ],
-            "da": [
-              "Den læser siden fra serveren også — svarheadere med, som et browsertjek ikke kan se"
-            ]
-          }
-        },
-        {
-          "id": "fifteen-checks",
-          "where": "site/text-on-image-checker-da.html:154-156 «EAA/WCAG, cookie-samtykke og NIS2-fund i én rapport, du kan give videre til en kunde»",
-          "labels": {
-            "en": [
-              "The 15 accessibility rules around each image"
-            ],
-            "da": [
-              "De 15 tilgængelighedsregler omkring hvert billede"
-            ]
-          }
-        },
-        {
-          "id": "pdf",
-          "where": "site/text-on-image-checker-da.html:155-156 «rapport, du kan give videre til en kunde»",
-          "labels": {
-            "en": [
-              "A PDF report you can hand a client"
-            ],
-            "da": [
-              "En PDF-rapport du kan give en kunde"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "path": "site/scan.html",
-      "product": "eucomply-pro",
-      "lang": "en",
-      "kind": "tool",
-      "layout": "inline",
-      "why": "Første skridt i en konvertering: kortet kommer lige efter fundene, hvor grunden til at købe er. Målt 2/10: den skrev 0 af de 11 tjek den selv kører.",
-      "free_features": [
-        {
-          "id": "a11y",
-          "where": "site/scan.html:486-544 — elleve add()-kald (IMG_ALT, FORM_LABEL, LINK_TEXT, BUTTON_TEXT, DUP_ID, TARGET_BLANK, HEADING_SKIP, IFRAME_TITLE, TABLE_HEADER, ARIA_HIDDEN_FOCUS, CONTRAST) læser den hentede sidekilde i browseren",
-          "labels": {
-            "en": [
-              "The accessibility checks on the pages you paste, up to five at a time — alt text, labels, headings, contrast"
-            ]
-          }
-        },
-        {
-          "id": "basics",
-          "where": "site/scan.html:514-517 «DOC_TITLE», «HTML_LANG», «VIEWPORT» og «HEADING_H1» lægges direkte i fundlisten, ingen af dem kræver en nøgle",
-          "labels": {
-            "en": [
-              "Page title, language attribute, viewport and h1 checked too"
-            ]
-          }
-        }
-      ],
-      "pro_features": [
-        {
-          "id": "crawl",
-          "where": "site/scan.html:455 «It reads the page from the server too» — påstanden står i kortet; om den er sand afgør `tools/check_scan_page_claims.py`, der tæller `cscFetch(`-kaldene i `handleReport`",
-          "labels": {
-            "en": [
-              "It reads the page from the server too — response headers included, which a browser check cannot see"
-            ],
-            "da": [
-              "Den læser siden fra serveren også — svarheadere med, som et browsertjek ikke kan se"
-            ]
-          }
-        },
-        {
-          "id": "server-checks",
-          "where": "site/scan.html:455 «18 server-side GDPR, cookie, security and metadata checks» — de 18 fund-typer kommer fra `reportProFindings(page.html, page.headers)` i `_worker.js`, som ogsa ser svarheaderne",
-          "labels": {
-            "en": [
-              "18 server-side GDPR, cookie, security and metadata checks"
-            ],
-            "da": [
-              "18 server-side GDPR-, cookie-, sikkerheds- og metatjek"
-            ]
-          }
-        },
-        {
-          "id": "pdf",
-          "where": "site/scan.html:159-161 «The report itself is free and needs no licence. A EUComply Pro licence unlocks the PDF download»",
-          "labels": {
-            "en": [
-              "The findings as a PDF report you can hand a client"
-            ],
-            "da": [
-              "Fundene som PDF-rapport, du kan give en kunde"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "path": "site/scan-da.html",
-      "product": "eucomply-pro",
-      "lang": "da",
-      "kind": "tool",
-      "layout": "inline",
-      "why": "Samme værktøj på dansk. Uden tabellen svarede de to sprog på to måder, og det er præcis fejlformen dom 6 blev skrevet for.",
-      "free_features": [
-        {
-          "id": "a11y",
-          "where": "site/scan-da.html:477-511 — elleve add()-kald (IMG_ALT, FORM_LABEL, LINK_TEXT, BUTTON_TEXT, DUP_ID, TARGET_BLANK, HEADING_SKIP, IFRAME_TITLE, TABLE_HEADER, ARIA_HIDDEN_FOCUS, CONTRAST) læser den hentede sidekilde i browseren",
-          "labels": {
-            "da": [
-              "Tilgængelighedstjek på de sider du indsætter, op til fem ad gangen — alt-tekst, mærkater, overskrifter, kontrast"
-            ]
-          }
-        },
-        {
-          "id": "basics",
-          "where": "site/scan-da.html:505-508 «DOC_TITLE», «HTML_LANG», «VIEWPORT» og «HEADING_H1» lægges direkte i fundlisten, ingen af dem kræver en nøgle",
-          "labels": {
-            "da": [
-              "Sides titel, sprogattribut, viewport og h1 tjekket med"
-            ]
-          }
-        }
-      ],
-      "pro_features": [
-        {
-          "id": "crawl",
-          "where": "site/scan-da.html:437 «Den læser siden fra serveren også» — påstanden står i kortet; om den er sand afgør `tools/check_scan_page_claims.py`, der tæller `cscFetch(`-kaldene i `handleReport`",
-          "labels": {
-            "en": [
-              "It reads the page from the server too — response headers included, which a browser check cannot see"
-            ],
-            "da": [
-              "Den læser siden fra serveren også — svarheadere med, som et browsertjek ikke kan se"
-            ]
-          }
-        },
-        {
-          "id": "server-checks",
-          "where": "site/scan-da.html:437 «18 server-side GDPR-, cookie-, sikkerheds- og metatjek» — de 18 fund-typer kommer fra `reportProFindings(page.html, page.headers)` i `_worker.js`, som ogsa ser svarheaderne",
-          "labels": {
-            "en": [
-              "18 server-side GDPR, cookie, security and metadata checks"
-            ],
-            "da": [
-              "18 server-side GDPR-, cookie-, sikkerheds- og metatjek"
-            ]
-          }
-        },
-        {
-          "id": "pdf",
-          "where": "site/scan-da.html:156-157 «En licens til EUComply Pro låser PDF-download»",
-          "labels": {
-            "en": [
-              "The findings as a PDF report you can hand a client"
-            ],
-            "da": [
-              "Fundene som PDF-rapport, du kan give en kunde"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "path": "site/compliance-site-check.html",
-      "product": "eucomply-pro",
-      "lang": "en",
-      "kind": "tool",
-      "layout": "inline",
-      "why": "Nedlægsside i scanneren og en af de fire indgangssider i Plausible 1/10. Målt 2/10: kortet skrev 0 af de ni tjek kaldet faktisk svarer på.",
-      "free_features": [
-        {
-          "id": "nine-checks",
-          "where": "site/compliance-site-check.html:530-535 «About each check» lister præcis de ni tjek der kom tilbage i data.checks, og :302 fetchScan('/api/compliance-scan') er det ene kald hele rapporten kommer fra",
-          "labels": {
-            "en": [
-              "The 9 compliance checks on the page you submit"
-            ]
-          }
-        },
-        {
-          "id": "legal-links",
-          "where": "site/compliance-site-check.html:339-343 data.pages_read skriver de sider kaldet læste, og :439-442 viser dem i rapporten — det er de juridiske sider, siden selv peger på",
-          "labels": {
-            "en": [
-              "The privacy, terms and imprint pages it links to"
-            ]
-          }
-        },
-        {
-          "id": "score-grade",
-          "where": "site/compliance-site-check.html:471-480 scoren og karakteren skrives i DOM'en uden licens",
-          "labels": {
-            "en": [
-              "A score and a grade for every site you paste"
-            ]
-          }
-        }
-      ],
-      "pro_features": [
-        {
-          "id": "crawl",
-          "where": "site/compliance-site-check.html:199-202 «runs 33 checks on the page you name» — påstanden er målt mod `handleReport`, der kalder `cscFetch` præcis én gang; dommen er `tools/check_scan_page_claims.py` dom 5",
-          "labels": {
-            "en": [
-              "It reads the page you name from the server — consent signals, privacy link and metadata, not just whether a legal page exists"
-            ],
-            "da": [
-              "Den læser den side du navngiver fra serveren — samtykkesignaler, privatlivslink og metadata, ikke kun om en juridisk side findes"
-            ]
-          }
-        },
-        {
-          "id": "server-checks",
-          "where": "site/compliance-site-check.html:200-202 «the 15 accessibility rules plus 18 server-side GDPR, cookie, security and metadata checks» — de 18 fund-typer kommer fra `reportProFindings(page.html, page.headers)`",
-          "labels": {
-            "en": [
-              "18 server-side GDPR, cookie, security and metadata checks"
-            ],
-            "da": [
-              "18 server-side GDPR-, cookie-, sikkerheds- og metatjek"
-            ]
-          }
-        },
-        {
-          "id": "pdf",
-          "where": "site/compliance-site-check.html:201-202 «hands you the findings as a PDF you can send to a client»",
-          "labels": {
-            "en": [
-              "The findings as a PDF report you can hand a client"
-            ],
-            "da": [
-              "Fundene som PDF-rapport, du kan give en kunde"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "path": "site/da/compliance-site-check.html",
-      "product": "eucomply-pro",
-      "lang": "da",
-      "kind": "tool",
-      "layout": "inline",
-      "why": "Samme scanner på dansk. Uden tabellen svarede de to sprog på to måder.",
-      "free_features": [
-        {
-          "id": "nine-checks",
-          "where": "site/da/compliance-site-check.html:528-533 «Om hvert tjek» lister præcis de ni tjek der kom tilbage i data.checks, og :301 fetchScan('/api/compliance-scan') er det ene kald hele rapporten kommer fra",
-          "labels": {
-            "da": [
-              "De 9 compliance-tjek på den side du indsætter"
-            ]
-          }
-        },
-        {
-          "id": "legal-links",
-          "where": "site/da/compliance-site-check.html:338-342 data.pages_read skriver de sider kaldet læste, og :438-441 viser dem i rapporten — det er de juridiske sider, siden selv peger på",
-          "labels": {
-            "da": [
-              "De privatlivs-, vilkår- og imprint-sider, siden peger på"
-            ]
-          }
-        },
-        {
-          "id": "score-grade",
-          "where": "site/da/compliance-site-check.html:470-479 scoren og karakteren skrives i DOM'en uden licens",
-          "labels": {
-            "da": [
-              "En score og en karakter for hvert website du indsætter"
-            ]
-          }
-        }
-      ],
-      "pro_features": [
-        {
-          "id": "crawl",
-          "where": "site/da/compliance-site-check.html:200-203 «kører 33 tjek på den side du navngiver» — målt mod `handleReport`s ene `cscFetch`-kald; dommen er `check_scan_page_claims.py` dom 5",
-          "labels": {
-            "en": [
-              "It reads the page you name from the server — consent signals, privacy link and metadata, not just whether a legal page exists"
-            ],
-            "da": [
-              "Den læser den side du navngiver fra serveren — samtykkesignaler, privatlivslink og metadata, ikke kun om en juridisk side findes"
-            ]
-          }
-        },
-        {
-          "id": "server-checks",
-          "where": "site/da/compliance-site-check.html:201-203 «de 15 tilgængelighedsregler plus 18 serverside-tjek for GDPR, cookies, sikkerhed og metadata»",
-          "labels": {
-            "en": [
-              "18 server-side GDPR, cookie, security and metadata checks"
-            ],
-            "da": [
-              "18 server-side GDPR-, cookie-, sikkerheds- og metatjek"
-            ]
-          }
-        },
-        {
-          "id": "pdf",
-          "where": "site/da/compliance-site-check.html:200-203 «kører 33 tjek på den side du» … «giver dig fundene som en PDF du kan sende til en kunde»",
-          "labels": {
-            "en": [
-              "The findings as a PDF report you can hand a client"
-            ],
-            "da": [
-              "Fundene som PDF-rapport, du kan give en kunde"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "path": "site/cookie-check.html",
-      "product": "eucomply-pro",
-      "lang": "en",
-      "kind": "tool",
-      "layout": "inline",
-      "why": "Kortet ligger efter fundene på den mest delte værktøjsside. Målt 2/10: det nævnte hverken de 14 trackere eller de 11 samtykkeplatforme tjekket kender.",
-      "free_features": [
-        {
-          "id": "trackers",
-          "where": "site/cookie-check.html:132-148 TRACKERS og :210-212 tælles i den hentede sidekilde, én linje pr. sporing",
-          "labels": {
-            "en": [
-              "Trackers found in the page source — 14 known services"
-            ]
-          }
-        },
-        {
-          "id": "gate",
-          "where": "site/cookie-check.html:150-165 CMPS og :219-221 parkedScripts giver consent-gate-dommen",
-          "labels": {
-            "en": [
-              "Consent gate: known CMPs, Consent Mode v2 and blocked scripts"
-            ]
-          }
-        }
-      ],
-      "pro_features": [
-        {
-          "id": "crawl",
-          "where": "site/cookie-check.html:109-111 «checks the page from the server, so it also reads the response headers»",
-          "labels": {
-            "en": [
-              "It reads the response headers as well — HSTS and CSP, which a page-source scan never sees"
-            ],
-            "da": [
-              "Den læser også svarheaderne — HSTS og CSP, som en kildoskanning aldrig ser"
-            ]
-          }
-        },
-        {
-          "id": "server-checks",
-          "where": "site/cookie-check.html:110-111 «cookie banners, tracking scripts, consent signals, privacy policy links and third-party embeds, alongside 33 checks in total»",
-          "labels": {
-            "en": [
-              "18 server-side GDPR, cookie, security and metadata checks"
-            ],
-            "da": [
-              "18 server-side GDPR-, cookie-, sikkerheds- og metatjek"
-            ]
-          }
-        },
-        {
-          "id": "pdf",
-          "where": "site/cookie-check.html:111-112 «33 checks in total in a PDF you can hand to a client»",
-          "labels": {
-            "en": [
-              "The findings as a PDF report you can hand a client"
-            ],
-            "da": [
-              "Fundene som PDF-rapport, du kan give en kunde"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "path": "site/cookie-check-da.html",
-      "product": "eucomply-pro",
-      "lang": "da",
-      "kind": "tool",
-      "layout": "inline",
-      "why": "Samme værktøj på dansk. Uden tabellen svarede de to sprog på to måder.",
-      "free_features": [
-        {
-          "id": "trackers",
-          "where": "site/cookie-check-da.html:130-146 TRACKERS og :206-208 tælles i den hentede sidekilde, én linje pr. sporing",
-          "labels": {
-            "da": [
-              "Trackere fundet i sidekilden — 14 kendte tjenester"
-            ]
-          }
-        },
-        {
-          "id": "gate",
-          "where": "site/cookie-check-da.html:148-163 CMPS og :217-219 parkedScripts giver samtykke-dommen",
-          "labels": {
-            "da": [
-              "Samtykkegate: kendte samtykkeplatforme, Consent Mode v2 og blokerede scripts"
-            ]
-          }
-        }
-      ],
-      "pro_features": [
-        {
-          "id": "crawl",
-          "where": "site/cookie-check-da.html:107-109 «tjekker siden fra serveren og læser derfor også svarheaderne»",
-          "labels": {
-            "en": [
-              "It reads the response headers as well — HSTS and CSP, which a page-source scan never sees"
-            ],
-            "da": [
-              "Den læser også svarheaderne — HSTS og CSP, som en kildoskanning aldrig ser"
-            ]
-          }
-        },
-        {
-          "id": "server-checks",
-          "where": "site/cookie-check-da.html:108-110 «cookie-bannere, tracking scripts, samtykkesignaler, links til privatlivspolitik og tredjeparts-embeds, sammen med i alt 33 tjek»",
-          "labels": {
-            "en": [
-              "18 server-side GDPR, cookie, security and metadata checks"
-            ],
-            "da": [
-              "18 server-side GDPR-, cookie-, sikkerheds- og metatjek"
-            ]
-          }
-        },
-        {
-          "id": "pdf",
-          "where": "site/cookie-check-da.html:109-110 «i alt 33 tjek i en PDF du kan give en kunde»",
-          "labels": {
-            "en": [
-              "The findings as a PDF report you can hand a client"
-            ],
-            "da": [
-              "Fundene som PDF-rapport, du kan give en kunde"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "path": "site/contrast-checker.html",
-      "product": "eucomply-pro",
-      "lang": "en",
-      "kind": "tool",
-      "layout": "block",
-      "why": "Kortet dukker op lige efter første beregning, altså i det øjeblik læseren ved at have fundet en fejl. Målt 2/10: det nævnte ikke at tjekket er gratis.",
-      "free_features": [
-        {
-          "id": "ratio",
-          "where": "site/contrast-checker.html:254-265 luminance() og ratio() beregner WCAG-forholdet for det indtastede par og skriver det i DOM'en",
-          "labels": {
-            "en": [
-              "The WCAG ratio for any pair of colors you type in"
-            ]
-          }
-        },
-        {
-          "id": "verdict",
-          "where": "site/contrast-checker.html:330-373 dommen sættes ud fra forholdet, og :341 gør kortet synligt efter første beregning",
-          "labels": {
-            "en": [
-              "AA and AAA verdict, large-text threshold included"
-            ]
-          }
-        },
-        {
-          "id": "local",
-          "where": "site/contrast-checker.html:397-408 swap-knappen og farvefelterne er ren browserkode — siden henter ingen data, så intet uploades",
-          "labels": {
-            "en": [
-              "Runs entirely in your browser — nothing uploaded"
-            ]
-          }
-        }
-      ],
-      "pro_features": [
-        {
-          "id": "crawl",
-          "where": "site/contrast-checker.html:214-216 «it reads the page from the server, runs the 15 accessibility checks» — målt mod `handleReport`s ene `cscFetch`-kald; dommen er `check_scan_page_claims.py` dom 5",
-          "labels": {
-            "en": [
-              "It reads the page from the server too — response headers included, which a browser check cannot see"
-            ],
-            "da": [
-              "Den læser siden fra serveren også — svarheadere med, som et browsertjek ikke kan se"
-            ]
-          }
-        },
-        {
-          "id": "server-checks",
-          "where": "site/contrast-checker.html:214-216 «18 server-side GDPR, cookie, security and metadata checks on top, 33 in all»",
-          "labels": {
-            "en": [
-              "18 server-side GDPR, cookie, security and metadata checks"
-            ],
-            "da": [
-              "18 server-side GDPR-, cookie-, sikkerheds- og metatjek"
-            ]
-          }
-        },
-        {
-          "id": "pdf",
-          "where": "site/contrast-checker.html:214-216 «33 in all, in a PDF report you can hand to a client»",
-          "labels": {
-            "en": [
-              "The findings as a PDF report you can hand a client"
-            ],
-            "da": [
-              "Fundene som PDF-rapport, du kan give en kunde"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "path": "site/contrast-checker-da.html",
-      "product": "eucomply-pro",
-      "lang": "da",
-      "kind": "tool",
-      "layout": "block",
-      "why": "Samme værktøj på dansk. Uden tabellen svarede de to sprog på to måder.",
-      "free_features": [
-        {
-          "id": "ratio",
-          "where": "site/contrast-checker-da.html:255-266 luminance() og ratio() beregner WCAG-forholdet for det indtastede par og skriver det i DOM'en",
-          "labels": {
-            "da": [
-              "WCAG-forholdet for ethvert farvepar du indtaster"
-            ]
-          }
-        },
-        {
-          "id": "verdict",
-          "where": "site/contrast-checker-da.html:331-374 dommen sættes ud fra forholdet, og :342 gør kortet synligt efter første beregning",
-          "labels": {
-            "da": [
-              "AA- og AAA-dom, tærskel for stor tekst med"
-            ]
-          }
-        },
-        {
-          "id": "local",
-          "where": "site/contrast-checker-da.html:398-409 byt-knappen og farvefelterne er ren browserkode — siden henter ingen data, så intet uploades",
-          "labels": {
-            "da": [
-              "Kører helt i din browser — intet uploades"
-            ]
-          }
-        }
-      ],
-      "pro_features": [
-        {
-          "id": "crawl",
-          "where": "site/contrast-checker-da.html:214-217 «den læser siden fra serveren, kører de 15 tilgængelighedstjek» — målt mod `handleReport`s ene `cscFetch`-kald; dommen er `check_scan_page_claims.py` dom 5",
-          "labels": {
-            "en": [
-              "It reads the page from the server too — response headers included, which a browser check cannot see"
-            ],
-            "da": [
-              "Den læser siden fra serveren også — svarheadere med, som et browsertjek ikke kan se"
-            ]
-          }
-        },
-        {
-          "id": "server-checks",
-          "where": "site/contrast-checker-da.html:214-217 «18 serverside-tjek for GDPR, cookies, sikkerhed og metadata oveni, i alt 33»",
-          "labels": {
-            "en": [
-              "18 server-side GDPR, cookie, security and metadata checks"
-            ],
-            "da": [
-              "18 server-side GDPR-, cookie-, sikkerheds- og metatjek"
-            ]
-          }
-        },
-        {
-          "id": "pdf",
-          "where": "site/contrast-checker-da.html:214-217 «i alt 33, i en PDF-rapport du kan give en kunde»",
-          "labels": {
-            "en": [
-              "The findings as a PDF report you can hand a client"
-            ],
-            "da": [
-              "Fundene som PDF-rapport, du kan give en kunde"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "path": "site/security-headers-check.html",
-      "product": "eucomply-pro",
-      "lang": "en",
-      "kind": "tool",
-      "layout": "block",
-      "why": "Kortet dukker op efter ét header-svar, altså midt i et sikkerhedsarbejde. Målt 2/10: det nævnte hverken karakteren eller de øvrige headers.",
-      "free_features": [
-        {
-          "id": "critical",
-          "where": "site/security-headers-check.html:299 henter /api/header-check, og :369-373 viser kortet efter ét svar",
-          "labels": {
-            "en": [
-              "The critical security headers of one response, pass or fail"
-            ]
-          }
-        },
-        {
-          "id": "grade",
-          "where": "site/security-headers-check.html:231-269 bogstavkarakteren A–F beregnes ud fra de samme headers og skrives i DOM'en",
-          "labels": {
-            "en": [
-              "A letter grade from A to F"
-            ]
-          }
-        },
-        {
-          "id": "all-headers",
-          "where": "site/security-headers-check.html:151-156 alle svarshovedere vises i en tabel ved siden af de kritiske",
-          "labels": {
-            "en": [
-              "Every response header, plus the raw response"
-            ]
-          }
-        }
-      ],
-      "pro_features": [
-        {
-          "id": "crawl",
-          "where": "site/security-headers-check.html:175-179 «reads the same headers for the site you name and adds what this page cannot see»",
-          "labels": {
-            "en": [
-              "It reads the page source as well — consent banner, trackers, privacy link and metadata, which no response header shows"
-            ]
-          }
-        },
-        {
-          "id": "server-checks",
-          "where": "site/security-headers-check.html:177-179 «adds what this page cannot see: HTTPS enforcement, mixed content and form submission security, next to 15 accessibility checks — 33 in all»",
-          "labels": {
-            "en": [
-              "18 server-side GDPR, cookie, security and metadata checks"
-            ],
-            "da": [
-              "18 server-side GDPR-, cookie-, sikkerheds- og metatjek"
-            ]
-          }
-        },
-        {
-          "id": "pdf",
-          "where": "site/security-headers-check.html:178-179 «in a PDF report you can hand to a client or your compliance officer»",
-          "labels": {
-            "en": [
-              "The findings as a PDF report you can hand a client"
-            ],
-            "da": [
-              "Fundene som PDF-rapport, du kan give en kunde"
-            ]
-          }
-        }
-      ]
     },
     {
       "path": "site/url-inspector/index.html",

@@ -10,29 +10,57 @@ begge må aldrig genoplives.
 Ingen side, klient eller CI-job må have Stripe-nøgler. Sider linker direkte til
 Payment Links; nøglerne ligger kun i Bitwarden og som secrets på workeren.
 
-| Produkt | product_key | Pris | Betalingslink |
-|---|---|---|---|
-| Clean Copy Pro | `clean-copy-pro` | $19/år | https://buy.stripe.com/6oU4gy76PgvgdBIdAXbMQ00 |
-| DeskUptime Pro | `deskuptime-pro` | $19 engang, 3 maskiner | https://buy.stripe.com/7sY9AS9eX3Iu418fJ5bMQ01 |
-| Transmute Desktop | `transmute-desktop` | $19 engang, 3 maskiner | https://buy.stripe.com/eVqbJ0dvdbaW55cgN9bMQ02 |
-| EUComply Pro | `eucomply-pro` | $79/år pr. website | https://buy.stripe.com/eVq00i4YH6UG69g0ObbMQ03 |
-| Page Profile Pro | `page-profile-pro` | $19/år | https://buy.stripe.com/9B6eVcgHp7YK69ggN9bMQ04 |
-| Clean Copy Pro Lifetime | `clean-copy-pro` (lifetime) | $39 engang, første 100 køb | https://buy.stripe.com/aFadR81Mv6UGgNU68vbMQ0d |
-| Page Profile Pro Lifetime | `page-profile-pro` (lifetime) | $39 engang, første 100 køb | https://buy.stripe.com/8x2cN42Qz0wifJQgN9bMQ0e |
-| EUComply Pro Lifetime | `eucomply-pro` (lifetime) | $149 engang pr. website, første 100 køb | https://buy.stripe.com/28E5kC3UDcf0btA2WjbMQ0f |
-| GDPR DPA template | `eucomply-dpa` | $59 | https://buy.stripe.com/bJe7sK8aT4My7dk7czbMQ05 |
-| NIS2 / DORA Vendor Clause Set | `eucomply-nis2-clauses` | $49 | https://buy.stripe.com/4gM4gydvd92OapwgN9bMQ06 |
-| Mutual NDA Clause Set | `eucomply-nda-clauses` | $29 | https://buy.stripe.com/aFafZg1Mv92OdBI8gDbMQ07 |
-| EAA Accessibility Statement | `eucomply-eaa-statement` | $39 | https://buy.stripe.com/3cI7sK2Qz3IugNUgN9bMQ08 |
-| Client Compliance Report Kit | `eucomply-report-kit` | $69 | https://buy.stripe.com/00wdR8bn5a6S0OWeF1bMQ09 |
-| EUComply Complete Template Bundle | `eucomply-template-bundle` | $149 | https://buy.stripe.com/eVqaEW0Iren855c68vbMQ0a |
-| EU Compliance E-book Bundle | `eu-compliance-ebook-bundle` | $29 | https://buy.stripe.com/fZu9AScr9a6SbtA68vbMQ0b |
-| Support for Mahope open source (donation, valgfrit beløb) | `support-mahope-oss` | fra 10 kr. | https://donate.stripe.com/7sYeVcbn50wieFM8gDbMQ0c |
+| Produkt | product_key | Pris | Betalingslink | Status |
+|---|---|---|---|---|
+| Clean Copy Pro | `clean-copy-pro` | $19/år | https://buy.stripe.com/6oU4gy76PgvgdBIdAXbMQ00 | **inaktiv**, lukket 22/11-2026 |
+| DeskUptime Pro | `deskuptime-pro` | $19 engang, 3 maskiner | https://buy.stripe.com/7sY9AS9eX3Iu418fJ5bMQ01 | **inaktiv**, lukket 22/11-2026 |
+| Transmute Desktop | `transmute-desktop` | $19 engang, 3 maskiner | https://buy.stripe.com/eVqbJ0dvdbaW55cgN9bMQ02 | **inaktiv**, lukket 22/11-2026 |
+| EUComply Pro | `eucomply-pro` | $79/år pr. website | https://buy.stripe.com/eVq00i4YH6UG69g0ObbMQ03 | **inaktiv**, lukket 22/11-2026 |
+| Page Profile Pro | `page-profile-pro` | $19/år | https://buy.stripe.com/9B6eVcgHp7YK69ggN9bMQ04 | aktiv |
+| Clean Copy Pro Lifetime | `clean-copy-pro` (lifetime) | $39 engang, første 100 køb | https://buy.stripe.com/aFadR81Mv6UGgNU68vbMQ0d | **inaktiv**, lukket 22/11-2026 |
+| Page Profile Pro Lifetime | `page-profile-pro` (lifetime) | $39 engang, første 100 køb | https://buy.stripe.com/8x2cN42Qz0wifJQgN9bMQ0e | aktiv |
+| EUComply Pro Lifetime | `eucomply-pro` (lifetime) | $149 engang pr. website, første 100 køb | https://buy.stripe.com/28E5kC3UDcf0btA2WjbMQ0f | **inaktiv**, lukket 22/11-2026 |
+| GDPR DPA template | `eucomply-dpa` | $59 | https://buy.stripe.com/bJe7sK8aT4My7dk7czbMQ05 | **inaktiv**, lukket 22/11-2026 |
+| NIS2 / DORA Vendor Clause Set | `eucomply-nis2-clauses` | $49 | https://buy.stripe.com/4gM4gydvd92OapwgN9bMQ06 | **inaktiv**, lukket 22/11-2026 |
+| Mutual NDA Clause Set | `eucomply-nda-clauses` | $29 | https://buy.stripe.com/aFafZg1Mv92OdBI8gDbMQ07 | **inaktiv**, lukket 22/11-2026 |
+| EAA Accessibility Statement | `eucomply-eaa-statement` | $39 | https://buy.stripe.com/3cI7sK2Qz3IugNUgN9bMQ08 | **inaktiv**, lukket 22/11-2026 |
+| Client Compliance Report Kit | `eucomply-report-kit` | $69 | https://buy.stripe.com/00wdR8bn5a6S0OWeF1bMQ09 | **inaktiv**, lukket 22/11-2026 |
+| EUComply Complete Template Bundle | `eucomply-template-bundle` | $149 | https://buy.stripe.com/eVqaEW0Iren855c68vbMQ0a | **inaktiv**, lukket 22/11-2026 |
+| EU Compliance E-book Bundle | `eu-compliance-ebook-bundle` | $29 | https://buy.stripe.com/fZu9AScr9a6SbtA68vbMQ0b | **inaktiv**, lukket 22/11-2026 |
+| Support for Mahope open source (donation, valgfrit beløb) | `support-mahope-oss` | fra 10 kr. | https://donate.stripe.com/7sYeVcbn50wieFM8gDbMQ0c | aktiv |
 
 Stripe vælger valuta efter kundens land; priserne vises også i EUR og DKK.
 Efter betaling lander køberen på `https://mahope.tools/thanks?session_id=…`,
 som viser licensnøgle eller downloadlinks. Det samme sendes pr. mail fra
 orders@mahoje.dk.
+
+## Lukket for salg 22/11-2026
+
+Mads besluttede 22/11-2026 at lukke salgssiderne for Clean Copy, DeskUptime og
+Transmute (domænerne beholdes) og fryse EUComply og BugBottle som gratis open
+source. Fokus er kunder med omsætning; Stripe havde på det tidspunkt 0
+abonnementer og 0 betalinger.
+
+- Alle betalingslinks med status **inaktiv** i tabellen ovenfor er deaktiveret i
+  Stripe. I `tools/stripe_catalog.json` har produkterne `"status": "inactive"`
+  og `"closed": "2026-11-22"`, og de sider der solgte dem står i
+  `closed_sales.former_offers`.
+- Ingen side, shippet klient eller rute må sælge dem igen:
+  `tools/check_stripe_ctas.py` (`check_closed_sales`) er rød, hvis et inaktivt
+  betalingslink dukker op i `site/` eller en klient, hvis et inaktivt produkt
+  kommer tilbage i `offers`, `core_pages` eller `pro_table_pages`, eller hvis
+  forsiderne på cleancopy.tools og deskuptime.com holder op med at sige at Pro
+  ikke sælges længere.
+- `/api/checkout` svarer **410 Gone** for `clean-copy-pro` og `deskuptime-pro`;
+  `page-profile-pro` svarer som før.
+- Licens-API'et (`/api/license/*`), `/thanks`, `/api/stripe-webhook`,
+  `/api/stripe/fulfillment`, `/api/download/*` og `/api/paid-files` er
+  uændrede. Eksisterende licenser og desktop-apps validerer fortsat, og
+  `STRIPE_PRODUCTS` i workeren kender stadig alle produkter, så et sent
+  webhook-kald eller en refundering stadig behandles.
+- Page Profile Pro og donationslinket (`support-mahope-oss`) er ikke omfattet.
+- Eksisterende kunder får hjælp på support@mahope.tools eller via GitHub
+  issues.
 
 ## Lifetime (founding-pris, 27/9)
 
