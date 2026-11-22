@@ -150,8 +150,12 @@ def sider(rod: Path = SITE) -> list[Path]:
     læse den korte form ville have fundet ni af tretten og ratchet'en ville have
     sagt «9 sider», altså grøn på en port der dømmer fire færre.
     """
+    # 22/11-2026: søgningen er klassen (`KORT_RE`), ikke strengen
+    # «pro-card». Licensnoten på `/scan` sender hændelsen `pro-card-click`,
+    # så konverteringstallet i /api/stats lever videre, men den er ikke et
+    # pro-kort — en ren strengsøgning dømte den som et kort uden </div>.
     return sorted(p for p in rod.rglob("*.html")
-                  if "pro-card" in p.read_text(encoding="utf-8"))
+                  if KORT_RE.search(p.read_text(encoding="utf-8")))
 
 
 def dom(kat: dict | None = None, rod: Path = SITE) -> list[str]:
