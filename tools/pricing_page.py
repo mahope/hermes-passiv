@@ -82,9 +82,8 @@ RÆKKE = {"license": 0, "download": 1, "template": 1, "donation": 2}
 TEKST = {
     "en": {
         "title": "Pricing — every Mahoje tool and template, in one list",
-        "description": ("Every paid Mahoje product with its real price: Clean Copy Pro, "
-                        "DeskUptime Pro, EUComply Pro and Page Profile Pro, plus the paid "
-                        "compliance templates. Free tools stay free."),
+        "description": ("Every paid Mahoje product with its real price: Page Profile Pro "
+                        "and the optional donation. Free tools stay free."),
         "th_product": "Product",
         "th_price": "Price",
         "th_free": "What you get free",
@@ -109,12 +108,15 @@ TEKST = {
         "download_note": "Delivered as files right after payment.",
         "donation_note": ("Optional, and it changes nothing about the tools. Every tool here "
                           "stays free whether you give or not."),
+        "closed_h2": "No longer sold",
+        "closed_lead": "Sales closed on 22 November 2026:",
+        "closed_tail": ("Licence keys and download links bought before then keep working, and "
+                        "the free tools stay free. Questions: support@mahope.tools."),
     },
     "da": {
         "title": "Priser — alle Mahoje-værktøjer og -skabeloner samlet",
-        "description": ("Alle betalte Mahoje-produkter med den rigtige pris: Clean Copy Pro, "
-                        "DeskUptime Pro, EUComply Pro og Page Profile Pro, plus de betalte "
-                        "compliance-skabeloner. Gratisværktøjerne bliver gratis."),
+        "description": ("Alle betalte Mahoje-produkter med den rigtige pris: Page Profile Pro "
+                        "og den valgfrie donation. Gratisværktøjerne bliver gratis."),
         "h1": "Hvad alt koster",
         "th_product": "Produkt",
         "th_price": "Pris",
@@ -140,6 +142,10 @@ TEKST = {
         "download_note": "Leveres som filer lige efter betaling.",
         "donation_note": ("Valgfrit, og det ændrer intet ved værktøjerne. Alle værktøjer her er "
                           "gratis, uanset om du giver."),
+        "closed_h2": "Sælges ikke længere",
+        "closed_lead": "Salget lukkede 22. november 2026:",
+        "closed_tail": ("Licensnøgler og downloadlinks købt før da virker fortsat, og "
+                        "gratisværktøjerne er stadig gratis. Spørgsmål: support@mahope.tools."),
     },
 }
 
@@ -209,9 +215,29 @@ def produkter(cat: dict, lang: str) -> list[tuple[str, dict]]:
     # et link på siden — den ville pege på ingenting — så den hører hjemme
     # i `check_pricing_page.py`s dom 4, der gør netop den mangel rød i stedet
     # for at den forsvinder stille.
+    # Et produkt med `"status": "inactive"` er lukket for salg (22/11-2026, se
+    # `closed_sales` i katalogen). Det får ingen række og ingen købsrute her;
+    # det nævnes i stedet i `lukket_blok()` som ikke længere til salg.
     ud = [(k, v) for k, v in cat["products"].items()
-          if v.get("pricing_page") is not False and v.get("pricing_link")]
+          if v.get("pricing_page") is not False and v.get("pricing_link")
+          and v.get("status") != "inactive"]
     return sorted(ud, key=lambda par: sorter(*par))
+
+
+def lukkede(cat: dict) -> list[tuple[str, dict]]:
+    """(nøgle, produkt) for de produkter der er lukket for salg."""
+    ud = [(k, v) for k, v in cat["products"].items() if v.get("status") == "inactive"]
+    return sorted(ud, key=lambda par: sorter(*par))
+
+
+def lukket_blok(cat: dict, lang: str) -> str:
+    """Én linje om de lukkede produkter — uden pris og uden købslink."""
+    navne = [p["name"] for _, p in lukkede(cat)]
+    if not navne:
+        return ""
+    t = TEKST[lang]
+    return (f"    <h2 id=\"closed\">{t['closed_h2']}</h2>\n"
+            f"    <p class=\"pc-closed\">{t['closed_lead']} {', '.join(navne)}. {t['closed_tail']}</p>")
 
 
 def enheder(produkt: dict, lang: str) -> str:
@@ -433,6 +459,9 @@ def byg_blok(cat: dict, lang: str) -> str:
             f"<th scope=\"col\">{t['th_buy']}</th>"
             f"</tr></thead>\n"
             f"      <tbody>\n" + "\n".join(livstid_rækker) + "\n      </tbody>\n    </table>")
+    lukket = lukket_blok(cat, lang)
+    if lukket:
+        dele.append(lukket)
     # Markørerne **inde i** blokken, ikke omkring den. `_sæt_indhold` erstatter
     # hele `EJER_RE`-træffet, så hvis markørerne lå uden for ville den første
     # `--apply` slette dem og den næste ville indsætte en ekstra tabel oveni.
