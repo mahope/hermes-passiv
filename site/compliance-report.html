@@ -40,16 +40,9 @@
 }
 </script>
 <style>
-.price-tag { font-size: 36px; font-weight: 800; color: var(--color-text); }
-.price-tag small { font-size: 16px; font-weight: 400; color: #94a3b8; }
-.pricing-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; max-width: 640px; margin: 0 auto; }
-@media (max-width: 600px) { .pricing-grid { grid-template-columns: 1fr; } }
 .tier-card { background: var(--color-surface-2); border: 1px solid var(--color-border); border-radius: 16px; padding: 28px; text-align: center; }
 .tier-card.pro { border-color: #0b6e8f; box-shadow: 0 0 0 1px #0b6e8f; position: relative; }
-.tier-card.pro::before { content: "Best value"; position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: #0b6e8f; color: #fff; font-size: 11px; font-weight: 700; padding: 3px 14px; border-radius: 20px; }
 .tier-card ul { text-align: left; list-style: none; padding: 0; margin: 20px 0; }
-.tier-card li { padding: 6px 0; font-size: 14px; }
-.tier-card li::before { content: "✓ "; color: #157a3c; font-weight: 700; }
 
 /* Report display */
 .report-container { max-width: 800px; margin: 0 auto; }
@@ -95,7 +88,7 @@
 .print-only { display: none; }
 
 @media print {
-  header.hero, footer.site-footer, .pricing-grid, .license-area, .scanbox, .no-print { display: none !important; }
+  header.hero, footer.site-footer, .license-area, .scanbox, .no-print { display: none !important; }
   .print-only { display: block !important; }
   body { background: #fff; color: #000; }
   .report-summary { border: 1px solid #ccc; }
