@@ -45,14 +45,8 @@
   #agreement ol li, #agreement ul li { margin-bottom: 6px; }
   .sr-only { position:absolute; width:1px; height:1px; overflow:hidden;
              clip:rect(0 0 0 0); white-space:nowrap; }
-  .pro-note { max-width: 720px; margin: 32px auto 0; padding: 18px 22px;
-              border: 1px solid var(--color-accent); border-radius: 10px;
-              background: var(--color-accent-soft); }
-  .pro-note h2 { font-size: 1.05rem; margin: 0 0 8px; }
-  .pro-note p { margin: 0; color: var(--color-text); font-size: 0.95rem; line-height: 1.7; }
-  .pro-note a { color: var(--color-accent); }
   @media print {
-    header.hero, .gen, .actions, footer.site-footer, .no-print, .pro-note { display: none !important; }
+    header.hero, .gen, .actions, footer.site-footer, .no-print { display: none !important; }
     #agreement { border: none; margin: 0; padding: 0; }
   }
 </style>
@@ -171,20 +165,6 @@ Google Ireland Ltd — transaktionel e-mail — Irland"></textarea>
   </ul>
 </section>
 
-<section class="pro-note" aria-labelledby="pro-heading">
-  <h2 id="pro-heading">Aftalen skriver, hvad I lover. Værktøjet tjekker, om I holder det.</h2>
-  <p>Generatoren er gratis, og den gennemgår alle de obligatoriske klausuler i artikel 28 —
-  genstand og omfang, oplysningstyper, artikel 32-foranstaltninger, underbehandlere,
-  bistand ved brud, sletning, overførsler og kontrolrettigheder. Det er hele dokumentet. Den
-  betalte DPA-skabelon ($59) dækker de samme bilag — emne, varighed, formål,
-  oplysningstyper, sikkerhedsforanstaltninger og underbehandlere — i PDF og Markdown, så den
-  tilføjer intet, du ikke allerede har.
-  <a href="/da/compliance-report">EUComply Pro</a> gør det, en aftale ikke kan: den åbner
-  jeres site og måler, om de foranstaltninger, I har lovet kunden, faktisk er der. Fem af de
-  18 server-side tjek er præcis den slags — HSTS, indholdssikkerhedspolitik i svaret og i
-  metadata, privatlivslink og samtykkebanner — og sammen med de 15 tilgængelighedsregler
-  giver det 33 tjek. $79/år pr. website, og rapporten kan sendes videre som pdf.</p>
-</section>
 
 <footer class="site-footer">
   <div class="container">
@@ -309,17 +289,9 @@ Google Ireland Ltd — transaktionel e-mail — Irland"></textarea>
   // læseren udskriver eller kopierer: `renderText()` bygger teksten fra
   // `renderHTML(current)` alene, så den kommer ikke med i kopieringen, kun
   // på skærmen.
-  var UPSELL = '<div class="upsell-card no-print" style="margin:16px 0 0;padding:16px;border:1px solid var(--color-border);border-radius:10px;background:var(--color-surface-2)">';
-  UPSELL += '<h2 class="sub" style="margin:0 0 4px;font-size:16px">Denne generator udfylder aftalen. Skabelonen kommer med bilagene.</h2>';
-  UPSELL += '<p style="margin:0 0 8px;font-size:13px;color:var(--color-text-muted)">Det gratis ikke kan give dig:</p>';
-  UPSELL += '<ul style="margin:0;padding-left:18px;font-size:13px">';
-  UPSELL += '<li style="margin:4px 0"><strong>Bilagene.</strong> Form&aring;lsbeskrivelse, varighed, art og karakter af behandlingen, typer af personoplysninger, sikkerhedsforanstaltninger og underbehandleraftaler &mdash; som to filer, PDF og Markdown.</li>';
-  UPSELL += '<li style="margin:4px 0"><strong>En kopi du selv styrer.</strong> Markdown kommer i dit eget lager ved siden af den aftale den h&oslash;rer til; PDF’en sendes til modparten.</li>';
-  UPSELL += '<li style="margin:4px 0"><strong>Ogs&aring; den n&aelig;ste kunde.</strong> Det er en fil, ikke en licens. Intet hindrer dig i at bruge den til n&aelig;ste DPA.</li>';
-  UPSELL += '</ul>';
-  UPSELL += '<p style="margin:12px 0 0"><a class="btn" style="display:inline-block;padding:12px 24px;text-decoration:none" href="https://buy.stripe.com/bJe7sK8aT4My7dk7czbMQ05" rel="nofollow noopener">K&oslash;b GDPR DPA-skabelonen &mdash; $59 engang</a></p>';
-  UPSELL += '<p style="margin:8px 0 0;font-size:13px;color:var(--color-text-muted)">To filer, leveret lige efter betaling. <a href="/da/paid-templates">Se hvad skabelonerne indeholder</a>.</p>';
-  UPSELL += '</div>';
+  // Købsvejen til den betalte skabelon er fjernet: salget af EUComply-skabelonerne er lukket 22/11-2026
+  // (closed_sales i tools/stripe_catalog.json). Generatoren er stadig gratis.
+  var UPSELL = '';
 
 
   // Tak-linjen ligger i resultatet, altså først når dokumentet er genereret,

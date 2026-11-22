@@ -28,7 +28,7 @@
   {"@type": "Question", "name": "How do I check SSL certificate expiry from the command line?","acceptedAnswer": {"@type": "Answer","text": "Run: npx github:mahope/deskuptime check https://yoursite.com. You get the HTTPS status, SSL issuer, and days until expiry. No install, no account, runs entirely locally."}},
   {"@type": "Question", "name": "What is the openssl command to check SSL certificate expiry?","acceptedAnswer": {"@type": "Answer","text": "openssl s_client -connect example.com:443 -servername example.com < /dev/null 2>/dev/null | openssl x509 -noout -enddate. This shows the expiry date but requires verbose parsing. DeskUptime formats it as a clean days-remaining count instead."}},
   {"@type": "Question", "name": "Can I check SSL expiry for multiple domains at once?","acceptedAnswer": {"@type": "Answer","text": "Yes. DeskUptime accepts multiple URLs: npx github:mahope/deskuptime check https://site1.com https://site2.com https://site3.com. It checks each one and reports SSL expiry, status, and response time in a single output."}},
-  {"@type": "Question", "name": "Is there a free SSL certificate expiry checker?","acceptedAnswer": {"@type": "Answer","text": "Yes. DeskUptime's CLI is free with no limits on SSL checks. The Pro version ($19 one-time) adds unlimited monitoring URLs, the desktop app, and email alerts for expiring certificates."}}
+  {"@type": "Question", "name": "Is there a free SSL certificate expiry checker?","acceptedAnswer": {"@type": "Answer","text": "Yes. DeskUptime's CLI is free with no limits on SSL checks. DeskUptime Pro is no longer sold (sales closed on 22 November 2026); existing licence keys keep working."}}
 ]}
 </script>
 <script defer src="/track.js"></script>
@@ -108,7 +108,7 @@ notAfter=Oct 27 12:00:00 2026 GMT</pre>
 ...next day at 10:15 AM...
 [10:15 AM] 🚨 SSL: 13 days 🔥</pre>
 
-<p>The free watch mode monitors up to 3 URLs. Pro ($19 one-time) removes the limit and adds email alerts.</p>
+<p>The free watch mode monitors up to 3 URLs.</p>
 
 <h2>Use in CI/CD</h2>
 
@@ -137,7 +137,7 @@ notAfter=Oct 27 12:00:00 2026 GMT</pre>
 <p>Yes. DeskUptime accepts multiple URLs: <code>npx github:mahope/deskuptime check https://site1.com https://site2.com https://site3.com</code>. It checks each one and reports SSL status for all.</p>
 
 <h3>Is there a free SSL certificate expiry checker?</h3>
-<p>Yes. DeskUptime's CLI is free with no limits on SSL checks. The Pro version ($19 one-time) adds unlimited monitoring URLs, the desktop app, and email alerts for expiring certificates.</p>
+<p>Yes. DeskUptime's CLI is free with no limits on SSL checks. DeskUptime Pro is no longer sold (sales closed on 22 November 2026); existing licence keys keep working.</p>
 
 <hr style="border:none;border-top:1px solid #d0d8e0;margin:32px 0">
 

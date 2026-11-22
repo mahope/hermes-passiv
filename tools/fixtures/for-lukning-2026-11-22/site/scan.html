@@ -1,0 +1,843 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Free EAA Compliance Scanner — Check Any Website</title>
+<!-- r19 -->
+<meta name="description" content="Paste a URL and get an instant automated EAA / WCAG 2.1 AA check. Works on any website — WordPress, Shopify, Webflow, Next.js, and hand-written HTML. No signup required.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Free EAA Compliance Scanner — Check Any Website">
+<meta property="og:description" content="Paste a URL and get an instant automated EAA / WCAG 2.1 AA check. Works on any website. No signup required.">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/scan">
+<meta property="og:image" content="https://hermes-passiv.pages.dev/eaa-cover.jpg">
+<meta property="og:image:alt" content="Free EAA Compliance Scanner — Check Any Website">
+<meta name="twitter:image" content="https://hermes-passiv.pages.dev/eaa-cover.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Free EAA Compliance Scanner — Check Any Website">
+<meta name="twitter:description" content="Paste a URL and get an instant automated EAA / WCAG 2.1 AA check. Works on any website. No signup required.">
+<link rel="stylesheet" href="style.css">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"What does the scanner check?","acceptedAnswer":{"@type":"Answer","text":"15 automated WCAG 2.1 AA rules: image alt text, form labels, link and button text, page title, language attribute, viewport meta, heading structure, iframe titles, table headers, duplicate IDs, ARIA hidden elements still focusable, text colour contrast, and links opening in new windows without warning."}},{"@type":"Question","name":"Is the scanner free?","acceptedAnswer":{"@type":"Answer","text":"Yes. No signup, no account, no email required. Paste any public URL and get an instant grade with detailed findings."}},{"@type":"Question","name":"How accurate is the automated check?","acceptedAnswer":{"@type":"Answer","text":"Automated checks catch roughly 30-40% of accessibility issues. The remaining 60-70% require human judgement: keyboard navigation testing, screen reader flow, and content review."}},{"@type":"Question","name":"Does the scanner store the pages I check?","acceptedAnswer":{"@type":"Answer","text":"The page is fetched server-side through our Cloudflare proxy, analysed in your browser, and discarded. We store nothing about the page itself and set no cookies. The one thing we keep is a salted hash of your IP address, so a single script cannot use up the check for everyone else; it expires after two hours."}},{"@type":"Question","name":"Which platforms does it work on?","acceptedAnswer":{"@type":"Answer","text":"Any website \u2014 WordPress, Shopify, Webflow, Wix, Squarespace, Drupal, Joomla, Next.js, hand-written HTML."}},{"@type":"Question","name":"Can I scan a password-protected or local site?","acceptedAnswer":{"@type":"Answer","text":"No \u2014 the scanner fetches pages over the public internet. For staging or local sites, use the browser extension or WordPress plugin."}}]}
+</script>
+<style>
+  /* Feltet blev et textarea, fordi én URL pr. linje er den åbeneste måde at se
+     flere sider på — og `sr-only` som label ville gemt den oplysning, så den er
+     nu en rigtig label. Begge nye dele tager hele bredden (`flex-basis: 100%`),
+     så feltet og knappen stadig deler én linje på bred skærme. Kun de
+     eksisterende farver og radius — ingen ny i denne blok. */
+  .scanbox { max-width: 640px; margin: 0 auto; display: flex; gap: 10px;
+             flex-wrap: wrap; align-items: flex-start; }
+  .scanbox-label, .scanbox-hint { flex-basis: 100%; margin: 0; }
+  .scanbox-label { font-weight: 600; font-size: 14px; }
+  .scanbox-hint { font-size: 13px; line-height: 1.5; color: var(--color-text-muted); }
+  .scanbox input, .scanbox textarea { flex: 1 1 240px; padding: 12px 14px;
+                   border: 1px solid #b9cdd8; border-radius: 8px; font-size: 15px;
+                   font-family: inherit; }
+  .scanbox textarea { min-height: 76px; resize: vertical; line-height: 1.45; }
+  /* Knappen bruger husets `btn-primary` og ikke en farve her. Den egne regel for
+     `.scanbox button` lå med højere specificitet (0,1,1) end `.btn-primary`
+     (0,1,0) og lagde derfor sin egen `#0b6e8f` oven i accentfarven — så scannerens
+     ene primære handling så anderledes ud end de otte andre værktøjssider, den er
+     bygget sammen med. Nu er der ingen regel at vinde over. */
+  .scanbox input:focus-visible, .scanbox textarea:focus-visible,
+  .scanbox button:focus-visible {
+    outline: 2px solid var(--color-text); outline-offset: 2px; }
+  @media (max-width: 460px) { .scanbox { flex-direction: column; } }
+  #result { max-width: 720px; margin: 28px auto; font-size: 15px;
+            line-height: 1.55; text-align: left; }
+  .scorecard { text-align: center; padding: 18px; border-radius: 12px;
+               background: var(--color-surface-2); border: 1px solid var(--color-border); }
+  .scorecard .score { font-size: 44px; font-weight: 700; }
+  .grade-A{color:#157a3c}.grade-B{color:#7a6415}
+  .grade-C{color:#a35a10}.grade-D{color:#a31515}
+  .findings li { margin-bottom: 8px; }
+  .sev-error{color:#a31515;font-weight:600}
+  .sev-warning{color:#a35a10}.sev-notice{color:#889}
+  .sr-only { position:absolute; width:1px; height:1px; overflow:hidden;
+             clip:rect(0 0 0 0); white-space:nowrap; }
+</style>
+<link rel="canonical" href="https://hermes-passiv.pages.dev/scan">
+<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/scan">
+<link rel="alternate" hreflang="da" href="https://hermes-passiv.pages.dev/scan-da">
+<link rel="alternate" hreflang="en" href="https://hermes-passiv.pages.dev/scan">
+<script defer src="/track.js"></script>
+</head>
+<body>
+<header class="hero" style="padding:48px 0 40px">
+  <div class="container">
+    <div class="badge">FREE TOOL</div>
+    <h1>Free EAA Compliance Scanner</h1>
+    <p class="tagline">Instant automated accessibility check — works on
+    <strong>any website</strong>, any platform, no signup.</p>
+    <!-- Formularen står i folden, ikke i et felt under den. Målt 5/10: `/scan`
+         er mål for 559 interne links på 228 sider, og `/api/results` læser 0
+         resultater i 28 dage — men det er ikke læsbarheden alene: folden var
+         badge + overskrift + tagline og så et tomt `required`-felt, altså det
+         samme som de otte værktøjssider der fik deres egen handling i opgave 6.
+         Samme mønster som på `/text-on-image-checker`, hvor dommen flyttede fra
+         1739 px til 601 px. -->
+    <form id="scanForm" class="scanbox">
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;flex-wrap:wrap">
+        <button type="button" id="modePages" class="btn-secondary" aria-pressed="true" style="padding:6px 14px;font-size:13px">Pages</button>
+        <button type="button" id="modeSitemap" class="btn-secondary" aria-pressed="false" style="padding:6px 14px;font-size:13px">Sitemap</button>
+      </div>
+      <div id="pagesMode">
+        <label for="url" class="scanbox-label">Page URL — one per line, up to 5 pages</label>
+        <textarea id="url" name="url" rows="2" required
+               placeholder="https://your-site.com&#10;https://your-site.com/contact"
+               inputmode="url" spellcheck="false"></textarea>
+      </div>
+      <div id="sitemapMode" hidden>
+        <label for="sitemapUrl" class="scanbox-label">Sitemap URL — we read it and scan every page</label>
+        <input type="url" id="sitemapUrl" name="sitemapUrl"
+               placeholder="https://your-site.com/sitemap.xml"
+               inputmode="url" spellcheck="false"
+               style="width:100%;padding:12px 14px;border:1px solid var(--color-border);border-radius:8px;font-size:15px">
+      </div>
+      <button type="submit" class="btn-primary">Scan now</button>
+      <p class="scanbox-hint" id="scanHint">Paste one URL per line to see where a whole site stands. Each page is scored on its own, and the pages you name are the pages you get — up to five per run. A licence reads the page again on the server, where it can see the response headers your browser never shows it.</p>
+    </form>
+  </div>
+</header>
+
+<main class="container">
+<!-- Et eksempel-resultat, så en læser ser hvad et resultat overhovedet er
+     uden at bruge en kørsel på sin egen side. Alle tal er målt med den kode der
+     står ovenfor — `python3 tools/scan_example.py https://wordpress.org/` — og
+     er mærket med datoen, fordi et site ændrer sig: en læser der scanner samme
+     URL i morgen kan se et andet tal. Derfor står datoen på kortet, og derfor
+     er «scan det selv» en rigtig link: den kører den samme måling igen.
+     Kortet sender ingen hændelse; det er et billede af et resultat, ikke en
+     måling af læserens egen side. -->
+<section aria-labelledby="example-heading">
+  <h2 id="example-heading">Example result</h2>
+  <p class="hint">A real scan of <code>wordpress.org</code>, measured 4 October 2026
+  with the check below. Sites change, so scan it yourself to see it as it is now.</p>
+  <div class="scorecard">
+    <div class="score grade-C">66/100 — Grade C</div>
+    <div>2 errors, 2 warnings</div>
+  </div>
+  <ul class="findings">
+    <li><span class="sev-error">9 images missing alt text</span></li>
+    <li><span class="sev-error">1 duplicate id value (breaks label and aria references)</span></li>
+    <li><span class="sev-warning">1 link opening in a new window without warning</span></li>
+    <li><span class="sev-warning">1 iframe without a title</span></li>
+  </ul>
+  <p><a href="#url=https%3A%2F%2Fwordpress.org%2F">Scan wordpress.org yourself</a>,
+  or paste any URL in the field above.</p>
+</section>
+
+<section aria-labelledby="scan-heading">
+  <h2 id="scan-heading">Your result</h2>
+  <div id="result" role="status" aria-live="polite"></div>
+</section>
+
+<section aria-labelledby="how-heading">
+  <h2 id="how-heading">What it checks</h2>
+  <ul class="findings">
+    <li>Images missing alt text · form fields without labels · links or buttons with no text</li>
+    <li>Missing page title, language attribute or viewport meta</li>
+    <li>Heading structure problems (no h1, skipped levels)</li>
+    <li>Untitled iframes · tables without headers · duplicate id values</li>
+    <li>aria-hidden elements that are still keyboard-focusable</li>
+    <li>Low text contrast (WCAG 1.4.3 — inline colour styles)</li>
+    <li>Links opening in a new window without warning the user</li>
+  </ul>
+  <p><strong>Honest limitation:</strong> automated checks catch roughly
+  30–40% of accessibility issues. The rest needs human judgement — the full
+  manual process is in our
+  <a href="/#products">EAA Compliance Checklist e-book</a>.</p>
+</section>
+
+<section aria-labelledby="pro-heading">
+  <h2 id="pro-heading">Need a formal compliance report?</h2>
+  <p>The <a href="/compliance-report">compliance report generator</a> produces a
+  professional PDF audit report with executive summary, detailed findings,
+  prioritised recommendations, and methodology documentation. Perfect for
+  client handovers and internal compliance files.</p>
+  <p>The report itself is free and needs no licence. A
+  <strong>EUComply Pro</strong> licence unlocks the PDF download — see
+  <a href="/compliance-report#pricingSection">pricing</a>.</p>
+</section>
+
+<section aria-labelledby="ext-heading">
+  <h2 id="ext-heading">Also available as a browser extension</h2>
+  <p>Scan any page you're on with one click. The extension ships the same
+  rule set — download the zip and load it unpacked in Chrome/Edge:</p>
+  <p><a href="eaa-scanner-extension.zip" class="btn"
+        download>Download extension (Chrome/Edge)</a></p>
+</section>
+
+<section aria-labelledby="gen-heading" style="margin-top:36px">
+  <h2 id="gen-heading">Accessibility Statement Generator</h2>
+  <p>After you fix what the scanner finds, publish an
+  <a href="/accessibility-statement-generator">EAA / WCAG accessibility statement</a> —
+  answer 8 questions and get a ready-to-publish statement. Free, runs in your browser.</p>
+</section>
+
+<section aria-labelledby="desktop-heading" style="margin-top:36px">
+  <h2 id="desktop-heading">Native desktop app (macOS)</h2>
+  <p>Run the same 22-rule scan as a native macOS app. Offline-capable, one-click
+  save-as-PDF reports, whole-site crawl up to 200 pages.</p>
+  <p><a href="/downloads" class="btn">Download for macOS (Apple Silicon)</a>
+  <span style="font-size:13px;color:#667;margin-left:8px">DMG + ZIP. Not
+  signed with an Apple Developer ID — right-click → Open on first launch.</span></p>
+</section>
+
+<section aria-labelledby="cli-heading" style="margin-top:36px">
+  <h2 id="cli-heading">Run it from the command line</h2>
+  <p>Prefer your terminal or CI? <a href="/downloads">Download eaa-scanner</a> —
+  a free, zero-dependency Python CLI that runs this same scan on any number of
+  URLs and fails the build when errors are found.</p>
+</section>
+
+<section aria-labelledby="wp-heading">
+<h2 id="wp-heading">WordPress plugin</h2>
+  <p>Run the same 15-rule scan from your WordPress dashboard —
+  <strong>Tools → EAA Scanner</strong>. Works with any theme, scans any URL,
+  and everything runs on your own server: no data is sent to third parties.</p>
+  <p><a href="eaa-compliance-scanner.zip" class="btn"
+        download>Download WordPress plugin</a>
+  <span style="font-size:13px;color:#667;margin-left:8px">Install via
+  Plugins → Add New → Upload Plugin. Free, MIT licensed.</span></p>
+  <p style="font-size:14px;color:#445">After the automated check, the manual
+  review steps are what make you actually compliant — they're all in our
+  <a href="/#products">EAA Compliance e-books</a>.</p>
+</section>
+<section aria-labelledby="guides-heading">
+  <h2 id="guides-heading">Platform-specific fix guides</h2>
+  <p>Scan flagged something on your site? These free guides show exactly where
+  to fix the most common issues in each platform's admin:</p>
+  <ul class="findings">
+    <li><a href="/guides/wordpress-accessibility-check">WordPress accessibility check</a> — or use the free <a href="/wordpress-plugin">scanner plugin</a></li>
+    <li><a href="/guides/shopify-accessibility-check">Shopify accessibility check</a></li>
+    <li><a href="/guides/webflow-accessibility-check">Webflow accessibility check</a></li>
+    <li><a href="/guides/wix-accessibility-check">Wix accessibility check</a></li>
+    <li><a href="/guides/squarespace-accessibility-check">Squarespace accessibility check</a></li>
+    <li><a href="/guides/drupal-accessibility-check">Drupal accessibility check</a></li>
+    <li><a href="/guides/joomla-accessibility-check">Joomla accessibility check</a></li>
+    <li><a href="/guides/prestashop-accessibility-check">PrestaShop accessibility check</a></li>
+    <li><a href="/guides/weebly-accessibility-check">Weebly accessibility check</a></li>
+    <li><a href="/guides/magento-accessibility-check">Magento / Adobe Commerce accessibility check</a></li>
+    <li><a href="/guides/ghost-accessibility-check">Ghost accessibility check</a></li>
+    <li><a href="/guides/typo3-accessibility-check">TYPO3 accessibility check (BITV / EN 301 549)</a></li>
+    <li><a href="/guides/craftcms-accessibility-check">Craft CMS accessibility check</a></li>
+    <li><a href="/guides/umbraco-accessibility-check">Umbraco accessibility check</a></li>
+  </ul>
+  <p><a href="/guides/comparison">Compare all platforms side by side →</a></p>
+  <p>Platform deep-dives: <a href="/blog/webflow-vs-squarespace-accessibility">Webflow vs Squarespace</a> · <a href="/blog/drupal-vs-typo3-accessibility">Drupal vs TYPO3</a> · <a href="/blog/prestashop-vs-shopify-accessibility">PrestaShop vs Shopify</a> · <a href="/blog/wordpress-vs-wix-accessibility">WordPress vs Wix</a></p>
+</section>
+</main>
+
+<footer class="site-footer"><div class="container">
+  <p><a href="/">← Back to Compliance Guides</a> · © 2026 Mahoje</p>
+  <p class="footer-small">Automated EAA/WCAG screening tool. No data leaves your
+  browser except fetching the page you scan.</p>
+</div></footer>
+
+<script src="/scan-share-core.js"></script>
+<script src="/scan-report.js"></script>
+<script>
+// De tre fund-tabeller — MSG (teksten), FIX (rettelsen) og PLATFORM_GUIDES
+// (platformens guide) — lå inde i `scan()` og lå derfor væk fra et *delt*
+// resultat, som ikke har noget hentet dokument at slå platformen op i. De er
+// flyttet ud på modulomfang, og `add()` tager ikke længere en tekst: den slår
+// op i MSG. Kun fundets id, alvor og antal rejser i fragmentet, så en
+// håndredigeret deling kan ændre et tal og aldrig skrive sine egne ord på
+// mahope.tools.
+const MSG={
+  IMG_ALT:'{n} image(s) missing alt text',
+  FORM_LABEL:'{n} form field(s) without a label',
+  LINK_TEXT:'{n} link(s) with no accessible text',
+  BUTTON_TEXT:'{n} button(s) with no accessible text',
+  DUP_ID:'{n} duplicate id value(s) (breaks label/aria references)',
+  TARGET_BLANK:'{n} link(s) opening in a new window without warning',
+  HEADING_SKIP:'{n} heading level skip(s)',
+  IFRAME_TITLE:'{n} iframe(s) without a title',
+  TABLE_HEADER:'{n} table(s) without header cells',
+  ARIA_HIDDEN_FOCUS:'{n} aria-hidden element(s) still focusable',
+  CONTRAST:'{n} text colour combination(s) below WCAG AA contrast (4.5:1 normal, 3:1 large)',
+  DOC_TITLE:'page has no <title>',
+  HTML_LANG:'<html> lacks a lang attribute',
+  VIEWPORT:'missing viewport meta tag',
+  HEADING_H1:'no <h1> found'};
+const FIX={
+    IMG_ALT:'Fix: add alt="description" to every meaningful image; use alt="" for purely decorative ones.',
+    FORM_LABEL:'Fix: give every field a <label for="field-id">, or an aria-label attribute.',
+    LINK_TEXT:'Fix: add descriptive text inside the link, or aria-label if it is icon-only.',
+    BUTTON_TEXT:'Fix: add visible text or an aria-label to every button.',
+    DUP_ID:'Fix: make every id value unique on the page.',
+    TARGET_BLANK:'Fix: warn users the link opens in a new window (e.g. "(opens in new tab)") and add rel="noopener".',
+    DOC_TITLE:'Fix: add a descriptive <title> in the <head>.',
+    HTML_LANG:'Fix: add lang to <html>, e.g. <html lang="en">.',
+    VIEWPORT:'Fix: add <meta name="viewport" content="width=device-width, initial-scale=1">.',
+    HEADING_H1:'Fix: add one descriptive <h1> as the main page heading.',
+    HEADING_SKIP:'Fix: do not skip heading levels — nest h2 under h1, h3 under h2, etc.',
+    IFRAME_TITLE:'Fix: add a title attribute describing the iframe content.',
+    TABLE_HEADER:'Fix: use <th> for header cells in data tables.',
+    ARIA_HIDDEN_FOCUS:'Fix: remove aria-hidden from focusable elements, or add tabindex="-1".',
+    CONTRAST:'Fix: darken the text colour or lighten the background until the contrast ratio is at least 4.5:1 (3:1 for large text). Check it at webaim.org/resources/contrastchecker.'};
+const PLATFORM_GUIDES={
+    'WordPress':'/guides/wordpress-accessibility-check',
+    'Shopify':'/guides/shopify-accessibility-check',
+    'Webflow':'/guides/webflow-accessibility-check',
+    'Wix':'/guides/wix-accessibility-check',
+    'Squarespace':'/guides/squarespace-accessibility-check',
+    'Drupal':'/guides/drupal-accessibility-check',
+    'Joomla':'/guides/joomla-accessibility-check',
+    'PrestaShop':'/guides/prestashop-accessibility-check',
+    'Magento':'/guides/magento-accessibility-check',
+    'Ghost':'/guides/ghost-accessibility-check',
+    'TYPO3':'/guides/typo3-accessibility-check',
+    'Craft CMS':'/guides/craftcms-accessibility-check',
+    'Umbraco':'/guides/umbraco-accessibility-check'};
+function gradeOf(s){return s>=90?'A':s>=75?'B':s>=55?'C':'D'}
+// Den tilstand resultatet står i, så del-linket skrives *fra* den måling der
+// lige skete. Før dette kopierede knappen kun URL'en, så modtageren så en tom
+// form og skulle trykke Scan selv — og brugte sin egen kvote på en side,
+// der måske var ændret siden.
+let LAST=null;
+// Brugerens adresse og fund-teksten kommer begge udefra, så begge escapes.
+// Uden det forsvandt «page has no <title>» som «page has no», fordi
+// DOMParser'ens `<title>` blev slugt som et tag.
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
+function describe(id,n){const t=MSG[id];return t?t.replace(/\{n\}/g,n):id;}
+function platformBox(plat){
+  if(!plat||!Object.prototype.hasOwnProperty.call(PLATFORM_GUIDES,plat))return '';
+  return '<div style="margin-top:18px;padding:14px;border:1px solid var(--color-border);border-radius:10px;background:var(--color-surface-2)"'
+    +'<strong>Detected platform: '+esc(plat)+'</strong> — most fixes are done right in '
+    +esc(plat)+'\'s admin. Step-by-step: <a href="'+PLATFORM_GUIDES[plat]+'">the free '
+    +esc(plat)+' accessibility fix guide</a>.</div>';
+}
+// «Start her» og «hvad er ændret siden sidste gang». Begge regler ligger i
+// `scan-share-core.js`, fordi de er beregninger over fund — ikke markup — og
+// fordi den danske side så ikke kan få sin egen rækkefølge.
+function rankBox(state){
+  const ss=window.SCANSHARE;
+  if(!ss||!state.findings.length||state.findings.length<=3)return '';
+  const top=ss.startHere(state.findings,3);
+  if(top.length<3)return '';
+  return '<h3 style="margin:22px 0 8px;font-size:16px">Start here — the 3 findings that matter most</h3>'
+    +'<p class="hint">Errors before warnings, and the rule that fires most often first. '
+    +'Everything else is below, in the same order.</p>'
+    +'<ol class="findings">'+top.map(f=>
+      '<li><span class="sev-'+f.sev+'">'+esc(describe(f.id,f.count))+'</span><br><small>'+esc(FIX[f.id]||'')+'</small></li>').join('')+'</ol>'
+    +'<h3 style="margin:22px 0 8px;font-size:16px">All '+state.findings.length+' findings</h3>';
+}
+function sinceBox(prev,findings){
+  const ss=window.SCANSHARE;
+  if(!ss||!prev)return '';
+  const d=ss.diffFindings(prev.findings,findings);
+  if(!d)return '';
+  const parts=[];
+  if(d.fixed.length)parts.push(d.fixed.length+' finding(s) gone');
+  if(d.reduced.length)parts.push(d.reduced.length+' fewer');
+  if(d.grew.length)parts.push(d.grew.length+' more');
+  if(d.added.length)parts.push(d.added.length+' new');
+  if(!parts.length)return '';
+  const up=d.scoreTo>d.scoreFrom;
+  return '<div style="margin-top:18px;padding:14px;border:1px solid var(--color-border);border-radius:10px;background:var(--color-surface-2)">'
+    +'<strong>Since your last scan of this page</strong> — '+parts.join(', ')
+    +', and the score moved '+d.scoreFrom+' → '+d.scoreTo+'. '
+    +'<span class="hint">Kept in this browser only; nothing was sent to us.</span></div>';
+}
+// Ét sted for kortet, fordi vejen til et delt resultat også er vej til et netop
+// kørt: en læser der åbner et delt link skal se præcis den samme kortstabel som
+// afsenderen, kun mærket som et øjebliksbillede.
+function render(state,opts){
+  opts=opts||{};
+  const out=document.getElementById('result');
+  if(!out)return;
+  const g=gradeOf(state.score);
+  // En delt rapport er et øjebliksbillede, så den tæller ikke som «sidste
+  // scanning» — ellers ville det være den afsenderens fund, ikke modtagerens.
+  const prev=opts.shared?null:(window.SCANSHARE?window.SCANSHARE.recall(state.url):null);
+  const ranked=window.SCANSHARE?window.SCANSHARE.rankFindings(state.findings):state.findings;
+  out.innerHTML =
+    '<div class="scorecard"><div class="score grade-'+g+'">'+state.score+'/100 — Grade '+g+'</div>'+
+    '<div>'+state.errors+' error(s), '+state.warnings+' warning(s)</div></div>'+
+    (opts.shared
+      ? '<p class="hint">Shared result for <code>'+esc(state.url)+'</code>, sent from the free scanner. It is a snapshot of one scan, not a live check of the page. Press <strong>Scan</strong> above to see the page as it is now.</p>'
+      : '')+
+    (opts.shared?'':sinceBox(prev,state.findings))+
+    platformBox(state.platform)+
+    (state.findings.length?(opts.shared?'':rankBox(state))+'<ul class="findings">'+ranked.map(f=>
+      '<li><span class="sev-'+f.sev+'">'+esc(describe(f.id,f.count))+'</span><br><small>'+esc(FIX[f.id]||'')+'</small></li>').join('')+'</ul>'
+     :'<p>No issues found by automated checks.</p>')+
+    '<p style="text-align:center;margin-top:18px"><button type="button" onclick="downloadReport()" class="btn btn-primary">Download the report</button> '+
+    '<button type="button" onclick="window.print()" class="btn btn-secondary">Print / save as PDF</button> '+
+    '<button type="button" onclick="shareResult()" class="btn btn-secondary">Copy link to this result</button></p>'+
+    '<p class="hint">The report is one self-contained HTML file — no account, nothing uploaded. Hand it to whoever asked for the audit; it repeats the findings with the fix for each one.</p>'+
+    '<p class="hint" id="shareStatus"></p>'+
+    '<input type="text" id="shareLink" readonly hidden aria-label="Link to this result">'+
+    '<p class="hint">The link carries the findings themselves, so whoever opens it reads this list without running a scan of their own. Nothing about the page is sent to us by opening it.</p>'+
+    '<p class="hint">Note: automated checks catch 30–40% of accessibility issues. See our <a href="/#products">EAA Compliance e-book</a> for the full manual process.</p>'+
+    proCard(forsteUrl(state))+
+    '<p class="hint">This scan is free and needs no account. If it saved you time, a small <a href="https://donate.stripe.com/7sYeVcbn50wieFM8gDbMQ0c" rel="nofollow noopener">donation</a> keeps it running.</p>';
+  revealResult(out);
+  const box=document.getElementById('shareLink');
+  if(box)box.value=location.origin+'/scan';
+  // Udfaldet, ikke forsøget. `scan` siger at nogen trykkede Scan; uden denne
+  // vidste vi ikke om de fik et svar, og de 290 indgående links kunne ikke
+  // skelnes fra køb. En delt rapport er ikke et udfald — den er afsenderens.
+  if(!opts.shared&&window.trackEvent)window.trackEvent(state.findings.length?'scan-findings':'scan-clean');
+}
+// Samme vej som før, men uden `alert()`: et 300-tegns link i en modal er
+// umuligt at læse, og hvis klippebordet var lukket kunne linket ikke
+// kopieres igen alligevel. Statuslinjen siger hvad der skete, og feltet
+// står med linket så det kan markeres med tastaturet.
+async function shareResult(){
+  if(!LAST||!window.SCANSHARE)return;
+  const hash=window.SCANSHARE.encode(LAST);
+  if(!hash)return;
+  const url=location.origin+'/scan'+hash;
+  let done=false;
+  try{await navigator.clipboard.writeText(url);done=true;}catch(e){}
+  const st=document.getElementById('shareStatus');
+  const box=document.getElementById('shareLink');
+  if(st)st.textContent=done?'Link copied. Send it to whoever should see the findings.':'Copy the link below and send it to whoever should see the findings.';
+  if(box){box.hidden=false;box.value=url;box.focus();box.select();}
+}
+window.shareResult=shareResult;
+// Det dokument en læser med fund faktisk kan bruge. `window.print()` udskriver
+// hele siden omkring resultatet — navigation, «hvad tjekkeren», pro-kortet — så
+// det er ikke noget, man kan vedlægge en mail. Modulet får **siden egne** MSG-
+// og FIX-tabeller, så rapporten ikke kan sige noget om et fund som siden ikke
+// ville sige om det samme fund, og den får scoren og karakteren som netop blev
+// tegnet — den regnes ikke ud igen her (punkt 10: to beregninger af det samme tal
+// er hvordan et scorekort ender i at modsige sin egen liste).
+function downloadReport(){
+  if(!LAST||!window.SCANREPORT)return;
+  const st=document.getElementById('shareStatus');
+  const name=window.SCANREPORT.download(LAST,{lang:'en',msg:MSG,fix:FIX,rankFindings:window.SCANSHARE?window.SCANSHARE.rankFindings:null});
+  if(st)st.textContent=name
+    ?'The report is downloading as '+name+'. Nothing was uploaded.'
+    :'The report could not be created in this browser. Use Print / save as PDF instead.';
+  // Udfaldet, ikke forsøget — samme regel som resten af tragten. En browser
+  // uden `Blob` eller uden `createObjectURL` får beskeden «brug Print i stedet»,
+  // og den skal ikke tælles som en rapport der blev hentet.
+  if(name&&window.trackEvent)window.trackEvent('scan-report');
+}
+window.downloadReport=downloadReport;
+// Betalt vej. Samme produktrappe og samme ærlige tre punkter som
+// `/compliance-site-check` bruger, fordi de to scanneren er det samme tjek på
+// hver sin måde: dette læser den ene side brugeren indsatte, den anden følger
+// links til de juridiske sider. Forskellen står i overskriften, fordi «den læste
+// én side» er sandt for denne og «læste siden og de juridiske sider» er sandt
+// for den anden — en løfte-boks der kun passer til den ene udgave er præcis den
+// fejl, de to kort er bygget for ikke at have.
+// `url` er den side læseren lige har læst. Den bruges **kun** til den dybe
+// vej til PDF-trinet: en Pro-holder skal ikke indtaste sin adresse igen for at
+// låse den rapport han netop har set. Mål 6/10 før rettelsen: pro-kortets note
+// linkede til `/compliance-report` uden mere, så han landede i et tomt felt,
+// kørte selv en scanning, og scrollede ned til nøglefeltet bagefter — tre
+// skridt, hvoraf ingen forklarede hvorfor de var nødvendige.
+// Den ene adresse `#url=`-vejen kan bære. Ved flere sider står de som
+// `urls.join(', ')` i `state.url`, og en liste er ingen URL — rapporten tager én
+// side ad gangen, så det er den første læseren læste. `pages[0].url` er den
+// samme adresse målt i felterne, så den bruges når den findes.
+function forsteUrl(state){
+  if(!state)return '';
+  if(state.pages&&state.pages.length&&state.pages[0]&&state.pages[0].url)return state.pages[0].url;
+  return String(state.url||'').split(',')[0].trim();
+}
+function proCard(url){
+  // `#url=`-vejen virker **kun** for en adresse rapport-siden genkender, og den
+  // bruger præcis denne test: `/^https?:\/\//i`. Læseren har skrevet `example.com`
+  // — helt normalt, feltet siger «eller bare domænet» — og så afviser
+  // `generateReport` stille, så den dybe vej landede i præcis det tomme felt den
+  // er lavet for at fjerne. Derfor samme regel, og ellers den gamle rute.
+  var dyb = /^https?:\/\//i.test(String(url||'')) ;
+  var handoff = dyb ? '/compliance-report#url=' + encodeURIComponent(url) : '/compliance-report';
+  var html = '<div class="result-card pro-card">';
+  html += '<h3 style="margin:0 0 4px;font-size:16px">It read the pages you pasted. A site is every page.</h3>';
+  html += '<!-- pro-table:start --> <div class="table-wrap"> <table class="compare pro-table"> <caption class="sr-only">Free and EUComply Pro, side by side</caption> <thead> <tr><th scope="col"><span class="sr-only">Plan</span></th><th scope="col">Free</th><th scope="col">EUComply Pro</th></tr> </thead> <tbody> <tr><th scope="row">What you get</th><td><ul><li>The accessibility checks on the pages you paste, up to five at a time — alt text, labels, headings, contrast</li><li>Page title, language attribute, viewport and h1 checked too</li></ul></td><td><ul><li>It reads the page from the server too — response headers included, which a browser check cannot see</li><li>18 server-side GDPR, cookie, security and metadata checks</li><li>The findings as a PDF report you can hand a client</li></ul></td></tr> <tr><th scope="row">Price</th><td><span class="pro-price">$0</span><span class="pro-note">no licence key needed</span></td><td><span class="pro-price">$79/year per website</span></td></tr> </tbody> </table> </div> <p class="pro-note">$149 once per website — lifetime, first 100 purchases</p> <p class="pro-note pro-limit">Does not include DPA, NIS2 clauses, or other documents — sold separately</p> <!-- pro-table:end -->';
+  html += '<a class="btn" style="display:inline-block;padding:12px 24px;margin-top:8px;text-decoration:none" href="https://buy.stripe.com/eVq00i4YH6UG69g0ObbMQ03" rel="nofollow noopener" onclick="window.trackEvent&&window.trackEvent(\'pro-card-click\')">Buy EUComply Pro — $79/year per website</a>';
+  html += '<p class="pro-card-note">One website per licence. <a href="' + handoff + '">Open the PDF report for this page</a> — your key unlocks the download there.</p>';
+  html += '</div>';
+  return html;
+}
+window.proCard=proCard;
+// `#result` ligger under folden, fordi et resultat er langt og ikke skal fylde
+// heroen. Men så lægger et klik i folden intet ud over det at blive trykket, og
+// det er værre end et felt længere nede: brugeren tror scanneren hang. Derfor
+// kalder alle tre skrivninger denne, som kun ruller hvis `#result` ikke allerede
+// kan ses — ellers ville et resultat der allerede er læst hoppe op ved skærm.
+function revealResult(out){
+  if(!out||!out.scrollIntoView)return;
+  const top=out.getBoundingClientRect().top;
+  if(top<0||top>window.innerHeight-80)out.scrollIntoView({block:'start'});
+}
+window.revealResult=revealResult;
+// Én URL pr. linje, samme dedupe som serveren: samme side to gange er samme
+// svar, og den må hverken tælle to gange i kvoten eller få to kort.
+const MAX_URLS = 5;
+// Fælles hale under «Scan failed»-teksten. Den lå tidligere indskrevet i
+// catch'en selv, og da `scan()` fik sin egen `fejl()`-vej, blev denne
+// reference hængende i luften: én kald der fejlede slog en `ReferenceError`
+// og efterlod et resultatfelt uden tekst. Én konstant, to brugere.
+const HINTTAIL='Cannot scan this page. Possible reasons: the site blocks automated fetchers, '
+  +'the URL is invalid, or the page is too large. Try the '
+  +'<a href="eaa-scanner-extension.zip" download>browser extension</a> '
+  +'which runs directly on the live page.</p>';
+// De femten tjek, som ét navn. Før læste `scan()` dem i sig selv, så den
+// anden vej ind (`visFlere`) kunne ikke finde dem; udtrækningen tabte selve
+// funktionen, og så døde hver eneste kørsel med `analyseDoc is not defined`.
+// Den her udgave afgrænser sig til **at finde fund og platform** — scoren
+// kommer fortsat fra `SCANSHARE.scoreOf`, så ingen formel får to hjem.
+function analyseDoc(doc){
+  const findings = [];
+  const add=(id,sev,n)=>{if(n>0)findings.push({id,sev,count:n})};
+  add('IMG_ALT','error',
+      [...doc.images].filter(i=>!i.hasAttribute('alt')||!i.alt.trim()).length);
+  add('FORM_LABEL','error',
+      [...doc.querySelectorAll('input,select,textarea')].filter(el=>{
+        const t=(el.type||'').toLowerCase();
+        if(['hidden','submit','button','reset','image'].includes(t))return false;
+        if(el.labels&&el.labels.length)return false;
+        return !(el.getAttribute('aria-label')||el.getAttribute('aria-labelledby')||el.getAttribute('title'));
+      }).length);
+  add('LINK_TEXT','error',
+      [...doc.querySelectorAll('a[href]')].filter(a=>!(a.textContent.trim()||a.getAttribute('aria-label')||a.querySelector('img[alt]:not([alt=""])'))).length);
+  add('BUTTON_TEXT','error',
+      [...doc.querySelectorAll('button')].filter(b=>!(b.textContent.trim()||b.getAttribute('aria-label')||b.querySelector('img[alt]:not([alt=""])'))).length);
+  add('DUP_ID','error',
+      (()=>{const seen=new Set(),dups=new Set();
+        doc.querySelectorAll('[id]').forEach(el=>{const v=el.id;if(seen.has(v))dups.add(v);else seen.add(v)});
+        return dups.size;})());
+  add('TARGET_BLANK','warning',
+      [...doc.querySelectorAll('a[target="_blank"]')].filter(a=>{
+        const t=(a.textContent||'').toLowerCase();
+        return t && !t.includes('new window') && !t.includes('new tab');
+      }).length);
+  if(!doc.title||!doc.title.trim())add('DOC_TITLE','error',1);
+  if(!doc.documentElement.lang)add('HTML_LANG','error',1);
+  if(!doc.querySelector('meta[name="viewport"]'))add('VIEWPORT','warning',1);
+  if(!doc.querySelector('h1'))add('HEADING_H1','warning',1);
+  let skips=0,prev=0;
+  doc.querySelectorAll('h1,h2,h3,h4,h5,h6').forEach(h=>{const l=+h.tagName[1];if(prev&&l>prev+1)skips++;prev=l});
+  add('HEADING_SKIP','warning',skips);
+  add('IFRAME_TITLE','warning',doc.querySelectorAll('iframe:not([title])').length);
+  add('TABLE_HEADER','warning',[...doc.querySelectorAll('table')].filter(t=>!t.querySelector('th')).length);
+  add('ARIA_HIDDEN_FOCUS','error',
+      [...doc.querySelectorAll('[aria-hidden="true"]')].filter(el=>el.matches('a[href],button,input,select,textarea,[tabindex]:not([tabindex="-1"])')).length);
+  add('CONTRAST','error',(()=>{
+    function parseCol(s){
+      s=(s||'').trim().toLowerCase();
+      if(!s||['transparent','inherit','currentcolor','initial'].includes(s))return null;
+      let m=s.match(/^#([0-9a-f]{3})$/);if(m)return m[1].split('').map(c=>parseInt(c+c,16));
+      m=s.match(/^#([0-9a-f]{6})/);if(m)return [0,2,4].map(i=>parseInt(m[1].slice(i,i+2),16));
+      m=s.match(/^rgba?\(([^)]+)\)/);
+      if(m){const p=m[1].split(',').map(x=>x.trim());
+        if(p.length>=4&&parseFloat(p[3])<0.9)return null;
+        try{return p.slice(0,3).map(x=>x.endsWith('%')?parseFloat(x)*2.55:parseFloat(x));}catch(e){return null;}}
+      const named={white:[255,255,255],black:[0,0,0],red:[255,0,0],green:[0,128,0],blue:[0,0,255],gray:[128,128,128],grey:[128,128,128],silver:[192,192,192],yellow:[255,255,0],orange:[255,165,0]};
+      return named[s]||null;}
+    function lum(rgb){return 0.2126*chan(rgb[0])+0.7152*chan(rgb[1])+0.0722*chan(rgb[2]);}
+    function chan(c){c/=255;return c<=0.04045?c/12.92:Math.pow((c+0.055)/1.055,2.4);}
+    const seen=new Set();let low=0;
+    const root=doc.body||doc.documentElement;
+    const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);
+    let n;
+    while((n=walker.nextNode())){
+      if(!n.textContent.trim())continue;
+      let el=n.parentElement,fg=null,bg=null,node=el;
+      while(node&&node.nodeType===1){
+        const st=(node.getAttribute&&node.getAttribute('style'))||'';
+        if(st){
+          if(fg===null){const m=st.match(/(?:^|;)\s*color\s*:\s*([^;!]+)/);if(m)fg=m[1].trim();}
+          if(bg===null){const m=st.match(/background(?:-color)?\s*:\s*([^;!]+)/);
+            if(m&&!/url\(|gradient\(/.test(m[1]))bg=m[1].trim();}
+        }
+        node=node.parentElement;}
+      if(fg===null||bg===null)continue;
+      let large=false;node=el;
+      while(node&&node.nodeType===1){
+        const st=(node.getAttribute&&node.getAttribute('style'))||'';
+        if(/font-size\s*:\s*(?:1[89]\d*|2\d+|[3-9]\d+)\s*px|font-size\s*:\s*(?:14|1[5-9]|[2-9]\d+(\.\d+)?)\s*pt|font-weight\s*:\s*(?:bold|[6-9]00)/.test(st)){large=true;break;}
+        node=node.parentElement;}
+      const f=parseCol(fg),b=parseCol(bg);
+      if(!f||!b)continue;
+      const lf=lum(f),lb=lum(b),hi=Math.max(lf,lb),lo=Math.min(lf,lb);
+      const ratio=(hi+0.05)/(lo+0.05),thr=large?3.0:4.5,key=fg+'|'+bg+'|'+large;
+      if(ratio<thr&&!seen.has(key)){seen.add(key);low++;}
+    }
+    return low;})());
+  // Platform-detektionen hører her, ikke i `platformBox()`: den skal kun slå
+  // platformen op i PLATFORM_GUIDES, og *navnet* kommer videre i del-linket, så
+  // modtageren får samme guide-boks som afsenderen.
+  const gen=((doc.querySelector('meta[name="generator"]')||{}).content||'');
+  let plat=null;
+  for(const p of Object.keys(PLATFORM_GUIDES)){
+    if(new RegExp(p,'i').test(gen)){plat=p;break;}}
+  return {findings:findings, platform:plat};
+}
+function splitUrls(raw){
+  const settes=[];
+  String(raw||'').split(/[\r\n]+/).forEach(function(l){
+    const t=l.trim();
+    if(!t)return;
+    const n=t.replace(/^https?:\/\//i,'').replace(/\/+$/,'').toLowerCase();
+    if(!settes.some(function(x){return x.replace(/^https?:\/\//i,'').replace(/\/+$/,'').toLowerCase()===n;}))settes.push(t);
+  });
+  return settes;
+}
+// Sitemap-tilstand. To knapper skifter mellem «indsæt URL'er» og «indsæt en
+// sitemap». Samme formular, to indgange — så en læser der har en sitemap ikke
+// skal kopiere 20 URL'er ind i et textarea for at scanne sin egen side.
+let sitemapMode = false;
+function setSitemapMode(on){
+  sitemapMode = on;
+  const pages = document.getElementById('pagesMode');
+  const sitemap = document.getElementById('sitemapMode');
+  const hint = document.getElementById('scanHint');
+  const bPages = document.getElementById('modePages');
+  const bSitemap = document.getElementById('modeSitemap');
+  if(!pages||!sitemap||!bPages||!bSitemap)return;
+  pages.hidden = on; sitemap.hidden = !on;
+  bPages.setAttribute('aria-pressed', String(!on));
+  bSitemap.setAttribute('aria-pressed', String(on));
+  if(hint) hint.textContent = on
+    ? 'Paste your sitemap URL — we read it and scan every page it lists, up to 20. One run covers a whole site.'
+    : 'Paste one URL per line to see where a whole site stands. Each page is scored on its own, and the pages you name are the pages you get — up to five per run. A licence reads the page again on the server, where it can see the response headers your browser never shows it.';
+}
+window.setSitemapMode = setSitemapMode;
+// Ét kald ad gangen. `rateLimitIp` tæller **én** kvoteslot pr. side, så et
+// dobbeltklik på «Scan now» med fem URL'er brænder ti af de 60 timer i timen —
+// og `revealResult` skriver det andet resultat oven i det første, så læseren
+// ser ét svar og ingen fejl. Derfor låses knappen, og et kald der allerede er
+// i luft får det samme løfte tilbage i stedet for at sende et nyt.
+let scanILuft = null;
+async function scan(raw){
+  if(scanILuft) return scanILuft;
+  // Knappen findes gennem formularen, ikke gennem hele dokumentet: så slår
+  // `getElementById` aldrig fejl, hvis `#scanForm` ikke findes.
+  const form = document.getElementById('scanForm');
+  const knap = form && form.querySelector ? form.querySelector('button') : null;
+  const tekst = knap ? knap.textContent : null;
+  if(knap){ knap.disabled = true; knap.textContent = 'Scanning…'; }
+  scanILuft = scanKør(raw).finally(function(){
+    scanILuft = null;
+    if(knap){ knap.disabled = false; knap.textContent = tekst; }
+  });
+  return scanILuft;
+}
+async function scanKør(raw){
+  const out = document.getElementById('result');
+  // Ingen `scan-failed` her: et tomt felt og for mange URL'er er **klientens**
+  // egen forudsætning, ikke en fejl der fik serveren til at svare noget. Hændelsen
+  // skal fortsat kun tælle kald der virkelig mislykkedes — porten
+  // `check_scan_events` dømmer præcis det tal.
+  const fejl = function(msg){
+    out.innerHTML = '<p><strong>Scan failed.</strong></p>'
+      +'<p style="color:#667;font-size:14px">'+esc(msg)+'</p>';
+    revealResult(out);
+  };
+  // Ét scan-forsøg er ét forsøg, uanset om det er en side-URL eller en sitemap.
+  // Begge veje deler derfor **ét** `scan`- og **ét** `scan-failed`-kald, så
+  // tragten ikke tælles dobbelt — porten `check_scan_events` dømmer netop at
+  // hver fil sender hver begivenhed præcis én gang.
+  const scanFejl = function(e){
+    if (window.trackEvent) window.trackEvent('scan-failed');
+    out.innerHTML = '<p><strong>Scan failed.</strong></p>'
+      +'<p style="color:#667;font-size:14px">'+esc(String(e))+'</p>'
+      +'<p style="font-size:13px;color:#667;margin-top:16px">'
+      +HINTTAIL;
+    revealResult(out);
+  };
+  // Validér først: et tomt felt eller for mange URL'er er klientens egen
+  // forudsætning og tæller ikke som et forsøg.
+  let sitemapUrl = '';
+  let urls = null;
+  if(sitemapMode){
+    sitemapUrl = ((document.getElementById('sitemapUrl')||{}).value||'').trim();
+    if(!sitemapUrl){ fejl('Paste your sitemap URL above.'); return; }
+  } else {
+    urls = splitUrls(raw);
+    if(!urls.length){ fejl('Paste at least one page URL above.'); return; }
+    // Serveren svarer 400 med sin egen sætning, så her må vi kun sige fra
+    // **før** den hænger på, og det er den eneste grund til at klienten kender
+    // loftet: ellers ville den sende ni sider og få «Scan up to 5 pages» tilbage.
+    if(urls.length>MAX_URLS){ fejl('You pasted %d URLs. This free scanner reads 5 pages per run — run the rest as a second scan.'.replace('%d',urls.length)); return; }
+  }
+  if (window.trackEvent) window.trackEvent('scan');
+  let data;
+  if(sitemapMode){
+    out.innerHTML = '<p>Reading sitemap <code>'+esc(sitemapUrl)+'</code> …</p>';
+    revealResult(out);
+    try {
+      const r = await fetch('/scan-proxy', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sitemap:sitemapUrl})});
+      data = await r.json();
+      if (!data.ok) throw new Error(data.error || 'Proxy returned error');
+    } catch(e) {
+      scanFejl(e);
+      return;
+    }
+    if(!data.multi){ fejl('The sitemap returned only one page — add more pages to it, or paste URLs directly.'); return; }
+    visFlere(data.pages||[], data.pages.map(p=>p.url).filter(Boolean));
+    return;
+  }
+  out.innerHTML = urls.length>1
+    ? 'Scanning %d pages: <code>%s</code> …'.replace('%d',urls.length).replace('%s',esc(urls.join('\n')))
+    : '<p>Scanning <code>'+esc(urls[0])+'</code> …</p>';
+  revealResult(out);
+  try {
+    const r = await fetch('/scan-proxy', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url:urls.join('\n')})});
+    data = await r.json();
+    if (!data.ok) throw new Error(data.error || 'Proxy returned error');
+  } catch(e) {
+    scanFejl(e);
+    return;
+  }
+
+  // Én URL svarer i den gamle form, og det skal forblive sandt: alt hvad der
+  // har kaldt ruten siden den blev skrevet læser `html`, ikke `pages`.
+  if(!data.multi){
+    visEn(data.html, data.url||urls[0]);
+    return;
+  }
+  visFlere(data.pages||[], urls);
+}
+
+function fundliste(findings){
+  if(!findings.length) return '<p>No issues found by automated checks.</p>';
+  const ranked=window.SCANSHARE?window.SCANSHARE.rankFindings(findings):findings;
+  return '<ul class="findings">'+ranked.map(f=>
+    '<li><span class="sev-'+f.sev+'">'+esc(describe(f.id,f.count))+'</span><br><small>'+esc(FIX[f.id]||'')+'</small></li>').join('')+'</ul>';
+}
+function scorecard(state){
+  const g=gradeOf(state.score);
+  return '<div class="scorecard"><div class="score grade-'+g+'">'+state.score+'/100 — Grade '+g+'</div>'
+    +'<div>'+state.errors+' error(s), '+state.warnings+' warning(s)</div></div>';
+}
+
+function visEn(html, url){
+  const doc = new DOMParser().parseFromString(html,'text/html');
+  const {findings, platform:plat}=analyseDoc(doc);
+  const errors=findings.filter(f=>f.sev==='error').length,
+        warnings=findings.filter(f=>f.sev==='warning').length;
+  const score=window.SCANSHARE.scoreOf(findings);
+  LAST={url:url,score:score,grade:gradeOf(score),errors:errors,warnings:warnings,findings:findings,platform:plat};
+  render(LAST);
+  if(window.SCANSHARE)window.SCANSHARE.remember(url,findings);
+}
+
+// Flere sider én kald. Hver side får sin egen score og sine egne fund, og
+// **summen** af dem giver den samme samlede score som én side — så en læser
+// kan se sin egen tilstand, ikke bare æn sides. Det delte link bærer summen,
+// og siden siger det under knappen, så ingen tror den har det hele.
+function visFlere(pages, urls){
+  const sider=[]; const kunst=[];
+  for(const p of pages){
+    if(!p || !p.ok){ kunst.push(p); continue; }
+    const doc=new DOMParser().parseFromString(p.html,'text/html');
+    const a=analyseDoc(doc);
+    const errors=a.findings.filter(f=>f.sev==='error').length,
+          warnings=a.findings.filter(f=>f.sev==='warning').length;
+    sider.push({url:p.url, findings:a.findings, platform:a.platform,
+                score:window.SCANSHARE.scoreOf(a.findings), errors:errors, warnings:warnings});
+  }
+  // Kan ikke ske mens serveren svarer 502 når ingen sider kom igennem, og
+  // det er derfor den **ikke** sender hændelsen: den er talt i catch'en over,
+  // og to steder i én fil med `scan-failed` er den måde et kald på to
+  // forøgålge kan ligne. — men
+  // hvis den nogensinde gør det, må siden **ikke** vise et grønt resultat
+  // på en læser der fik nul sider læst. Det er præcis den fejl de ni andre
+  // porte er bygget for ikke at have.
+  if(!sider.length){
+    const box=document.getElementById('result');
+    box.innerHTML='<p><strong>'+"Scan failed."+'</strong></p>'
+      +'<ul class="findings">'+kunst.map(p=>'<li><code>'+esc(p&&p.url||'')+'</code> — '+esc(p&&p.error||'')+'</li>').join('')+'</ul>';
+    revealResult(box);
+    return;
+  }
+  // Fund fra alle sider i den rækkefølge de kommer i, med tællerne lagt
+  // sammen — det er den samme listeform, del-linket og scoren allerede kender.
+  const alle=[]; const talt={};
+  for(const s of sider) for(const f of s.findings){
+    const n=talt[f.id+'|'+f.sev];
+    if(n===undefined){ talt[f.id+'|'+f.sev]=f.count; alle.push({id:f.id,sev:f.sev,count:f.count}); }
+    else talt[f.id+'|'+f.sev]=n+f.count;
+  }
+  for(const f of alle) f.count=talt[f.id+'|'+f.sev];
+  const state={url:urls.join(', '), score:window.SCANSHARE.scoreOf(alle),
+              errors:alle.filter(f=>f.sev==='error').length,
+              warnings:alle.filter(f=>f.sev==='warning').length,
+              findings:alle, platform:(sider.find(s=>s.platform)||{}).platform||null,
+              pages:sider, mislykkedes:kunst};
+  LAST=state;
+  state.grade=gradeOf(state.score);
+  const out=document.getElementById('result');
+  out.innerHTML = scorecard(state)
+    +'<h3 style="margin:22px 0 8px;font-size:16px">%d pages scanned</h3>'.replace('%d',sider.length)
+    +'<p class="hint">Aggregate score across every page above. The per-page scores below are what you fix first.</p>'
+    +sider.map((s,i)=>'<section style="margin-top:22px;padding-top:16px;border-top:1px solid var(--color-border)">'
+        +'<h3 style="margin:0 0 8px;font-size:16px">' + 'Page %d'.replace('%d',i+1)+' — <code>'+esc(s.url)+'</code></h3>'
+        +scorecard(s)
+        +fundliste(s.findings)
+        +'</section>').join('')
+    +(kunst.length?'<h3 style="margin:22px 0 8px;font-size:16px">%d page(s) could not be read</h3>'.replace('%d',kunst.length)+'<p class="hint">The server said so, verbatim. Nothing below is a finding about those pages.</p>'
+        +'<ul class="findings">'+kunst.map(p=>'<li><code>'+esc(p&&p.url||'')+'</code> — '+esc(p&&p.error||'')+'</li>').join('')+'</ul>':'')
+    +'<p style="text-align:center;margin-top:18px"><button type="button" onclick="downloadReport()" class="btn btn-primary">Download the report</button> '
+    +'<button type="button" onclick="window.print()" class="btn btn-secondary">Print / save as PDF</button> '
+    +'<button type="button" onclick="shareResult()" class="btn btn-secondary">Copy link to this result</button></p>'
+    +'<p class="hint">The report is one self-contained HTML file — no account, nothing uploaded. Hand it to whoever asked for the audit; it repeats the findings with the fix for each one.</p>'
+    +'<p class="hint" id="shareStatus"></p>'
+    // Samme felt som den ene side har, ellers siger statuslinjen «copy the link
+    // below» om et felt der ikke findes, og et tastatur kan ikke kopierer over
+    // en 300-tegns url.
+    +'<input type="text" id="shareLink" readonly hidden aria-label="Link to this result">'
+    +'<p class="hint">The link carries the %d findings above, so whoever opens it reads this list without running a scan of their own. It carries the totals, not the per-page breakdown — nothing about the pages is sent to us by opening it.</p>'.replace('%d',sider.length)
+    +'<p class="hint">This scan is free and needs no account. If it saved you time, a small <a href="https://donate.stripe.com/7sYeVcbn50wieFM8gDbMQ0c" rel="nofollow noopener">donation</a> keeps it running.</p>'
+    +proCard(forsteUrl(state));
+  revealResult(out);
+  if(window.trackEvent)window.trackEvent('scan-findings');
+}
+document.getElementById('scanForm').addEventListener('submit',e=>{
+  e.preventDefault();
+  if(sitemapMode){
+    scan('');
+  } else {
+    scan(document.getElementById('url').value.trim());
+  }
+});
+const bPages = document.getElementById('modePages');
+const bSitemap = document.getElementById('modeSitemap');
+if(bPages) bPages.addEventListener('click',function(){setSitemapMode(false);});
+if(bSitemap) bSitemap.addEventListener('click',function(){setSitemapMode(true);});
+// `#url=` — fragmentet kan skrives i hånden, og `decodeURIComponent('%')`
+// kaster `URIError`. Uden `try` dør hele denne IIFE, så en note, et gammelt
+// bookmark eller et dobbeltkodet link giver læseren en tom side og en rød
+// konsolfejl i stedet for den scanning de blev lovet. Samme tre linjer som
+// `/url-to-markdown` allerede havde.
+// `#u=` er et delt resultat, `#url=` er en kørsel, og begge kan skrives i
+// hånden. `decode()` kaster aldrig og giver `null` på alt den ikke kan læse,
+// så et gammelt bookmark, et dobbeltkodet link eller en beskåret besked
+// efterlader formularen som den var — aldrig en tom side og en rød konsolfejl.
+// Et delt resultat scanner *ikke*: der gennemgås ingen kald, så det tager hverken
+// afsenderens eller modtagerens kvote.
+(function(){
+  const shared=window.SCANSHARE?window.SCANSHARE.decode(location.hash):null;
+  if(shared){
+    const field=document.getElementById('url');
+    if(field)field.value=shared.url;
+    LAST={url:shared.url,score:shared.score,grade:gradeOf(shared.score),
+          errors:shared.errors,warnings:shared.warnings,
+          findings:shared.findings,platform:shared.platform};
+    render(LAST,{shared:true});
+    return;
+  }
+  const m=location.hash.match(/#url=(.+)$/);
+  if(m){let u='';try{u=decodeURIComponent(m[1]);}catch(e){}
+    if(/^https?:\/\//i.test(u)){document.getElementById('url').value=u;scan(u);}}
+})();
+</script>
+<script>
+(function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';document.addEventListener('click',function(ev){var a=ev.target&&ev.target.closest?ev.target.closest('a[href]'):null;if(!a)return;var h=a.getAttribute('href')||'';var k=/^https:\/\/donate\.stripe\.com\//.test(h)?'donate':(h.match(/^\/(da\/)?(accessibility-statement-generator|wordpress-plugin|downloads|scan|clean-copy-tool|page-profile|site-icons|text-diff|url-to-markdown|free-tools|compliance-report)(\.html)?(#[^#]*)?$/)||[])[2];if(!k)return;try{navigator.sendBeacon('/api/track',new Blob([JSON.stringify({path:p,event:'cta-'+k})],{type:'application/json'}));}catch(e){}},true);}catch(e){}})();
+</script>
+<script>
+(function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';fetch('/api/track',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:p}),keepalive:true}).catch(function(){});}catch(e){}})();
+</script>
+</body>
+</html>

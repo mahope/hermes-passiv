@@ -4,16 +4,16 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Desktop Website Monitor: Stop Renting Uptime Monitoring</title>
-<meta name="description" content="UptimeRobot Solo is €108 a year, a single Better Stack responder seat is $348. DeskUptime is $19 once. Local checks, no monthly fee. CLI included.">
+<meta name="description" content="UptimeRobot Solo is €108 a year, a single Better Stack responder seat is $348. DeskUptime is a free MIT CLI. Local checks, no monthly fee.">
 <meta property="og:type" content="article">
 <meta property="og:site_name" content="Hermes Passiv">
 <meta property="og:title" content="Desktop Website Monitor: Stop Renting Uptime Monitoring">
-<meta property="og:description" content="A one-time $19 purchase replaces a yearly uptime subscription. Runs on your machine. CLI included. Open source engine.">
+<meta property="og:description" content="A free MIT CLI checks uptime, SSL and content changes from your own machine. No account, no monthly fee.">
 <meta property="og:url" content="https://hermes-passiv.pages.dev/blog/desktop-website-monitor-cli">
 <meta property="og:image" content="https://hermes-passiv.pages.dev/cover.jpg">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Desktop Website Monitor: Stop Renting Uptime Monitoring">
-<meta name="twitter:description" content="A one-time $19 purchase replaces a yearly uptime subscription. Runs on your machine. CLI included. Open source engine.">
+<meta name="twitter:description" content="A free MIT CLI checks uptime, SSL and content changes from your own machine. No account, no monthly fee.">
 <link rel="canonical" href="https://hermes-passiv.pages.dev/blog/desktop-website-monitor-cli">
 <link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/blog/desktop-website-monitor-cli">
 <link rel="alternate" hreflang="da" href="https://hermes-passiv.pages.dev/da/blog/overvaag-hjemmeside-fra-terminalen">
@@ -21,15 +21,15 @@
 <link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
 <link rel="stylesheet" href="/style.css">
 <script type="application/ld+json">
-{"@context": "https://schema.org", "@type": "Article", "headline": "Desktop Website Monitor: Stop Renting Uptime Monitoring", "description": "A one-time $19 desktop app replaces a yearly uptime subscription. Monitor uptime, SSL and content changes from your own machine.", "url": "https://hermes-passiv.pages.dev/blog/desktop-website-monitor-cli", "datePublished": "2026-08-25", "dateModified": "2026-09-30", "author": {"@type": "Person", "name": "Mads Holst Jensen", "url": "https://mahoje.dk"}, "publisher": {"@type": "Organization", "name": "mahoje.dk", "url": "https://mahoje.dk"}}
+{"@context": "https://schema.org", "@type": "Article", "headline": "Desktop Website Monitor: Stop Renting Uptime Monitoring", "description": "A free MIT command-line tool checks uptime, SSL expiry and content changes from your own machine, without a yearly uptime subscription.", "url": "https://hermes-passiv.pages.dev/blog/desktop-website-monitor-cli", "datePublished": "2026-08-25", "dateModified": "2026-09-30", "author": {"@type": "Person", "name": "Mads Holst Jensen", "url": "https://mahoje.dk"}, "publisher": {"@type": "Organization", "name": "mahoje.dk", "url": "https://mahoje.dk"}}
 </script>
 <script type="application/ld+json">
 {"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
-  {"@type": "Question", "name": "Is there a free desktop website monitor?","acceptedAnswer": {"@type": "Answer","text": "Yes. DeskUptime's CLI is free — run npx github:mahope/deskuptime check https://yoursite.com from any terminal. Watch mode monitors up to 3 URLs with downtime alerts. Pro ($19) unlocks the desktop app (native GUI with system tray), notifications, and unlimited URLs."}},
+  {"@type": "Question", "name": "Is there a free desktop website monitor?","acceptedAnswer": {"@type": "Answer","text": "Yes. DeskUptime's CLI is free — run npx github:mahope/deskuptime check https://yoursite.com from any terminal. Watch mode monitors up to 3 URLs with downtime alerts. DeskUptime Pro is no longer sold (sales closed 22 November 2026); existing Pro licence keys keep unlocking the desktop app and unlimited URLs."}},
   {"@type": "Question", "name": "What does DeskUptime check?","acceptedAnswer": {"@type": "Answer","text": "HTTP status + response time, SSL certificate validity + expiry countdown, and SHA-256 content hash comparison for change detection. It works on any URL regardless of CMS or hosting provider."}},
   {"@type": "Question", "name": "How is DeskUptime different from UptimeRobot or Pingdom?","acceptedAnswer": {"@type": "Answer","text": "DeskUptime runs monitoring on your machine, not on a cloud monitoring service. Your monitoring URLs and check results stay on your machine and are not uploaded. The desktop app sends the licence key, a stable device ID and the product identifier deskuptime-pro to a licence server over HTTPS when you enter the key. In version 0.2.7 that server is still the app's previous provider. You can also check internal or staging URLs without exposing them to a hosted monitor. The trade-off is that monitoring stops when your computer is off, though the CLI can run on an always-on machine."}},
   {"@type": "Question", "name": "Can I use DeskUptime in CI/CD?","acceptedAnswer": {"@type": "Answer","text": "Yes. The CLI is a standard Node.js script — it works in GitHub Actions, GitLab CI, or any Unix terminal. Exit codes are 0 for success, 1 for errors. Use it for pre-deploy URL checks, scheduled monitoring, or integration tests."}},
-  {"@type": "Question", "name": "How do I download the DeskUptime desktop app?","acceptedAnswer": {"@type": "Answer","text": "Download the desktop app from GitHub Releases: https://github.com/mahope/deskuptime/releases — choose macOS (Apple Silicon or Intel) or Windows. The desktop app requires a Pro license key ($19) to unlock beyond the free 3-URL limit and activate system tray background monitoring."}}
+  {"@type": "Question", "name": "How do I download the DeskUptime desktop app?","acceptedAnswer": {"@type": "Answer","text": "Download the desktop app from GitHub Releases: https://github.com/mahope/deskuptime/releases — choose macOS (Apple Silicon or Intel) or Windows. The desktop app requires an existing Pro licence key (Pro is no longer sold) to unlock beyond the free 3-URL limit and activate system tray background monitoring."}}
 ]}
 </script>
 <script defer src="/track.js"></script>
@@ -39,7 +39,7 @@
   <div class="container">
     <div class="badge">ARTICLE</div>
     <h1>Desktop Website Monitor:<br>Stop Renting Uptime Monitoring</h1>
-    <p class="subtitle">UptimeRobot Solo is &euro;108 a year, a Better Stack responder seat is $348 a year. Both are the price you pay when you commit to a year. They all monitor HTTP status, SSL expiry, and response time. DeskUptime is <strong>$19 once</strong>, runs on your own machine, and includes a free CLI.</p>
+    <p class="subtitle">UptimeRobot Solo is &euro;108 a year, a Better Stack responder seat is $348 a year. Both are the price you pay when you commit to a year. They all monitor HTTP status, SSL expiry, and response time. DeskUptime&rsquo;s CLI is <strong>free and MIT-licensed</strong>, and runs on your own machine.</p>
     <div class="hero-cta">
       <a href="/deskuptime/" class="btn-primary">See DeskUptime &rarr;</a>
       <a href="/" class="btn-secondary">Back to Home</a>
@@ -99,10 +99,10 @@
 
 <p>Free without a licence key: one-off checks, SSL and content checks, and JSON output for scripts and CI. The 3-URL limit applies to <code>watch</code> only.</p>
 
-<h2>What Pro ($19) adds</h2>
+<h2>What a Pro licence adds</h2>
 
 <table style="width:100%;border-collapse:collapse;margin:16px 0">
-<tr><th style="background:#f5f7fa;padding:10px;border:1px solid #ddd;text-align:left">Feature</th><th style="background:#f5f7fa;padding:10px;border:1px solid #ddd;text-align:center">Free</th><th style="background:#f5f7fa;padding:10px;border:1px solid #ddd;text-align:center">Pro ($19)</th></tr>
+<tr><th style="background:#f5f7fa;padding:10px;border:1px solid #ddd;text-align:left">Feature</th><th style="background:#f5f7fa;padding:10px;border:1px solid #ddd;text-align:center">Free</th><th style="background:#f5f7fa;padding:10px;border:1px solid #ddd;text-align:center">Pro licence</th></tr>
 <tr><td style="padding:10px;border:1px solid #ddd">URL checking</td><td style="padding:10px;border:1px solid #ddd;text-align:center">&#10003;</td><td style="padding:10px;border:1px solid #ddd;text-align:center">&#10003;</td></tr>
 <tr><td style="padding:10px;border:1px solid #ddd">SSL expiry</td><td style="padding:10px;border:1px solid #ddd;text-align:center">&#10003;</td><td style="padding:10px;border:1px solid #ddd;text-align:center">&#10003;</td></tr>
 <tr><td style="padding:10px;border:1px solid #ddd">Content change detection</td><td style="padding:10px;border:1px solid #ddd;text-align:center">&#10003;</td><td style="padding:10px;border:1px solid #ddd;text-align:center">&#10003;</td></tr>
@@ -114,28 +114,9 @@
 <tr><td style="padding:10px;border:1px solid #ddd">Lifetime updates</td><td style="padding:10px;border:1px solid #ddd;text-align:center">&mdash;</td><td style="padding:10px;border:1px solid #ddd;text-align:center">&#10003;</td></tr>
 </table>
 
-<p>Pro unlocks with a license key &mdash; pay once, get a key, activate on up to 3 machines. No DRM, no subscription. <a href="https://buy.stripe.com/7sY9AS9eX3Iu418fJ5bMQ01" rel="nofollow noopener">Buy DeskUptime Pro for $19 once</a>.</p>
-
-<h2>Why buy vs rent</h2>
-
-<p>The case is simple math:</p>
-
-<table style="width:100%;border-collapse:collapse;margin:16px 0">
-<tr><th style="background:#f5f7fa;padding:10px;border:1px solid #ddd">Service</th><th style="background:#f5f7fa;padding:10px;border:1px solid #ddd;text-align:right">1 year, billed annually</th></tr>
-<tr><td style="padding:10px;border:1px solid #ddd">UptimeRobot Solo (10 monitors, 60 s)</td><td style="padding:10px;border:1px solid #ddd;text-align:right">&euro;108 <small style="color:#666">&euro;9/month</small></td></tr>
-<tr><td style="padding:10px;border:1px solid #ddd">UptimeRobot Team (100 monitors, 30 s)</td><td style="padding:10px;border:1px solid #ddd;text-align:right">&euro;420 <small style="color:#666">&euro;35/month</small></td></tr>
-<tr><td style="padding:10px;border:1px solid #ddd">Better Stack (10 monitors + 1 responder)</td><td style="padding:10px;border:1px solid #ddd;text-align:right">$348 <small style="color:#666">$29/month</small></td></tr>
-<tr><td style="padding:10px;border:1px solid #ddd">Pingdom</td><td style="padding:10px;border:1px solid #ddd;text-align:right">no list price</td></tr>
-<tr><td style="padding:10px;border:1px solid #ddd;font-weight:600">DeskUptime Pro &mdash; three years included</td><td style="padding:10px;border:1px solid #ddd;text-align:right;font-weight:600">$19</td></tr>
-</table>
-
-<p>DeskUptime is $19 once, against &euro;108 or $348 a year for the cheapest paid tiers above. That is the first month&rsquo;s rent either way, and then it keeps being savings.</p>
-
-<p>Every figure in this table was read off the vendors&rsquo; own pricing pages &mdash; UptimeRobot 1 October 2026, Better Stack 30 September 2026. They change their prices, so <a href="https://uptimerobot.com/pricing/">UptimeRobot</a> and <a href="https://betterstack.com/pricing">Better Stack</a> are linked &mdash; go and check them before you take the numbers as gospel.</p>
+<p><strong>DeskUptime Pro is no longer sold</strong> &mdash; sales closed on 22 November 2026. If you already have a licence key, it keeps working in the desktop app and the CLI. The free CLI stays free and MIT-licensed. Existing customers can get help at <a href="mailto:support@mahope.tools">support@mahope.tools</a> or in <a href="https://github.com/mahope/deskuptime/issues">GitHub issues</a>.</p>
 
 <h2>Licensing &amp; privacy</h2>
-
-<p>Payment runs through Stripe. Your purchase generates a license key instantly, shown on the thank-you page and sent by email.</p>
 
 <p>Your monitoring URLs and check results stay on your machine and are not uploaded to a central monitoring service. The desktop app sends the licence key, a stable device ID and the product identifier deskuptime-pro to a licence server over HTTPS when you enter the key. In version 0.2.7 that server is still the app's previous provider.</p>
 
@@ -143,7 +124,7 @@
 
 <h2>Download the desktop app</h2>
 
-<p>The DeskUptime desktop app is built and ready. Download the latest release for your platform:</p>
+<p>The desktop app needs a DeskUptime Pro licence key. If you already have one, download the latest release for your platform:</p>
 
 <div style="background:#f5f7fa;padding:16px;border-radius:8px;overflow-x:auto;font-size:14px;line-height:1.9">
 <p><strong>macOS (Apple Silicon):</strong><br>
@@ -154,7 +135,7 @@
 <a href="https://github.com/mahope/deskuptime/releases/download/desktop-v0.2.7/DeskUptime_0.2.7_x64-setup.exe" style="color:var(--color-accent)">DeskUptime_0.2.7_x64-setup.exe</a></p>
 </div>
 
-<p>Unzip and run. The app lives in your system tray — checks continue even when the window is closed. <strong>Pro license ($19)</strong> unlocks unlimited URLs, system tray background monitoring, and email/webhook alerts. Free tier monitors up to 3 URLs with no license key.</p>
+<p>Unzip and run. The app lives in your system tray — checks continue even when the window is closed. Your existing Pro licence key unlocks unlimited URLs, system tray background monitoring and webhook alerts. Without a key, the free CLI monitors up to 3 URLs.</p>
 
 <p>The CLI and watch mode are also ready today. Same engine, different interface:</p>
 

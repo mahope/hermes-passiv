@@ -1342,6 +1342,15 @@ def self_test() -> int:
         tmp = Path(td) / "repo"
         shutil.copytree(ROOT, tmp, ignore=shutil.ignore_patterns(
             ".git", "dist", "node_modules", "__pycache__", ".wrangler"))
+        # 22/11-2026: salget af EUComply Pro er lukket, og to af de løfter
+        # armene muterer ("runs 33 checks" på `/books/` og "tjek i alt" på den
+        # danske rapportside) stod i de fjernede salgsafsnit. Porten skal stadig
+        # kunne dømme dem, så selvtesten lægger siderne fra før lukningen ind i
+        # sin kopi (`tools/closed_sales.py`).
+        sys.path.insert(0, str(ROOT / "tools"))
+        import closed_sales  # noqa: E402
+        for rel in ("site/books/index.html", "site/da/compliance-report.html"):
+            (tmp / rel).write_text(closed_sales.before_closure(rel), encoding="utf-8")
         lay = Layout(site=tmp / "site")
 
         base = check(lay)

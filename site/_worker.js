@@ -529,7 +529,7 @@ export default {
       });
     }
 
-    // === Route: Clean Copy Pro checkout URL (dynamic embed) ===
+    // === Route: Pro checkout URL (Page Profile Pro; cc/du svarer 410 efter 22/11-2026) ===
     if (path === '/api/checkout') return handleCheckout(request, url, env);
 
     // === Route: URL Inspector (redirect chain + security headers) ===
@@ -4178,23 +4178,38 @@ async function cscCountScan(env) {
 }
 
 /* ── Pro Checkout — GET /api/checkout ────────────────────────────
- * Returns the Stripe Payment Link and price for one Pro product.
- * KV keys: cc-pro-checkout (Clean Copy Pro), pp-pro-checkout (Page Profile
- * Pro), du-pro-checkout (DeskUptime Pro) — set via tools/set-checkout-url.sh.
+ * Returns the Stripe Payment Link and price for Page Profile Pro.
+ * KV key: pp-pro-checkout — set via tools/set-checkout-url.sh.
  *
- * `?product=` takes the product_key from `docs/stripe-kontrakt.md` —
- * clean-copy-pro / deskuptime-pro / page-profile-pro — plus the older
- * shorthands cc / du / pp.
+ * `?product=` takes the product_key from `docs/stripe-kontrakt.md` plus the
+ * older shorthands cc / du / pp.
+ *
+ * Salget af Clean Copy Pro og DeskUptime Pro er lukket 22/11-2026 (se
+ * `closed_sales` i `tools/stripe_catalog.json`). Deres nøgler svarer derfor
+ * 410 Gone med en kort forklaring — aldrig et købslink, heller ikke fra en
+ * gammel KV-overstyring — så en gammel indlejring får et ærligt svar i stedet
+ * for et deaktiveret Stripe-link. Licens-API'et er uændret, så eksisterende
+ * nøgler validerer fortsat.
  *
  * An unknown or missing product is a 400 that names the valid keys. It was
  * `which = … : 'cc'` before (1/10): every unrecognised value silently fell
- * through to Clean Copy Pro, so `?product=deskuptime-pro` — the product_key
- * Stripe itself uses — returned Clean Copy's payment link, its price and its
- * product name. A buyer following that link pays for a different product than
- * the one the caller asked for, and the response says nothing is wrong. On the
- * one route that hands out a buy link, "I don't know that product" has to be an
- * answer.
+ * through to Clean Copy Pro. On the one route that hands out a buy link, "I
+ * don't know that product" has to be an answer.
  */
+const CHECKOUT_CLOSED = {
+  cc: {
+    product: 'clean-copy-pro',
+    name: 'Clean Copy Pro',
+    free: 'The free Clean Copy extensions, CLI and web tool stay free and MIT-licensed.',
+  },
+  du: {
+    product: 'deskuptime-pro',
+    name: 'DeskUptime Pro',
+    free: 'The free DeskUptime CLI and web checkers stay free and MIT-licensed.',
+  },
+};
+const CHECKOUT_CLOSED_DATE = '2026-11-22';
+
 async function handleCheckout(request, url, env) {
   const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
@@ -4218,7 +4233,7 @@ async function handleCheckout(request, url, env) {
   };
   const which = asked === null ? null : ALIASES[asked.trim().toLowerCase()];
   if (!which) {
-    const VALID = 'Use one of: clean-copy-pro, deskuptime-pro, page-profile-pro.';
+    const VALID = 'Use page-profile-pro. Sales of clean-copy-pro and deskuptime-pro closed on 2026-11-22.';
     // Kalderens egen tekst gengives ikke: det er en åben rute med CORS `*`, og
     // en fejl behøver ikke at vise et afkortet af strengen der kom uden om.
     return new Response(JSON.stringify({
@@ -4227,45 +4242,38 @@ async function handleCheckout(request, url, env) {
     }), { status: 400, headers: corsHeaders });
   }
 
-  const kvKey = { pp: 'pp-pro-checkout', du: 'du-pro-checkout', cc: 'cc-pro-checkout' }[which];
-  // `price` er til at vise, `price_usd` + `billing` er til at regne på. En
-  // kalder må ikke skulle gætte om "$19/year" er et abonnement eller en
-  // engangspris, og de to tal er hentet fra `tools/stripe_catalog.json`, der
-  // spejler `docs/stripe-kontrakt.md` — så en pris der glide af, bliver rød i
+  const closed = CHECKOUT_CLOSED[which];
+  if (closed) {
+    return new Response(JSON.stringify({
+      ok: false,
+      live: false,
+      product: closed.product,
+      closed: CHECKOUT_CLOSED_DATE,
+      error: `${closed.name} is no longer sold (sales closed ${CHECKOUT_CLOSED_DATE}). `
+        + `Existing licence keys keep working. ${closed.free} `
+        + 'Existing customers: support@mahope.tools.',
+    }), { status: 410, headers: corsHeaders });
+  }
+
+  // Kun Page Profile Pro er tilbage. `price` er til at vise, `price_usd` +
+  // `billing` er til at regne på; tallene er hentet fra
+  // `tools/stripe_catalog.json`, så en pris der glider af, bliver rød i
   // `tests/checkout-route.test.mjs` i stedet for på en købsside.
-  const meta = which === 'pp'
-    ? {
-        product: 'page-profile-pro',
-        price: '$19/year',
-        price_usd: 19,
-        billing: 'yearly',
-        note: 'Pro adds comparison mode, batch mode and client-ready HTML reports to the page-profile CLI.',
-      }
-    : which === 'du'
-    ? {
-        product: 'deskuptime-pro',
-        price: '$19 one-time',
-        price_usd: 19,
-        billing: 'once',
-        note: 'One-time license: desktop tray app, unlimited sites, webhook alerts and a client-ready report. Up to 3 machines, all v1.x updates.',
-      }
-    : {
-        product: 'clean-copy-pro',
-        price: '$19/year',
-        price_usd: 19,
-        billing: 'yearly',
-        note: 'One license covers all 7 surfaces: Chrome, Firefox, Edge, CLI, VS Code, Obsidian, GitHub Action.',
-      };
+  const meta = {
+    product: 'page-profile-pro',
+    price: '$19/year',
+    price_usd: 19,
+    billing: 'yearly',
+    note: 'Pro adds comparison mode, batch mode and client-ready HTML reports to the page-profile CLI.',
+  };
 
   // Stripe Payment Links (Mahope.dk-kontoen). KV-nøglen kan stadig overstyre.
   const STRIPE_LINKS = {
     pp: 'https://buy.stripe.com/9B6eVcgHp7YK69ggN9bMQ04',
-    du: 'https://buy.stripe.com/7sY9AS9eX3Iu418fJ5bMQ01',
-    cc: 'https://buy.stripe.com/6oU4gy76PgvgdBIdAXbMQ00',
   };
   let checkoutUrl = STRIPE_LINKS[which];
   try {
-    checkoutUrl = (await env.VISITS.get(kvKey)) || checkoutUrl;
+    checkoutUrl = (await env.VISITS.get('pp-pro-checkout')) || checkoutUrl;
   } catch { /* KV not available */ }
   const live = !!checkoutUrl;
 

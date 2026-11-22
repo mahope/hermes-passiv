@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en" data-product="cleancopy">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Clean Copy — copy web pages as clean Markdown or plain text</title>
+<meta name="description" content="Clean Copy turns any web page, selection or HTML file into clean Markdown or plain text. Browser extension, CLI, Obsidian and VS Code plugins, GitHub Action. Free, MIT-licensed, nothing leaves your machine while you convert.">
+<meta name="author" content="Mads Holst Jensen">
+<link rel="canonical" href="https://cleancopy.tools/">
+<link rel="alternate" hreflang="en" href="https://cleancopy.tools/">
+<link rel="alternate" hreflang="da" href="https://cleancopy.tools/da/">
+<link rel="alternate" hreflang="x-default" href="https://cleancopy.tools/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Clean Copy">
+<meta property="og:title" content="Clean Copy — copy web pages as clean Markdown or plain text">
+<meta property="og:description" content="Browser extension, CLI, Obsidian and VS Code plugins. Free, MIT-licensed, runs locally.">
+<meta property="og:url" content="https://cleancopy.tools/">
+<meta property="og:image" content="https://cleancopy.tools/clean-copy/og-preview.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<script defer src="/track.js"></script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"SoftwareApplication","name":"Clean Copy","applicationCategory":"BrowserApplication","operatingSystem":"Chrome, Firefox, macOS, Linux, Windows","offers":[{"@type":"Offer","price":"0","priceCurrency":"USD"},{"@type":"Offer","name":"Clean Copy Pro Lifetime (founding price, first 100 purchases)","price":"39","priceCurrency":"USD","availability":"https://schema.org/InStock","url":"https://buy.stripe.com/aFadR81Mv6UGgNU68vbMQ0d"}],"license":"https://opensource.org/licenses/MIT","url":"https://cleancopy.tools/","author":{"@type":"Person","name":"Mads Holst Jensen","url":"https://mahoje.dk"}}
+</script>
+<style>
+  .surfaces { display: grid; gap: 0.5rem 1.5rem; grid-template-columns: 1fr; margin: 0; padding: 0; list-style: none; }
+  @media (min-width: 560px) { .surfaces { grid-template-columns: 1fr 1fr; } }
+  .surfaces li { display: flex; justify-content: space-between; gap: 1rem; border-bottom: 1px solid var(--color-border); padding: 0.45rem 0; margin: 0; }
+  .surfaces span { color: var(--color-text-muted); font-size: 0.9rem; }
+  .install h3 { margin-top: 1.75rem; }
+  .install ol { padding-left: 1.3em; }
+</style>
+</head>
+<body>
+<main id="main">
+
+<div class="hero" id="check">
+  <div class="container">
+    <h1>Copy any web page as clean Markdown or plain text.</h1>
+    <p>Clean Copy takes what you select in the browser — or a whole page, or an HTML file — and gives you Markdown that pastes correctly into Obsidian, a README, a ticket or an email. Smart quotes, zero-width characters and layout junk are removed on the way.</p>
+    <form class="oc-form" id="cc-check-form" method="get" action="/url-to-markdown">
+      <label for="cc-check-url">Address of the page to convert</label>
+      <div class="oc-row-wrap">
+        <input id="cc-check-url" name="url" type="text" inputmode="url" autocomplete="url"
+               spellcheck="false" placeholder="https://example.com/article" aria-describedby="cc-check-hint" required>
+        <button type="submit" class="btn-primary">Convert it now</button>
+      </div>
+      <p class="oc-hint" id="cc-check-hint">One address — an article or a documentation page
+      works best. We add <code>https://</code> if you leave it out. The fetch goes through our
+      server, which is also why a page behind a login or a paywall comes back empty. The
+      conversion then runs in this tab.</p>
+    </form>
+    <p class="oc-status" id="cc-check-status" role="status" aria-live="polite"></p>
+    <div id="cc-check-result" hidden></div>
+    <div class="hero-cta">
+      <a href="#install" class="btn-secondary">Install</a>
+      <a href="https://github.com/mahope/clean-copy" class="btn-secondary">Source on GitHub</a>
+    </div>
+    <span class="hero-note">Free and MIT-licensed. Your text is converted on your own machine — no account, no server. The one exception is the URL converter above: our server reads that page once, because a browser cannot fetch a page on another domain itself. A Pro license key is checked online against mahope.tools.</span>
+    <p class="hero-note">The free version is complete, not a trial. <a href="#price">See what Clean Copy Pro — $19/year adds, side by side</a>.</p>
+  </div>
+</div>
+
+<section id="paste">
+  <div class="container">
+    <h2>Or paste what you already copied</h2>
+    <p>Copy a table, a code block or part of an article on any page, then paste it here. It is the same converter as above, running in this tab, and the result is Markdown you can paste straight into Obsidian, a README, a ticket or an email.</p>
+    <div id="cc-embed"></div>
+    <script>window.CC_EMBED = { path: '/' };</script>
+  </div>
+</section>
+
+<section>
+  <div class="container">
+    <h2>What it does</h2>
+    <p>Select text on a page, right-click, choose <strong>Copy as Markdown</strong> or <strong>Copy as clean text</strong>. Or press <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>C</kbd>. The same converter runs in the terminal:</p>
+<pre class="term"><span class="p">$</span> curl -sL https://example.com/article | clean-copy
+<span class="dim"># Article title</span>
+
+<span class="dim">Paragraphs come out as paragraphs. Links become [text](url), headings keep
+their level, code blocks are fenced, and tables become pipe tables with the
+original column alignment.</span>
+
+<span class="p">$</span> clean-copy --url https://example.com/docs --text > docs.txt</pre>
+    <dl class="feature-list">
+      <div><dt>Markdown that matches the page</dt><dd>Headings, lists, links, images, bold and italic, fenced code blocks with language tags, tables with alignment, ordered lists that keep their start number.</dd></div>
+      <div><dt>Typographic clean-up</dt><dd>Curly quotes become straight quotes, non-breaking spaces become spaces, zero-width and other invisible characters are dropped.</dd></div>
+      <div><dt>Plain-text mode</dt><dd>When you only want the words: no Markdown syntax, just paragraphs and line breaks.</dd></div>
+      <div><dt>Nothing leaves your machine</dt><dd>The converter is a small JavaScript file with no runtime dependencies. The extension has no server; the CLI only opens a network connection if you pass <code>--url</code>. The one exception is a Pro license key, which is validated online — see the privacy question below.</dd></div>
+    </dl>
+  </div>
+</section>
+
+<section>
+  <div class="container">
+    <h2>Who it is for</h2>
+    <p>People who move text from the web into something else every day: developers writing docs and tickets, researchers keeping notes in Obsidian, writers pasting sources into a draft, and anyone who has pasted from a web page into a code editor and got a curly quote in a string literal.</p>
+    <p>It is one converter shipped in seven forms, so you can use the same behaviour wherever you happen to be:</p>
+    <ul class="surfaces">
+      <li>Chrome / Edge / Brave extension <span>v1.5.3</span></li>
+      <li>Firefox extension <span>v1.5.4, named Clean Copy MD</span></li>
+      <li>Command-line tool <span>Homebrew or npm</span></li>
+      <li>Obsidian plugin <span>paste as Markdown</span></li>
+      <li>VS Code extension <span>paste as Markdown</span></li>
+      <li>GitHub Action <span>convert URLs or files in CI</span></li>
+      <li>Web tool and bookmarklet <span>no install</span></li>
+    </ul>
+  </div>
+</section>
+
+<section id="install" class="install">
+  <div class="container">
+    <h2>Install</h2>
+    <p class="section-intro">The extensions are not in the Chrome Web Store or on addons.mozilla.org yet, so they are installed from a zip. That takes about a minute and does not require a developer account.</p>
+
+    <h3>Chrome, Edge, Brave</h3>
+    <ol>
+      <li>Download <a href="/downloads/clean-copy-v1.5.3.zip">clean-copy-v1.5.3.zip</a> and unzip it.</li>
+      <li>Open <code>chrome://extensions</code> and turn on <strong>Developer mode</strong>.</li>
+      <li>Click <strong>Load unpacked</strong> and pick the unzipped folder.</li>
+    </ol>
+
+    <h3>Firefox</h3>
+    <ol>
+      <li>Download <a href="/downloads/clean-copy-firefox-v1.5.4.zip">clean-copy-firefox-v1.5.4.zip</a> and unzip it.</li>
+      <li>Open <code>about:debugging#/runtime/this-firefox</code>, click <strong>Load Temporary Add-on</strong> and pick <code>manifest.json</code>.</li>
+      <li>Temporary add-ons are removed when Firefox closes. A signed build for addons.mozilla.org is in progress.</li>
+    </ol>
+
+    <h3>Command line</h3>
+<pre><code>brew install mahope/tap/clean-copy      # macOS / Linux
+npm install -g github:mahope/clean-copy-cli
+npx github:mahope/clean-copy-cli page.html   # run without installing</code></pre>
+    <p>Reads stdin or a file, writes Markdown to stdout. <code>--url</code> fetches a page and keeps the main article, <code>--text</code> gives plain text, <code>--copy</code> puts the result on the clipboard. Full reference: <a href="/clean-copy-cli-ref">CLI options</a>.</p>
+
+    <h3>Obsidian</h3>
+    <p>Add <code>mahope/clean-copy-obsidian</code> through <a href="https://github.com/TfTHacker/obsidian42-brat">BRAT</a>, or copy <code>main.js</code>, <code>manifest.json</code> and <code>styles.css</code> from the <a href="https://github.com/mahope/clean-copy-obsidian/releases/latest">latest release</a> into <code>.obsidian/plugins/clean-copy-markdown/</code>. Then paste with <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>V</kbd>. Community-plugin listing is pending.</p>
+
+    <h3>VS Code</h3>
+    <p>Download the <code>.vsix</code> from the <a href="https://github.com/mahope/clean-copy-vscode/releases/latest">latest release</a> and run <code>code --install-extension clean-copy-1.0.0.vsix</code>, or use <strong>Install from VSIX</strong> in the Extensions view. Paste HTML as Markdown with <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>V</kbd>.</p>
+
+    <h3>GitHub Action</h3>
+<pre><code>- uses: mahope/clean-copy-cli@v1
+  with:
+    url: https://example.com/changelog
+    output_file: docs/changelog.md</code></pre>
+    <p>Also accepts <code>file:</code> or raw <code>html:</code> input and four output modes: <code>markdown</code>, <code>plain</code>, <code>wikilinks</code> and <code>csv</code>.</p>
+
+    <h3>No install</h3>
+    <p>The <a href="/clean-copy-tool">web tool</a> converts pasted HTML or rich text in the browser tab. The <a href="/clean-copy-bookmarklet">bookmarklet</a> works in any browser. There is also a small <a href="/url-to-markdown">URL to Markdown</a> page and an <a href="/clean-copy-api">HTTP API</a> for scripts that cannot run Node. Agents get the same four tools over the <a href="/mcp">passiv-mcp server</a> — it is listed in the official MCP Registry and needs no API key.</p>
+  </div>
+</section>
+
+<section id="price">
+  <div class="container">
+    <h2>Price</h2>
+<!-- pro-table:start -->
+<div class="table-wrap">
+<table class="compare pro-table">
+  <caption class="sr-only">Free and Clean Copy Pro, side by side</caption>
+  <thead>
+    <tr><th scope="col"><span class="sr-only">Plan</span></th><th scope="col">Free</th><th scope="col">Clean Copy Pro</th></tr>
+  </thead>
+  <tbody>
+    <tr><th scope="row">What you get</th><td><ul><li>Every conversion mode in the extension and on the web tool</li><li>No limit on how much text you paste</li></ul></td><td><ul><li>Batch conversion</li><li>Custom cleanup rules</li></ul></td></tr>
+    <tr><th scope="row">Price</th><td><span class="pro-price">$0</span><span class="pro-note">no licence key needed</span></td><td><span class="pro-price">$19/year</span></td></tr>
+  </tbody>
+</table>
+</div>
+<p class="pro-note">$39 once — lifetime, first 100 purchases · One licence covers 5 devices.</p>
+<p class="pro-note pro-limit">Batch conversion is web-tool only. Custom cleanup rules are in the browser extension and the Obsidian plugin — the CLI and the VS Code plugin have none</p>
+<!-- pro-table:end -->
+    <p>Free. Every surface is MIT-licensed and the full source is on <a href="https://github.com/mahope/clean-copy">GitHub</a>. The free version is complete, not a trial. You get every conversion mode in the extension and on the web tool, and no limit on how much text you paste.</p>
+    <p><strong>Clean Copy Pro — $19/year</strong> adds two things to the free version: <em>batch conversion</em> of many snippets at once in the <a href="/clean-copy-tool">web tool</a>, and <em>custom cleanup rules</em> you define once in the browser extension or in the Obsidian plugin, and reuse on every copy. Pro also buys you a year of major updates, and your license helps fund development of the free version. One license covers 5 devices.</p>
+    <p><a href="https://buy.stripe.com/6oU4gy76PgvgdBIdAXbMQ00" class="btn-primary" rel="nofollow noopener">Buy Clean Copy Pro — $19/year</a></p>
+    <p><strong>Or pay once: Clean Copy Pro Lifetime — $39 once, forever.</strong> The same Pro license and the same 5 devices, but the key never expires and nothing renews. It is a founding price for the first 100 purchases only; after that, Pro is the yearly plan above.</p>
+    <p><a href="https://buy.stripe.com/aFadR81Mv6UGgNU68vbMQ0d" class="btn-secondary" rel="nofollow noopener">Buy Clean Copy Pro Lifetime — $39 once</a></p>
+    <p class="hero-note">Secure checkout via Stripe. Your license key arrives by email and on the thank-you page; activate it wherever you use Clean Copy — <a href="/activate/">the activation guide</a> covers the extension, Obsidian and the web tool.</p>
+  </div>
+</section>
+
+<section id="faq">
+  <div class="container">
+    <h2>Questions</h2>
+    <details>
+      <summary>Why is the extension not in the Chrome Web Store?</summary>
+      <p>The store listing needs a developer account and a review cycle that I have not finished. Loading the unpacked folder gives you exactly the same code; the store version will be identical when it lands.</p>
+    </details>
+    <details>
+      <summary>Does it send my text anywhere?</summary>
+      <p>The text you convert does not. The extension has no background server, and while you copy, it makes no network request at all. The CLI only makes a request when you ask it to fetch a URL. The URL converter at the top of this page is the one exception on this site: it sends the address you type to our server once so it can fetch that page, because a browser cannot fetch a third-party page itself. The HTML comes back and is converted here, in your tab — we do not store the address or the page. The paste converter further down sends nothing at all.</p>
+      <p><strong>One exception:</strong> if you activate a Clean Copy Pro license key, the key and a random device id are sent to <code>mahope.tools</code> so the license can be validated. The pages you visit and the text you copy are never sent. Without a Pro key, nothing is sent at all.</p>
+    </details>
+    <details>
+      <summary>How good is the Markdown?</summary>
+      <p>Good on articles, documentation and most tables; it preserves column alignment, language tags on code blocks and nested lists. It is not a browser rendering engine, so heavily scripted pages or content injected after load can come out incomplete. Paste the result into the <a href="/clean-copy-tool">web tool</a> if you want to see what the converter does with a specific page before installing anything.</p>
+    </details>
+    <details>
+      <summary>Chrome shows a warning about developer-mode extensions.</summary>
+      <p>That warning appears for every unpacked extension. It goes away once the store listing exists. You can read the whole extension — it is a few files with no build step.</p>
+    </details>
+    <details>
+      <summary>Can I use the converter in my own project?</summary>
+      <p>Yes. <code>clean-copy-core.js</code> is a single dependency-free module under the MIT license. The CLI, the extensions and the plugins all import it unchanged, and a parity test keeps them from drifting apart.</p>
+    </details>
+  </div>
+</section>
+
+<section>
+  <div class="container">
+    <h2>Who makes this</h2>
+    <p>Clean Copy is built and maintained by Mads Holst Jensen, an independent developer in Odense, Denmark, working as <a href="https://mahoje.dk">mahoje.dk</a>. It started as a fix for a personal annoyance — pasting from web pages into Obsidian — and grew into the set of tools above. Bug reports and pull requests are welcome on <a href="https://github.com/mahope/clean-copy/issues">GitHub</a>.</p>
+    <p>Related reading: <a href="/blog/html-to-markdown-cli">HTML to Markdown from the terminal</a>, <a href="/blog/paste-into-obsidian-clean-markdown">pasting into Obsidian as clean Markdown</a>, <a href="/blog/table-alignment-html-to-markdown">keeping table alignment in Markdown</a>.</p>
+  </div>
+</section>
+
+</main>
+<script>/* What this check cannot do, and where the visitor goes next, are this page's
+  own words — /convert-check.js is a front-door engine and hard-codes no
+  product, the same contract as /one-off-check.js on the other two sites. The
+  links point at the two ways onward that this short preview is not. */
+window.CONVERT_CHECK = {
+  then: 'That is the real converter, running on your page — the same one the extension, the CLI and the plugins use. It reads what is in the page’s HTML, so text a script adds after the page loads comes out incomplete, and it cannot open anything behind a login.',
+  next: [{label: 'Convert and copy the full text', href: '/url-to-markdown', takesUrl: true}, {label: 'Paste HTML instead of a URL', href: '/clean-copy-tool'}]
+};
+/* The donation line lives in the page, not in the engine: it has to reach
+  tools/check_donation_paths.py, and it must not appear before there is a
+  result. A sentence, never a button, and the href is the catalog's. */
+window.CC_DONATE = '<p class="oc-donate">Converting a page is free. If it saved you time, a small <a href="https://donate.stripe.com/7sYeVcbn50wieFM8gDbMQ0c" rel="nofollow noopener">donation</a> keeps it running.</p>';</script>
+<script defer src="/net.js"></script>
+<script defer src="/clean-copy-core.js"></script>
+<script defer src="/readable.js"></script>
+<script defer src="/convert-check.js"></script>
+<script defer src="/clean-copy-embed.js"></script>
+</body>
+</html>

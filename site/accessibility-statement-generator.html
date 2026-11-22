@@ -43,12 +43,6 @@
   #statement h2, #statement h3 { color: #12283a; }
   #statement dl dt { font-weight: 700; margin-top: 12px; }
   #statement dl dd { margin-left: 0; }
-  .pro-note { max-width: 720px; margin: 32px auto; padding: 18px 22px;
-              border: 1px solid var(--color-accent); border-radius: 12px;
-              background: var(--color-accent-soft); }
-  .pro-note h2 { font-size: 1.05rem; margin: 0 0 8px; }
-  .pro-note p { margin: 0; color: var(--color-text); font-size: 0.95rem; line-height: 1.65; }
-  .pro-note a { color: var(--color-accent); }
   .sr-only { position:absolute; width:1px; height:1px; overflow:hidden;
              clip:rect(0 0 0 0); white-space:nowrap; }
   @media print {
@@ -156,19 +150,6 @@
   <a href="/scan">scanner</a> first, then state honestly what you found.</p>
 </section>
 
-<section class="pro-note" aria-labelledby="pro-heading">
-  <h2 id="pro-heading">This page writes the statement. Only a test can fill it in truthfully.</h2>
-  <p>The generator above is free and stays free — eight questions, the full EU model
-  structure, nothing held back. So is the test it points you at:
-  <a href="/compliance-report">the compliance report</a> runs the accessibility checks and
-  shows you the whole report, with a score and a grade, on the page.
-  <strong>EUComply Pro</strong> is the same report for people who have to hand it to
-  someone else: 33 checks — the same 15 accessibility rules, plus 18 server-side checks for
-  GDPR and cookies, NIS2 and security headers — and a PDF you can send to a client and
-  attach to the statement. $79/year, per website. If you only need the statement for
-  one site, the free generator above is enough &mdash; nothing on this page is held
-  back for a licence.</p>
-</section>
 </main>
 
 <footer class="site-footer"><div class="container">
@@ -273,17 +254,9 @@
   // kortet siger det og påstår ikke at generatoren mangler noget.
   // `no-print`, så det ikke ender i det dokument læseren udskriver eller
   // kopierer: `renderText()` bygger fra `renderHTML(current)` alene.
-  var UPSELL = '<div class="upsell-card no-print" style="margin:16px 0 0;padding:16px;border:1px solid var(--color-border);border-radius:10px;background:var(--color-surface-2)">';
-  UPSELL += '<h2 class="sub" style="margin:0 0 4px;font-size:16px">The statement is written. The file version is what you publish and keep.</h2>';
-  UPSELL += '<p style="margin:0 0 8px;font-size:13px;color:var(--color-text-muted)">The statement above is complete and stays free. What the paid version adds is the same document as files:</p>';
-  UPSELL += '<ul style="margin:0;padding-left:18px;font-size:13px">';
-  UPSELL += '<li style="margin:4px 0"><strong>Structured to the EN 301 549 and WCAG 2.1 AA axes.</strong> What was tested, what was found, what is being fixed and how to complain &mdash; the four sections the Act expects to find.</li>';
-  UPSELL += '<li style="margin:4px 0"><strong>Two files, not a form to fill in.</strong> A PDF to publish or hand over, and a Markdown file to keep in your own repository next to the site it describes.</li>';
-  UPSELL += '<li style="margin:4px 0"><strong>The next client too.</strong> It is a file, not a licence. Nothing stops you using it on the next statement.</li>';
-  UPSELL += '</ul>';
-  UPSELL += '<p style="margin:12px 0 0"><a class="btn" style="display:inline-block;padding:12px 24px;text-decoration:none" href="https://buy.stripe.com/3cI7sK2Qz3IugNUgN9bMQ08" rel="nofollow noopener">Buy the EAA accessibility statement &mdash; $39 once</a></p>';
-  UPSELL += '<p style="margin:8px 0 0;font-size:13px;color:var(--color-text-muted)">Two files, delivered right after payment. <a href="/paid-templates">See what the templates include</a>.</p>';
-  UPSELL += '</div>';
+  // Købsvejen til den betalte skabelon er fjernet: salget af EUComply-skabelonerne er lukket 22/11-2026
+  // (closed_sales i tools/stripe_catalog.json). Generatoren er stadig gratis.
+  var UPSELL = '';
 
   $('genForm').addEventListener('submit', function (e) {
     e.preventDefault();

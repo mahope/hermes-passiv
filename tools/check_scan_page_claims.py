@@ -312,7 +312,30 @@ def _selftest() -> int:
             print("   ", f)
         return 1
 
-# Hver mutation giver de **filer** den rører ved navn. En mutation der
+    # 22/11-2026: salget af EUComply Pro er lukket. Pro-kortet på /scan er
+    # nu en note til eksisterende licenser, og katalogen har ingen
+    # `eucomply-pro`-sider i `pro_table_pages`. Dom 4 og dom 5 skal stadig
+    # kunne fejle, så mutation 6, 7 og 10-12 køres på siderne og katalogen
+    # fra før lukningen (`tools/closed_sales.py`) — og de skal være grønne
+    # dér, før en mutation må bevise noget.
+    sys.path.insert(0, str(ROOT / "tools"))
+    import closed_sales  # noqa: E402
+    før_en = closed_sales.before_closure("site/scan.html")
+    før_da = closed_sales.before_closure("site/scan-da.html")
+    før_k = closed_sales.catalog_before_closure()
+    før_fund = dom(base_w, før_en, før_da, katalog=før_k)
+    if før_fund:
+        print("SELFTEST: siderne fra før lukningen er RØDE uden mutation")
+        for f in før_fund:
+            print("   ", f)
+        return 1
+    for ord_, side in (("It reads the page from the server too", før_en),
+                       ("Den læser siden fra serveren", før_da)):
+        if ord_ not in side:
+            print(f"SELFTEST: «{ord_}» står ikke i siden fra før lukningen")
+            return 1
+
+    # Hver mutation giver de **filer** den rører ved navn. En mutation der
     # ingen fil ændrer, ville være grøn og lyde som en fejlslået dom — så
     # sidst i `_selftest` dømmes det: en mutation skal kunne ramme noget.
     HÆV = lambda s: s.replace("const SCAN_PROXY_MAX_URLS = 5;",
@@ -341,13 +364,15 @@ def _selftest() -> int:
          {"w": HÆV(base_w), "da": base_da.replace("op til 5 sider", "op til 6 sider")}),
         # 6. Pro-kortet på EN lover igen at ruten kryber hele sitet.
         ("EN-pro-kortet siger 'crawls the whole site'",
-         {"en": base_en.replace("It reads the page from the server too",
-                                "It crawls the whole site")}),
+         {"en": før_en.replace("It reads the page from the server too",
+                               "It crawls the whole site"),
+          "da": før_da, "k": før_k}),
         # 7. Samme på DA med et dansk krybende verb, så dommen ikke bare
         #    kan læse engelsk.
         ("DA-pro-kortet siger 'gennemgår hele sitet'",
-         {"da": base_da.replace("Den læser siden fra serveren",
-                                "Den gennemgår hele sitet")}),
+         {"da": før_da.replace("Den læser siden fra serveren",
+                               "Den gennemgår hele sitet"),
+          "en": før_en, "k": før_k}),
         # 8. Konstanten er væk. Dom 1 skal sige det, ellers ville resten af
         #    dommene være grønne ved at slå alt sammen.
         ("SCAN_PROXY_MAX_URLS er slettet",
@@ -376,7 +401,7 @@ def _selftest() -> int:
         ("dansk crawl-claim i katalogen",
          "Den gennemgår hele sitet — samme tjek på hver side den finder"),
     ), start=10):
-        k = json.loads(json.dumps(base_k))
+        k = json.loads(json.dumps(før_k))
         ramt = 0
         for side in k["pro_table_pages"]:
             if side.get("product") != "eucomply-pro":
@@ -387,13 +412,16 @@ def _selftest() -> int:
                     if num == 11:
                         f["labels"]["da"] = [rute_tekst]
                     ramt += 1
+        if ramt == 0:
+            print(f"SELFTEST: mutation {num} fandt intet crawl-id at ændre")
+            return 1
         mutationer.append((fejl_txt, {"k": k}))
 
     flersidet = base_w.replace(
         "const page = await cscFetch(target.toString(), REPORT_FETCH_TIMEOUT_MS);",
         "const page = await cscFetch(target.toString(), REPORT_FETCH_TIMEOUT_MS);\n"
         "  const mere = await cscFetch(target.toString(), REPORT_FETCH_TIMEOUT_MS);")
-    k12 = json.loads(json.dumps(base_k))
+    k12 = json.loads(json.dumps(før_k))
     for side in k12["pro_table_pages"]:
         if side.get("product") != "eucomply-pro":
             continue

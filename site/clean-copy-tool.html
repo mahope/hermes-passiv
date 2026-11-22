@@ -26,7 +26,7 @@
     "url": "https://hermes-passiv.pages.dev/clean-copy-tool",
     "applicationCategory": "UtilitiesApplication",
     "operatingSystem": "Any",
-    "offers": [{ "@type": "Offer", "price": "0", "priceCurrency": "USD" }, { "@type": "Offer", "name": "Clean Copy Pro Lifetime (founding price, first 100 purchases)", "price": "39", "priceCurrency": "USD", "availability": "https://schema.org/InStock", "url": "https://buy.stripe.com/aFadR81Mv6UGgNU68vbMQ0d" }],
+    "offers": [{ "@type": "Offer", "price": "0", "priceCurrency": "USD" }],
     "description": "Paste messy formatted text and get clean Markdown or plain text back. Your text never leaves your browser."
   }
   </script>
@@ -139,8 +139,8 @@
       <div class="hero-cta">
         <a href="#input-box" class="btn-primary">Paste your text</a>
       </div>
-      <span class="hero-note">Free and complete, not a trial.
-      <a href="#free-vs-pro">See what Clean Copy Pro — $19/year adds, side by side</a>.</span>
+      <span class="hero-note">Free and complete, not a trial. Clean Copy Pro is no longer sold —
+      <a href="#free-vs-pro">existing licence keys keep working</a>.</span>
     </header>
 
     <div class="privacy-note" role="note">
@@ -255,37 +255,17 @@
       "&lt;" and converts them directly.</p>
     </details>
 
-    <h2 id="free-vs-pro">Free and Pro</h2>
-<!-- pro-table:start -->
-<div class="table-wrap">
-<table class="compare pro-table">
-  <caption class="sr-only">Free and Clean Copy Pro, side by side</caption>
-  <thead>
-    <tr><th scope="col"><span class="sr-only">Plan</span></th><th scope="col">Free</th><th scope="col">Clean Copy Pro</th></tr>
-  </thead>
-  <tbody>
-    <tr><th scope="row">What you get</th><td><ul><li>The four conversion modes on this page — Markdown, WikiLinks, CSV, plain text</li><li>No limit on how much text you paste</li></ul></td><td><ul><li>Batch conversion — many snippets at once, one per line</li><li>Custom cleanup rules you define once, in the browser extension</li></ul></td></tr>
-    <tr><th scope="row">Price</th><td><span class="pro-price">$0</span><span class="pro-note">no licence key needed</span></td><td><span class="pro-price">$19/year</span></td></tr>
-  </tbody>
-</table>
-</div>
-<p class="pro-note">$39 once — lifetime, first 100 purchases · One licence covers 5 devices.</p>
-<p class="pro-note pro-limit">Batch conversion is web-tool only. Custom cleanup rules are in the browser extension and the Obsidian plugin — the CLI and the VS Code plugin have none</p>
-<!-- pro-table:end -->
+    <h2 id="free-vs-pro">Clean Copy Pro is no longer sold</h2>
+    <p class="tool-hint">Sales of Clean Copy Pro closed on 22 November 2026. This tool stays free
+    and MIT-licensed: every conversion mode and no limit on how much text you paste, with the source
+    <a href="https://github.com/mahope/clean-copy">on GitHub</a>. If you already have a Pro licence key,
+    activate it below — batch conversion unlocks here as before. Existing customers get help at
+    <a href="mailto:support@mahope.tools">support@mahope.tools</a>.</p>
 
-    <p class="tool-hint">Free without an account or a key: every conversion mode in the
-    extension and on the web tool, and no limit on how much text you paste.</p>
-    <p class="tool-hint">The free version is the complete tool, not a trial: it has no account,
-    no expiry and no limit, and the source is
-    <a href="https://github.com/mahope/clean-copy">MIT-licensed on GitHub</a>. Pro adds batch
-    conversion and custom cleanup rules on top of that, and one license covers 5 devices.</p>
-
-    <h2>Clean Copy Pro — $19/year</h2>
+    <h2>For existing Pro licence holders</h2>
     <div class="pro-box" id="pro-box">
-      <p><strong>Pro</strong> adds priority features to both the web tool and the browser
-      extension: <em>batch conversion</em> of many snippets at once, <em>custom cleanup
-      rules</em> you define once and reuse everywhere, and a year of major updates.
-      One license covers 5 devices.</p>
+      <p>Your Pro licence key keeps working: <em>batch conversion</em> of many snippets at once
+      here, and <em>custom cleanup rules</em> in the browser extension. One licence covers 5 devices.</p>
 
       <!-- Batch conversion (Pro) -->
       <details class="faq" id="batch-details" hidden>
@@ -309,15 +289,6 @@
           <span id="batch-status" role="status"></span>
         </div>
       </details>
-
-      <p id="pro-buy-row">
-        <a class="btn-primary pro-buy" id="pro-buy" style="text-decoration:none;display:inline-block;" href="https://buy.stripe.com/6oU4gy76PgvgdBIdAXbMQ00" rel="nofollow noopener">Buy Clean Copy Pro — $19/year</a>
-        <span class="tool-hint">Secure checkout via Stripe. Your license key arrives by email and on the thank-you page.</span>
-      </p>
-      <p id="pro-lifetime-row">
-        <a class="btn-secondary" id="pro-buy-lifetime" style="text-decoration:none;display:inline-block;" href="https://buy.stripe.com/aFadR81Mv6UGgNU68vbMQ0d" rel="nofollow noopener">Buy Clean Copy Pro Lifetime — $39 once</a>
-        <span class="tool-hint">Or pay once: the same Pro license, forever, with no renewal. Founding price for the first 100 purchases only.</span>
-      </p>
       <details class="faq" id="pro-activate-details">
         <summary>Already have a license key? Activate it here</summary>
         <p style="font-size:0.85rem;color:var(--color-text-muted);margin:0.5rem 0 0 0;">
@@ -500,24 +471,14 @@
     }
 
     function proCard() {
-      var html = '<div class="pro-card">';
-      html += '<h3>Cleaning one snippet at a time?</h3>';
-      html += '<p class="pro-lead">What Pro adds on top of this tool:</p>';
-      html += '<ul class="pro-list">';
-      html += '<li><strong>Batch conversion.</strong> One click cleans many snippets — one per line — instead of one paste at a time.</li>';
-      html += '<li><strong>Custom cleanup rules.</strong> In the browser extension: define your own rules once and reuse them on every site.</li>';
-      html += '<li><strong>Nothing here is taken away.</strong> Every conversion mode on this page, and no limit on how much text you paste, stay free.</li>';
-      html += '</ul>';
-      html += '<a class="btn-primary" style="display:inline-block;text-decoration:none" href="https://buy.stripe.com/6oU4gy76PgvgdBIdAXbMQ00" rel="nofollow noopener">Buy Clean Copy Pro — $19/year</a>';
-      html += '<p class="pro-card-note">One licence covers 5 devices. <a href="#free-vs-pro">See what Pro adds before you buy</a>.</p>';
-      html += '</div>';
-      return html;
+      // Salget af Clean Copy Pro er lukket 22/11-2026 (closed_sales i
+      // tools/stripe_catalog.json), så der er intet kort at vise.
+      return '';
     }
 
     function showProCard() {
-      if (proActive()) return;
-      if (!nudgeRendered) { nudge.innerHTML = proCard(); nudgeRendered = true; }
-      nudge.hidden = false;
+      // Intet salgskort efter 22/11-2026; nudge-feltet forbliver skjult.
+      nudge.hidden = true;
     }
 
     function hideProCard() { nudge.hidden = true; }

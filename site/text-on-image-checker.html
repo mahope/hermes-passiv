@@ -147,14 +147,6 @@
   </div>
 </section>
 
-<section class="ti-card" style="margin-top:2.5rem;">
-  <h2 style="margin-top:0">This checker is free. Checking the whole site is not.</h2>
-  <p style="color:var(--color-text-muted);margin-top:0">You have checked one image. Nothing on this
-  page says whether the rest of the site passes — that needs the page read from the server, and it is
-  what <a href="/compliance-report">EUComply Pro</a> does: EAA/WCAG, cookie consent and NIS2 findings in
-  one report you can hand to a client.
-  <a href="/free-tools">See every free tool</a>.</p>
-</section>
 </main>
 <footer class="container" style="padding:40px 24px;color:var(--color-text-muted);font-size:.85rem">
   mahoje.dk · Free GDPR &amp; accessibility tools that run in your browser
@@ -169,13 +161,9 @@
    `check_own_prices` dømmer pr. fil — en pris i en `.js` er en pris ingen port
    kan se. */
 (function () {
-  var PRO_CARD =
-      '<div class="pro-card">'
-    +'<h3>You checked one image. A site is every image.</h3>'
-    +'<!-- pro-table:start --> <div class="table-wrap"> <table class="compare pro-table"> <caption class="sr-only">Free and EUComply Pro, side by side</caption> <thead> <tr><th scope="col"><span class="sr-only">Plan</span></th><th scope="col">Free</th><th scope="col">EUComply Pro</th></tr> </thead> <tbody> <tr><th scope="row">What you get</th><td><ul><li>WCAG contrast ratio of the sampled text</li><li>AA and AAA verdict, large-text threshold</li><li>Image read in your browser — nothing uploaded</li></ul></td><td><ul><li>It reads the page from the server too — response headers included, which a browser check cannot see</li><li>The 15 accessibility rules around each image</li><li>A PDF report you can hand a client</li></ul></td></tr> <tr><th scope="row">Price</th><td><span class="pro-price">$0</span><span class="pro-note">no licence key needed</span></td><td><span class="pro-price">$79/year per website</span></td></tr> </tbody> </table> </div> <p class="pro-note">$149 once per website — lifetime, first 100 purchases</p> <p class="pro-note pro-limit">Does not include DPA, NIS2 clauses, or other documents — sold separately</p> <!-- pro-table:end -->'
-    +'<p><a class="btn" href="https://buy.stripe.com/eVq00i4YH6UG69g0ObbMQ03" rel="nofollow noopener">Buy EUComply Pro — $79/year per website</a></p>'
-    +'<p class="pro-card-note">One website per licence. <a href="/compliance-report">See what Pro adds before you buy</a>.</p>'
-    +'</div>';
+  // Pro-kortet er fjernet: salget af EUComply Pro er lukket 22/11-2026
+  // (closed_sales i tools/stripe_catalog.json). Tjekket er stadig gratis.
+  var PRO_CARD = '';
   var instance = window.TiContrast.mount({
     prefix: '',
     strings: {

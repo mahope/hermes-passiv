@@ -298,18 +298,23 @@ def self_test() -> int:
             mut(rod)
             return dom(kat_fra(rod), rod)
 
+    # 22/11-2026: salget af EUComply Pro er lukket, og `/scan` har ikke
+    # længere en pro-tabel i `pro_table_pages`. Mutationerne dømmes derfor på
+    # URL Inspector-siden, der stadig sælger Page Profile Pro — samme slags
+    # værktøjsside med egne free_features og pro_features.
+    #
     # 1. En fil, der ikke findes. Uden dom 1 ville `where` være grønt for en
     #    funktion, der peger på et værktøj, vi aldrig byggede.
     fund = med(lambda rod: _sæt_where(
-        rod, "site/scan.html", "free_features", "a11y",
-        "site/scan-uden-existence.html:12"))
+        rod, "site/url-inspector/index.html", "free_features", "one-url",
+        "site/url-inspector/uden-existence.html:12"))
     tjek("fil der ikke findes er rød",
          any("ikke findes i repoet" in f for f in fund), str(fund[:2]))
 
     # 2. Et linjenummer forbi filens ende — det `where`, der ser helt rigtigt ud.
     fund = med(lambda rod: _sæt_where(
-        rod, "site/scan.html", "free_features", "a11y",
-        "site/scan.html:233-9000 — elleve add()-kald"))
+        rod, "site/url-inspector/index.html", "free_features", "one-url",
+        "site/url-inspector/index.html:154-9000 — headers-tabellen"))
     tjek("linje uden for filen er rød",
          any("har kun" in f and "linjer" in f for f in fund), str(fund[:2]))
 
@@ -317,8 +322,8 @@ def self_test() -> int:
     #    den virkelige fejl mest: `where` ser rigtigt ud, men siger noget andet
     #    end koden gør.
     fund = med(lambda rod: _sæt_where(
-        rod, "site/scan.html", "pro_features", "pdf",
-        "site/scan.html:95-96 «A EUComply Pro licence gør dig til administrator»"))
+        rod, "site/url-inspector/index.html", "pro_features", "report",
+        "site/url-inspector/index.html:182 «A Page Profile Pro licence gør dig til administrator»"))
     tjek("citat der ikke findes i intervallet er rødt",
          any("står ikke i" in f for f in fund), str(fund[:2]))
 
@@ -328,13 +333,13 @@ def self_test() -> int:
     #    være rød på ethvert HTML-brudt citat, og en fejlrettelse ville se ud
     #    som en ny fejl.
     def med_strong(rod: Path) -> None:
-        sti = rod / "site" / "scan.html"
+        sti = rod / "site" / "url-inspector" / "index.html"
         tekst = sti.read_text(encoding="utf-8")
-        gammel = "<p>The report itself is free and needs no licence. A"
+        gammel = "</strong> The same headers, redirects and SSL result"
         assert gammel in tekst
         sti.write_text(tekst.replace(
             gammel,
-            "<p>The report itself is <em>free</em> and needs no licence. A", 1),
+            "</strong> The same headers, redirects and <em>SSL</em> result", 1),
             encoding="utf-8")
 
     fund = med(med_strong)
@@ -343,8 +348,8 @@ def self_test() -> int:
 
     # 5. Et `where` helt uden linjereference.
     fund = med(lambda rod: _sæt_where(
-        rod, "site/scan.html", "free_features", "basics",
-        "site/scan.html scanneren kører i browseren"))
+        rod, "site/url-inspector/index.html", "free_features", "headers",
+        "site/url-inspector/index.html headers-tabellen fylder hvert svarshoved"))
     tjek("`where` uden linjer er rød",
          any("intet `fil:linje`" in f for f in fund), str(fund[:2]))
 
@@ -353,15 +358,15 @@ def self_test() -> int:
     #    filer, så porten skal dømme hver af dem — ellers ville den være grøn
     #    på en halvdel af sit eget katalogmateriale.
     fund = med(lambda rod: _sæt_where(
-        rod, "site/scan.html", "free_features", "basics",
-        "site/scan.html:251-255, håndhævet i site/ikke-findes.js:372-376"))
+        rod, "site/url-inspector/index.html", "free_features", "headers",
+        "site/url-inspector/index.html:154-156, håndhævet i site/ikke-findes.js:372-376"))
     tjek("en anden henvisning, der ikke findes, er rød",
          any("ikke findes i repoet" in f for f in fund), str(fund[:2]))
 
     # 7. Et interval, der løber baglæns.
     fund = med(lambda rod: _sæt_where(
-        rod, "site/scan.html", "free_features", "basics",
-        "site/scan.html:255-251"))
+        rod, "site/url-inspector/index.html", "free_features", "headers",
+        "site/url-inspector/index.html:156-154"))
     tjek("interval der løber baglæns er rødt",
          any("baglæns" in f for f in fund), str(fund[:2]))
 
@@ -372,7 +377,7 @@ def self_test() -> int:
         katfil = rod / "tools" / "stripe_catalog.json"
         kat = json.loads(katfil.read_text(encoding="utf-8"))
         for post in kat["pro_table_pages"]:
-            if post["path"] == "site/scan.html":
+            if post["path"] == "site/url-inspector/index.html":
                 post.pop("free_features")
         katfil.write_text(json.dumps(kat, indent=2, ensure_ascii=False),
                          encoding="utf-8")
@@ -384,7 +389,7 @@ def self_test() -> int:
     # 9. Mutation på **kilden**: en fil, der bliver slettet. Det er den fejl,
     #    hele porten findes for — `where` så rigtigt ud, indtil filen forsvandt.
     def slet_fil(rod: Path) -> None:
-        (rod / "site" / "scan.html").unlink()
+        (rod / "site" / "url-inspector" / "index.html").unlink()
 
     fund = med(slet_fil)
     tjek("en slettet kildefil er rød",

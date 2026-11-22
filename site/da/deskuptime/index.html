@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>DeskUptime — uptid, SSL og indholdskontrol fra din egen maskine</title>
-<meta name="description" content="DeskUptime tjekker om dine websites er oppe, hvornår SSL-certifikater udløber og om indholdet er ændret — fra terminalen eller en lille desktop-app. Gratis CLI, MIT-licenseret. Pro desktop-licens 19 USD engangsbetaling.">
+<meta name="description" content="DeskUptime tjekker om dine websites er oppe, hvornår SSL-certifikater udløber og om indholdet er ændret — fra terminalen eller en lille desktop-app. Gratis CLI, MIT-licenseretsbetaling.">
 <meta name="author" content="Mads Holst Jensen">
 <link rel="canonical" href="https://deskuptime.com/da/">
 <link rel="alternate" hreflang="en" href="https://deskuptime.com/">
@@ -13,7 +13,7 @@
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="DeskUptime">
 <meta property="og:title" content="DeskUptime — uptid, SSL og indholdskontrol fra din egen maskine">
-<meta property="og:description" content="Gratis MIT CLI til uptid, SSL-udløb og indholdsåndringer. Desktop-app til macOS og Windows med Pro, 19 USD engangsbetaling. Ingen månedlig gebyr.">
+<meta property="og:description" content="Gratis MIT CLI til oppetid, SSL-udløb og indholdsændringer. Ingen konto, intet månedligt gebyr.">
 <meta property="og:url" content="https://deskuptime.com/da/">
 <meta property="og:image" content="https://deskuptime.com/og.png">
 <meta name="twitter:card" content="summary_large_image">
@@ -21,13 +21,12 @@
 <link rel="stylesheet" href="/style.css">
 <script defer src="/track.js"></script>
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"SoftwareApplication","name":"DeskUptime","applicationCategory":"DeveloperApplication","operatingSystem":"macOS, Windows, Linux","offers":[{"@type":"Offer","name":"CLI","price":"0","priceCurrency":"USD"},{"@type":"Offer","name":"Pro desktop-licens","price":"19","priceCurrency":"USD"}],"url":"https://deskuptime.com/da/","author":{"@type":"Person","name":"Mads Holst Jensen","url":"https://mahoje.dk"}}
+{"@context":"https://schema.org","@type":"SoftwareApplication","name":"DeskUptime","applicationCategory":"DeveloperApplication","operatingSystem":"macOS, Windows, Linux","offers":[{"@type":"Offer","name":"CLI","price":"0","priceCurrency":"USD"}],"url":"https://deskuptime.com/da/","author":{"@type":"Person","name":"Mads Holst Jensen","url":"https://mahoje.dk"}}
 </script>
 <style>
   .downloads { list-style: none; padding: 0; margin: 1rem 0 0; display: grid; gap: 0.5rem; }
   .downloads li { display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap; border-top: 1px solid var(--color-border); padding: 0.55rem 0; margin: 0; }
   .downloads span { color: var(--color-text-muted); font-size: 0.9rem; }
-  table.compare td:nth-child(n+2), table.compare th:nth-child(n+2) { text-align: center; width: 6.5rem; }
 </style>
 </head>
 <body>
@@ -50,9 +49,9 @@
     <div id="oc-check-result" hidden></div>
     <div class="hero-cta">
       <a href="#install" class="btn-secondary">Installér CLI'en</a>
-      <a href="#pro" class="btn-secondary">Se hvad Pro tilføjer</a>
+      <a href="#pro" class="btn-secondary">Om DeskUptime Pro</a>
     </div>
-    <span class="hero-note">Tjekket kræver ingen installation. For at holde øje med et site skal du bruge CLI'en og desktop-appen. CLI'en er gratis og MIT-licenseret; desktop-appen er en del af Pro: 19 USD engangsbetaling, 3 maskiner. <a href="#pro">Se hvad Pro tilføjer, side om side</a>.</span>
+    <span class="hero-note">Tjekket kræver ingen installation. For at holde øje med et site bruger du den gratis CLI. CLI'en er gratis og MIT-licenseret. <strong>DeskUptime Pro sælges ikke længere</strong>; eksisterende licensnøgler forbliver gyldige. <a href="#pro">Hvad det betyder for dig</a>.</span>
   </div>
 </div>
 
@@ -106,7 +105,7 @@ npx github:mahope/deskuptime check https://dit-site.dk   # ingen installation, k
   <div class="container">
     <h2>Desktop-app</h2>
     <p>En lille Tauri-app til macOS og Windows der bor i system-tray og kører de samme kontroller på et tidsplan. Notifikationer når et site går ned, et certifikat nærmer sig udløb eller indholdshashen ændres. Nuværende version 0.2.7.</p>
-    <p>Appen er closed-source og en del af DeskUptime Pro. Du kan downloade installationsfilen her, og den beder om licensnøglen fra din Stripe-kvittering første gang du starter den. <a href="#pro">Pro er 19 USD engangsbetaling</a>.</p>
+    <p>Appen er closed-source og en del af DeskUptime Pro, som ikke sælges længere. Har du allerede en licensnøgle, kan du downloade installationsfilen her; den beder om nøglen fra din Stripe-kvittering første gang du starter den. <a href="#pro">Mere om Pro</a>.</p>
     <ul class="downloads">
       <li><a href="https://github.com/mahope/deskuptime/releases/download/desktop-v0.2.7/DeskUptime-macOS-aarch64-apple-darwin.zip">macOS, Apple Silicon</a><span>zip, aarch64</span></li>
       <li><a href="https://github.com/mahope/deskuptime/releases/download/desktop-v0.2.7/DeskUptime-macOS-x86_64-apple-darwin.zip">macOS, Intel</a><span>zip, x86_64</span></li>
@@ -130,38 +129,10 @@ npx github:mahope/deskuptime check https://dit-site.dk   # ingen installation, k
 
 <section id="pro">
   <div class="container">
-    <h2>Gratis og Pro</h2>
-<!-- pro-table:start -->
-<div class="table-wrap">
-<table class="compare pro-table" id="compare">
-  <caption class="sr-only">Gratis og DeskUptime Pro, side mod side</caption>
-  <thead>
-    <tr><th scope="col"><span class="sr-only">Plan</span></th><th scope="col">Gratis</th><th scope="col">DeskUptime Pro</th></tr>
-  </thead>
-  <tbody>
-    <tr><th scope="row">Hvad du får</th><td><ul><li>Enkelttjek</li><li>SSL- og content-tjek</li><li>JSON-output</li></ul></td><td><ul><li>Desktop-app</li><li>Ubegrænsede sites</li><li>Poll hvert 30. sekund</li><li>Webhook-alarmer</li><li>Kunderapport</li></ul></td></tr>
-    <tr><th scope="row">Pris</th><td><span class="pro-price">$0</span><span class="pro-note">ingen licensnøgle nødvendig</span></td><td><span class="pro-price">$19 én gang</span></td></tr>
-  </tbody>
-</table>
-</div>
-<p class="pro-note">Én licens dækker 3 maskiner.</p>
-<p class="pro-note pro-limit">Alarmer er skrivebordsnotifikationer og webhooks — ingen SMS, mail eller telefon</p>
-<!-- pro-table:end -->
-    <div class="pricing">
-      <div>
-        <h3>CLI</h3>
-        <p class="price">Gratis</p>
-        <p>MIT-licenseret. Engangskontroller har ingen grænser; kontinuerlig watch-mode dækker op til tre sites.</p>
-        <p>Gratis uden licensnøgle: engangskontroller, SSL og indholdskontroller, og JSON-output til scripts og CI.</p>
-      </div>
-      <div>
-        <h3>Desktop Pro</h3>
-        <p class="price">19 USD <small>én gang, 3 maskiner, alle 1.x opdateringer</small></p>
-        <p>Giver dig desktop-appen til macOS og Windows, fjerner tre-sites-grænsen, lader CLI'en polle hvert 30. sekund i stedet for hvert 60., tilføjer webhook-alarmer og en klientklar rapport i Markdown og JSON. Du får en licensnøgle og betaler kun engang. Desktop-appen beder om nøglen, første gang du starter den. I version 0.2.7 går den check stadig til appens tidligere licensudbyder, så Pro-funktionerne inde i appen låser endnu ikke op.</p>
-        <p><a href="https://buy.stripe.com/7sY9AS9eX3Iu418fJ5bMQ01" class="btn-primary" rel="nofollow noopener">Køb DeskUptime Pro — 19 USD én gang</a></p>
-        <p class="notice">Sikker betaling via Stripe. Din licensnøgle ankommer pr. email og på tak-siden. Den gratis version forbliver komplet og MIT-licenseret, og intet i den udløber.</p>
-      </div>
-    </div>
+    <h2>DeskUptime Pro sælges ikke længere</h2>
+    <p><strong>DeskUptime Pro sælges ikke længere</strong> — salget lukkede 22. november 2026. DeskUptime bliver: CLI'en og web-checkerne er gratis og MIT-licenseret. Engangskontroller har ingen grænser, kontinuerlig watch-mode dækker op til tre sites, og du får SSL- og indholdskontroller og JSON-output til scripts og CI uden licensnøgle. Kildekoden ligger på <a href="https://github.com/mahope/deskuptime">GitHub</a>.</p>
+    <p>Har du allerede en Pro-licensnøgle? Den forbliver gyldig, og <a href="#desktop">desktop-appen</a> kan stadig hentes ovenfor. Desktop-appen beder om nøglen, første gang du starter den. I version 0.2.7 går den check stadig til appens tidligere licensudbyder, så Pro-funktionerne inde i appen låser endnu ikke op.</p>
+    <p>Eksisterende kunder får hjælp på <a href="mailto:support@mahope.tools">support@mahope.tools</a> eller i <a href="https://github.com/mahope/deskuptime/issues">GitHub issues</a>. Mistet nøglen? <a href="https://mahope.tools/da/license-lookup">Slå den op her</a>.</p>
   </div>
 </section>
 
@@ -212,7 +183,7 @@ window.ONE_OFF_CHECK = {
   // heroover virker stadig for besøgendes egen adresse; dette viser bare, hvordan
   // svaret ser ud, og kortet siger det selv.
   example: 'example.com',
-  then: 'Det var ét tjek, lige nu. Det siger intet om om sitet var nede for fem minutter siden eller vil være nede i morgen, og det kan ikke fortælle at sideindholdet er ændret. CLI\u0027en og desktop-appen kan det.',
+  then: 'Det var ét tjek, lige nu. Det siger intet om om sitet var nede for fem minutter siden eller vil være nede i morgen, og det kan ikke fortælle at sideindholdet er ændret. Den gratis CLI kan det.',
   next: [{label: 'Installér CLI\u0027en', href: '#install'}, {label: 'Se desktop-appen', href: '#desktop'},
     {label: 'Læs: overvågning af websites fra terminalen', href: '/blog/desktop-website-monitor-cli'}]
 };</script>

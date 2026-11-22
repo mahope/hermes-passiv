@@ -200,6 +200,13 @@ NOT_CLIENTS = {
     # `page_profile.py`, som `find_callers` ellers ville dømme som en ny
     # licensklient — den er netop den kode porten skal finde fejlen i.
     "tools/fixtures/page-profile-pre-cloudflare.py",
+    # 22/11-2026 (issue #9): kopierne fra før salget lukkede. Selvtestene i
+    # `check_stripe_ctas.py`, `check_pro_table.py` m.fl. beviser deres regler
+    # på de tidligere købssider (`tools/closed_sales.py`). De udgives aldrig og
+    # kaldes ikke af nogen kunde — de rigtige klienter står i CLIENTS.
+    "tools/fixtures/for-lukning-2026-11-22/site/clean-copy-tool.html",
+    "tools/fixtures/for-lukning-2026-11-22/site/compliance-report.html",
+    "tools/fixtures/for-lukning-2026-11-22/tools/stripe_catalog.json",
     # Opgave 37: porten over nøgleopslagssiden. Den læser den publicerede
     # klient for at dømme at den kalder `/api/license/lookup` — den *er* den
     # klients kode, ikke en kunde indlæser den.

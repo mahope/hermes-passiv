@@ -1,0 +1,807 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Premium Compliance Report — EAA, NIS2 & GDPR Audit</title>
+<meta name="description" content="Professional automated compliance report for your website. Covers EAA/WCAG accessibility, GDPR cookie consent, NIS2 security headers. Download a PDF report for client handovers and compliance files.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Premium Compliance Report — Professional Website Audit">
+<meta property="og:description" content="Get a professional compliance report for any URL. EAA/WCAG accessibility, GDPR cookie consent, NIS2 security headers — with prioritized fix recommendations.">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/compliance-report">
+<meta property="og:image" content="https://hermes-passiv.pages.dev/eaa-cover.jpg">
+<meta property="og:image:alt" content="Premium Compliance Report">
+<meta name="twitter:image" content="https://hermes-passiv.pages.dev/eaa-cover.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Premium Compliance Report — Professional Website Audit">
+<meta name="twitter:description" content="Professional compliance report for any URL. EAA/WCAG, GDPR, NIS2 — with prioritized fix recommendations.">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/compliance-report">
+<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/compliance-report">
+<link rel="stylesheet" href="style.css">
+<script defer src="/track.js"></script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "Premium Compliance Report",
+  "description": "Professional automated compliance report for websites covering EAA/WCAG accessibility, GDPR cookie consent, and NIS2 security.",
+  "applicationCategory": "BusinessApplication",
+  "operatingSystem": "Web",
+  "browserRequirements": "Requires JavaScript",
+  "offers": [
+    {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD",
+      "availability": "https://schema.org/InStock"
+    },
+    {
+      "@type": "Offer",
+      "name": "EUComply Pro Lifetime, per website (founding price, first 100 purchases)",
+      "price": "149",
+      "priceCurrency": "USD",
+      "availability": "https://schema.org/InStock",
+      "url": "https://buy.stripe.com/28E5kC3UDcf0btA2WjbMQ0f"
+    }
+  ],
+  "publisher": {"@type": "Organization", "name": "mahoje.dk", "url": "https://mahoje.dk"}
+}
+</script>
+<style>
+.price-tag { font-size: 36px; font-weight: 800; color: var(--color-text); }
+.price-tag small { font-size: 16px; font-weight: 400; color: #94a3b8; }
+.pricing-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; max-width: 640px; margin: 0 auto; }
+@media (max-width: 600px) { .pricing-grid { grid-template-columns: 1fr; } }
+.tier-card { background: var(--color-surface-2); border: 1px solid var(--color-border); border-radius: 16px; padding: 28px; text-align: center; }
+.tier-card.pro { border-color: #0b6e8f; box-shadow: 0 0 0 1px #0b6e8f; position: relative; }
+.tier-card.pro::before { content: "Best value"; position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: #0b6e8f; color: #fff; font-size: 11px; font-weight: 700; padding: 3px 14px; border-radius: 20px; }
+.tier-card ul { text-align: left; list-style: none; padding: 0; margin: 20px 0; }
+.tier-card li { padding: 6px 0; font-size: 14px; }
+.tier-card li::before { content: "✓ "; color: #157a3c; font-weight: 700; }
+
+/* Report display */
+.report-container { max-width: 800px; margin: 0 auto; }
+.report-summary { text-align: center; padding: 32px; border-radius: 16px; background: var(--color-surface-2); border: 1px solid var(--color-border); margin-bottom: 24px; }
+.report-grade { font-size: 56px; font-weight: 800; }
+.report-grade.grade-A { color: #157a3c; } .report-grade.grade-B { color: #7a6415; }
+.report-grade.grade-C { color: #a35a10; } .report-grade.grade-D { color: #a31515; }
+.report-section { margin-bottom: 24px; }
+.report-section h3 { font-size: 18px; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--color-border); display: flex; align-items: center; gap: 8px; }
+.report-section h3 .section-icon { font-size: 22px; }
+.finding-item { padding: 12px 16px; margin-bottom: 8px; border-radius: 10px; border: 1px solid var(--color-border); background: var(--color-surface-2); }
+.finding-item .sev-tag { display: inline-block; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 4px; text-transform: uppercase; margin-right: 8px; }
+.sev-error { background: #fef2f2; color: #a31515; border: 1px solid #fecaca; }
+.sev-error .sev-tag { background: #a31515; color: #fff; }
+.sev-warning { background: #fffbeb; color: #a35a10; border: 1px solid #fde68a; }
+.sev-warning .sev-tag { background: #a35a10; color: #fff; }
+.sev-notice { background: #f0f9ff; color: #0369a1; border: 1px solid #bae6fd; }
+.sev-notice .sev-tag { background: #0369a1; color: #fff; }
+.finding-fix { font-size: 13px; color: #667; margin-top: 4px; }
+.metric-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 24px; }
+.metric-card { text-align: center; padding: 16px; border-radius: 12px; border: 1px solid var(--color-border); background: var(--color-surface-2); }
+.metric-card .metric-value { font-size: 28px; font-weight: 700; }
+.metric-card .metric-label { font-size: 12px; color: #94a3b8; margin-top: 4px; }
+.license-area { text-align: center; padding: 24px; margin: 24px 0; border-radius: 12px; background: var(--color-surface-2); border: 1px dashed var(--color-border); }
+.license-area input { padding: 10px 14px; border: 1px solid #b9cdd8; border-radius: 8px; font-size: 14px; font-family: monospace; width: 280px; max-width: 100%; }
+.license-area .btn { margin-left: 8px; }
+.upgrade-area { text-align: center; padding: 24px; margin: 24px 0; border-radius: 12px; background: var(--color-surface-2); border: 1px solid #0b6e8f; box-shadow: 0 0 0 1px #0b6e8f; }
+.upgrade-area h3 { margin: 0 0 6px; }
+.upgrade-area .btn { display: inline-block; padding: 10px 24px; margin-top: 4px; text-decoration: none; }
+.license-status { margin-top: 10px; font-size: 14px; }
+.license-status.ok { color: #157a3c; }
+.license-status.err { color: #a31515; }
+.score-simulator { padding: 20px; margin: 20px 0; border-radius: 12px; background: var(--color-surface-2); border: 1px solid var(--color-border); }
+.score-bar-container { margin: 12px 0; }
+.score-bar { position: relative; height: 32px; background: #e5e7eb; border-radius: 16px; overflow: hidden; }
+.score-bar-current { position: absolute; left: 0; top: 0; height: 100%; background: #a31515; border-radius: 16px; }
+.score-bar-potential { position: absolute; left: 0; top: 0; height: 100%; background: #157a3c; border-radius: 16px; opacity: 0.4; }
+.score-bar-labels { display: flex; justify-content: space-between; font-size: 13px; color: #667; margin-top: 6px; }
+/* The paid deliverable used to be reachable with Ctrl+P, because the whole
+   report sat in the DOM before the key was typed. The NIS2/GDPR findings now
+   come from /api/report after the server accepted the key, so a print made
+   without one carries this line and cannot pass for the Pro report. */
+.print-only { display: none; }
+
+@media print {
+  header.hero, footer.site-footer, .pricing-grid, .license-area, .scanbox, .no-print { display: none !important; }
+  .print-only { display: block !important; }
+  body { background: #fff; color: #000; }
+  .report-summary { border: 1px solid #ccc; }
+  .finding-item { break-inside: avoid; border: 1px solid #ddd; }
+  .report-section { break-inside: avoid; }
+  @page { margin: 1.5cm; }
+}
+</style>
+</head>
+<body>
+
+<header class="hero" style="padding:48px 0 32px">
+  <div class="container">
+    <div class="badge">BETA — FREE DURING LAUNCH</div>
+    <h1>Premium Compliance Report</h1>
+    <p class="tagline">A professional, actionable compliance audit for <strong>any URL</strong> — EAA/WCAG accessibility, GDPR cookie consent, and NIS2 cybersecurity — with prioritized fix recommendations you can hand to your team or client.</p>
+    <div class="hero-cta">
+      <a class="btn-primary" href="#pricingSection">See pricing — EUComply Pro</a>
+    </div>
+  </div>
+</header>
+
+<main class="container">
+
+<!-- URL Input -->
+<section aria-labelledby="scan-heading" style="margin-bottom:32px">
+  <h2 id="scan-heading" style="text-align:center">Enter a URL to audit</h2>
+  <form id="reportForm" class="scanbox" style="max-width:600px;margin:16px auto 0">
+    <label for="url" class="sr-only" style="position:absolute;width:1px;height:1px;overflow:hidden">Page URL</label>
+    <input id="url" name="url" type="url" required
+           placeholder="https://your-site.com" inputmode="url"
+           value="https://example.com">
+    <button type="submit">Generate report</button>
+  </form>
+  <p style="text-align:center;font-size:13px;color:#94a3b8;margin-top:8px">
+    Public URLs only. The page is fetched and analysed on mahope.tools' servers, then discarded.
+  </p>
+</section>
+
+<!-- Loading -->
+<div id="loading" style="display:none;text-align:center;padding:48px 0">
+  <p style="font-size:18px">Scanning and analysing…</p>
+  <p style="font-size:14px;color:#94a3b8">Fetching page → checking accessibility → analysing metadata → generating report</p>
+</div>
+
+<!-- Report Display -->
+<div id="reportOutput" style="display:none" class="report-container"></div>
+
+<!-- Pricing (shown before a report is generated) -->
+<section id="pricingSection" aria-labelledby="pricing-heading" style="margin-top:48px">
+  <span id="buy" aria-hidden="true"></span>
+  <h2 id="pricing-heading" style="text-align:center">Simple pricing</h2>
+  <p style="text-align:center;color:#94a3b8;margin-bottom:24px">The report generator is free. One licence unlocks the PDF for a website you look after.</p>
+  <div class="pricing-grid">
+    <div class="tier-card pro">
+      <h3 style="margin:0">EUComply Pro</h3>
+      <div class="price-tag">$79<small> / year per website</small></div>
+      <ul>
+        <li>PDF download of the whole report as a file you can save and attach</li>
+        <li>33 checks in all — the free 15 accessibility rules, plus 18 server-side GDPR/cookie, security and metadata checks</li>
+        <li>Licence covers 1 machine</li>
+      </ul>
+      <p style="font-size:13px;color:#94a3b8">Pick how many websites you need at checkout.</p>
+      <a class="btn" style="display:inline-block;padding:10px 24px;margin-top:8px;text-decoration:none" href="https://buy.stripe.com/eVq00i4YH6UG69g0ObbMQ03" rel="nofollow noopener">Buy EUComply Pro — $79/year</a>
+    </div>
+    <div class="tier-card">
+      <h3 style="margin:0">EUComply Pro Lifetime</h3>
+      <div class="price-tag">$149<small> once per website</small></div>
+      <ul>
+        <li>The same Pro license, paid once: no renewal and no expiry</li>
+        <li>Founding price for the first 100 purchases only</li>
+        <li>Pick how many websites you need at checkout</li>
+      </ul>
+      <a class="btn" style="display:inline-block;padding:10px 24px;margin-top:8px;text-decoration:none" href="https://buy.stripe.com/28E5kC3UDcf0btA2WjbMQ0f" rel="nofollow noopener">Buy EUComply Pro Lifetime — $149 once</a>
+    </div>
+  </div>
+<!-- pro-table:start -->
+<div class="table-wrap">
+<table class="compare pro-table">
+  <caption class="sr-only">Free and EUComply Pro, side by side</caption>
+  <thead>
+    <tr><th scope="col"><span class="sr-only">Plan</span></th><th scope="col">Free</th><th scope="col">EUComply Pro</th></tr>
+  </thead>
+  <tbody>
+    <tr><th scope="row">What you get</th><td><ul><li>The accessibility checks</li><li>Score and grade</li><li>The whole report on the page</li></ul></td><td><ul><li>Pdf download</li><li>GDPR/cookie and NIS2/security checks</li></ul></td></tr>
+    <tr><th scope="row">Price</th><td><span class="pro-price">$0</span><span class="pro-note">no licence key needed</span></td><td><span class="pro-price">$79/year per website</span></td></tr>
+  </tbody>
+</table>
+</div>
+<p class="pro-note">$149 once per website — lifetime, first 100 purchases</p>
+<p class="pro-note pro-limit">Does not include DPA, NIS2 clauses, or other documents — sold separately</p>
+<!-- pro-table:end -->
+</section>
+
+<!-- Not a licence buyer? The compliance documents are sold separately -->
+<section id="documents" aria-labelledby="documents-heading" style="margin-top:48px">
+  <h2 id="documents-heading">Buying the paper, not the tool?</h2>
+  <p style="color:#94a3b8;max-width:680px">Sometimes what you need is the document, not the scanner. Seven compliance documents are sold on their own, one at a time: a DPA template, NIS2 and DORA vendor clauses, a mutual NDA clause set, an EAA accessibility statement, monthly and quarterly report templates, and the full bundle.</p>
+  <p style="color:#94a3b8;max-width:680px"><strong>They are not part of EUComply Pro.</strong> The licence unlocks the PDF this tool produces; the documents are a separate purchase, in PDF and Markdown so you can edit them. Take the one you need instead of the licence — they are written for the same compliance work.</p>
+  <a class="btn" style="display:inline-block;padding:10px 24px;margin-top:8px;text-decoration:none" href="/paid-templates">See the seven documents</a>
+</section>
+
+<!-- How it works -->
+<section aria-labelledby="how-heading" style="margin-top:48px">
+  <h2 id="how-heading">What the report covers</h2>
+  <div class="metric-row" style="grid-template-columns: repeat(3, 1fr)">
+    <div class="metric-card">
+      <div style="font-size:32px;margin-bottom:4px"></div>
+      <h3 style="margin:0;font-size:16px">EAA / WCAG</h3>
+      <p style="font-size:13px;color:#94a3b8;margin-top:6px">15 automated checks: alt text, form labels, headings, contrast, ARIA, frames, tables</p>
+    </div>
+    <div class="metric-card">
+      <div style="font-size:32px;margin-bottom:4px"></div>
+      <h3 style="margin:0;font-size:16px">GDPR / Cookie</h3>
+      <p style="font-size:13px;color:#94a3b8;margin-top:6px">Cookie banners, tracking scripts, consent signals, privacy policy links, third-party embeds</p>
+    </div>
+    <div class="metric-card">
+      <div style="font-size:32px;margin-bottom:4px"></div>
+      <h3 style="margin:0;font-size:16px">NIS2 / Security</h3>
+      <p style="font-size:13px;color:#94a3b8;margin-top:6px">Security headers (HSTS, CSP, XFO), HTTPS, mixed content, form submission security</p>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section aria-labelledby="faq-heading" style="margin-top:48px;margin-bottom:48px">
+  <h2 id="faq-heading" style="text-align:center">Frequently asked questions</h2>
+  <div style="max-width:640px;margin:0 auto">
+    <details><summary>How is this different from the free scanner?</summary>
+      <p>The free scanner on this page runs 15 accessibility checks and gives you the score, the grade and the whole report on screen. Pro adds the 18 server-side checks — GDPR/cookie, NIS2/security and metadata — and lets you save the report as a PDF file. Findings are grouped by severity in both versions.</p>
+    </details>
+    <details><summary>Is this a legal compliance guarantee?</summary>
+      <p>No. An automated scan catches roughly 30–40% of accessibility issues and provides a useful baseline, but it cannot replace a full manual audit by a qualified accessibility specialist. This report is a due-diligence tool, not a certification.</p>
+    </details>
+    <details><summary>Which standards does it check?</summary>
+      <p>EAA / WCAG 2.1 AA (15 automated rules), GDPR cookie consent requirements, and basic NIS2 security posture (CSP, HSTS, HTTPS enforcement). Each finding links to the specific criterion.</p>
+    </details>
+    <details><summary>Can I use this for client handovers?</summary>
+      <p>Yes — the report is built to be handed to clients, stakeholders, or compliance officers. Findings are grouped by severity, so the most important problems are at the top. You save the PDF yourself from the browser's print dialog.</p>
+    </details>
+    <details><summary>What happens to the pages I scan?</summary>
+      <p>The page is fetched through our proxy and the findings are computed on our server, then discarded. We store nothing about the page you scan and set no cookies. The only thing we keep is a temporary hourly counter per IP address, so a single script cannot exhaust the scanner for everyone else.</p>
+    </details>
+  </div>
+</section>
+
+</main>
+
+<footer class="site-footer"><div class="container">
+  <p><a href="/scan">← Free EAA Scanner</a> · <a href="/">Compliance Guides</a> · © 2026 Mahoje</p>
+  <p class="footer-small">Premium Compliance Report. Automated audit tool. Results are indicative — always verify with a manual audit.</p>
+</div></footer>
+
+<script>
+// ── EAA/WCAG scanner logic (same engine as /scan) ────────────────
+function gradeOf(s){return s>=90?'A':s>=75?'B':s>=55?'C':'D'}
+
+function runScan(html, url) {
+  const findings = [];
+  const add = (id, sev, msg, n) => { if (n > 0) findings.push({ id, sev, msg: msg.replace('{n}', n), count: n }); };
+
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(html, 'text/html');
+
+  add('IMG_ALT','error','{n} image(s) missing alt text',
+      [...doc.images].filter(i=>!i.hasAttribute('alt')||!i.alt.trim()).length);
+  add('FORM_LABEL','error','{n} form field(s) without a label',
+      [...doc.querySelectorAll('input,select,textarea')].filter(el=>{
+        const t=(el.type||'').toLowerCase();
+        if(['hidden','submit','button','reset','image'].includes(t))return false;
+        if(el.labels&&el.labels.length)return false;
+        return !(el.getAttribute('aria-label')||el.getAttribute('aria-labelledby')||el.getAttribute('title'));
+      }).length);
+  add('LINK_TEXT','error','{n} link(s) with no accessible text',
+      [...doc.querySelectorAll('a[href]')].filter(a=>!(a.textContent.trim()||a.getAttribute('aria-label')||a.querySelector('img[alt][alt!=""]'))).length);
+  add('BUTTON_TEXT','error','{n} button(s) with no accessible text',
+      [...doc.querySelectorAll('button')].filter(b=>!(b.textContent.trim()||b.getAttribute('aria-label')||b.querySelector('img[alt][alt!=""]'))).length);
+  add('DUP_ID','error','{n} duplicate id value(s) (breaks label/aria references)',
+      (()=>{const s=new Set(),d=new Set();doc.querySelectorAll('[id]').forEach(el=>{const v=el.id;if(s.has(v))d.add(v);else s.add(v)});return d.size;})());
+  add('TARGET_BLANK','warning','{n} link(s) opening in a new window without warning',
+      [...doc.querySelectorAll('a[target="_blank"]')].filter(a=>{
+        const t=(a.textContent||'').toLowerCase();
+        return t && !t.includes('new window') && !t.includes('new tab');
+      }).length);
+  if(!doc.title||!doc.title.trim())findings.push({id:'DOC_TITLE',sev:'error',msg:'Page has no <title>'});
+  if(!doc.documentElement.lang)findings.push({id:'HTML_LANG',sev:'error',msg:'<html> lacks a lang attribute'});
+  else if(doc.documentElement.lang.length<2)findings.push({id:'HTML_LANG_SHORT',sev:'warning',msg:'<html> lang is very short — should be a BCP 47 tag like "en" or "en-US"'});
+  if(!doc.querySelector('meta[name="viewport"]'))findings.push({id:'VIEWPORT',sev:'warning',msg:'Missing viewport meta tag'});
+  if(!doc.querySelector('h1'))findings.push({id:'HEADING_H1',sev:'warning',msg:'No <h1> found'});
+  let skips=0,prev=0;
+  doc.querySelectorAll('h1,h2,h3,h4,h5,h6').forEach(h=>{const l=+h.tagName[1];if(prev&&l>prev+1)skips++;prev=l});
+  add('HEADING_SKIP','warning','{n} heading level skip(s)',skips);
+  add('IFRAME_TITLE','warning','{n} iframe(s) without a title',doc.querySelectorAll('iframe:not([title])').length);
+  add('TABLE_HEADER','warning','{n} table(s) without header cells',[...doc.querySelectorAll('table')].filter(t=>!t.querySelector('th')).length);
+  add('ARIA_HIDDEN_FOCUS','error','{n} aria-hidden element(s) still focusable',
+      [...doc.querySelectorAll('[aria-hidden="true"]')].filter(el=>el.matches('a[href],button,input,select,textarea,[tabindex]:not([tabindex="-1"])')).length);
+
+  // Contrast check
+  function parseCol(s){
+    s=(s||'').trim().toLowerCase();
+    if(!s||['transparent','inherit','currentcolor','initial'].includes(s))return null;
+    let m=s.match(/^#([0-9a-f]{3})$/);if(m)return m[1].split('').map(c=>parseInt(c+c,16));
+    m=s.match(/^#([0-9a-f]{6})/);if(m)return [0,2,4].map(i=>parseInt(m[1].slice(i,i+2),16));
+    m=s.match(/^rgba?\\(([^)]+)\\)/);
+    if(m){const p=m[1].split(',').map(x=>x.trim());
+      if(p.length>=4&&parseFloat(p[3])<0.9)return null;
+      try{return p.slice(0,3).map(x=>x.endsWith('%')?parseFloat(x)*2.55:parseFloat(x));}catch(e){return null;}}
+    const named={white:[255,255,255],black:[0,0,0],red:[255,0,0],green:[0,128,0],blue:[0,0,255],gray:[128,128,128],grey:[128,128,128],silver:[192,192,192],yellow:[255,255,0],orange:[255,165,0]};
+    return named[s]||null;
+  }
+  function lum(rgb){return 0.2126*chan(rgb[0])+0.7152*chan(rgb[1])+0.0722*chan(rgb[2]);}
+  function chan(c){c/=255;return c<=0.04045?c/12.92:Math.pow((c+0.055)/1.055,2.4);}
+  const seen=new Set();let low=0;
+  const root=doc.body||doc.documentElement;
+  const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);
+  let n;
+  while((n=walker.nextNode())){
+    if(!n.textContent.trim())continue;
+    let el=n.parentElement,fg=null,bg=null,node=el;
+    while(node&&node.nodeType===1){
+      const st=(node.getAttribute&&node.getAttribute('style'))||'';
+      if(st){
+        if(fg===null){const m=st.match(/(?:^|;)\s*color\s*:\s*([^;!]+)/);if(m)fg=m[1].trim();}
+        if(bg===null){const m=st.match(/background(?:-color)?\s*:\s*([^;!]+)/);
+          if(m&&!/url\(|gradient\(/.test(m[1]))bg=m[1].trim();}
+      }
+      node=node.parentElement;}
+    if(fg===null||bg===null)continue;
+    let large=false;node=el;
+    while(node&&node.nodeType===1){
+      const st=(node.getAttribute&&node.getAttribute('style'))||'';
+      if(/font-size\s*:\s*(?:1[89]\d*|2\d+|[3-9]\d+)\s*px|font-size\s*:\s*(?:14|1[5-9]|[2-9]\d+(\.\d+)?)\s*pt|font-weight\s*:\s*(?:bold|[6-9]00)/.test(st)){large=true;break;}
+      node=node.parentElement;}
+    const f=parseCol(fg),b=parseCol(bg);
+    if(!f||!b)continue;
+    const lf=lum(f),lb=lum(b),hi=Math.max(lf,lb),lo=Math.min(lf,lb);
+    const ratio=(hi+0.05)/(lo+0.05),thr=large?3.0:4.5,key=fg+'|'+bg+'|'+large;
+    if(ratio<thr&&!seen.has(key)){seen.add(key);low++;}
+  }
+  // The GDPR/cookie, NIS2/security and metadata checks that used to live here
+  // are gone on purpose. They ran in the browser on HTML that /scan-proxy had
+  // already handed back, so their output sat in the DOM before a license key
+  // was ever typed and @media print printed it — Ctrl+P handed out exactly
+  // what the $79 "Unlock & Download" button was meant to unlock (❓ 14). They
+  // now run server-side in /api/report (site/_worker.js), so nothing about
+  // NIS2 or GDPR reaches the DOM before the server has accepted a key. What
+  // stays here is the accessibility grade, which is the free product.
+  add('CONTRAST','error','{n} text colour combination(s) below WCAG AA (4.5:1 normal, 3:1 large)',low);
+
+  // Score
+  const errors=findings.filter(f=>f.sev==='error').length;
+  const warnings=findings.filter(f=>f.sev==='warning').length;
+  const notices=findings.filter(f=>f.sev==='notice').length;
+  const score=Math.max(0,100-errors*12-warnings*5-notices*2);
+  const grade=gradeOf(score);
+
+  return { findings, errors, warnings, notices, score, grade, title: doc.title, lang: doc.documentElement.lang };
+}
+
+// ── License validation ────────────────────────────────────────────
+function getDeviceId() {
+  let did = localStorage.getItem('cc_device_id');
+  if (!did) { did = 'cc-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2,10); localStorage.setItem('cc_device_id', did); }
+  return did;
+}
+
+// ── License validation ────────────────────────────────────────────
+// The worker rejects a payload without `product`, so the key must be sent as
+// an EUComply Pro key — the one licensed product this page sells.
+const LICENSE_PRODUCT = 'eucomply-pro';
+
+// A paying customer must never be locked out by a license-server blip, so a
+// successful check is cached for seven days and an unreachable server keeps
+// that cache — the same rule as tools/clean_copy_license.js. That module
+// cannot be inlined here: its PRODUCT is hardcoded to clean-copy-pro, and
+// inlining it verbatim would make the worker answer 403 "This license key is
+// for another product." to every EUComply key, locking out exactly the
+// customers this page charges $79/year.
+//
+// Stored under its own names on purpose: `cc_pro_license` holds a
+// clean-copy-pro key, and a cached key of the wrong product must never
+// unlock this one.
+const CACHE_MAX_MS = 7 * 24 * 60 * 60 * 1000;
+const CACHE_KEY = 'euc_pro_license';
+const CHECKED_KEY = 'euc_pro_checked';
+const EXPIRES_KEY = 'euc_pro_expires';
+
+function readStore(name) {
+  try { return localStorage.getItem(name) || ''; } catch (e) { return ''; }
+}
+function writeStore(name, value) {
+  try { localStorage.setItem(name, value); } catch (e) {}
+}
+
+// status 0 = the request never got an answer (offline, DNS, timeout).
+function isServerError(status) { return status === 0 || status >= 500; }
+
+function normalizeKey(key) {
+  return String(key === null || key === undefined ? '' : key).trim().toLowerCase();
+}
+
+// One HTTP exchange, reduced to one decision: may this customer save the
+// report, and what do we tell them? Mirrors decide() in the canonical module.
+function decideLicense(status, data, key) {
+  data = data || {};
+  if (status === 200 && data.ok && (data.valid === true || data.activated === true)) {
+    return { active: true, cached: false, message: '', expiresAt: data.expires_at || '' };
+  }
+  if (isServerError(status)) {
+    const checkedAt = Number(readStore(CHECKED_KEY)) || 0;
+    // Only this exact key may ride out an outage — otherwise any 32-hex string
+    // would open the report while the server is down.
+    if (checkedAt > 0 && Date.now() - checkedAt <= CACHE_MAX_MS && readStore(CACHE_KEY) === key) {
+      return {
+        active: true, cached: true, expiresAt: readStore(EXPIRES_KEY),
+        message: 'License server unreachable — Pro stays active until ' +
+          new Date(checkedAt + CACHE_MAX_MS).toISOString().slice(0, 10) + '.'
+      };
+    }
+    return {
+      active: false, cached: false, message: '',
+    };
+  }
+  if (status === 409) return { active: false, message: data.error || 'Device limit reached for this license.' };
+  if (status === 403) return { active: false, message: data.error || 'This license is expired, revoked, or for another product.' };
+  if (status === 404) return { active: false, message: data.error || 'License key not found.' };
+  if (status === 400) return { active: false, message: data.error || 'Invalid license key.' };
+  return {
+    active: false, cached: false,
+    message: data.error || (data.reason === 'device_limit'
+      ? 'Device limit reached for this license.'
+      : 'This license is not valid anymore.')
+  };
+}
+
+async function validateLicense(key) {
+  const norm = normalizeKey(key);
+  let status = 0;
+  let data = {};
+  try {
+    const r = await fetch('/api/license/validate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      // The contract is 32 *lowercase* hex characters, so the key is trimmed
+      // and lowercased here: a customer who retypes it from the email with
+      // caps lock on was otherwise rejected with 400 on a key they paid for.
+      body: JSON.stringify({ license_key: norm, device_id: getDeviceId(), product: LICENSE_PRODUCT })
+    });
+    status = r.status;
+    data = await r.json().catch(function () { return {}; });
+  } catch (e) {
+    status = 0;
+  }
+  const decision = decideLicense(status, data, norm);
+  if (decision.active && !decision.cached) {
+    writeStore(CACHE_KEY, norm);
+    writeStore(CHECKED_KEY, String(Date.now()));
+    if (decision.expiresAt) writeStore(EXPIRES_KEY, decision.expiresAt);
+  }
+  if (decision.active && !decision.message) decision.message = '';
+  if (!decision.active && !decision.message) {
+    decision.message = 'License server unreachable. Try again in a moment — your report is not lost, just re-open this page.';
+  }
+  return decision;
+}
+
+// ── Report rendering ──────────────────────────────────────────────
+const FIXES = {
+  IMG_ALT:'Add alt="description" to every meaningful image; use alt="" for purely decorative ones.',
+  FORM_LABEL:'Give every field a <label for="field-id">, or an aria-label attribute.',
+  LINK_TEXT:'Add descriptive text inside the link, or aria-label if it is icon-only.',
+  BUTTON_TEXT:'Add visible text or an aria-label to every button.',
+  DUP_ID:'Make every id value unique on the page.',
+  TARGET_BLANK:'Warn users the link opens in a new window, e.g. "(opens in new tab)", and add rel="noopener".',
+  DOC_TITLE:'Add a descriptive <title> in the <head>.',
+  HTML_LANG:'Add lang to <html>, e.g. <html lang="en">.',
+  HTML_LANG_SHORT:'Use a complete BCP 47 tag such as "en" or "en-US".',
+  VIEWPORT:'Add <meta name="viewport" content="width=device-width, initial-scale=1">.',
+  HEADING_H1:'Add one descriptive <h1> as the main page heading.',
+  HEADING_SKIP:'Do not skip heading levels — nest h2 under h1, h3 under h2, etc.',
+  IFRAME_TITLE:'Add a title attribute describing the iframe content.',
+  TABLE_HEADER:'Use <th> for header cells in data tables.',
+  ARIA_HIDDEN_FOCUS:'Remove aria-hidden from focusable elements, or add tabindex="-1".',
+  CONTRAST:'Darken text or lighten background until contrast is at least 4.5:1 (3:1 for large text). Check at webaim.org/resources/contrastchecker.',
+  COOKIE_BANNER:'Install a GDPR/ePrivacy consent banner that blocks tracking until user consent is given before the page loads.',
+  GA_NO_CONSENT:'Implement a consent mechanism that prevents GA from loading before consent, or anonymize strictly. Use Google Consent Mode v2.',
+  FB_NO_CONSENT:'Prevent the Facebook pixel from loading before consent is given — use the consent platform to gate the pixel script.',
+  PRIVACY_LINK:'Add a link to your privacy policy and cookie policy in the footer, visible on every page.',
+  COOKIE_SCRIPTS:'Review all cookie scripts to ensure they respect consent signals and are documented in your cookie policy.',
+  FORM_COUNT:'Verify all forms submit over HTTPS and include CSRF tokens for NIS2 compliance.',
+  FORM_HTTP:'Change form action URLs to HTTPS — HTTP form submissions are insecure and violate NIS2.',
+  META_CSP:'Move CSP to an HTTP header for stronger protection against XSS and data injection.',
+  SEC_HSTS:'Send `Strict-Transport-Security: max-age=31536000; includeSubDomains` from your web server so browsers only reach the site over HTTPS.',
+  SEC_CSP:'Send a `Content-Security-Policy` response header. Start narrow with `default-src \'self\'` and widen only where you must.',
+  OG_TITLE:'Add <meta property="og:title" content="..."> for better social sharing previews.',
+  OG_DESC:'Add <meta property="og:description" content="..."> for social sharing descriptions.',
+  OG_IMAGE:'Add <meta property="og:image" content="..."> for a preview image when shared.',
+  TWITTER_CARD:'Add <meta name="twitter:card" content="summary_large_image"> for rich Twitter cards.',
+  CANONICAL:'Add <link rel="canonical" href="..."> to prevent duplicate content issues.',
+  CHARSET:'Add <meta charset="utf-8"> in the <head> for correct character rendering.',
+  JSONLD:'Add JSON-LD structured data (Organization, WebSite, Article, etc.) to help search engines.',
+  NO_ANALYTICS:'If the site uses tracking, consider an analytics tool with privacy-friendly configuration.'
+};
+
+const SEV_LABELS = { error: 'Error', warning: 'Warning', notice: 'Notice' };
+
+function renderReport(data, url) {
+  const findingsBySev = { error: [], warning: [], notice: [] };
+  data.findings.forEach(f => { if (findingsBySev[f.sev]) findingsBySev[f.sev].push(f); });
+
+  let h = '';
+
+  // Summary card
+  h += '<div class="report-summary">';
+  h += '<p style="font-size:13px;color:#94a3b8;margin-bottom:8px">Compliance Report — ' + new Date().toISOString().slice(0,10) + '</p>';
+  h += '<div class="report-grade grade-' + data.grade + '">' + data.score + '/100 <span style="font-size:24px">— Grade ' + data.grade + '</span></div>';
+  h += '<p style="margin-top:8px;font-size:14px;color:#667">' + data.errors + ' error(s), ' + data.warnings + ' warning(s), ' + data.notices + ' notice(s)</p>';
+  if (data.title) h += '<p style="font-size:14px;color:#667;margin-top:4px">Page: ' + data.title.replace(/&/g,'&amp;').replace(/</g,'&lt;').slice(0,80) + '</p>';
+  h += '<p style="font-size:13px;color:#94a3b8;margin-top:4px;word-break:break-all">URL: ' + url.replace(/&/g,'&amp;').replace(/</g,'&lt;') + '</p>';
+  // A print made with Ctrl+P before a key was entered must not be mistakable
+  // for the thing $79 buys. Pro findings arrive only from /api/report, so
+  // their absence is the honest signal — no extra flag to keep in sync.
+  if (!data.pro) {
+    h += '<p class="print-only" style="font-size:12px;color:#a31515;margin-top:10px">Free scan — accessibility findings only. This is not the EUComply Pro report: the GDPR/cookie and NIS2/security checks need a license key.</p>';
+  }
+  h += '</div>';
+
+  // Metrics row
+  h += '<div class="metric-row">';
+  h += '<div class="metric-card"><div class="metric-value grade-' + data.grade + '">' + data.grade + '</div><div class="metric-label">Overall Grade</div></div>';
+  h += '<div class="metric-card"><div class="metric-value" style="color:#a31515">' + data.errors + '</div><div class="metric-label">Errors</div></div>';
+  h += '<div class="metric-card"><div class="metric-value" style="color:#a35a10">' + data.warnings + '</div><div class="metric-label">Warnings</div></div>';
+  h += '<div class="metric-card"><div class="metric-value" style="color:#0369a1">' + data.notices + '</div><div class="metric-label">Notices</div></div>';
+  h += '</div>';
+
+  // Score improvement simulator — shows what fixing issues would do
+  const potentialScore = Math.max(0, 100 - data.notices * 2);
+  const errorPoints = data.errors * 12;
+  const warningPoints = data.warnings * 5;
+  if (data.errors > 0 || data.warnings > 0) {
+    h += '<div class="score-simulator">';
+    h += '<h3 style="margin:0 0 12px">What fixing these would do</h3>';
+    h += '<div class="score-bar-container">';
+    h += '<div class="score-bar">';
+    h += '<div class="score-bar-current" style="width:' + Math.min(100, data.score) + '%"></div>';
+    if (potentialScore > data.score) {
+      h += '<div class="score-bar-potential" style="width:' + Math.min(100, potentialScore) + '%"></div>';
+    }
+    h += '</div>';
+    h += '<div class="score-bar-labels">';
+    h += '<span>Now: ' + data.score + '</span>';
+    if (potentialScore > data.score) {
+      h += '<span>Fixed: ' + potentialScore + '</span>';
+    }
+    h += '</div>';
+    h += '</div>';
+    if (errorPoints > 0) {
+      h += '<p style="font-size:14px;margin:12px 0 4px"><strong>Fix all ' + data.errors + ' error(s) → +' + errorPoints + ' points</strong> (score: ' + data.score + ' → ' + Math.min(100, data.score + errorPoints) + ')</p>';
+    }
+    if (warningPoints > 0) {
+      h += '<p style="font-size:14px;margin:4px 0"><strong>Fix all ' + data.warnings + ' warning(s) → +' + warningPoints + ' points</strong> (score: ' + data.score + ' → ' + Math.min(100, data.score + errorPoints + warningPoints) + ')</p>';
+    }
+    h += '</div>';
+  }
+
+  // Findings by severity
+  ['error', 'warning', 'notice'].forEach(sev => {
+    const items = findingsBySev[sev];
+    if (items.length === 0) return;
+    h += '<div class="report-section">';
+    h += '<h3><span class="section-icon">' + (sev==='error'?'🔴':sev==='warning'?'🟡':'🔵') + '</span> ' + (sev==='error'?'Errors':sev==='warning'?'Warnings':'Notices') + ' <span style="font-size:14px;font-weight:400;color:#94a3b8">(' + items.length + ')</span></h3>';
+    items.forEach(f => {
+      h += '<div class="finding-item sev-' + f.sev + '">';
+      h += '<strong><span class="sev-tag">' + SEV_LABELS[f.sev] + '</span> ' + (f.count ? '(' + f.count + ')' : '') + ' ' + f.msg + '</strong>';
+      if (FIXES[f.id]) h += '<div class="finding-fix">' + FIXES[f.id] + '</div>';
+      h += '</div>';
+    });
+    h += '</div>';
+  });
+
+  // License gate for PDF download
+  h += '<div class="license-area no-print">';
+  h += '<h3 style="margin:0 0 8px">Download PDF Report</h3>';
+  h += '<p style="font-size:14px;color:#94a3b8;margin-bottom:16px">Enter your license key to unlock the professional PDF download.</p>';
+  h += '<div style="display:flex;flex-wrap:wrap;justify-content:center;gap:8px">';
+  h += '<label for="licenseInput" class="sr-only">License key</label><input type="text" id="licenseInput" placeholder="License key (32 hex chars)" style="flex:1;min-width:200px;max-width:320px" spellcheck="false" autocomplete="off">';
+  h += '<button id="verifyBtn" class="btn" onclick="verifyAndDownload()">Unlock & Download</button>';
+  h += '</div>';
+  h += '<div id="licenseStatus" class="license-status"></div>';
+  h += '</div>';
+
+  // The reader has just seen what the free scan found. That is the moment the
+  // paid report is worth explaining, so the offer sits here — not behind a
+  // link to a pricing section the scan used to hide.
+  if (!data.pro) {
+    h += '<div class="upgrade-area no-print">';
+    h += '<h3>No licence yet? Here is what the paid report adds.</h3>';
+    h += '<p style="font-size:14px;color:#667">This free scan ran the 15 accessibility rules. EUComply Pro adds the 18 server-side GDPR/cookie, security and metadata checks and a PDF you can hand a client.</p>';
+    h += '<p style="font-size:15px"><strong>$79/year per website</strong> <span style="color:#94a3b8">· $149 once (lifetime, first 100 purchases)</span></p>';
+    h += '<a class="btn" href="https://buy.stripe.com/eVq00i4YH6UG69g0ObbMQ03" rel="nofollow noopener" onclick="window.trackEvent&&window.trackEvent(\'upgrade-buy-click\')">Buy EUComply Pro — $79/year per website</a>';
+    h += '<p style="font-size:12px;color:#94a3b8;margin-top:10px">One website per licence. <a href="#pricingSection">Compare free and Pro</a>.</p>';
+    h += '</div>';
+  }
+
+  h += '<p style="text-align:center;font-size:13px;color:#94a3b8;margin-top:16px" class="no-print">Automated checks catch ~30-40% of issues. Always pair with a manual audit.</p>';
+
+  document.getElementById('reportOutput').innerHTML = h;
+  document.getElementById('reportOutput').style.display = 'block';
+  document.getElementById('loading').style.display = 'none';
+  // Pricing stays on the page after a scan: the report and the hero both link
+  // to #pricingSection, and hiding it left the only buy path unreachable.
+  // A customer who paid $79/year should not have to find the key again to get
+  // the report a second time. Prefilled, never submitted automatically.
+  var cachedKey = readStore(CACHE_KEY);
+  if (cachedKey) {
+    var keyField = document.getElementById('licenseInput');
+    if (keyField) keyField.value = cachedKey;
+  }
+  document.getElementById('reportOutput').scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+  // Store scan data for PDF download
+  window._lastScanData = data;
+  window._lastScanUrl = url;
+}
+
+let scanInProgress = false;
+
+async function generateReport(url) {
+  if (scanInProgress) return;
+  scanInProgress = true;
+
+  document.getElementById('loading').style.display = 'block';
+  document.getElementById('reportOutput').style.display = 'none';
+  // The pricing section must never be hidden by a scan: the hero button and the
+  // report's own "Compare free and Pro" link both point at #pricingSection, so
+  // hiding it here (and never restoring it) left both links dead right after a
+  // scan. renderReport() only removes the report output, never the offer.
+  if (window.trackEvent) window.trackEvent('compliance-report');
+
+  try {
+    // Fetch the page via scan proxy
+    const scanResp = await fetch('/scan-proxy?url=' + encodeURIComponent(url));
+    const scanData = await scanResp.json();
+
+    if (!scanData.ok) {
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('reportOutput').innerHTML =
+        '<div class="report-summary"><p style="color:#a31515;font-size:16px;font-weight:600">Could not scan this page</p>' +
+        '<p style="color:#667">' + (scanData.error || 'Unknown error') + '</p></div>';
+      document.getElementById('reportOutput').style.display = 'block';
+      scanInProgress = false;
+      return;
+    }
+
+    // Run scan + profile analysis
+    const scanResult = runScan(scanData.html, scanData.url);
+    renderReport(scanResult, scanData.url);
+  } catch (err) {
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('reportOutput').innerHTML =
+      '<div class="report-summary"><p style="color:#a31515;font-size:16px;font-weight:600">Something went wrong</p>' +
+      '<p style="color:#667">' + (err.message || 'An unexpected error occurred') + '</p></div>';
+    document.getElementById('reportOutput').style.display = 'block';
+  }
+  scanInProgress = false;
+}
+
+async function verifyAndDownload() {
+  const input = document.getElementById('licenseInput');
+  const status = document.getElementById('licenseStatus');
+  const key = input.value.trim();
+
+  if (!key) {
+    status.className = 'license-status err';
+    status.textContent = 'Please enter a license key.';
+    return;
+  }
+  if (!/^[a-f0-9]{32}$/i.test(key)) {
+    status.className = 'license-status err';
+    status.textContent = 'Invalid format — license key is 32 hexadecimal characters.';
+    return;
+  }
+
+  status.className = 'license-status';
+  status.textContent = 'Verifying license…';
+  document.getElementById('verifyBtn').disabled = true;
+
+  const result = await validateLicense(key);
+  if (!result.active) {
+    status.className = 'license-status err';
+    status.textContent = result.message || 'License not valid. Check your key or visit the pricing page.';
+    document.getElementById('verifyBtn').disabled = false;
+    return;
+  }
+
+  status.className = 'license-status';
+  status.textContent = 'License verified — running the full report…';
+
+  // The paid half of the report is computed server-side now. Printing first and
+  // asking afterwards would put the free-only document in front of the customer,
+  // so the fetch happens before window.print().
+  let note = result.cached
+    ? ' (server unreachable earlier — checked ' + (readStore(EXPIRES_KEY) || '').slice(0, 10) + ')'
+    : '';
+  let pro = null;
+  try {
+    const r = await fetch('/api/report', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ license_key: key, device_id: getDeviceId(), url: window._lastScanUrl }),
+    });
+    const j = await r.json().catch(() => null);
+    if (r.ok && j && j.ok) pro = j.findings;
+    else if (r.status === 429) {
+      // The hourly limit is not a verdict on the key, so it must not be
+      // reported as one. The PDF still opens with the free analysis.
+      note = ' — you have used the hourly report limit, so this PDF holds the free analysis only. It resets within the hour.';
+    } else if (r.status >= 500 || !j) {
+      // A blip must never lock out a customer who paid. Print what we have and
+      // say plainly that it is not the full report.
+      note = ' — the server could not be reached, so this PDF holds the free analysis only. Try again in a moment.';
+    } else {
+      // Nøglen er allerede bekræftet aktiv ovenfor, så intet herfra kan være
+      // en afvisning af den. Den gamle tekst sagde "the report server refused
+      // the key" og nåede ethvert 4xx — også et 400 for en privat værtsadresse,
+      // som /scan-proxy lader igennem men rapporten ikke gør. En kunde der
+      // betalte $79 fik så skylden lagt på sin egen nøgle for et problem med
+      // den URL, han havde tastet. Sig hvad der faktisk stoppede, og at nøglen
+      // stadig er i orden.
+      const why = j && j.error ? j.error : 'try again';
+      note = ' — your key is valid, but this report could not be produced: ' + why;
+    }
+  } catch {
+    note = ' — the server could not be reached, so this PDF holds the free analysis only. Try again in a moment.';
+  }
+
+  if (pro) {
+    mergeProFindings(pro);
+    // Re-rendering replaces the license box, so the status node has to be
+    // looked up again afterwards.
+    renderReport(window._lastScanData, window._lastScanUrl);
+  }
+
+  const final = document.getElementById('licenseStatus');
+  if (final) {
+    final.className = 'license-status ' + (pro ? 'ok' : 'err');
+    final.textContent = (pro ? '✓ License valid' : '⚠ License valid') + note + ' — your PDF opens now.';
+  }
+  window.setTimeout(() => window.print(), 500);
+}
+
+// Merge the server-side NIS2/GDPR/metadata findings into the scan already in
+// the DOM and restate the score, so the printed grade covers all of it.
+function mergeProFindings(extra) {
+  const data = window._lastScanData;
+  if (!data || !Array.isArray(extra)) return;
+  const have = new Set(data.findings.map(f => f.id));
+  extra.forEach(f => { if (f && f.id && !have.has(f.id)) data.findings.push(f); });
+  const errors = data.findings.filter(f => f.sev === 'error').length;
+  const warnings = data.findings.filter(f => f.sev === 'warning').length;
+  const notices = data.findings.filter(f => f.sev === 'notice').length;
+  data.errors = errors;
+  data.warnings = warnings;
+  data.notices = notices;
+  data.score = Math.max(0, 100 - errors * 12 - warnings * 5 - notices * 2);
+  data.grade = gradeOf(data.score);
+  data.pro = true;
+}
+
+// ── Form handler ──────────────────────────────────────────────────
+document.getElementById('reportForm').addEventListener('submit', function(e) {
+  e.preventDefault();
+  const url = document.getElementById('url').value.trim();
+  if (!url) return;
+  generateReport(url);
+});
+
+// Hash param auto-scan. `decodeURIComponent` kaster `URIError` på `#url=%` —
+// fragmentet kan skrives i hånden — og kaster den dør denne IIFE, så
+// `generateReport(u)` springes over og læseren får en tom rapport side og en
+// rød konsolfejl. Derfor `try`. Samme tre linjer som `/url-to-markdown`.
+(function() {
+  const m = location.hash.match(/#url=(.+)$/);
+  if (m) {
+    let u = '';
+    try { u = decodeURIComponent(m[1]); } catch (e) { return; }
+    if (/^https?:\/\//i.test(u)) {
+      document.getElementById('url').value = u;
+      generateReport(u);
+    }
+  }
+})();
+</script>
+<script>
+(function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';document.addEventListener('click',function(ev){var a=ev.target&&ev.target.closest?ev.target.closest('a[href]'):null;if(!a)return;var h=a.getAttribute('href')||'';var m=h.match(/^\/(?:da\/)?(scan|clean-copy-tool|page-profile|site-icons|text-diff|url-to-markdown|free-tools|paid-templates|compliance-report)(\.html)?(#[^#]*)?$/);if(!m)return;try{navigator.sendBeacon('/api/track',new Blob([JSON.stringify({path:p,event:'cta-'+m[1]})],{type:'application/json'}));}catch(e){}},true);}catch(e){}})();
+</script>
+<script>
+(function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';fetch('/api/track',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:p}),keepalive:true}).catch(function(){});}catch(e){}})();
+</script>
+</body>
+</html>

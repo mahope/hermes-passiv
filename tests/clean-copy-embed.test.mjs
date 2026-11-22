@@ -149,8 +149,9 @@ const VALID = { status: 200, json: { ok: true, valid: true, plan: 'pro-yearly', 
   const t = laad({});
   const input = t.byId.get('cc-input');
   const output = t.byId.get('cc-output');
-  const nudge = t.byId.get('cc-nudge');
-  ok('embed: kortet er skjult før der er konverteret', nudge.hidden === true);
+  // Salget af Clean Copy Pro er lukket 22/11-2026: der er intet Pro-kort og
+  // intet købslink i embeddet — dommen er vendt fra «kortet køber via linket».
+  ok('embed: der er intet Pro-kort (salget er lukket)', !t.byId.has('cc-nudge'));
 
   // Ren tekst i markdown-tilstand: ingen kerne, kun mellemrumsrens.
   input.value = '  Hej  verden\u00A0igen  ';
@@ -158,9 +159,8 @@ const VALID = { status: 200, json: { ok: true, valid: true, plan: 'pro-yearly', 
   ok('embed: ren tekst konverteres uden at røre indholdet',
     output.value === 'Hej  verden igen', JSON.stringify(output.value));
   ok('embed: statistikken tæller tegn og ord', /chars · \d+ words/.test(t.byId.get('cc-stats').textContent), t.byId.get('cc-stats').textContent);
-  ok('embed: Pro-kortet kommer efter et rigtigt resultat', nudge.hidden === false);
-  ok('embed: Pro-kortet køber via den aftale Stripe-lænke',
-    nudge.find((n) => n.tag === 'a' && n.href === BUY_LINK) !== null);
+  ok('embed: et resultat viser intet købslink',
+    t.byId.get('cc-embed').find((n) => n.tag === 'a' && /stripe\.com/.test(n.href || '')) === null);
 
   // Rå HTML: kernen kører, outputtet er Markdown (h2 → ##, som i værktøjet).
   input.value = '<h2>Kvartalsrapport</h2><p>Omsætningen voksede <strong>34 %</strong>.</p>';
@@ -195,11 +195,11 @@ const VALID = { status: 200, json: { ok: true, valid: true, plan: 'pro-yearly', 
   input.fire('input');
   t.byId.get('cc-copy').click();
   ok('embed: kopiering af ingenting siger at der ikke er noget', /Nothing to copy yet/.test(t.byId.get('cc-status').textContent));
-  ok('embed: rydning skjuler Pro-kortet igen', (() => {
+  ok('embed: rydning tømmer felterne', (() => {
     input.value = '<p>x</p>';
     input.fire('input');
     t.byId.get('cc-clear').click();
-    return nudge.hidden === true && output.value === '';
+    return output.value === '';
   })());
 
   // Ét anonymt signal pr. side, og intet når læseren har bedt om ro.
@@ -303,25 +303,22 @@ const VALID = { status: 200, json: { ok: true, valid: true, plan: 'pro-yearly', 
   await flush();
   const sum = t.byId.get('cc-batch').children[0]._text;
   ok('dansk: batch-overskriften er dansk', /Batch-konvertering/.test(sum), sum);
-  const nudge = t.byId.get('cc-nudge');
-  ok('dansk: Pro-kortet er dansk', /ét stykke ad gangen/i.test(nudge.children[0]._text));
+  ok('dansk: intet Pro-kort på dansk heller', !t.byId.has('cc-nudge'));
   ok('dansk: privatlivsteksten nævner licens-API\'et', /licens-API på mahope\.tools/.test(
     t.byId.get('cc-embed').children.map((c) => c._text).join(' ')));
 }
 
 // --------------------------------------------------------------------------
-// 6. At testen kan fejle: mutationen der fjerner Pro-kortet må gå rød.
+// 6. At testen kan fejle: et købslink der kommer tilbage i kilden skal ses.
 // --------------------------------------------------------------------------
 {
-  const muteret = embed.replace('nudge.hidden = false;', '/* mutation: kortet kommer aldrig */');
+  ok('kilden: intet Stripe-købslink i clean-copy-embed.js', !embed.includes('buy.stripe.com'));
+  const muteret = embed.replace("var batch = el('details', 'cc-batch');",
+    "host.appendChild(anchor('" + BUY_LINK + "', 'btn-primary', 'Buy')); var batch = el('details', 'cc-batch');");
   ok('mutation: kilden til mutationen findes', muteret !== embed);
   const t = laad({ source: muteret });
-  const input = t.byId.get('cc-input');
-  input.value = '<p>noget</p>';
-  input.fire('input');
-  ok('embed: uden mutationen vises kortet — med mutationen forbliver det skjult',
-    (() => { const frisk = laad({}); const i2 = frisk.byId.get('cc-input'); i2.value = '<p>x</p>'; i2.fire('input'); return frisk.byId.get('cc-nudge').hidden === false && t.byId.get('cc-nudge').hidden === true; })(),
-    `frisk vs muteret`);
+  ok('mutation: et genindsat købslink bliver set',
+    t.byId.get('cc-embed').find((n) => n.tag === 'a' && /stripe\.com/.test(n.href || '')) !== null);
 }
 
 // --------------------------------------------------------------------------

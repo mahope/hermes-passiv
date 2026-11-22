@@ -266,7 +266,14 @@ def self_test() -> int:
             work = Path(tmp) / "site"
             shutil.copytree(SITE, work)
             target = work / Path(rel).relative_to("site")
-            body = target.read_text(encoding="utf-8")
+            # 22/11-2026: salget af DeskUptime Pro er lukket, og artiklen og
+            # blogindekset sælger ikke længere "$19 once". Mutationerne er
+            # skrevet mod sammenligningen fra før lukningen, så de køres på
+            # siderne fra dengang (`tools/closed_sales.py`) — konkurrent-
+            # priserne i dem er de samme, og porten skal stadig kunne se dem.
+            sys.path.insert(0, str(ROOT / "tools"))
+            import closed_sales  # noqa: E402
+            body = closed_sales.before_closure(rel)
             if old not in body:
                 ok(False, f"mutation {name!r}: mønsteret findes ikke mere")
                 continue

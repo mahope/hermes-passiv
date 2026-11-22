@@ -269,7 +269,7 @@ FREE_NOT_ENOUGH = re.compile(
     r"(?:cannot|can not|does not|will not)\s+\w+", re.I)
 
 
-def paid_only_terms(slug: str) -> list[str]:
+def paid_only_terms(slug: str, site_root: Path | None = None) -> list[str]:
     """Hvad den betalte del af bannerets egen rute siger, at gratis ikke har.
 
     Kun den del af siden der står **efter** markøren tælles, så en gratis vare
@@ -279,7 +279,7 @@ def paid_only_terms(slug: str) -> list[str]:
     row = TOOL_CTA.get(slug)
     if not row:
         return []
-    side = ROOT / "site" / (row[1].lstrip("/") + ".html")
+    side = (site_root or ROOT / "site") / (row[1].lstrip("/") + ".html")
     if not side.exists():
         return []
     src = side.read_text(encoding="utf-8")
@@ -561,8 +561,14 @@ def self_test() -> int:
                 ok("banneret på %s lover ikke «%s»" % (slug, term), False, label)
     # Ratcheten må ikke være død: uden en betalt liste ville den være grøn
     # altid, og så fanger den heller ikke den næste gang.
-    ok("ratcheten ser en betalt liste", bool(paid_only_terms("gdpr-for-agencies")),
-       "dpa-generator skal stadig liste hvad gratis ikke har")
+    # 22/11-2026: salget af DPA-skabelonen er lukket, og `/dpa-generator` har
+    # ikke længere en betalt liste — så ratcheten er grøn på siden i dag, og
+    # det skal den være. At den *kan* se en liste, bevises på siden fra før
+    # lukningen (`tools/closed_sales.py`).
+    import closed_sales  # noqa: E402
+    ok("ratcheten ser en betalt liste", bool(paid_only_terms(
+        "gdpr-for-agencies", closed_sales.SNAPSHOT / "site")),
+       "dpa-generator fra før lukningen skal liste hvad gratis ikke har")
 
     # 0d. Knappen skal være mindst 44×44 px. Fund 3/10: `.btc a.cta` var
     #     120×42, to pixel under kravet, målt i rigtig Chromium ved 390 og

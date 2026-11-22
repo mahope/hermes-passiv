@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Page Profile CLI — Meta Tags, Open Graph &amp; SEO Audit</title>
+  <meta name="description" content="Check any web page's meta tags, Open Graph, JSON-LD, headings, alt text, security headers — from the terminal. Zero dependencies, single file.">
+  <meta property="og:title" content="page-profile — Web Page Profiler CLI">
+  <meta property="og:description" content="HTTP status, title, OG, JSON-LD, headings, alt text, security headers — one command, no install.">
+  <meta property="og:image" content="/page-profile/og.png">
+  <meta property="twitter:image" content="/page-profile/og.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="canonical" href="https://hermes-passiv.pages.dev/page-profile">
+  <link rel="alternate" hreflang="en" href="https://hermes-passiv.pages.dev/page-profile">
+  <link rel="alternate" hreflang="da" href="https://hermes-passiv.pages.dev/da/page-profile">
+  <link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/page-profile">
+  <link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+  <link rel="stylesheet" href="/style.css">
+  <style>
+    .cli-demo {
+      background: #0f172a;
+      color: #e2e8f0;
+      border-radius: 12px;
+      padding: 1.5rem;
+      font-family: 'SF Mono', 'Monaco', 'Fira Code', monospace;
+      font-size: 0.85rem;
+      line-height: 1.6;
+      overflow-x: auto;
+      white-space: pre;
+    }
+    .cli-demo .prompt { color: #38bdf8; }
+    .cli-demo .output { color: #94a3b8; }
+    .cli-demo .highlight { color: #4ade80; }
+    .cli-demo .pass { color: #4ade80; }
+    .cli-demo .fail { color: #f87171; }
+    .cli-demo .warn { color: #fbbf24; }
+    .tier-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+      margin: 2rem 0;
+    }
+    @media (max-width: 640px) {
+      .tier-grid { grid-template-columns: 1fr; }
+    }
+    .tier-card {
+      background: var(--color-surface-2);
+      border-radius: 12px;
+      padding: 1.5rem;
+      border: 1px solid var(--color-border);
+    }
+    .tier-card.pro {
+      border-color: #38bdf8;
+      box-shadow: 0 0 20px rgba(56, 189, 248, 0.1);
+    }
+    .tier-card h3 { margin-top: 0; }
+    .tier-card .price { font-size: 2rem; font-weight: 700; color: var(--color-accent); }
+    .tier-card ul { padding-left: 1.2rem; }
+    .tier-card ul li { margin-bottom: 0.4rem; }
+    .tier-card .btn { display: block; text-align: center; margin-top: 1rem; }
+  </style>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "SoftwareApplication",
+      "name": "page-profile",
+      "applicationCategory": "DeveloperApplication",
+      "operatingSystem": "Any",
+      "description": "Free CLI web page profiler: HTTP status, meta tags, Open Graph, JSON-LD, headings, alt text, security headers.",
+      "offers": [
+        {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        },
+        {
+          "@type": "Offer",
+          "name": "Page Profile Pro Lifetime (founding price, first 100 purchases)",
+          "price": "39",
+          "priceCurrency": "USD",
+          "availability": "https://schema.org/InStock",
+          "url": "https://buy.stripe.com/8x2cN42Qz0wifJQgN9bMQ0e"
+        }
+      ]
+    },
+    {
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "Do I need to install anything?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "No. page-profile is a single Python file using only the standard library. Download it, run it with Python 3.8+ — no pip install, no npm, no browser automation."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What does it check on a page?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "HTTP status and redirects, title and meta description lengths, canonical URL, language, Open Graph and Twitter Card tags, JSON-LD structured data, heading outline, image alt-text coverage, and security headers (HSTS, CSP, X-Frame-Options and more)."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Does it work on any website?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes. It works on any public URL regardless of platform — WordPress, Shopify, Webflow, Next.js, Squarespace or hand-written HTML. Nothing is installed on the target site."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Can I use it in CI pipelines?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes. Run with --json to get machine-readable output including the score and grade, so you can gate deploys on a minimum quality threshold."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What is the difference between Free and Pro?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "The free version covers all checks, the terminal report with score and grade, and JSON output. Pro ($19/year) adds compare mode from the command line, batch mode and client-ready HTML reports. Pro activation and regular license checks contact mahope.tools; a successful check is cached for up to seven days during temporary service outages."
+          }
+        }
+      ]
+    }
+  ]
+}
+</script>
+<script defer src="/net.js"></script>
+</head>
+<body>
+  <header class="hero" style="padding:3rem 1rem 2rem;text-align:center;">
+    <div class="badge">New Tool</div>
+    <h1>Profile any web page from your terminal</h1>
+    <p class="tagline" style="font-size:1.2rem;max-width:560px;margin:0 auto;">
+      HTTP status, meta tags, Open Graph, JSON-LD, headings, alt text, security headers — one command, no install.
+    </p>
+    <div style="margin-top:1.5rem;display:flex;gap:0.75rem;justify-content:center;flex-wrap:wrap;">
+      <a href="/downloads/page-profile/page-profile-1.2.2.tar.gz" class="btn btn-primary">Download (tar.gz)</a>
+      <a href="/downloads/page-profile/page_profile.py" class="btn btn-secondary">Single file</a>
+      <a href="#quickstart" class="btn btn-secondary">Quick start →</a>
+    </div>
+  </header>
+
+  <main style="max-width:800px;margin:0 auto;padding:0 1rem 3rem;">
+    <!-- CLI demo -->
+    <section>
+      <h2>How it works</h2>
+      <div class="cli-demo">
+        <div><span class="prompt">$</span> <span class="highlight">python3 page_profile.py https://example.com</span></div>
+        <div><span class="output">page-profile v1.2.2  —  https://example.com</span></div>
+        <div><span class="output"> status: HTTP 200</span></div>
+        <div><span class="output">──────────────────────────────────────────────────────</span></div>
+        <div><span class="output"> Title: Example Domain (14 chars)</span></div>
+        <div><span class="output"> Description: Missing</span></div>
+        <div><span class="output"> Canonical: —</span></div>
+        <div><span class="output"> Language: en</span></div>
+        <div><span class="output">──────────────────────────────────────────────────────</span></div>
+        <div><span class="output"> Open Graph: All missing</span></div>
+        <div><span class="output"> Twitter Card: Missing</span></div>
+        <div><span class="output">  JSON-LD:      — 0 blocks</span></div>
+        <div><span class="output"> Headings: 1 H1 — Example Domain</span></div>
+        <div><span class="output"> Security: No HSTS, no CSP</span></div>
+        <div><span class="output">  Score:        6.0/21.0  Grade: F</span></div>
+      </div>
+      <p style="margin-top:1rem;">Or get JSON output for CI pipelines:</p>
+      <div class="cli-demo">
+        <div><span class="prompt">$</span> <span class="highlight">python3 page_profile.py https://example.com --json</span></div>
+        <div><span class="output">{</span></div>
+        <div><span class="output">  "url": "https://example.com",</span></div>
+        <div><span class="output">  "status": 200,</span></div>
+        <div><span class="output">  "title": "Example Domain",</span></div>
+        <div><span class="output">  "canonical": null,</span></div>
+        <div><span class="output">  "score": 6.0,</span></div>
+        <div><span class="output">  "grade": "F"</span></div>
+        <div><span class="output">}</span></div>
+      </div>
+    </section>
+
+    <!-- Compare two URLs -->
+    <section id="compare">
+      <h2>Compare two pages</h2>
+      <p>Paste two URLs to see their scores side by side — the same 21-point audit, diffed check by check.</p>
+      <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:1rem;">
+        <label for="compare-url-a" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);">First URL to compare</label>
+        <input type="url" id="compare-url-a" placeholder="https://yoursite.com" required
+          style="flex:1;min-width:200px;padding:0.7rem 1rem;border-radius:8px;border:1px solid var(--color-border);background:var(--color-surface-2);color:var(--color-text);font-size:1rem;">
+        <label for="compare-url-b" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);">Second URL to compare</label>
+        <input type="url" id="compare-url-b" placeholder="https://competitor.com" required
+          style="flex:1;min-width:200px;padding:0.7rem 1rem;border-radius:8px;border:1px solid var(--color-border);background:var(--color-surface-2);color:var(--color-text);font-size:1rem;">
+        <button id="compare-btn" class="btn btn-primary" style="text-decoration:none;">Compare →</button>
+      </div>
+      <div id="compare-status" role="status" aria-live="polite" style="min-height:1.5rem;color:#94a3b8;"></div>
+      <div id="compare-result" class="cli-demo" hidden></div>
+      <noscript><p>The comparison needs JavaScript. Use the CLI instead — see quick start below.</p></noscript>
+    </section>
+
+    <!-- Quick start -->
+    <!-- Live profiler -->
+    <section id="try">
+      <h2>Try it now — no install</h2>
+      <p>Enter any URL and get the same report the CLI produces, right in your browser.</p>
+      <form id="profile-form" style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:1rem;">
+        <label for="profile-url" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);">URL to profile</label>
+        <input type="url" id="profile-url" placeholder="https://your-site.com" required
+          style="flex:1;min-width:240px;padding:0.7rem 1rem;border-radius:8px;border:1px solid var(--color-border);background:var(--color-surface-2);color:var(--color-text);font-size:1rem;">
+        <button type="submit" class="btn btn-primary" style="text-decoration:none;">Profile →</button>
+      </form>
+      <div id="profile-status" role="status" aria-live="polite" style="min-height:1.5rem;color:#94a3b8;"></div>
+      <div id="profile-result" class="cli-demo" hidden></div>
+      <noscript><p>The live profiler needs JavaScript. Use the CLI instead — see quick start below.</p></noscript>
+    </section>
+
+    <section id="quickstart">
+      <h2>Quick start</h2>
+      <p><strong>Zero dependencies</strong> — uses only the Python standard library. Python 3.8+ required.</p>
+      <div class="cli-demo">
+        <div><span class="prompt">$</span> curl -O <span style="color:#38bdf8;">/downloads/page-profile/page_profile.py</span></div>
+        <div><span class="prompt">$</span> python3 page_profile.py https://your-site.com</div>
+      </div>
+      <p style="margin-top:1rem;">Or download the full package:</p>
+      <div class="cli-demo">
+        <div><span class="prompt">$</span> curl -O <span style="color:#38bdf8;">/downloads/page-profile/page-profile-1.2.2.tar.gz</span></div>
+        <div><span class="prompt">$</span> tar xzf page-profile-1.2.2.tar.gz</div>
+        <div><span class="prompt">$</span> cd page_profile-1.2.2</div>
+        <div><span class="prompt">$</span> python3 page_profile.py https://your-site.com</div>
+      </div>
+    </section>
+
+    <!-- What it checks -->
+    <section>
+      <h2>What it checks</h2>
+      <table style="width:100%;border-collapse:collapse;">
+        <tr><th style="text-align:left;padding:0.5rem 0;border-bottom:1px solid var(--color-border);">Category</th><th style="text-align:left;padding:0.5rem 0;border-bottom:1px solid var(--color-border);">Checks</th></tr>
+        <tr><td style="padding:0.5rem 0;border-bottom:1px solid var(--color-border);"><strong>Status</strong></td><td style="padding:0.5rem 0;border-bottom:1px solid var(--color-border);">HTTP status code, redirect chain</td></tr>
+        <tr><td style="padding:0.5rem 0;border-bottom:1px solid var(--color-border);"><strong>Core meta</strong></td><td style="padding:0.5rem 0;border-bottom:1px solid var(--color-border);">Title (length), meta description (length), canonical URL, language, charset</td></tr>
+        <tr><td style="padding:0.5rem 0;border-bottom:1px solid var(--color-border);"><strong>Social</strong></td><td style="padding:0.5rem 0;border-bottom:1px solid var(--color-border);">Open Graph (og:title, og:description, og:image, og:type), Twitter Card</td></tr>
+        <tr><td style="padding:0.5rem 0;border-bottom:1px solid var(--color-border);"><strong>Structured data</strong></td><td style="padding:0.5rem 0;border-bottom:1px solid var(--color-border);">JSON-LD block count and @types</td></tr>
+        <tr><td style="padding:0.5rem 0;border-bottom:1px solid var(--color-border);"><strong>Content</strong></td><td style="padding:0.5rem 0;border-bottom:1px solid var(--color-border);">Heading 1-6 outline, image alt-text coverage</td></tr>
+        <tr><td style="padding:0.5rem 0;border-bottom:1px solid var(--color-border);"><strong>Security</strong></td><td style="padding:0.5rem 0;border-bottom:1px solid var(--color-border);">HSTS, CSP, X-Frame-Options, X-Content-Type-Options, Referrer-Policy</td></tr>
+        <tr><td style="padding:0.5rem 0;border-bottom:1px solid var(--color-border);"><strong>i18n</strong></td><td style="padding:0.5rem 0;border-bottom:1px solid var(--color-border);">Language declaration, hreflang alternates</td></tr>
+        <tr><td style="padding:0.5rem 0;"><strong>Score</strong></td><td style="padding:0.5rem 0;">21-point weighted score with letter grade (A–F) and actionable penalties</td></tr>
+      </table>
+    </section>
+
+    <!-- Tiers -->
+    <section>
+      <h2>Tiers</h2>
+      <div class="tier-grid">
+        <div class="tier-card">
+          <h3>Free</h3>
+          <div class="price">$0</div>
+          <ul>
+            <li>All checks: core, social, structure, security, i18n</li>
+            <li>Terminal report with score and grade</li>
+            <li>JSON output for CI pipelines</li>
+            <li>Redirect chain trace</li>
+            <li>History tracking — every single-URL profile run is recorded, so you can watch your score move over time</li>
+            <li>Compare two pages side by side in your browser</li>
+            <li>Zero dependencies — single Python file</li>
+          </ul>
+          <a href="/downloads/page-profile/page_profile.py" class="btn btn-secondary" style="text-decoration:none;">Download free →</a>
+        </div>
+        <div class="tier-card pro">
+          <h3>Pro</h3>
+          <div class="price">$19</div>
+          <span style="font-size:0.8rem;color:#94a3b8;">per year</span>
+          <ul>
+            <li>Everything in Free, plus:</li>
+            <li>Compare mode from the command line — diff two URLs in your terminal</li>
+            <li>Batch mode — profile multiple URLs, ranked by score</li>
+            <li>Client-ready HTML report</li>
+            <li>Online activation and validation — no account required</li>
+          </ul>
+          <a href="https://buy.stripe.com/9B6eVcgHp7YK69ggN9bMQ04" id="pp-buy-live" class="btn btn-primary" style="text-decoration:none;" rel="nofollow noopener">Buy Pro — $19/year →</a>
+          <span style="display:block;font-size:0.8rem;color:#94a3b8;margin-top:0.5rem;">Secure checkout via Stripe. License key by email. Activate it with <code>page-profile --activate YOUR-KEY</code>.</span>
+          <p style="margin:1rem 0 0.4rem;font-size:0.9rem;"><strong>Or pay once: $39 once, forever.</strong> The same Pro license with no renewal and no expiry. Founding price for the first 100 purchases only.</p>
+          <a href="https://buy.stripe.com/8x2cN42Qz0wifJQgN9bMQ0e" id="pp-buy-lifetime" class="btn btn-secondary" style="text-decoration:none;" rel="nofollow noopener">Buy Pro Lifetime — $39 once →</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Free vs Pro comparison -->
+    <section>
+      <h2>Free vs Pro — side by side</h2>
+<!-- pro-table:start -->
+<div class="table-wrap">
+<table class="compare pro-table">
+  <caption class="sr-only">Free and Page Profile Pro, side by side</caption>
+  <thead>
+    <tr><th scope="col"><span class="sr-only">Plan</span></th><th scope="col">Free</th><th scope="col">Page Profile Pro</th></tr>
+  </thead>
+  <tbody>
+    <tr><th scope="row">What you get</th><td><ul><li>History tracking</li><li>All checks</li><li>Terminal report with score and grade</li><li>JSON output</li><li>Redirect chain trace</li></ul></td><td><ul><li>Compare mode from the command line</li><li>Batch mode</li><li>Client-ready html report</li></ul></td></tr>
+    <tr><th scope="row">Price</th><td><span class="pro-price">$0</span><span class="pro-note">no licence key needed</span></td><td><span class="pro-price">$19/year</span></td></tr>
+  </tbody>
+</table>
+</div>
+<p class="pro-note">$39 once — lifetime, first 100 purchases · One licence covers 3 devices.</p>
+<p class="pro-note pro-limit">No alerts or notifications — check manually</p>
+<!-- pro-table:end -->
+      <p style="margin-top:0.75rem;font-size:0.9rem;color:#94a3b8;">Pro is a one-time decision per year: activation and regular license checks contact mahope.tools, while the last successful Pro status remains available for up to seven days during temporary service outages. If you audit pages for clients, the HTML report and batch mode pay for themselves on the first job.</p>
+    </section>
+
+    <!-- Why use it -->
+    <section>
+      <h2>Why use it?</h2>
+      <ul>
+        <li><strong>Zero dependencies</strong> — pure Python stdlib. No pip install, no npm, no Playwright. One file, any machine with Python 3.8+.</li>
+        <li><strong>5-second check</strong> — faster than opening DevTools or a web auditor. Great for quick QA before publishing a page.</li>
+        <li><strong>CI-ready</strong> — JSON output works with jq, grep, or any pipeline. Gate deploys on a minimum score.</li>
+        <li><strong>Universal</strong> — works on any website (WordPress, Shopify, Next.js, static HTML — anything with a URL).</li>
+        <li><strong>Dependency-free</strong> — the profiling core uses only what comes with Python.</li>
+      </ul>
+    </section>
+
+    <!-- Example output -->
+    <section>
+      <h2>Live example</h2>
+      <p>Running against hermes-passiv.pages.dev:</p>
+      <div class="cli-demo">
+        <div><span class="prompt">$</span> <span class="highlight">python3 page_profile.py https://hermes-passiv.pages.dev/</span></div>
+        <div><span class="output">page-profile v1.2.2  —  https://hermes-passiv.pages.dev/</span></div>
+        <div><span class="output"> status: HTTP 200</span></div>
+        <div><span class="output">──────────────────────────────────────────────────────</span></div>
+        <div><span class="pass"> Title: EU Compliance Guides for Small Web Agencies</span></div>
+        <div><span class="output">                 (68 chars)</span></div>
+        <div><span class="warn"> Description: 214 chars (outside recommended 50-165)</span></div>
+        <div><span class="pass"> Canonical: </span></div>
+        <div><span class="pass"> OG: All three present</span></div>
+        <div><span class="pass"> JSON-LD: 1 block (Series)</span></div>
+        <div><span class="pass"> Images: 5/5 with alt text</span></div>
+        <div><span class="output"> Hreflang: 3 alternates</span></div>
+        <div><span class="output">  Score:        16.5/21.0  Grade: B</span></div>
+      </div>
+    </section>
+
+    <!-- Free JSON API -->
+    <section id="api" style="margin-top:3rem;">
+      <h2>Free JSON API</h2>
+      <p>
+        Everything the web tool does is also a public REST endpoint — no key, no signup. Fetch any page and get
+        structured JSON back: status, meta, Open Graph, JSON-LD, headings, alt-text coverage, security headers,
+        plus a quality score and grade.
+      </p>
+      <div class="cli-demo">
+        <div><span class="output">$</span> curl "https://hermes-passiv.pages.dev/api/profile?url=https://example.com"</div>
+        <div><span class="pass">{ "ok": true, "status": 200, "title": "Example Domain",</span></div>
+        <div><span class="pass">  "score": 7, "max_score": 21, "grade": "F", ... }</span></div>
+      </div>
+      <p style="margin-top:1rem;">
+        Fair use: 30 requests per visitor per day. For unlimited local runs, use the
+        <a href="/downloads/page-profile/page_profile.py">single-file Python CLI</a> instead — same checks, no limits.
+        Full docs: <a href="/page-profile-api-readme.md" rel="noopener">API reference</a> ·
+        <a href="/openapi.yaml" rel="noopener">OpenAPI spec</a>.
+      </p>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p>page-profile by <a href="/">Home</a> · MIT license · Pro license for commercial use · <a href="/da/page-profile">Dansk version</a> · <a href="/blog/technical-seo-check-website">Technical SEO guide</a> · <a href="/blog/open-graph-checker">Open Graph checker</a> · <a href="/blog/meta-tag-checker">Meta tag checker</a></p>
+  </footer>
+  <section style="background:var(--color-surface);padding:2rem 1rem;" id="faq">
+    <div class="container" style="max-width:760px;margin:0 auto;">
+      <h2>Frequently Asked Questions</h2>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <details>
+          <summary style="cursor:pointer;font-weight:600;padding:0.6rem 0;">Do I need to install anything?</summary>
+          <p>No. page-profile is a single Python file using only the standard library. Download it, run it with Python 3.8+ — no pip install, no npm, no browser automation.</p>
+        </details>
+        <details>
+          <summary style="cursor:pointer;font-weight:600;padding:0.6rem 0;">What does it check on a page?</summary>
+          <p>HTTP status and redirects, title and meta description lengths, canonical URL, language, Open Graph and Twitter Card tags, JSON-LD structured data, heading outline, image alt-text coverage, and security headers (HSTS, CSP, X-Frame-Options and more).</p>
+        </details>
+        <details>
+          <summary style="cursor:pointer;font-weight:600;padding:0.6rem 0;">Does it work on any website?</summary>
+          <p>Yes. It works on any public URL regardless of platform — WordPress, Shopify, Webflow, Next.js, Squarespace or hand-written HTML. Nothing is installed on the target site.</p>
+        </details>
+        <details>
+          <summary style="cursor:pointer;font-weight:600;padding:0.6rem 0;">Can I use it in CI pipelines?</summary>
+          <p>Yes. Run with <code>--json</code> to get machine-readable output including the score and grade, so you can gate deploys on a minimum quality threshold.</p>
+        </details>
+        <details>
+          <summary style="cursor:pointer;font-weight:600;padding:0.6rem 0;">What is the difference between Free and Pro?</summary>
+          <p>The free version covers all checks, the terminal report with score and grade, and JSON output. Pro ($19/year) adds compare mode from the command line, batch mode and client-ready HTML reports. Pro activation and regular license checks contact mahope.tools; a successful check is cached for up to seven days during temporary service outages.</p>
+        </details>
+      </div>
+    </div>
+  </section>
+  <script>
+  (function () {
+    var form = document.getElementById('profile-form');
+    var input = document.getElementById('profile-url');
+    var status = document.getElementById('profile-status');
+    var result = document.getElementById('profile-result');
+
+    function esc(s) {
+      var d = document.createElement('div');
+      d.textContent = s == null ? '' : String(s);
+      return d.innerHTML;
+    }
+    function line(html) { return html + '\n'; }
+    function mark(ok, warn) { return ok ? '<span class="pass">✅</span>' : (warn ? '<span class="warn">⚠️</span>' : '<span class="fail">❌</span>'); }
+
+    // Vores egen 5xx er ikke brugerens wifi: Cloudflare svarer en worker der er
+    // faldet ned med sin egen HTML-side, så et blindt `r.json()` kastede, og
+    // brugeren fik "Could not reach the profiling service". Status læses først,
+    // forbigående svar genkaldes, og kun et rigtigt 4xx er endeligt — det ligger
+    // i /net.js sammen med de andre klienter, og `tools/check_net_copies.py`
+    // holder det som den eneste kopi. Her står kun antallet genkald.
+    var PROFILE_MAX_TRIES = 3;
+    function fetchProfile(target) {
+      // `ok:false` i et 200-svar er et rigtigt svar, ikke et blip: serveren kunne
+      // ikke hente sitet. NET lader den fejl gå igennem som et vellykket svar,
+      // så den dømmes her — efter genkalderne, aldrig før.
+      return NET.askGet('/api/profile?url=' + encodeURIComponent(target), PROFILE_MAX_TRIES)
+        .then(function (j) {
+          if (j && j.ok) return j;
+          // Uden `transient` er den endelig, så NET ikke prøver igen. Det er
+          // et svar serveren mente, ikke et blip.
+          throw new Error((j && j.error) || 'Request failed.');
+        });
+    }
+
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var target = input.value.trim();
+      if (!target) return;
+      status.textContent = 'Fetching and analyzing ' + target + ' …';
+      result.hidden = true;
+      fetchProfile(target)
+        .then(function (j) {
+          var out = '';
+          out += line('<span class="highlight">page-profile web</span>  —  ' + esc(j.url));
+          out += line('  status: <span class="pass">HTTP ' + esc(j.status) + '</span>');
+          if (j.final_url && j.final_url !== j.url) out += line('  redirected to: ' + esc(j.final_url));
+          out += line('──────────────────────────────────────────────');
+          // Title
+          if (j.title) {
+            var tOk = j.title_length >= 20 && j.title_length <= 70;
+            out += line('  Title:        ' + mark(tOk, !tOk) + ' ' + esc(j.title).slice(0, 60));
+            out += line('                (' + j.title_length + ' chars)');
+          } else {
+            out += line('  Title:        <span class="fail">❌ Missing</span>');
+          }
+          // Description
+          if (j.meta_description) {
+            var dOk = j.meta_description_length >= 50 && j.meta_description_length <= 165;
+            out += line('  Description:  ' + mark(dOk, !dOk) + ' ' + esc(j.meta_description).slice(0, 50) + '…');
+            out += line('                (' + j.meta_description_length + ' chars)');
+          } else {
+            out += line('  Description:  <span class="fail">❌ Missing</span>');
+          }
+          out += line('  Canonical:    ' + (j.canonical ? '<span class="pass">✅</span>' : '<span class="fail">❌</span>') + ' ' + esc(j.canonical || '—').slice(0, 45));
+          out += line('  Language:     ' + (j.language ? '<span class="pass">✅</span>' : '<span class="fail">❌</span>') + ' ' + esc(j.language || '—'));
+          out += line('  Charset:      ' + (j.charset ? '<span class="pass">✅</span>' : '<span class="fail">❌</span>') + ' ' + esc(j.charset || '—'));
+          out += line('──────────────────────────────────────────────');
+          var ogAll = j.og && j.og.title && j.og.description && j.og.image;
+          var ogSome = j.og && (j.og.title || j.og.description || j.og.image);
+          out += line('  Open Graph:   ' + mark(ogAll, ogSome) + ' ' + (ogAll ? 'All three present' : (ogSome ? 'Partial' : 'All missing')));
+          out += line('  Twitter Card: ' + (j.twitter && j.twitter.card ? '<span class="pass">✅</span> ' + esc(j.twitter.card) : '<span class="fail">❌ Missing</span>'));
+          out += line('  JSON-LD:      — ' + j.json_ld_count + ' block(s)' + (j.json_ld_types && j.json_ld_types.length ? ' (' + esc(j.json_ld_types.join(', ')).slice(0, 40) + ')' : ''));
+          var h1c = j.headings && j.headings.h1 ? j.headings.h1.length : 0;
+          if (h1c === 1) out += line('  Headings:     <span class="pass">✅</span> 1 H1 — ' + esc(j.headings.h1[0]).slice(0, 40));
+          else if (h1c > 1) out += line('  Headings:     <span class="warn">⚠️</span> ' + h1c + ' H1 tags');
+          else out += line('  Headings:     <span class="fail">❌</span> No H1');
+          var imgs = j.images || { total: 0, with_alt: 0 };
+          if (imgs.total > 0) {
+            var iOk = imgs.with_alt / imgs.total >= 0.9;
+            out += line('  Images alt:   ' + mark(iOk, imgs.with_alt > 0) + ' ' + imgs.with_alt + '/' + imgs.total);
+          }
+          var secBits = [];
+          if (!j.security.hsts) secBits.push('no HSTS');
+          if (!j.security.csp) secBits.push('no CSP');
+          if (!j.security.xfo) secBits.push('no X-Frame-Options');
+          out += line('  Security:     ' + (secBits.length ? '<span class="warn">⚠️</span> ' + esc(secBits.join(', ')) : '<span class="pass">✅</span> headers present'));
+          out += line('──────────────────────────────────────────────');
+          var gClass = j.grade === 'F' || j.grade === 'D' ? 'fail' : (j.grade === 'C' ? 'warn' : 'pass');
+          out += line('  Score:        ' + j.score + '/' + j.max_score + '  Grade: <span class="' + gClass + '">' + esc(j.grade) + '</span>');
+          if (j.penalties && j.penalties.length) {
+            for (var p = 0; p < j.penalties.length; p++) {
+              out += line('  • <span class="warn">' + esc(j.penalties[p]) + '</span>');
+            }
+          }
+          out += '<p style="font-size:13px;color:#94a3b8;margin:16px 0 0">This profile is free and needs no account. If it saved you time, a small <a href="https://donate.stripe.com/7sYeVcbn50wieFM8gDbMQ0c" rel="nofollow noopener">donation</a> keeps it running.</p>';
+          status.textContent = '';
+          result.hidden = false;
+          result.innerHTML = out;
+          trackEvent();
+        })
+        .catch(function (err) {
+          status.textContent = '';
+          result.hidden = false;
+          var msg = err.transport
+            ? 'We could not reach the profiling service. Check your connection, or use the CLI.'
+            : (err.transient
+              ? 'The profiling service is temporarily unavailable. Please try again in a moment.'
+              : (err.message || 'Request failed.'));
+          result.innerHTML = line('<span class="fail">Error:</span> ' + esc(msg));
+        });
+    });
+
+    function trackEvent() {
+      try {
+        if (typeof window.__hpTrack === 'function') window.__hpTrack('profile');
+        else if (navigator.sendBeacon) navigator.sendBeacon('/api/track', new Blob([JSON.stringify({ path: '/page-profile', event: 'profile' })], { type: 'application/json' }));
+      } catch (e) { /* never break the tool over analytics */ }
+    }
+
+    // Compare two URLs
+    var cForm = document.getElementById('compare-form');
+    var cUrlA = document.getElementById('compare-url-a');
+    var cUrlB = document.getElementById('compare-url-b');
+    var cStatus = document.getElementById('compare-status');
+    var cResult = document.getElementById('compare-result');
+    var cBtn = document.getElementById('compare-btn');
+
+    function escC(s) {
+      var d = document.createElement('div');
+      d.textContent = s == null ? '' : String(s);
+      return d.innerHTML;
+    }
+    function lineC(html) { return html + '\n'; }
+
+    function scoreDiff(a, b) {
+      var diff = b.score - a.score;
+      if (diff > 0) return '+' + diff.toFixed(1) + ' vs ' + a.url;
+      if (diff < 0) return diff.toFixed(1) + ' vs ' + b.url;
+      return 'tied';
+    }
+
+    function checkLine(label, aVal, bVal, fmt) {
+      var a = fmt ? fmt(aVal) : aVal;
+      var b = fmt ? fmt(bVal) : bVal;
+      var better = aVal === bVal ? '' : (bVal > aVal ? ' ← B better' : ' ← A better');
+      return lineC('  ' + label + ': A=' + a + '  B=' + b + better);
+    }
+
+    cBtn.addEventListener('click', function () {
+      var urlA = cUrlA.value.trim();
+      var urlB = cUrlB.value.trim();
+      if (!urlA || !urlB) return;
+      cStatus.textContent = 'Fetching and comparing ' + urlA + ' vs ' + urlB + ' …';
+      cResult.hidden = true;
+      Promise.all([fetchProfile(urlA), fetchProfile(urlB)])
+        .then(function (arr) {
+          var a = arr[0], b = arr[1];
+          var out = '';
+          out += lineC('<span class="highlight">page-profile compare</span>  —  ' + escC(a.url) + ' vs ' + escC(b.url));
+          out += lineC('──────────────────────────────────────────────');
+          out += checkLine('Status', a.status, b.status);
+          out += checkLine('Title', a.title_length, b.title_length, function(v) { return v + ' chars'; });
+          out += checkLine('Description', a.meta_description_length, b.meta_description_length, function(v) { return v + ' chars'; });
+          out += checkLine('Canonical', a.canonical ? 1 : 0, b.canonical ? 1 : 0, function(v) { return v ? 'yes' : 'no'; });
+          out += checkLine('Language', a.language ? 1 : 0, b.language ? 1 : 0, function(v) { return v ? 'yes' : 'no'; });
+          out += checkLine('OG complete', (a.og && a.og.title && a.og.description && a.og.image) ? 1 : 0, (b.og && b.og.title && b.og.description && b.og.image) ? 1 : 0, function(v) { return v ? 'yes' : 'no'; });
+          out += checkLine('Twitter card', a.twitter && a.twitter.card ? 1 : 0, b.twitter && b.twitter.card ? 1 : 0, function(v) { return v ? 'yes' : 'no'; });
+          out += checkLine('JSON-LD blocks', a.json_ld_count, b.json_ld_count);
+          var aH1 = a.headings && a.headings.h1 ? a.headings.h1.length : 0;
+          var bH1 = b.headings && b.headings.h1 ? b.headings.h1.length : 0;
+          out += checkLine('H1 count', aH1, bH1);
+          var aAlt = a.images ? a.images.with_alt : 0, aTot = a.images ? a.images.total : 0;
+          var bAlt = b.images ? b.images.with_alt : 0, bTot = b.images ? b.images.total : 0;
+          out += checkLine('Alt text', aTot ? aAlt / aTot : 0, bTot ? bAlt / bTot : 0, function(v) { return Math.round(v * 100) + '%'; });
+          out += checkLine('HSTS', a.security.hsts ? 1 : 0, b.security.hsts ? 1 : 0, function(v) { return v ? 'yes' : 'no'; });
+          out += checkLine('CSP', a.security.csp ? 1 : 0, b.security.csp ? 1 : 0, function(v) { return v ? 'yes' : 'no'; });
+          out += checkLine('X-Frame-Options', a.security.xfo ? 1 : 0, b.security.xfo ? 1 : 0, function(v) { return v ? 'yes' : 'no'; });
+          out += lineC('──────────────────────────────────────────────');
+          out += lineC('  Score:  A=' + a.score + '/' + a.max_score + ' (' + a.grade + ')  B=' + b.score + '/' + b.max_score + ' (' + b.grade + ')');
+          out += lineC('  ' + scoreDiff(a, b));
+          cStatus.textContent = '';
+          cResult.hidden = false;
+          cResult.innerHTML = out;
+        })
+        .catch(function (err) {
+          cStatus.textContent = '';
+          cResult.hidden = false;
+          cResult.innerHTML = lineC('<span class="fail">Error:</span> ' + escC(err.message || 'Request failed.'));
+        });
+    });
+  })();
+  </script>
+<script>
+(function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';fetch('/api/track',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:p}),keepalive:true}).catch(function(){});document.addEventListener('click',function(ev){var a=ev.target&&ev.target.closest?ev.target.closest('a[href]'):null;if(!a)return;var h=a.href;if(h&&h.indexOf('chromewebstore.google.com')>-1){try{navigator.sendBeacon('/api/track',new Blob([JSON.stringify({path:p,event:'store-click'})],{type:'application/json'}));}catch(e){}}},true);}catch(e){}})();
+</script>
+<script src="/track.js"></script>
+<script>
+(function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';document.addEventListener('click',function(ev){var a=ev.target&&ev.target.closest?ev.target.closest('a[href]'):null;if(!a)return;var h=a.getAttribute('href')||'';var m=h.match(/^\/(?:da\/)?(scan|clean-copy-tool|page-profile|site-icons|text-diff|url-to-markdown|free-tools|compliance-report)(\.html)?(#[^#]*)?$/);if(!m)return;try{navigator.sendBeacon('/api/track',new Blob([JSON.stringify({path:p,event:'cta-'+m[1]})],{type:'application/json'}));}catch(e){}},true);}catch(e){}})();
+</script>
+</body>
+</html>

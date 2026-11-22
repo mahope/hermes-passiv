@@ -1374,7 +1374,14 @@ def _self_test() -> int:
     #     der skal *mister* en: så er fejlretningen beviselig. Uden mutationerne
     #     nederst kunne `path_problems()` være `lambda *_: []` og alle de andre
     #     kontroller være grønne af den forkerte grund.
-    målt_række = next((r for r in table if judged(r) and len(r["paid"]) > 1),
+    # 22/11-2026: efter lukningen af salget har `/free-tools` stadig flere
+    # `paid`-træffere, men to af ankerne peger på samme destination — så den
+    # første række med `len(paid) > 1` kunne ikke længere bære ombytnings- og
+    # tabsmutationerne. Rækken vælges derfor på *forskellige* destinationer
+    # blandt ankerne, som er det mutationerne faktisk kræver.
+    målt_række = next((r for r in table if judged(r)
+                       and len(set((r.get("ankere") or {}).values())) > 1),
+                      None) or next((r for r in table if judged(r) and len(r["paid"]) > 1),
                       None) or next((r for r in table if judged(r) and r["paid"]),
                                     None)
     if målt_række is None:

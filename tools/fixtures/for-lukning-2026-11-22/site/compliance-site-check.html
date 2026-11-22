@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Free Website Compliance Checker — 9-Point EU Compliance Scan</title>
+<meta name="description" content="Check any website for 9 EU compliance items: privacy policy, terms, cookie consent, imprint, accessibility statement, DPA, security headers, meta tags, and hreflang. Free, no login required.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Free Website Compliance Checker — 9-Point Scan">
+<meta property="og:description" content="Check any website for 9 EU compliance items. Free, server-side scan, no login required.">
+<meta property="og:url" content="https://mahope.tools/compliance-site-check">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Free Website Compliance Checker — 9-Point Scan">
+<meta name="twitter:description" content="Check any website for 9 EU compliance items (privacy policy, terms, cookies, imprint, accessibility, DPA, security headers, meta tags, hreflang). Free, server-side scan.">
+<link rel="canonical" href="https://mahope.tools/compliance-site-check">
+<link rel="alternate" hreflang="en" href="https://mahope.tools/compliance-site-check">
+<link rel="alternate" hreflang="da" href="https://mahope.tools/da/compliance-site-check">
+<link rel="alternate" hreflang="x-default" href="https://mahope.tools/compliance-site-check">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "Website Compliance Checker",
+  "description": "Free tool to check any website for 9 EU compliance items: privacy policy, terms, cookie consent, imprint, accessibility, DPA, security headers, meta tags, and hreflang.",
+  "applicationCategory": "BusinessApplication",
+  "operatingSystem": "Web",
+  "browserRequirements": "JavaScript required",
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "USD"
+  }
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [{
+    "@type": "Question",
+    "name": "What does this compliance checker scan for?",
+    "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Nine things: privacy policy, terms of service, cookie consent banner, imprint/legal notice, accessibility statement, DPA, security headers (CSP, HSTS, XFO, XCTO, Referrer-Policy), SEO meta tags (title, description, viewport, canonical, robots, OG), and hreflang/language declaration."
+    }
+  }, {
+    "@type": "Question",
+    "name": "Is this really free?",
+    "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Yes. No login, no API key, no credit card. Just enter a URL and get your report."
+    }
+  }, {
+    "@type": "Question",
+    "name": "Can I automate this check in CI/CD?",
+    "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Yes. The same engine runs as a free GitHub Action (mahope/compliance-site-check@v2). Add it to your workflow to check after every deploy."
+    }
+  }]
+}
+</script>
+<style>
+  .tool-container { max-width: 720px; margin: 0 auto; padding: 24px 16px; }
+  .input-group { display: flex; gap: 8px; margin: 24px 0; }
+  /* `border-box` er ikke kosmetik: feltet har 32 px padding og 4 px ramme,
+     så uden den står det 12 px ud over kanten på en 390 px telefon —
+     altså vandret scroll på den side, kunden indsender sit site fra. */
+  .input-group input, .input-group textarea { box-sizing: border-box; flex: 1; min-width: 0; padding: 12px 16px; font-size: 16px; font-family: inherit; border: 2px solid #d1d5db; border-radius: 8px; outline: none; transition: border-color 0.2s; resize: vertical; }
+  .input-group input:focus, .input-group textarea:focus { border-color: #2563eb; }
+  .input-group textarea { line-height: 1.4; }
+  .input-group button { padding: 12px 24px; background: #2563eb; color: #fff; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; transition: background 0.2s; white-space: nowrap; }
+  .input-group button:hover { background: #1d4ed8; }
+  .input-group button:disabled { background: #93c5fd; cursor: not-allowed; }
+  .error-box { background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 12px 16px; color: #dc2626; margin: 16px 0; }
+  .result-card { background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 24px; margin: 16px 0; }
+  .score-row { display: flex; align-items: center; gap: 16px; margin-bottom: 20px; flex-wrap: wrap; }
+  .score-badge { font-size: 28px; font-weight: 800; padding: 8px 16px; border-radius: 8px; }
+  .score-badge.A { background: #d1fae5; color: #065f46; }
+  .score-badge.B { background: #dbeafe; color: #1e40af; }
+  .score-badge.C { background: #fef3c7; color: #92400e; }
+  .score-badge.D { background: #fee2e2; color: #991b1b; }
+  .score-detail { font-size: 14px; color: #6b7280; }
+  .check-item { padding: 12px 0; border-bottom: 1px solid #f3f4f6; display: flex; align-items: flex-start; gap: 12px; }
+  .check-item:last-child { border-bottom: none; }
+  .check-status { flex-shrink: 0; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; margin-top: 2px; }
+  .check-status.pass { background: #d1fae5; color: #065f46; }
+  .check-status.fail { background: #fee2e2; color: #dc2626; }
+  .check-status.warn { background: #fef3c7; color: #92400e; }
+  .check-label { font-weight: 600; font-size: 14px; }
+  .check-detail { font-size: 13px; color: #6b7280; margin-top: 2px; line-height: 1.4; }
+  .check-hint { font-size: 12px; color: #9ca3af; margin-top: 2px; }
+  .loading { text-align: center; padding: 40px 0; }
+  .loading .spinner { display: inline-block; width: 32px; height: 32px; border: 3px solid #e5e7eb; border-top: 3px solid #2563eb; border-radius: 50%; animation: spin 0.8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .cta-box { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px; padding: 20px 24px; margin: 24px 0; text-align: center; }
+  .cta-box :is(h3, h2.sub) { margin: 0 0 8px; color: #065f46; }
+  .cta-box p { font-size: 14px; color: #4b5563; margin: 0 0 12px; }
+  /* #059669 med hvid tekst er 3,77:1 — under WCAG AA's 4,5:1 for denne
+     knapstørrelse, så axe fandt den på begge sider. #047857 er samme grønne
+     familie, 5,48:1. Ikke en ny farve, men den samme farve mørkere. */
+  .cta-box a { display: inline-block; padding: 10px 20px; background: #047857; color: #fff; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 14px; }
+  .cta-box a:hover { background: #065f46; }
+  .sub-results { margin-top: 8px; padding: 8px 12px; background: #f9fafb; border-radius: 6px; }
+  .sub-results .sub-item { font-size: 12px; color: #6b7280; padding: 3px 0; }
+  .checks-legend { margin: 16px 0; display: flex; gap: 16px; flex-wrap: wrap; font-size: 13px; color: #6b7280; }
+  .checks-legend span { display: flex; align-items: center; gap: 4px; }
+  .checks-legend .dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; }
+  .dot.green { background: #10b981; }
+  .dot.red { background: #ef4444; }
+  .dot.yellow { background: #f59e0b; }
+  .examples { font-size: 13px; color: #6b7280; margin-top: 4px; }
+  .field-hint { font-size: 13px; color: #6b7280; margin: -12px 0 0; }
+  .site-list { margin: 0 0 12px; }
+  .site-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid #e5e7eb; flex-wrap: wrap; }
+  .site-row:last-child { border-bottom: none; }
+  .site-row .site-name { flex: 1; min-width: 0; font-size: 14px; word-break: break-all; }
+  /* Hvilken side der blev læst. Egen linje, så den ikke konkurrerer med
+     domænet på 390 px, hvor de to ellers bryder i to halve linjer. */
+  .site-row .site-page { display: block; font-size: 12px; color: #6b7280; margin-top: 2px; word-break: break-word; }
+  /* Hvilke sider der blev læst. `<details>` bruges, fordi listen skal kunne
+     foldes sammen: en kunde med et stort site får ellers otte linjer mellem
+     scoren og det første fund. Native element, så tastatur og skærmlæser
+     får det gratis. */
+  .pages-read { margin: 12px 0 0; }
+  .pages-read > summary { cursor: pointer; font-size: 13px; color: #374151; padding: 4px 0; }
+  .pages-read > summary:hover { color: #111827; }
+  .pages-read > summary:focus-visible { outline: 2px solid #2563eb; outline-offset: 2px; border-radius: 4px; }
+  .pages-read ul { margin: 6px 0 0; padding: 0 0 0 18px; }
+  .pages-read li { font-size: 13px; color: #6b7280; word-break: break-all; padding: 1px 0; }
+  .site-row .score-badge { width: 40px; height: 40px; font-size: 18px; }
+  .site-row .site-score { font-size: 13px; color: #6b7280; }
+  @media (max-width: 480px) { .site-row .site-name { flex-basis: 100%; } }
+  .examples a { color: #2563eb; text-decoration: none; }
+  .examples a:hover { text-decoration: underline; }
+  @media (max-width: 480px) {
+    .input-group { flex-direction: column; }
+    .input-group input, .input-group textarea { width: 100%; }
+    .input-group button { width: 100%; }
+  }
+</style>
+<script defer src="/net.js"></script>
+<script defer src="/track.js"></script>
+<!-- iter313 report-dl -->
+</head>
+<body>
+
+<header class="hero" style="padding:48px 0 40px">
+  <div class="container">
+    <div class="badge">FREE TOOL</div>
+    <h1>Website Compliance Checker</h1>
+    <p class="tagline">Check any website for 9 EU compliance essentials — privacy, terms, cookies, imprint, accessibility, DPA, security headers, meta tags, and language declaration. Free, server-side, no login.</p>
+  </div>
+</header>
+
+<div class="tool-container">
+  <div class="checks-legend">
+    <span><span class="dot green"></span> Pass</span>
+    <span><span class="dot yellow"></span> Warning</span>
+    <span><span class="dot red"></span> Fail / Missing</span>
+  </div>
+
+  <div class="input-group" id="scanForm">
+    <label for="urlInput" class="sr-only">Website URL to check — one per line to scan several</label>
+      <textarea id="urlInput" rows="2" placeholder="https://example.com" spellcheck="false" autocomplete="url"></textarea>
+    <button id="scanBtn" onclick="scan()">Check Site</button>
+  </div>
+
+  <p class="field-hint">Paste one URL per line to check up to 5 sites in one go — handy when you are auditing several client sites.</p>
+
+  <div class="examples">
+    Try: <a href="javascript:scanExample()">mahope.tools</a> &middot;
+    <a href="javascript:;" onclick="document.getElementById('urlInput').value='https://example.com';scan()">example.com</a>
+  </div>
+
+  <div id="errorBox" class="error-box" style="display:none"></div>
+  <div id="loading" class="loading" style="display:none">
+    <div class="spinner"></div>
+    <p style="font-size:14px;color:#6b7280;margin-top:12px">Scanning… this takes 5-15 seconds</p>
+  </div>
+  <div id="results"></div>
+
+  <div class="cta-box" id="ctaBox" style="display:none">
+    <h2 class="sub">Automate this check in CI/CD</h2>
+    <p>Add the free GitHub Action to your workflow and catch compliance gaps after every deploy.</p>
+    <a href="https://github.com/mahope/compliance-site-check">View on GitHub → mahope/compliance-site-check@v2</a>
+  </div>
+</div>
+
+<div class="container">
+  <h2>Nine points is a homepage and its legal pages. A site is every page.</h2>
+  <p>This scan reads the page you submit and follows its links to the privacy, terms and
+  imprint pages. It cannot tell you that page three has no privacy link, or that the
+  checkout leaks a third-party embed.
+  <a href="/compliance-report">EUComply Pro</a> runs 33 checks on the page you
+  name — the 15 accessibility rules plus 18 server-side GDPR, cookie, security and
+  metadata checks — and hands you the findings as a PDF you can send to a
+  client.</p>
+</div>
+
+<footer class="site-footer"><div class="container">
+  <p>Part of the <a href="/">Compliance Toolkit</a> &middot; <a href="https://github.com/mahope/compliance-site-check">GitHub Action</a> &middot; <a href="/free-tools">More free tools</a></p>
+</div></footer>
+
+<script>
+(function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/.html$/,'')||'/';fetch('/api/track',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:p}),keepalive:true}).catch(function(){});}catch(e){}})();
+</script>
+
+<script>
+const urlInput = document.getElementById('urlInput');
+const scanBtn = document.getElementById('scanBtn');
+const resultsEl = document.getElementById('results');
+const errorBox = document.getElementById('errorBox');
+const loadingEl = document.getElementById('loading');
+const ctaBox = document.getElementById('ctaBox');
+
+function showLoading() { loadingEl.style.display = ''; resultsEl.innerHTML = ''; errorBox.style.display = 'none'; ctaBox.style.display = 'none'; scanBtn.disabled = true; }
+function hideLoading() { loadingEl.style.display = 'none'; scanBtn.disabled = false; }
+function showError(msg) { errorBox.textContent = msg; errorBox.style.display = ''; hideLoading(); }
+function esc(s) { var d = document.createElement('div'); d.appendChild(document.createTextNode(s)); return d.innerHTML; }
+
+function getStatusIcon(status) {
+  if (status === 'pass') return '<span class="check-status pass">&#10003;</span>';
+  if (status === 'warn' || status === 'info') return '<span class="check-status warn">&#9888;</span>';
+  // Et tjek der ikke blev læst, er ikke et rødt kryds. Den gamle kode skrev
+  // «Not found. Add a … page» om sider, scanneren aldrig hentede, fordi kaldets
+  // sidelimit nåede. Nu kommer de som sit eget, og et rødt kryds ville bare
+  // flytte løgnen.
+  if (status === 'unknown') return '<span class="check-status warn">&#8211;</span>';
+  return '<span class="check-status fail">&#10005;</span>';
+}
+
+// A failed answer from our own worker is not the visitor's network: Cloudflare
+// replies to a crashed worker with an HTML error page, so the old `r.json()`
+// threw and the catch reported "Network error: Unexpected token '<'".
+// Our own 5xx is not the visitor's Wi-Fi: Cloudflare replies to a crashed worker
+// with its own HTML page, so a bare `r.json()` threw and the catch blamed the
+// visitor for our outage. The status is read first, a 5xx is retried, and only
+// a real 4xx is final — all of that lives in /net.js now, next to the other
+// callers, and tools/check_net_copies.py keeps it the only copy. Only the retry
+// budget and the sentences this page shows are ours.
+var SCAN_MAX_TRIES = 3;
+var SERVER_BUSY = 'Our scan server is temporarily unavailable. Please try again in a moment.';
+var OFFLINE = 'We could not reach the scan server. Check your connection and try again.';
+// Samme fem som serveren, så de to steder ikke kan komme i uoverens. Se
+// CSC_MAX_URLS i site/_worker.js.
+var SCAN_MAX_SITES = 5;
+
+function fetchScan(endpoint) {
+  return NET.askGet(endpoint, SCAN_MAX_TRIES);
+}
+
+// Én URL pr. linje, samme site to gange kun én gang. Rækkefølgen bevares, så
+// rapport nummer to stadig er den anden linje kunden skrev.
+function readSites() {
+  var linjer = String(urlInput.value || '').split(/[\r\n]+/);
+  var set = [], setNøgler = {};
+  linjer.forEach(function(r) {
+    var rå = r.trim();
+    if (!rå) return;
+    var nøgle = rå.replace(/^https?:\/\//i, '').replace(/\/+$/, '').toLowerCase();
+    if (setNøgler[nøgle]) return;
+    setNøgler[nøgle] = true;
+    set.push(rå);
+  });
+  return set;
+}
+
+function scan() {
+  var sites = readSites();
+  if (!sites.length) { showError('Enter a URL first.'); return; }
+  if (sites.length > SCAN_MAX_SITES) {
+    showError('Scan up to ' + SCAN_MAX_SITES + ' sites at a time — you pasted ' + sites.length + '. Run them in batches.');
+    return;
+  }
+  var urls = [];
+  for (var i = 0; i < sites.length; i++) {
+    var u = /^https?:\/\//i.test(sites[i]) ? sites[i] : 'https://' + sites[i];
+    try { new URL(u); } catch (e) { showError('Invalid URL: ' + sites[i]); return; }
+    urls.push(u);
+  }
+
+  showLoading();
+  // Én URL ad gangen, og `NET.askGet` står for genkalderne — ikke denne løkke.
+  // Før delte de ansvaret, så en 503 blev genkaldt op til ni gange: tre her og
+  // tre i hvert forsøg.
+  var rapporter = [], fejl = [], k = 0;
+  function naeste() {
+    if (k >= urls.length) {
+      hideLoading();
+      if (!rapporter.length) { showError(fejl.length ? fejl[0].error : 'Scan failed'); return; }
+      ctaBox.style.display = '';
+      if (window.trackEvent) window.trackEvent('scan');
+      renderResults(rapporter, fejl);
+      return;
+    }
+    var target = urls[k];
+    fetchScan('/api/compliance-scan?url=' + encodeURIComponent(target))
+      .then(function(data) {
+        if (!data.ok) {
+          fejl.push({ url: target, error: data.error || 'Scan failed' });
+        } else if (data.multi && data.reports) {
+          data.reports.forEach(function(r) {
+            if (r.ok) rapporter.push(r); else fejl.push({ url: r.url, error: r.error });
+          });
+        } else {
+          rapporter.push(data);
+        }
+        k++;
+        naeste();
+      })
+      .catch(function(err) {
+        fejl.push({ url: target, error: err.transport ? OFFLINE : (err.transient ? SERVER_BUSY : (err.message || 'Scan failed')) });
+        k++;
+        naeste();
+      });
+  }
+  naeste();
+}
+
+
+  // iter313: download report as Markdown (client-side, no server)
+  var lastScan = [];
+  function reportLines(data) {
+    var lines = [];
+    lines.push('## ' + data.url);
+    lines.push('');
+    // Rapporten kan sendes videre til en kunde, så den skal sige præcis hvilken
+    // side der blev læst — ellers læser modtageren «site.dk» og tror hele
+    // sitet er tjekket.
+    lines.push('Page checked: ' + (data.scanned_url || data.url));
+    // Hvilke sider der faktisk blev læst. Uden denne linje kan modtageren
+    // ikke se om «Privacy Policy: found» stammer fra en side der virkelig
+    // findes — og fundet er det eneste i rapporten, kunden sender videre.
+    if (Array.isArray(data.pages_read) && data.pages_read.length) {
+      lines.push('');
+      lines.push('Pages read (' + data.pages_read.length + '):');
+      data.pages_read.forEach(function(u) { lines.push('- ' + u); });
+    }
+    lines.push('');
+    lines.push('Score: **' + data.score + '/100** (' + data.grade + ') · ' + data.passed + '/' + data.total + ' checks passed');
+    var all = [];
+    if (data.results) { for (var k in data.results) { data.results[k].forEach(function(r){ all.push(r); }); } }
+    var icons = { pass: 'PASS', warn: 'WARN', info: 'INFO', fail: 'FAIL', unknown: 'NOT CHECKED' };
+    all.forEach(function(r) {
+      lines.push('- [' + (icons[r.status] || r.status.toUpperCase()) + '] ' + (r.label || r.key) + ' — ' + (r.details || ''));
+    });
+    return lines;
+  }
+
+  function downloadReport() {
+    var rapporter = lastScan;
+    if (!rapporter || !rapporter.length) return;
+    var lines = [];
+    lines.push('# Compliance Report — ' + (rapporter.length === 1 ? rapporter[0].url : rapporter.length + ' websites'));
+    lines.push('');
+    lines.push('Scanned: ' + new Date().toISOString().slice(0, 10) + ' · via mahope.tools/compliance-site-check');
+    lines.push('');
+    rapporter.forEach(function(data, i) {
+      if (i) lines.push('');
+      lines = lines.concat(reportLines(data));
+    });
+    lines.push('');
+    lines.push('Fix each FAIL above, then re-scan. Free GitHub Action for CI: https://github.com/mahope/compliance-site-check');
+    var blob = new Blob([lines.join('\n')], { type: 'text/markdown' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    if (window.trackEvent) window.trackEvent('report-dl');
+    a.download = 'compliance-report-' + (rapporter.length === 1
+      ? (rapporter[0].url || '').replace(/^https?:\/\//, '').replace(/[^a-z0-9.-]/gi, '')
+      : rapporter.length + '-websites') + '.md';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(function(){ URL.revokeObjectURL(a.href); }, 1000);
+  }
+
+  // Betalt vej. Den skal kunne sige sandheden både for ét site og for flere, så
+  // den får antallet: «this checked one page» var ikke længere hele sandheden,
+  // da feltet tog fem URL'er — og en løfte-boks der kun passer for den ene
+  // udgave, er den fejl hele opgaven handler om.
+  // `url` er den første side rapporten dækker. Den bruges kun til den dybe vej
+  // til PDF-trinet: en Pro-holder skal ikke indtaste sin adresse igen for at
+  // låse den rapport han netop har set. Mål 6/10 før rettelsen: noten linkede
+  // til `/compliance-report` uden mere, så han landede i et tomt felt, kørte
+  // selv en scanning og scrollede ned til nøglefeltet bagefter.
+  function proCard(antal, url) {
+    var flere = antal > 1;
+    // `#url=`-vejen virker kun for en adresse rapport-siden genkender, og den
+    // bruger præcis denne test. `example.com` uden scheme ville give præcis
+    // det tomme felt den dybe vej er lavet for at fjerne.
+    var dyb = /^https?:\/\//i.test(String(url || ''));
+    var handoff = dyb ? '/compliance-report#url=' + encodeURIComponent(url) : '/compliance-report';
+    var html = '<div class="result-card pro-card">';
+    html += '<h3 style="margin:0 0 4px;font-size:16px">' + (flere
+      ? 'It found the legal pages and stopped. A site is every page.'
+      : 'It read one page and the legal pages it links to. A site is every page.') + '</h3>';
+    // Den håndskrevne liste var «hvad tjekket ikke ser» — altså kun Pro-siden.
+    // Målt 2/10: den nævnte ikke de ni tjek kaldet faktisk svarer på, og den
+    // havde en egen fortælling for hvert antal URL'er. Tabellen fra katalogen
+    // siger begge dele uden at siden skal holde dem i live.
+    html += '<!-- pro-table:start --> <div class="table-wrap"> <table class="compare pro-table"> <caption class="sr-only">Free and EUComply Pro, side by side</caption> <thead> <tr><th scope="col"><span class="sr-only">Plan</span></th><th scope="col">Free</th><th scope="col">EUComply Pro</th></tr> </thead> <tbody> <tr><th scope="row">What you get</th><td><ul><li>The 9 compliance checks on the page you submit</li><li>The privacy, terms and imprint pages it links to</li><li>A score and a grade for every site you paste</li></ul></td><td><ul><li>It reads the page you name from the server — consent signals, privacy link and metadata, not just whether a legal page exists</li><li>18 server-side GDPR, cookie, security and metadata checks</li><li>The findings as a PDF report you can hand a client</li></ul></td></tr> <tr><th scope="row">Price</th><td><span class="pro-price">$0</span><span class="pro-note">no licence key needed</span></td><td><span class="pro-price">$79/year per website</span></td></tr> </tbody> </table> </div> <p class="pro-note">$149 once per website — lifetime, first 100 purchases</p> <p class="pro-note pro-limit">Does not include DPA, NIS2 clauses, or other documents — sold separately</p> <!-- pro-table:end -->';
+    html += '<a class="btn" style="display:inline-block;padding:12px 24px;margin-top:8px;text-decoration:none" href="https://buy.stripe.com/eVq00i4YH6UG69g0ObbMQ03" rel="nofollow noopener">Buy EUComply Pro — $79/year per website</a>';
+    html += '<p class="pro-card-note">One website per licence. <a href="' + handoff + '">Open the PDF report for this page</a> — your key unlocks the download there.</p>';
+    html += '</div>';
+    return html;
+  }
+
+function renderResults(rapporter, fejl) {
+  lastScan = rapporter;
+  var html = '';
+
+  // Én rapport: præcis som før, så en enkeltvis kunde ser det samme. Flere
+  // rapporter får et overblik først, fordi det er det, han spørger om: hvilken
+  // af kunders sites mangler noget.
+  //
+  // Hvad blev der egentlig læst? Før dette stod «the score is the homepage»
+  // overalt, også når kunden havde indsendt `example.dk/kontakt` — så var
+  // rapporten løgnen, ikke værktøjet. Serveren svarer nu med `scanned_url` og
+  // `pages_checked`, og vi siger begge dele. Sidestien er kort nok til et
+  // site-navn på 390 px, så den bruges i overblikket.
+  function scannetSide(data) {
+    var u = data.scanned_url || data.url || '';
+    var sti = u.replace(/^https?:\/\//i, '').replace(/^[^/]*\/?/, '').replace(/\/$/, '');
+    return sti ? '/' + sti : 'the homepage';
+  }
+
+  // Hvilke sider scanneren faktisk læste. Før dette stod der et tal — «12
+  // pages read» — som var umuligt at efterprøve, og en rapport der sendes videre
+  // til en kunde skal kunne det. Serveren sender `pages_read` med de sider der
+  // svarede med indhold, så listen er dem, og ikke 404'erne der blev forsøgt.
+  function laesteSider(data) {
+    var liste = (data && data.pages_read) || [];
+    if (!liste.length) return '';
+    var vaert = String(data.scanned_url || data.url || '').replace(/^https?:\/\//i, '').split('/')[0];
+    var stier = liste.map(function(u) {
+      var s = String(u).replace(/^https?:\/\//i, '');
+      var vaertHer = s.split('/')[0];
+      var sti = s.replace(/^[^/]*\/?/, '').replace(/\/$/, '');
+      // Et cross-domæne-link ville aldrig være nået, men hvis serveren en dag
+      // læser videre, skal stien ikke lægge et andet website ind i listen.
+      return (sti ? '/' + sti : '/') + (vaertHer !== vaert ? ' (' + vaertHer + ')' : '');
+    });
+    return '<details class="pages-read"><summary>Pages read (' + liste.length + ')</summary><ul>'
+      + stier.map(function(s) { return '<li>' + esc(s) + '</li>'; }).join('') + '</ul></details>';
+  }
+
+  if (rapporter.length > 1) {
+    html += '<div class="result-card"><h3 style="margin:0 0 4px;font-size:16px">' + rapporter.length + ' sites checked</h3>';
+    html += '<p style="font-size:13px;color:#6b7280;margin:0 0 8px">One page per site, plus the legal pages it links to &mdash; not the whole site.</p>';
+    html += '<div class="site-list">';
+    rapporter.forEach(function(data, i) {
+      html += '<div class="site-row">';
+      html += '<span class="score-badge ' + esc(data.grade) + '">' + esc(data.grade) + '</span>';
+      html += '<span class="site-name"><a href="#site-' + (i + 1) + '">' + esc(data.url) + '</a>'
+        + '<span class="site-page">Checked: ' + esc(scannetSide(data)) + '</span></span>';
+      html += '<span class="site-score">' + data.score + '/100 &middot; ' + data.passed + '/' + data.total + ' passed</span>';
+      html += '</div>';
+    });
+    html += '</div>';
+    if (fejl && fejl.length) {
+      html += '<p style="font-size:13px;color:#b91c1c;margin:12px 0 0">' + fejl.length + ' of ' + (rapporter.length + fejl.length)
+        + ' could not be checked: ' + fejl.map(function(f) { return esc(f.url); }).join(', ') + '</p>';
+    }
+    html += '<div style="margin:16px 0 0"><button id="dlReport" onclick="downloadReport()" style="padding:8px 16px;background:#fff;border:1px solid #d1d5db;border-radius:8px;font-size:13px;cursor:pointer">⬇ Download report (.md)</button></div>';
+    html += '</div>';
+  }
+
+  rapporter.forEach(function(data, i) {
+  var html2 = '<div class="result-card" id="site-' + (i + 1) + '">';
+  html2 += '<div class="score-row">';
+  html2 += '<div class="score-badge ' + data.grade + '">' + esc(data.grade) + '</div>';
+  // «N pages read» skal være det tal listen lige under kan efterprøve. Før dette
+  // stod her `pages_checked`, som er antallet *kald* — og det medtager 404'er,
+  // fordi et kald der svarer 404 også er et kald (site/_worker.js:3119-3124).
+  // Så skrev siden «9 pages read» over en liste på 5, i en rapport der sendes
+  // videre til en kunde. Samme ord, to tal, og det forkerte af de to.
+  var laeste = (data && data.pages_read) || [];
+  html2 += '<div class="score-detail"><strong>' + data.score + '/100</strong> &middot; ' + data.passed + '/' + data.total + ' checks passed &middot; ' + esc(scannetSide(data))
+    + (laeste.length > 1 ? ' &middot; ' + laeste.length + ' pages read' : '')
+    + (data.not_checked ? ' &middot; ' + data.not_checked + ' not checked' : '') + '</div>';
+  // «2/9 checks passed» uden denne linje læses som «7 fejl». Når scanneren
+  // ikke nåede at læse alle de juridiske sider, skal det stå som sit eget.
+  if (data.not_checked) {
+    html2 += '<p class="check-detail" style="margin:0 0 12px">' + data.not_checked + ' of ' + data.total
+      + ' checks were not completed: this call reads a limited number of pages, and it ran out before every legal page was read. No finding was made about them.</p>';
+  }
+  html2 += '</div>';
+  if (rapporter.length === 1) {
+    html2 += '<div style="margin:0 0 16px"><button id="dlReport" onclick="downloadReport()" style="padding:8px 16px;background:#fff;border:1px solid #d1d5db;border-radius:8px;font-size:13px;cursor:pointer">⬇ Download report (.md)</button></div>';
+  }
+  html2 += laesteSider(data);
+
+  // Group results — passed first, then warnings, then failures
+  var order = [];
+  var statusOrder = { pass: 0, warn: 1, info: 1, unknown: 1, fail: 2 };
+  for (var key in data.results) {
+    data.results[key].forEach(function(r) { order.push(r); });
+  }
+  order.sort(function(a, b) {
+    var sa = statusOrder[a.status] !== undefined ? statusOrder[a.status] : 2;
+    var sb = statusOrder[b.status] !== undefined ? statusOrder[b.status] : 2;
+    if (sa !== sb) return sa - sb;
+    return (a.label || a.key || '').localeCompare(b.label || b.key || '');
+  });
+
+  order.forEach(function(r) {
+    html2 += '<div class="check-item">';
+    html2 += getStatusIcon(r.status);
+    html2 += '<div><div class="check-label">' + esc(r.label || r.check || r.key) + '</div>';
+    html2 += '<div class="check-detail">' + esc(r.details) + '</div>';
+    if (r.importance) html2 += '<div class="check-hint">' + esc(r.importance) + '</div>';
+    if (r.subResults && r.subResults.length) {
+      html2 += '<div class="sub-results">';
+      r.subResults.forEach(function(s) {
+        html2 += '<div class="sub-item">' + getStatusIcon(s.status) + ' <strong>' + esc(s.check) + '</strong> — ' + esc(s.detail) + '</div>';
+      });
+      html2 += '</div>';
+    }
+    html2 += '</div></div>';
+  });
+
+  html2 += '</div>';
+
+  // What each check means. De ni tjek er de samme for hvert site, så listen
+  // står kun ved det første — ellers ville den læses N gange for ingenting.
+  if (data.checks && i === 0) {
+    html2 += '<div class="result-card"><h3 style="margin:0 0 12px;font-size:16px">About each check</h3>';
+    for (var key in data.checks) {
+      var c = data.checks[key];
+      html2 += '<p style="font-size:13px;color:#4b5563;margin:2px 0"><strong>' + esc(c.label) + '</strong> — ' + esc(c.importance) + '</p>';
+    }
+    html2 += '</div>';
+  }
+  html += html2;
+  });
+
+  // Betalt vej, pr. samme oplysninger som nedenstående afsnit, men hvor
+  // besøgeren står: lige efter sit eget resultat. Uden den var det eneste
+  // økonomiske opfordring efter et resultat en donation på 10 kr., selv om
+  // det er en bureauopgave der mangler — og det er den der koster 79 USD.
+  html += proCard(rapporter.length, rapporter[0] && rapporter[0].url);
+
+  html += '<p style="font-size:13px;color:var(--color-text-muted);margin:16px 0 0">This scan is free and needs no account. If it saved you time, a small <a href="https://donate.stripe.com/7sYeVcbn50wieFM8gDbMQ0c" rel="nofollow noopener">donation</a> keeps it running.</p>';
+
+  resultsEl.innerHTML = html;
+  window.scrollTo({ top: document.getElementById('results').offsetTop - 20, behavior: 'smooth' });
+}
+
+// Enter key. I et felt der tager flere linjer er Enter et linjeskift, så
+// scanningen skal have Ctrl/Cmd+Enter — ellers kunne en kunde ikke skrive to
+// URL'er uden at den første scannede med det samme.
+urlInput.addEventListener('keydown', function(e) {
+  if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) scan();
+});
+
+function scanExample() {
+  document.getElementById('urlInput').value = 'https://mahope.tools';
+  scan();
+}
+
+// `#url=` — den adresse forsiden lige tjekkede, klistret på `next`-linket.
+// Målt 2/10: `/scan` læste denne fragment altid, men `compliance-site-check`
+// gjorde ikke, så den farligste vej ud af forsidens tjek — «Compliance-tjek» —
+// endte i et tomt felt og spurgte om den adresse læseren for et sekund siden
+// havde indtastet. Konventionen er `#url=` og ikke `?url=`, fordi det er den de
+// øvrige tolv sider læser; feltet tager flere linjer, så værdien sættes i den
+// som én linje. Kun `http(s)` slipper igennem — fragmentet kan skrives i
+// hånden, og serveren verner sig selv (`targetIsPublic`) mod private mål.
+//
+// `decodeURIComponent` kaster `URIError` på `#url=%`, og kaster den dør
+// denne IIFE — så både `scan()` og `urlInput.focus()` springes over, og
+// læseren får en tom side og en rød konsolfejl. Derfor `try`. Samme tre
+// linjer som `/url-to-markdown` allerede havde.
+(function () {
+  var m = location.hash.match(/#url=([^&]+)$/);
+  if (!m) return;
+  var u = '';
+  try { u = decodeURIComponent(m[1]); } catch (e) { return; }
+  if (!/^https?:\/\//i.test(u)) return;
+  urlInput.value = u;
+  scan();
+})();
+
+// Auto-focus
+urlInput.focus();
+</script>
+</body>
+</html>

@@ -4,44 +4,16 @@
   "measured": "2026-11-02",
   "acknowledged": [
     {
-      "file": "blog/add-bug-report-form-to-any-website.html",
-      "reason": "BugBottle har ingen betalt udgave: `tools/stripe_catalog.json` har ingen `bugbottle`-product_key, så der er ingen købsknap at sætte. Artiklen er dokumentation for et gratis open source-værktøj (npm + GitHub), og dens indirekte vej er den eneste ærlige konvertering den har. Rødt fra 2/10, da artiklen lå på `bugbottle.dev` — et domæne deploy-matricen ikke udgiver — og derfor var undtaget af dom 5. Den ligger nu på mahope.tools, så reglen gælder igen; se `dark_link_problems()` i tools/check_article_paid_path.py."
-    },
-    {
-      "file": "da/blog/tilfoej-fejlrapport-formular-hjemmeside.html",
-      "reason": "Samme grund på dansk: BugBottle har ingen betalt udgave i `tools/stripe_catalog.json`, så der er ingen købsknap at sætte på en gratis-værktøjs-guide. Rødt fra 2/10, da artiklen lå på det udpublicerede `bugbottle.dev`."
-    },
-    {
       "file": "blog/canonical-url-guide.html",
       "reason": "Ikke afklaret. Ugerapporterne 2026-42 til 2026-45 (genereret efter sidste grønne deploy 11/10-26) målte 1 besøg her, og siden har ingen købsknap. Opført 2/11-26 ved navneskiftet til Mahoje, så deploy-gaten ikke blev stående rød på trafiktal ingen havde nået at vurdere. Skal vurderes: sæt en knap på, eller skriv her hvorfor siden bevidst ikke har en."
-    },
-    {
-      "file": "blog/cmp-comparison-2026.html",
-      "reason": "Ikke afklaret. Ugerapporterne 2026-42 til 2026-45 (genereret efter sidste grønne deploy 11/10-26) målte 2 besøg her, og siden har ingen købsknap. Opført 2/11-26 ved navneskiftet til Mahoje, så deploy-gaten ikke blev stående rød på trafiktal ingen havde nået at vurdere. Skal vurderes: sæt en knap på, eller skriv her hvorfor siden bevidst ikke har en."
-    },
-    {
-      "file": "blog/copy-as-markdown-chrome-extension.html",
-      "reason": "Ikke afklaret. Ugerapporterne 2026-42 til 2026-45 (genereret efter sidste grønne deploy 11/10-26) målte 4 besøg her, og siden har ingen købsknap. Opført 2/11-26 ved navneskiftet til Mahoje, så deploy-gaten ikke blev stående rød på trafiktal ingen havde nået at vurdere. Skal vurderes: sæt en knap på, eller skriv her hvorfor siden bevidst ikke har en."
-    },
-    {
-      "file": "blog/eaa-enforcement-2026.html",
-      "reason": "Ikke afklaret. Ugerapporterne 2026-42 til 2026-45 (genereret efter sidste grønne deploy 11/10-26) målte 1 besøg her, og siden har ingen købsknap. Opført 2/11-26 ved navneskiftet til Mahoje, så deploy-gaten ikke blev stående rød på trafiktal ingen havde nået at vurdere. Skal vurderes: sæt en knap på, eller skriv her hvorfor siden bevidst ikke har en."
-    },
-    {
-      "file": "blog/paste-without-formatting-chrome.html",
-      "reason": "Ikke afklaret. Ugerapporterne 2026-42 til 2026-45 (genereret efter sidste grønne deploy 11/10-26) målte 2 besøg her, og siden har ingen købsknap. Opført 2/11-26 ved navneskiftet til Mahoje, så deploy-gaten ikke blev stående rød på trafiktal ingen havde nået at vurdere. Skal vurderes: sæt en knap på, eller skriv her hvorfor siden bevidst ikke har en."
     },
     {
       "file": "blog/url-to-markdown-converter.html",
       "reason": "Ikke afklaret. Ugerapporterne 2026-42 til 2026-45 (genereret efter sidste grønne deploy 11/10-26) målte 2 besøg her, og siden har ingen købsknap. Opført 2/11-26 ved navneskiftet til Mahoje, så deploy-gaten ikke blev stående rød på trafiktal ingen havde nået at vurdere. Skal vurderes: sæt en knap på, eller skriv her hvorfor siden bevidst ikke har en."
     },
     {
-      "file": "da/blog/html-til-markdown-api.html",
-      "reason": "Ikke afklaret. Ugerapporterne 2026-42 til 2026-45 (genereret efter sidste grønne deploy 11/10-26) målte 2 besøg her, og siden har ingen købsknap. Opført 2/11-26 ved navneskiftet til Mahoje, så deploy-gaten ikke blev stående rød på trafiktal ingen havde nået at vurdere. Skal vurderes: sæt en knap på, eller skriv her hvorfor siden bevidst ikke har en."
-    },
-    {
-      "file": "da/blog/tabeljustering-html-til-markdown.html",
-      "reason": "Ikke afklaret. Ugerapporterne 2026-42 til 2026-45 (genereret efter sidste grønne deploy 11/10-26) målte 2 besøg her, og siden har ingen købsknap. Opført 2/11-26 ved navneskiftet til Mahoje, så deploy-gaten ikke blev stående rød på trafiktal ingen havde nået at vurdere. Skal vurderes: sæt en knap på, eller skriv her hvorfor siden bevidst ikke har en."
+      "file": "blog/index.html",
+      "reason": "Rød på main siden ugerapport 2026-47 (1 målt besøg). Blogindekset er en liste over artikler, ikke en salgsside. Salget af Clean Copy Pro, DeskUptime Pro, Transmute Desktop, EUComply Pro og EUComply-skabelonerne er lukket 22/11-2026 (`status: inactive` i `tools/stripe_catalog.json`, linkene deaktiveret i Stripe; issue #9). Det eneste produkt til salg er Page Profile Pro, og det sælges på sine egne sider; en købsknap på indekset ville være en knap til et produkt indekset ikke handler om."
     }
   ]
 }

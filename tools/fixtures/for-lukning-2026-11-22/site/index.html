@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en" data-product="mahope">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mahoje tools — free web tools, guides and e-books</title>
+<meta name="description" content="Free browser-based tools for developers and small web agencies: GDPR document generators, WCAG contrast and colour tools, NIS2 self-assessments, text and developer utilities. Plus guides and e-books on EU web compliance. No accounts, nothing uploaded.">
+<meta name="author" content="Mads Holst Jensen">
+<link rel="canonical" href="https://mahope.tools/">
+<link rel="alternate" hreflang="en" href="https://mahope.tools/">
+<link rel="alternate" hreflang="da" href="https://mahope.tools/da/">
+<link rel="alternate" hreflang="x-default" href="https://mahope.tools/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Mahoje tools">
+<meta property="og:title" content="Mahoje tools — free web tools, guides and e-books">
+<meta property="og:description" content="GDPR generators, WCAG colour tools, NIS2 assessments, developer utilities. Runs in your browser, no account.">
+<meta property="og:url" content="https://mahope.tools/">
+<meta name="twitter:card" content="summary">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<script defer src="/track.js"></script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebSite","name":"Mahoje tools","url":"https://mahope.tools/","author":{"@type":"Person","name":"Mads Holst Jensen","url":"https://mahoje.dk"}}
+</script>
+<style>
+  .catalog { display: grid; gap: 2rem 2.5rem; }
+  @media (min-width: 720px) { .catalog { grid-template-columns: 1fr 1fr; } }
+  .catalog h3 { margin-bottom: 0.4rem; }
+  .catalog ul { list-style: none; padding: 0; margin: 0; }
+  .catalog li { border-top: 1px solid var(--color-border); padding: 0.45rem 0; margin: 0; display: flex; justify-content: space-between; gap: 1rem; }
+  .catalog li span { color: var(--color-text-muted); font-size: 0.85rem; white-space: nowrap; }
+  .catalog .all { border-top: 0; padding-top: 0.6rem; }
+  .products { list-style: none; padding: 0; margin: 0; display: grid; gap: 0.75rem; }
+  @media (min-width: 640px) { .products { grid-template-columns: repeat(3, 1fr); } }
+  .products li { border: 1px solid var(--color-border); border-radius: var(--radius); padding: 1rem; background: var(--color-surface); margin: 0; }
+  .products li p { margin: 0.25rem 0 0; font-size: 0.9rem; color: var(--color-text-muted); }
+</style>
+</head>
+<body>
+<main id="main">
+
+<div class="hero">
+  <div class="container">
+    <h1>Small, free web tools that run in your browser.</h1>
+    <p>Generators for GDPR documents, colour and contrast checkers for WCAG, NIS2 self-assessments, and the usual developer utilities — word counter, JSON formatter, diff, hashes. Nothing is uploaded, there are no accounts, and the guides and e-books are free to read and download.</p>
+    <div class="hero-cta">
+      <a href="/free-tools" class="btn-primary">All tools</a>
+      <a href="/blog/" class="btn-secondary">Guides</a>
+      <a href="/books/" class="btn-secondary">E-books</a>
+    </div>
+  </div>
+</div>
+
+<section id="check">
+  <div class="container">
+    <h2>Check a site right now</h2>
+    <p>Four of the tools here need a URL before they can do anything, so the
+    front door takes one. Type an address and we fetch it from our own server:
+    the status it answers with, how many redirects it took, the live TLS
+    certificate with the days left on it, and which of the eight security
+    headers came back. One check, about a second, and the URL is not stored.
+    For the rest — contrast, headings, cookie banners, the full WCAG pass — the
+    scanners below do more.</p>
+    <form class="oc-form" id="oc-check-form" method="get" action="/api/url-inspect">
+      <label for="oc-check-url">Website address</label>
+      <div class="oc-row-wrap">
+        <input id="oc-check-url" name="url" type="text" inputmode="url" autocomplete="url"
+               spellcheck="false" placeholder="https://your-site.com" aria-describedby="oc-check-hint" required>
+        <button type="submit" class="btn-primary">Check it now</button>
+      </div>
+      <p class="oc-hint" id="oc-check-hint">One URL, for example <code>example.com</code> — we add
+      <code>https://</code> if you leave it out. The request goes to our server, so it sees the
+      site the way the rest of the world does, not the way your browser does.</p>
+    </form>
+    <p class="oc-status" id="oc-check-status" role="status" aria-live="polite"></p>
+    <div id="oc-check-result" hidden></div>
+  </div>
+</section>
+
+<section>
+  <div class="container wide">
+    <h2>Tools</h2>
+    <div class="catalog">
+      <div>
+        <h3>GDPR documents</h3>
+        <ul>
+          <li><a href="/privacy-notice-generator">Privacy notice generator</a><span>Art. 13/14</span></li>
+          <li><a href="/dpa-generator">Data processing agreement generator</a><span>Art. 28</span></li>
+          <li><a href="/ropa-generator">Record of processing activities</a><span>Art. 30</span></li>
+          <li><a href="/cookie-check">Cookie check</a><span>cookies before consent</span></li>
+          <li><a href="/privacy-policy-template">Privacy policy template</a><span>Markdown</span></li>
+          <li><a href="/gdpr-breach-report-generator">Breach report generator</a><span>Art. 33/34</span></li>
+        </ul>
+      </div>
+      <div>
+        <h3>Accessibility and colour</h3>
+        <ul>
+          <li><a href="/contrast-checker">WCAG contrast checker</a><span>AA / AAA</span></li>
+          <li><a href="/palette-generator">Accessible palette generator</a><span></span></li>
+          <li><a href="/color-blindness-simulator">Colour blindness simulator</a><span></span></li>
+          <li><a href="/text-on-image-checker">Text-on-image contrast</a><span>real pixels</span></li>
+          <li><a href="/scan">Accessibility scanner</a><span>WCAG 2.2 / EAA</span></li>
+          <li><a href="/accessibility-statement-generator">Accessibility statement generator</a><span></span></li>
+        </ul>
+      </div>
+      <div>
+        <h3>NIS2</h3>
+        <ul>
+          <li><a href="/nis2-check">Am I covered by NIS2?</a><span>12 questions</span></li>
+          <li><a href="/nis2-gap-assessment">Gap assessment</a><span>Art. 21 measures</span></li>
+          <li><a href="/nis2-incident-generator">Incident report generator</a><span>Art. 23</span></li>
+        </ul>
+      </div>
+      <div>
+        <h3>Site checks</h3>
+        <ul>
+          <li><a href="/compliance-site-check">Website compliance check</a><span>9 points</span></li>
+          <li><a href="/security-headers-check">Security headers</a><span>CSP, HSTS, …</span></li>
+          <li><a href="/url-inspector/">URL inspector</a><span>redirects, headers, TLS</span></li>
+          <li><a href="/page-profile">page-profile</a><span>CLI</span></li>
+          <li><a href="/site-icons">site-icons</a><span>CLI</span></li>
+        </ul>
+      </div>
+      <div>
+        <h3>Text and developer utilities</h3>
+        <ul>
+          <li><a href="/word-counter">Word counter</a><span></span></li>
+          <li><a href="/json-formatter">JSON formatter and validator</a><span></span></li>
+          <li><a href="/text-diff">Text diff</a><span></span></li>
+          <li><a href="/case-converter">Case converter</a><span></span></li>
+          <li><a href="/markdown-table-generator">Markdown table generator</a><span>CSV / TSV</span></li>
+          <li><a href="/base64-encoder-decoder">Base64</a>, <a href="/url-encoder-decoder">URL encoding</a>, <a href="/hash-generator">hashes</a>, <a href="/uuid-generator">UUIDs</a><span></span></li>
+        </ul>
+        <p class="all"><a href="/free-tools">Full list with descriptions</a> · <a href="/free-downloads">Downloadable templates and CLIs</a></p>
+      </div>
+      <div>
+        <h3>CI and GitHub Actions</h3>
+        <ul>
+          <li><a href="https://github.com/mahope/compliance-site-check">compliance-site-check</a><span>after every deploy</span></li>
+          <li><a href="https://github.com/mahope/deskuptime">deskuptime</a><span>uptime and SSL in CI</span></li>
+          <li><a href="https://github.com/mahope/clean-copy-cli">clean-copy-cli</a><span>HTML to Markdown</span></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="container wide">
+    <h2>Reading</h2>
+    <div class="two-col">
+      <div>
+        <h3>Guides</h3>
+        <p>Practical articles on EU web compliance — the European Accessibility Act, GDPR for agencies, NIS2 — and on the tools above. Most have a Danish version. <a href="/blog/">Browse the blog</a>, or start with the <a href="/compliance-guide">compliance guide for small agencies</a>.</p>
+      </div>
+      <div>
+        <h3>E-books</h3>
+        <p>Six short books as free EPUB downloads: an EAA checklist, EAA for Shopify, GDPR and NIS2 for agencies, a cookie-consent guide, and a tutorial on building a first Chrome extension. <a href="/books/">See the books</a>.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="products">
+  <div class="container wide">
+    <h2>Larger tools</h2>
+    <h3>With their own sites</h3>
+    <ul class="products">
+      <li><a href="https://cleancopy.tools">Clean Copy</a><p>Copy web pages as clean Markdown or plain text. Browser extension, CLI, Obsidian and VS Code plugins. Pro ($19/year) adds batch conversion and custom cleanup rules. <a class="btn btn-small" href="https://cleancopy.tools">See the free/Pro table</a></p></li>
+      <li><a href="https://deskuptime.com">DeskUptime</a><p>Uptime, SSL expiry and content-change checks from your own machine. Free CLI, three sites. Pro ($19 once, three machines) adds the desktop app, unlimited sites, 30-second checks and webhook alerts. <a class="btn btn-small" href="https://deskuptime.com">See the free/Pro table</a></p></li>
+      <li><a href="https://bugbottle.dev">BugBottle</a><p>Headless in-app bug reports with console errors, context and a screenshot, sent to your own endpoint.</p></li>
+    </ul>
+    <h3>Sold here</h3>
+    <ul class="products">
+      <li><a href="/page-profile">page-profile</a><p>Read a page the way Google and a visitor do: meta tags, headings, links, images and Core Web Vitals. The free version covers all checks, the terminal report with score and grade, and JSON output. Pro ($19/year) adds compare mode from the command line, batch mode and client-ready HTML reports. <a class="btn btn-small" href="/page-profile">See the free/Pro table</a></p></li>
+      <li><a href="/compliance-report">EU Compliance Report</a><p>One report per website.</p>
+        <p>Free: the accessibility checks, score and grade and the whole report on the page.</p>
+        <p>Pro adds pdf download and the GDPR/cookie and NIS2/security checks.</p>
+        <p><a class="btn btn-small" href="/compliance-report">See the free/Pro table</a> <a class="btn btn-small" href="https://buy.stripe.com/eVq00i4YH6UG69g0ObbMQ03" rel="nofollow noopener">Buy EUComply Pro — $79/year per website</a></p></li>
+    </ul>
+    <!-- Målt 5/10: listerne over nævner **4** af katalogens 13 produkter,
+         og siden havde **0** links til `/pricing` — den eneste side der viser
+         alle 13 med pris. Så en læser der landede her for at finde ud af, hvad
+         noget koster, måtte gætte eller bruge `/free-tools` som genvej.
+         `/free-tools` linkede til prislisten, forsiden gjorde ikke, og den er
+         den side med 6 besøgende og 100 % bounce.
+         Sætningen nedenfor må kun navngive varer der *ikke* står i listerne
+         ovenfor. Den skrev oprindeligt «Clean Copy Pro, DeskUptime Pro … er
+         ikke listet ovenfor», men Clean Copy og DeskUptime står lige overfor
+         med deres pris i teksten, så den modsagde sig selv. `tools/
+         check_frontpage_pricing.py` dom 4 dømmer det. -->
+    <p style="margin-bottom:0">Not listed above: Transmute Desktop, the compliance templates and the report kits. <a class="btn btn-small" href="/pricing">Every price in one list</a></p>
+  </div>
+</section>
+
+<section id="faq">
+  <div class="container">
+    <h2>Questions</h2>
+    <details>
+      <summary>Is anything I type sent to a server?</summary>
+      <p>For the generators, checkers and text utilities: no, they run entirely in the page. The site scanners (accessibility scanner, compliance check, security headers, URL inspector) have to fetch the URL you give them, which happens through a small Cloudflare Worker; the URL is not stored. The only thing this site records is an anonymous page-view count.</p>
+    </details>
+    <details>
+      <summary>Are the generated documents legal advice?</summary>
+      <p>No. They are structured templates built from the articles of the regulations, meant to give you a solid first draft. Have a lawyer review anything you rely on, particularly data processing agreements and NIS2 obligations.</p>
+    </details>
+    <details>
+      <summary>Why are the e-books free?</summary>
+      <p>The individual e-books are Creative Commons BY-NC 4.0 and stay free. The <a href="/books/compliance-bundle">paid EU compliance bundle</a> and the document templates are separate, sold once through Stripe — the free EPUBs are not part of them.</p>
+    </details>
+    <details>
+      <summary>Can I request a tool or report a bug?</summary>
+      <p>Yes — the fastest way is an issue on <a href="https://github.com/mahope">GitHub</a>, or email through <a href="https://mahoje.dk">mahoje.dk</a>.</p>
+    </details>
+  </div>
+</section>
+
+<section>
+  <div class="container">
+    <h2>Who makes this</h2>
+    <p>Mahoje tools is run by Mads Holst Jensen, an independent developer in Odense, Denmark, working with small businesses and agencies as <a href="https://mahoje.dk">mahoje.dk</a>. The tools started as things needed for client work — a privacy notice draft, a contrast check, a post-deploy smoke test — and were published so others could use them without another subscription.</p>
+  </div>
+</section>
+
+</main>
+<script>/* What this check cannot do, and where the visitor goes next, are this page's
+  own words — /one-off-check.js is shared by every site's front door, so it
+  hard-codes no product. The links point at the scanners that go deeper than
+  one HTTP request. */
+window.ONE_OFF_CHECK = {
+  // Same reason as deskuptime.com: the h1 asks what the visitor's own site
+  // answers, and without this the answer waited for a keystroke. 10 visitors and
+  // 89 % bounce over 28 days (Plausible, 10/10) — one example check answers the
+  // page's own question on load, and the card says it is an example.
+  example: 'example.com',
+  then: 'That was one request, just now. It says nothing about whether the site was down five minutes ago, and it does not look at a single thing on the page — no contrast, no headings, no cookies. Those are the scanners.',
+  next: [{label: 'Full WCAG scan', href: '/scan', takesUrl: true}, {label: 'Compliance check', href: '/compliance-site-check', takesUrl: true}]
+};
+/* The donation line lives in the page, not in the script: it has to reach
+  tools/check_donation_paths.py, and it must not appear before there is a
+  result. A sentence, never a button, and the href is the catalog's. */
+window.OC_DONATE = '<p class="oc-donate">The check is free and needs no account. If it saved you time, a small <a href="https://donate.stripe.com/7sYeVcbn50wieFM8gDbMQ0c" rel="nofollow noopener">donation</a> keeps it running.</p>';</script>
+<script defer src="/net.js"></script>
+<script defer src="/one-off-check.js"></script>
+</body>
+</html>

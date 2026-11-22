@@ -391,6 +391,12 @@ def self_test() -> int:
         shutil.copytree(ROOT, tmp, ignore=shutil.ignore_patterns(
             ".git", "dist", "node_modules", "__pycache__", ".wrangler"))
         site = tmp / "site"
+        # Den rigtige fejlform stod i pro-noten på den danske gapanalyse, og
+        # den note blev fjernet, da salget af EUComply Pro lukkede 22/11-2026.
+        # Mutationerne kører derfor på siden fra før lukningen
+        # (`tools/closed_sales.py`), så de stadig rammer publiceret tekst.
+        snap = ROOT / "tools/fixtures/for-lukning-2026-11-22/site/nis2-gap-assessment-da.html"
+        shutil.copy2(snap, site / "nis2-gap-assessment-da.html")
 
         # FINDET_MER skriver bare den fejl, mutationen gav, så mutationerne
         # kan genbruges af både ordtal- og antalsarmen.

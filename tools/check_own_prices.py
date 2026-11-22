@@ -391,7 +391,15 @@ def self_test() -> int:
             work = Path(tmp) / "site"
             shutil.copytree(SITE, work)
             target = work / Path(rel).relative_to("site")
-            body = target.read_text(encoding="utf-8")
+            # 22/11-2026: salget af Clean Copy Pro, DeskUptime Pro og
+            # skabelonerne er lukket, og salgssiderne har ikke længere priser
+            # og købsknapper. Mutationerne er skrevet mod knapperne fra før
+            # lukningen, så de køres på siderne fra dengang
+            # (`tools/closed_sales.py`). Katalogpriserne er de samme, og porten
+            # skal stadig kunne se en forkert pris på en knap.
+            sys.path.insert(0, str(ROOT / "tools"))
+            import closed_sales  # noqa: E402
+            body = closed_sales.before_closure(rel)
             if old not in body:
                 ok(False, f"mutation {name!r}: mønsteret findes ikke mere")
                 continue
@@ -421,14 +429,16 @@ def self_test() -> int:
 
     # Dom 4 mod katalogen selv: et produkt uden `periods` kan ikke dømmes, og
     # en forkert `periods` dømmer den røde side grøn. Begge skal være fund.
+    # 22/11-2026: dømt på Page Profile Pro, fordi Clean Copy Pro ikke længere
+    # har knapper på siderne (salget er lukket) — samme `yearly`-periode.
     blind = copy.deepcopy(catalog)
-    del blind["billing_periods"]["products"]["clean-copy-pro"]
+    del blind["billing_periods"]["products"]["page-profile-pro"]
     found = check_buttons(SITE, catalog_prices(blind), period_detector(blind))
     ok([f for f in found if f["kind"] == "produkt uden periode i katalogen"],
        "produkt uden `periods` er et fund")
 
     swapped = copy.deepcopy(catalog)
-    swapped["billing_periods"]["products"]["clean-copy-pro"] = ["one_time"]
+    swapped["billing_periods"]["products"]["page-profile-pro"] = ["one_time"]
     found = check_buttons(SITE, catalog_prices(swapped),
                           period_detector(swapped))
     mismatched = [f for f in found if f["kind"] == "periode modsiger katalogen"]

@@ -1915,9 +1915,13 @@ def _self_test() -> int:
     #     artikler, fordi de eneste med trafik ligger på `bugbottle.dev`. Derfor
     #     bygges den syntetisk, samme grund som kontrol 5b og 7b: selftester
     #     skal dømme *evnen*, ikke data (NEXT_TASK fra vscode-artikel-knap).
+    # 22/11-2026: salget af Clean Copy Pro, DeskUptime Pro og EUComply Pro er
+    # lukket, så langt de fleste artikler har nu *ingen* betalt vej (de står i
+    # `article_paid_path_blind.json`) i stedet for en indirekte. Klassen er
+    # målt til 36 af 194 samme dag; kravet er at den stadig findes og måles.
     lo = [r for r in table if r["paid"] and not r["knapper"]]
-    check("klassen 'klik uden knap' findes og måles (148 af 190)",
-          len(lo) > 100,
+    check("klassen 'klik uden knap' findes og måles (36 af 194)",
+          len(lo) > 20,
           f"{len(lo)} af {len(table)}")
     check("fixturens klasse er præcis den ene artikel med læsere, klik og ingen knap",
           [r["file"] for r in click_no_button(fx_table)] == fx_expect["click_class"],
@@ -2312,8 +2316,34 @@ def _self_test() -> int:
     # 16f. Dom 7, forsiden pr. domæne. De otte rækker er målt på filerne, så
     #      porten ser her *hver* forside og ikke fire sider bag ét tal — og det
     #      er hele hullet dom 6 lod åbent: 461 af 505 målte besøg.
-    forsider = frontpage_rows()
+    forsider_i_dag = frontpage_rows()
+    # 22/11-2026: salget af Clean Copy Pro, DeskUptime Pro og EUComply Pro er
+    # lukket, så de seks udgivne forsider har 0 knapper i dag og står med en
+    # grund i `tools/frontpage_no_button.json`. Dom 7s evne bevises derfor på
+    # forsidefilerne fra før lukningen (`tools/closed_sales.py`), målt med den
+    # samme `knap_links`, og i dag-målingen dømmes for sig nedenfor.
+    import closed_sales  # noqa: E402
+
+    def _før(row: dict) -> dict:
+        if not row.get("file"):
+            return row
+        kopi = closed_sales.SNAPSHOT / row["file"]
+        if not kopi.is_file():
+            return row
+        knapper = knap_links(closed_sales.SNAPSHOT / "site", kopi)
+        return dict(row, knapper=len(knapper), knap_urls=knapper or None)
+
+    forsider = [_før(r) for r in forsider_i_dag]
     målt = {f"{r['domain']}{r['route']}": r["knapper"] for r in forsider}
+    i_dag = {f"{r['domain']}{r['route']}": r["knapper"] for r in forsider_i_dag}
+    check("dom 7 i dag: de lukkede produkters forsider har 0 købsknapper",
+          all(i_dag.get(k) == 0 for k in (
+              "cleancopy.tools/", "cleancopy.tools/da/",
+              "deskuptime.com/", "deskuptime.com/da/")),
+          f"{i_dag}")
+    check("dom 7 i dag: hver forside uden knap står med en grund",
+          not frontpage_problems(forsider_i_dag),
+          f"{frontpage_problems(forsider_i_dag)[:1]}")
     check("dom 7 måler alle fire domæners forsider, begge sprog",
           len(forsider) == 8 and sorted({r["domain"] for r in forsider})
           == ["bugbottle.dev", "cleancopy.tools", "deskuptime.com",

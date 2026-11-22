@@ -39,6 +39,9 @@ from html.parser import HTMLParser
 from pathlib import Path
 from urllib.parse import urljoin, urlsplit
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import closed_sales  # noqa: E402
+
 ROOT = Path(__file__).resolve().parent.parent
 CATALOG = ROOT / "tools/stripe_catalog.json"
 CONTRACT = ROOT / "docs/stripe-kontrakt.md"
@@ -2456,6 +2459,9 @@ KRYDS_TABEL_DA = """<!doctype html><html lang="da"><body>
 </body></html>"""
 
 
+CORE_PAGE_COUNT = 1
+
+
 def check_routes(offers: list[dict], core_pages: object) -> list[str]:
     """Hver købsside skal have sit domæne og sin public route, og de fire
     centrale produktsider skal findes med den CTA de erklærer."""
@@ -2474,8 +2480,11 @@ def check_routes(offers: list[dict], core_pages: object) -> list[str]:
         if domain in KNOWN_DOMAINS and route_file(domain, route) is None:
             problems.append(f"{label}: {domain}{route} findes ikke i dist/")
 
-    if not isinstance(core_pages, list) or len(core_pages) != 4:
-        problems.append("catalog: core_pages skal være præcis fire centrale produktsider")
+    # Fire centrale produktsider indtil 22/11-2026. Clean Copy Pro, DeskUptime
+    # Pro og EUComply Pro blev lukket for salg den dag, så Page Profile Pro er
+    # den eneste tilbage; de lukkede sider dømmes af `check_closed_sales`.
+    if not isinstance(core_pages, list) or len(core_pages) != CORE_PAGE_COUNT:
+        problems.append(f"catalog: core_pages skal være præcis {CORE_PAGE_COUNT} central(e) produktside(r)")
         return problems
     for page in core_pages:
         if not isinstance(page, dict):
@@ -3245,7 +3254,11 @@ def check_sale_denials(catalog: dict, pages: list[tuple[str, str]]) -> list[str]
     products = catalog.get("products", {})
     if not isinstance(products, dict):
         return []
-    named = {key: _product_words(entry.get("name", "")) for key, entry in products.items() if isinstance(entry, dict)}
+    # Et lukket produkt (`status: inactive`) sælges ikke længere, så en side
+    # der siger det, fortæller sandheden — den modsatte regel, at siden SKAL
+    # sige det, står i `check_closed_sales`.
+    named = {key: _product_words(entry.get("name", "")) for key, entry in products.items()
+             if isinstance(entry, dict) and not is_inactive(entry)}
     problems: list[str] = []
     for relative, text in pages:
         visible, _ = parse_page(text)
@@ -3358,6 +3371,11 @@ def check_deliverable(catalog: dict, pages: list[tuple[str, str]], paid: dict | 
     for key, product in sorted(catalog["products"].items()):
         if product.get("kind") != "download":
             continue
+        if is_inactive(product):
+            # Lukket for salg: filerne skal stadig kunne leveres til tidligere
+            # købere (/thanks og /api/download), men ingen side må sælge dem.
+            # Den modsatte regel står i `check_closed_sales`.
+            continue
         entry = inventory.get(key)
         if entry is None:
             problems.append(f"catalog: {key} er et download-produkt uden post i {relative_inventory}")
@@ -3377,6 +3395,148 @@ def check_deliverable(catalog: dict, pages: list[tuple[str, str]], paid: dict | 
     return problems
 
 
+def is_inactive(product: object) -> bool:
+    return isinstance(product, dict) and product.get("status") == "inactive"
+
+
+def inactive_keys(catalog: dict) -> set[str]:
+    return {key for key, product in (catalog.get("products") or {}).items() if is_inactive(product)}
+
+
+def closed_links(catalog: dict) -> dict[str, str]:
+    """Betalingslink -> product_key for alle lukkede produkter, inkl. lifetime."""
+    out: dict[str, str] = {}
+    for key in inactive_keys(catalog):
+        product = catalog["products"][key]
+        if isinstance(product.get("payment_link"), str):
+            out[product["payment_link"]] = key
+        lifetime = lifetime_offer(product)
+        if lifetime and isinstance(lifetime.get("payment_link"), str):
+            out[lifetime["payment_link"]] = key
+    return out
+
+
+CHECKOUT_CLOSED_RE = re.compile(r"const CHECKOUT_CLOSED = \{(.*?)\n\};", re.S)
+
+
+def check_closed_sales(catalog: dict, pages: list[tuple[str, str]],
+                       clients: list[Path] | None = None,
+                       worker_text: str | None = None) -> list[str]:
+    """Et produkt lukket for salg må ikke kunne købes nogen steder.
+
+    Mads lukkede 22/11-2026 salget af Clean Copy Pro, DeskUptime Pro,
+    Transmute Desktop, EUComply Pro, EUComply-skabelonerne og e-bogspakken.
+    Payment Linkene er deaktiveret i Stripe, så en knap til dem ender på
+    Stripes "dette link er ikke længere aktivt" — en død ende for læseren.
+    Reglen er den omvendte af `check_offers`: dér *skal* en købsside have
+    præcis én knap; her må ingen side, ingen shippet klient og ingen
+    checkout-rute have en til et lukket produkt. Licens-API'et, /thanks,
+    webhooken og leveringen rører kontrollen ikke — eksisterende køb virker.
+
+    Dømmer:
+      1. `closed_sales.products` er præcis mængden af `status: inactive`, og
+         hver har `closed` = `closed_sales.date` (og lifetime er inactive).
+      2. Intet lukket produkt i offers, core_pages, pro_table_pages eller
+         built_offers.
+      3. Intet betalingslink for et lukket produkt i en side i `site/` eller en
+         shippet klient — undtagen de filer `release_pending` navngiver, som er
+         låst til et publiceret arkiv og først kan rettes ved en udgivelse.
+      4. Hver side i `notice_pages` findes og siger i synlig tekst at
+         produktet ikke sælges længere, og hvor eksisterende kunder får hjælp.
+      5. Workeren: STRIPE_LINKS har intet lukket link, og CHECKOUT_CLOSED
+         nævner hvert lukket produkt, der havde en kort /api/checkout-nøgle,
+         og svarer 410.
+    """
+    closed = catalog.get("closed_sales")
+    if not isinstance(closed, dict):
+        return ["catalog: closed_sales mangler (produkter med status inactive skal stå dér)"]
+    problems: list[str] = []
+    date = closed.get("date")
+    declared = closed.get("products")
+    inactive = inactive_keys(catalog)
+    if not isinstance(declared, list):
+        return ["catalog: closed_sales.products skal være en liste"]
+    for key in sorted(set(declared) - inactive):
+        problems.append(f"catalog: closed_sales nævner {key}, men produktet har ikke status inactive")
+    for key in sorted(inactive - set(declared)):
+        problems.append(f"catalog: {key} har status inactive, men står ikke i closed_sales.products")
+    for key in sorted(inactive):
+        product = catalog["products"][key]
+        if product.get("closed") != date:
+            problems.append(f"catalog: {key} mangler closed={date!r}")
+        lifetime = lifetime_offer(product)
+        if lifetime and lifetime.get("status") != "inactive":
+            problems.append(f"catalog: {key} er lukket, men lifetime-udgaven er ikke inactive")
+
+    for field in ("offers", "core_pages", "pro_table_pages", "built_offers"):
+        for entry in catalog.get(field) or []:
+            if isinstance(entry, dict) and entry.get("product") in inactive:
+                problems.append(f"catalog: {field} sælger det lukkede produkt {entry['product']} på {entry.get('path') or entry.get('route')}")
+
+    links = closed_links(catalog)
+    pending = {entry.get("path") for entry in closed.get("release_pending") or [] if isinstance(entry, dict)}
+    for entry in closed.get("release_pending") or []:
+        if not isinstance(entry, dict) or not str(entry.get("why", "")).strip():
+            problems.append("catalog: closed_sales.release_pending skal have path og why pr. fil")
+    for relative, text in pages:
+        if relative in pending:
+            continue
+        for link in sorted(set(LINK_PATTERN.findall(text)) & set(links)):
+            problems.append(f"{relative}: linker til {links[link]}, som er lukket for salg {date} — fjern købsknappen")
+    for path in client_sources() if clients is None else clients:
+        try:
+            text = path.read_text(encoding="utf-8")
+        except (UnicodeDecodeError, OSError):
+            continue
+        try:
+            label = str(path.relative_to(ROOT))
+        except ValueError:
+            label = str(path)
+        if label in pending:
+            continue
+        for link in sorted(set(LINK_PATTERN.findall(text)) & set(links)):
+            problems.append(f"{label}: shippet klient linker til {links[link]}, som er lukket for salg {date}")
+    for path in sorted(pending):
+        if not (ROOT / path).is_file():
+            problems.append(f"catalog: release_pending peger på {path}, som ikke findes — fjern posten")
+
+    by_path = {label: text for label, text in pages}
+    for notice in closed.get("notice_pages") or []:
+        if not isinstance(notice, dict):
+            problems.append("catalog: en notice_page er ikke et objekt")
+            continue
+        path = notice.get("path")
+        text = by_path.get(path)
+        if text is None:
+            full = ROOT / str(path)
+            text = full.read_text(encoding="utf-8") if full.is_file() else None
+        if text is None:
+            problems.append(f"catalog: notice_page {path} findes ikke")
+            continue
+        visible, _ = parse_page(text)
+        for required in notice.get("requires_text") or []:
+            if normalize(required).casefold() not in visible.casefold():
+                problems.append(f"{path}: siger ikke {required!r} — forsiden skal fortælle at {notice.get('product')} ikke sælges længere")
+
+    text = WORKER.read_text(encoding="utf-8") if worker_text is None else worker_text
+    links_block = re.search(r"const STRIPE_LINKS = \{(.*?)\n  \};", text, re.S)
+    if links_block:
+        for short, link in re.findall(r"(\w+):\s*'(https://buy\.stripe\.com/[A-Za-z0-9]+)'", links_block.group(1)):
+            if link in links:
+                problems.append(f"site/_worker.js: STRIPE_LINKS.{short} sælger {links[link]}, som er lukket for salg")
+    block = CHECKOUT_CLOSED_RE.search(text)
+    if block is None:
+        problems.append("site/_worker.js: CHECKOUT_CLOSED mangler, så /api/checkout ved ikke hvilke produkter der er lukket")
+    else:
+        for key in sorted(set(closed.get("checkout_keys") or {}) ):
+            product = closed["checkout_keys"][key]
+            if not re.search(rf"\b{re.escape(key)}:\s*\{{[^}}]*product:\s*'{re.escape(product)}'", block.group(1)):
+                problems.append(f"site/_worker.js: CHECKOUT_CLOSED mangler {key} ({product}) — /api/checkout?product={key} skal svare 410")
+        if not re.search(r"CHECKOUT_CLOSED\[\w+\][\s\S]{0,800}?status:\s*410", text):
+            problems.append("site/_worker.js: /api/checkout svarer ikke 410 for lukkede produkter")
+    return problems
+
+
 def run(catalog: dict) -> tuple[list[str], list[dict]]:
     problems = check_catalog(catalog)
     problems += check_contract_doc(catalog)
@@ -3393,6 +3553,7 @@ def run(catalog: dict) -> tuple[list[str], list[dict]]:
     problems += check_sale_denials(catalog, source_pages())
     problems += check_analysis_location(source_pages())
     problems += check_deliverable(catalog, source_pages())
+    problems += check_closed_sales(catalog, source_pages())
     problems += check_free_tier(catalog, source_pages())
     problems += check_pro_features(catalog, source_pages())
     problems += check_free_features(catalog, source_pages())
@@ -3452,6 +3613,29 @@ def discover_offers(catalog: dict) -> list[dict]:
 def self_test() -> int:
     """Beviser at gaten faktisk fanger de fem driftformer."""
     good = load_catalog(CATALOG)
+    # Selftestens "rigtige fil" for en side, der solgte et produkt lukket
+    # 22/11-2026, er den publicerede tekst fra før lukningen (se
+    # `tools/closed_sales.py`). Andre sider læses fra `site/` som før.
+    def real_page(relative: str) -> str:
+        snap = closed_sales.SNAPSHOT / str(relative)
+        if snap.is_file():
+            return snap.read_text(encoding="utf-8")
+        return (ROOT / relative).read_text(encoding="utf-8")
+    # Mange scenarier nedenfor er bygget på syntetiske sider for produkter, der
+    # blev lukket for salg 22/11-2026 (Clean Copy Pro, EUComply …). Katalogens
+    # produktdata findes stadig, så de er gode fixturer for *reglerne*; de
+    # købssider de havde, står i `closed_sales.former_offers`.
+    former = [dict(offer) for offer in (good.get("closed_sales") or {}).get("former_offers") or []]
+    historical = {**good, "offers": good["offers"] + former}
+
+    def reopened(catalog: dict, *keys: str) -> dict:
+        """Samme katalog, hvor `keys` sælges igen — fixtur for regler, der
+        kun gælder produkter til salg."""
+        products = dict(catalog["products"])
+        for key in keys:
+            products[key] = {k: v for k, v in products[key].items()
+                             if k not in ("status", "closed", "closed_note")}
+        return {**catalog, "products": products}
     rogue_link = {**good, "products": {
         **good["products"],
         "clean-copy-pro": {**good["products"]["clean-copy-pro"],
@@ -3475,12 +3659,12 @@ def self_test() -> int:
     # stum kontrol: den fejl, den skal fange, kan så ikke opstå. Derfor
     # verificeres her, at mutationen rent faktisk rammer en købsside.
     wrong_domain = {**good, "offers": [
-        {**offer, "domain": "example.com"} if offer["path"] == "site/clean-copy.html" else offer
+        {**offer, "domain": "example.com"} if offer["path"] == "site/page-profile.html" else offer
         for offer in good["offers"]]}
     if wrong_domain["offers"] == good["offers"]:
         print("SELFTEST FEJLER: domænescenariet muterer ingen købsside — det er en stum kontrol")
         return 1
-    missing_core = {**good, "core_pages": good["core_pages"][:3]}
+    missing_core = {**good, "core_pages": good["core_pages"][:CORE_PAGE_COUNT - 1]}
     rogue_portal = {**good, "billing_portal": "https://billing.stripe.com/p/login/ukjendtPortal0"}
     no_subscriptions = {**good, "products": {
         key: {field: value for field, value in product.items() if field != "subscription"}
@@ -3512,16 +3696,26 @@ def self_test() -> int:
     not_uploaded = json.loads(PAID_CONTENT.read_text(encoding="utf-8"))
     for entry in not_uploaded["products"]:
         entry["kv_verified"] = False
-    undeliverable = check_deliverable(good, synthetic_sale, not_uploaded)
+    # eucomply-report-kit er lukket for salg 22/11-2026; reglen gælder kun
+    # produkter til salg, så scenarierne genåbner det i en kopi af katalogen.
+    for_sale = reopened(historical, "eucomply-report-kit")
+    for_sale = {**for_sale, "offers": good["offers"] + [
+        offer for offer in former if offer["product"] == "eucomply-report-kit"][:1]}
+    if len(for_sale["offers"]) != len(good["offers"]) + 1:
+        print("SELFTEST FEJLER: former_offers har ingen købsside for eucomply-report-kit")
+        return 1
+    undeliverable = check_deliverable(for_sale, synthetic_sale, not_uploaded)
     # Samme side med et produkt, der faktisk kan leveres: må ikke fejle.
     deliverable_page = [("site/eksempel.html", '<a href="https://buy.stripe.com/6oU4gy76PgvgdBIdAXbMQ00">Buy</a>')]
     verified = json.loads(PAID_CONTENT.read_text(encoding="utf-8"))
     for entry in verified["products"]:
         entry["kv_verified"] = True
-    should_pass = check_deliverable(good, deliverable_page, verified)
-    delisted = {**good, "offers": [
-        offer for offer in good["offers"] if offer["product"] != "eucomply-report-kit"]}
+    should_pass = check_deliverable(for_sale, deliverable_page, verified)
+    delisted = {**for_sale, "offers": [
+        offer for offer in for_sale["offers"] if offer["product"] != "eucomply-report-kit"]}
     forgot_the_page = check_deliverable(delisted, [], verified)
+    # Negativ kontrol: det *lukkede* produkt uden købsside er netop meningen.
+    closed_without_page = check_deliverable(good, [], verified)
 
     # 6: en Pro-side skal vise hvad den gratis udgave giver. Scenarierne er
     # syntetiske, så selftesten ikke skriver den fejl ind i de rigtige sider.
@@ -3550,8 +3744,8 @@ def self_test() -> int:
     second_feature_buried = (f'<html><body><p>Pro adds batch conversion.</p><details>'
                              f'<summary>Pro</summary><p>And custom cleanup rules.</p></details>'
                              f'<a href="{clean_copy_link}">Buy</a></body></html>')
-    only_offer = [{**offer, "path": "site/eksempel.html"} for offer in good["offers"]
-                  if offer["product"] == "clean-copy-pro"]
+    only_offer = [{**offer, "path": "site/eksempel.html"} for offer in former
+                  if offer["product"] == "clean-copy-pro"][:1]
     free_tier_only = {**good, "offers": only_offer}
     no_free_tier = check_free_tier(free_tier_only, [("site/eksempel.html", buys_only)])
     buried_free_tier = check_free_tier(free_tier_only, [("site/eksempel.html", says_free_but_buried)])
@@ -3601,8 +3795,8 @@ def self_test() -> int:
     # batch og historik" og den engelske "History tracking"-bullet. De læses
     # fra de rigtige filer, og kun sætningen muteres — en fejlform der kun
     # findes i en streng porten selv har fundet, er ingen fejlform.
-    da_real = (ROOT / "site/da/page-profile.html").read_text(encoding="utf-8")
-    en_real = (ROOT / "site/page-profile.html").read_text(encoding="utf-8")
+    da_real = real_page("site/da/page-profile.html")
+    en_real = real_page("site/page-profile.html")
     old_da_pro = ("<li>Gratis kerne — web-tjekket er altid gratis. Pro-versionen "
                   "tilføjer sammenligning, batch og historik.</li>")
     old_en_pro = "<li>History tracking across runs</li>"
@@ -3846,7 +4040,7 @@ def self_test() -> int:
     feature_id = str(feature.get("id"))
     unproven: list[str] = []
     for relative in prose_surfaces:
-        real = (ROOT / relative).read_text(encoding="utf-8")
+        real = real_page(relative)
         lang = page_lang(relative, real)
         label = (feature.get("labels") or {}).get(lang) or []
         if not label:
@@ -3920,7 +4114,7 @@ def self_test() -> int:
             globals()["TierBlocks"] = saved
 
     def mutation_for(relative: str) -> tuple[dict, list[tuple[str, str]]]:
-        real = (ROOT / relative).read_text(encoding="utf-8")
+        real = real_page(relative)
         lang = page_lang(relative, real)
         sentence = str(((feature.get("labels") or {}).get(lang) or [""])[0])
         spoken = sentence[:1].upper() + sentence[1:]
@@ -3944,7 +4138,7 @@ def self_test() -> int:
     # formodet: `site/clean-copy.html` læser 289/113 med den rigtige
     # (opgave 74, Fund 2) og taber alt efter første inline-element med den
     # blinde.
-    real_text = (ROOT / "site/clean-copy.html").read_text(encoding="utf-8")
+    real_text = real_page("site/clean-copy.html")
     read_right = paid_contexts(real_text)
     read_blind = with_blinded_parser(lambda: paid_contexts(real_text))
     if blind or not all(len(a) >= len(b) for a, b in zip(read_right[:2], read_blind[:2])):
@@ -4109,27 +4303,38 @@ def self_test() -> int:
     whole_page_real = free_claim_blocks_in_prose(real_catalog, source_pages())
     whole_page_catalog = {**real_catalog, "offers": [
         {**offer, "path": "site/eksempel.html"}
-        for offer in real_catalog["offers"][:1]
-        if offer.get("product") == "clean-copy-pro"]}
+        for offer in former
+        if offer.get("product") == "clean-copy-pro"][:1]}
     lying_prose = (f'<html><body><p>Batch conversion is free in the web tool, '
                    f'along with everything else you paste.</p></html>')
+    honest_prose = ('<html><body><p>The web tool is free for everything you paste. '
+                    'Pro adds batch conversion.</p></html>')
     whole_page_synthetic = free_claim_blocks_in_prose(
         whole_page_catalog, [("site/eksempel.html", lying_prose)])
     saved_adds = globals()["PRO_ADDS"]
     globals()["PRO_ADDS"] = re.compile(r"(?!x)x")
     try:
         whole_page_without_marker = free_claim_blocks_in_prose(
-            real_catalog, source_pages())
+            whole_page_catalog, [("site/eksempel.html", honest_prose)])
     finally:
         globals()["PRO_ADDS"] = saved_adds
+    # (c) var indtil 22/11-2026 målt på de rigtige sider: 8 ærlige "Pro
+    # tilføjer"-blokke, alle på Clean Copy- og EUComply-siderne. De sider
+    # sælger ikke længere, så beviset er flyttet til en syntetisk ærlig side:
+    # grøn med markøren, rød uden — samme pointe, uden at afhænge af prosa
+    # der ikke findes mere.
+    whole_page_honest = free_claim_blocks_in_prose(
+        whole_page_catalog, [("site/eksempel.html", honest_prose)])
     if (whole_page_real
             or len(whole_page_synthetic) != 1
             or "'batch'" not in whole_page_synthetic[0]
-            or len(whole_page_without_marker) != 8):
-        print("SELFTEST FEJLER: helsides-reglen skal finde 0 på de rigtige sider "
-              "(de otte blokke er den ærlige 'Pro tilføjer'-form), 1 på den "
-              "syntetiske løgn, og 8 når 'tilføjer'-markøren slås fra. "
+            or whole_page_honest
+            or len(whole_page_without_marker) != 1):
+        print("SELFTEST FEJLER: helsides-reglen skal finde 0 på de rigtige sider, "
+              "1 på den syntetiske løgn, 0 på den ærlige 'Pro tilføjer'-side og "
+              "1 på samme side når 'tilføjer'-markøren slås fra. "
               f"Målt: {len(whole_page_real)} / {len(whole_page_synthetic)} / "
+              f"{len(whole_page_honest)} / "
               f"{len(whole_page_without_marker)}. Et tal der ikke passer kan "
               "være en ny fejl i prosaen — eller en redaktion der har flyttet "
               "en betalt funktion uden for en tilføjelses-sætning. Se "
@@ -4174,7 +4379,7 @@ def self_test() -> int:
     promise_catalog = {**good, "offers": promise_offers}
     for relative, (old, new) in superseded_promises.items():
         base = relative.split("#")[0]
-        real = (ROOT / base).read_text(encoding="utf-8")
+        real = real_page(base)
         if new not in real:
             raise AssertionError(f"{base}: den rettede tekst mangler i den rigtige fil: {new[:60]!r}")
         if old in real:
@@ -4192,7 +4397,7 @@ def self_test() -> int:
         promise_found.extend(found)
     # Det samme på den anden slags løfte: EUComply Pro lovede fire funktioner,
     # ingen af dem findes i koden.
-    eucomply_real = (ROOT / "site/compliance-report.html").read_text(encoding="utf-8")
+    eucomply_real = real_page("site/compliance-report.html")
     eucomply_old = ("Continuous compliance monitoring for one website",
                     "Client-ready branded PDF reports",
                     "Priority support (email within 24h)")
@@ -4300,7 +4505,12 @@ def self_test() -> int:
                 "Up to 3 machines, all v1.x updates.")
     new_note = ("One-time license: desktop tray app, unlimited sites, webhook alerts and a "
                 "client-ready report. Up to 3 machines, all v1.x updates.")
-    worker_text = WORKER.read_text(encoding="utf-8")
+    # Noten stod i `site/_worker.js` indtil 22/11-2026, hvor /api/checkout
+    # holdt op med at sælge deskuptime-pro (den svarer nu 410 uden note).
+    # Reglen bevises derfor på den publicerede `du`-post, ordret som den stod.
+    worker_text = ("  du: {\n    link: 'https://buy.stripe.com/7sY9AS9eX3Iu418fJ5bMQ01',\n"
+                   "    product: 'deskuptime-pro',\n    name: 'DeskUptime Pro',\n"
+                   f"    note: '{new_note}',\n  }},\n")
     if new_note not in worker_text or old_note in worker_text:
         raise AssertionError("site/_worker.js: /checkout-noten er ikke i den forventede stand")
     checkout_found = check_checkout_notes(good, worker_text.replace(new_note, old_note, 1))
@@ -4311,11 +4521,11 @@ def self_test() -> int:
     # Negativ kontrol: de rettede flader skal være grønne. Uden den kunne
     # reglen være for stram til at sælge nogen somhelst.
     honest_pages = [("site/deskuptime/index.html",
-                     (ROOT / "site/deskuptime/index.html").read_text(encoding="utf-8")),
+                     real_page("site/deskuptime/index.html")),
                     ("site/da/deskuptime/index.html",
-                     (ROOT / "site/da/deskuptime/index.html").read_text(encoding="utf-8")),
+                     real_page("site/da/deskuptime/index.html")),
                     ("site/blog/desktop-website-monitor-cli.html",
-                     (ROOT / "site/blog/desktop-website-monitor-cli.html").read_text(encoding="utf-8")),
+                     real_page("site/blog/desktop-website-monitor-cli.html")),
                     ("site/compliance-report.html", eucomply_real)]
     honest_offers = [{"path": path, "product": ("eucomply-pro" if "compliance-report" in path
                                                  else "deskuptime-pro")}
@@ -4528,11 +4738,13 @@ def self_test() -> int:
     # skal fjerne spørgsmålets genstand — hele den danske flade — ikke én
     # tilfældig post i den. Tallet kræver derfor ≥ 1 fjernet side, og
     # porten skal give præcis ÉN rød der rammer *dette* produkt.
+    # Indtil 22/11-2026 var produktet her `eucomply-pro`; det er lukket for
+    # salg, så mutationen bruger det produkt, der stadig sælges på to sprog.
     da_offers = [offer for offer in good["offers"]
-                 if offer.get("product") == "eucomply-pro"
+                 if offer.get("product") == "page-profile-pro"
                  and page_lang(str(offer.get("path"))) == "da"]
     if not da_offers:
-        print("SELFTEST FEJLER: mutationen kan ikke bygges — `eucomply-pro` har ingen "
+        print("SELFTEST FEJLER: mutationen kan ikke bygges — `page-profile-pro` har ingen "
               "danske købssider at fjerne, så resten ville teste en tilfældighed")
         return 1
     da_paths = {offer["path"] for offer in da_offers}
@@ -4550,12 +4762,12 @@ def self_test() -> int:
     # side her. `transmute-desktop` er uden `pro_features`, fordi købslinket
     # ligger på transmute.run. Uden den kontrol ville porten kræve en dansk
     # side for et produkt den ikke engang kan dømme.
-    ungated = {**good, "products": {
+    ungated = {**without_da_offer, "products": {
         **good["products"],
-        "clean-copy-pro": {k: v for k, v in good["products"]["clean-copy-pro"].items()
-                           if k != "pro_features"}}}
+        "page-profile-pro": {k: v for k, v in good["products"]["page-profile-pro"].items()
+                             if k != "pro_features"}}}
     coverage_ungated = check_language_coverage(ungated, source_pages())
-    if len(coverage_missing) != 1 or "eucomply-pro" not in coverage_missing[0]:
+    if len(coverage_missing) != 1 or "page-profile-pro" not in coverage_missing[0]:
         print("SELFTEST FEJLER: sprogdækningen fanger ikke den manglende danske købsside, "
               "eller rammer et andet produkt: " + "; ".join(coverage_missing))
         return 1
@@ -4563,7 +4775,7 @@ def self_test() -> int:
         print("SELFTEST FEJLER: sprogdækningen fejler på den katalog, der er komplet — "
               "kravet er for stramt: " + "; ".join(coverage_ok))
         return 1
-    if coverage_ungated != coverage_ok:
+    if coverage_ungated:
         print("SELFTEST FEJLER: et produkt uden pro_features i katalogen fejler alligevel — "
               "porten dømmer produkter den ikke sælger her: " + "; ".join(coverage_ungated))
         return 1
@@ -4583,8 +4795,8 @@ def self_test() -> int:
               "sprogskellet er så ikke længere til stede i site/ og porten er uden dækning")
         return 1
     suffixed = {**good, "offers": [offer for offer in good["offers"]
-                                  if offer["path"] != "site/da/compliance-report.html"]
-                + [{"product": "eucomply-pro", "path": da_suffix_page}]}
+                                  if offer["path"] not in da_paths]
+                + [{"product": "page-profile-pro", "path": da_suffix_page}]}
     if check_language_coverage(suffixed, source_pages()):
         print(f"SELFTEST FEJLER: en dansk købsside med engelsk sti ({da_suffix_page}) "
               "tælles ikke som dansk — `page_lang()` læser stien og ikke `lang`")
@@ -4876,7 +5088,10 @@ def self_test() -> int:
                     "<html lang=\"en\"><head><title>Complete EU Compliance Bundle</title></head>"
                     "<body><p>All six e-books are free. We do not sell a combined PDF "
                     "of these guides.</p></body></html>")]
-    denied_found = check_sale_denials(good, denied_page)
+    denied_found = check_sale_denials(reopened(good, "eu-compliance-ebook-bundle"), denied_page)
+    # Negativ kontrol: e-bogspakken er lukket for salg 22/11-2026, så samme
+    # nægtelse er sand og må ikke fejle mod det rigtige katalog.
+    denied_closed = check_sale_denials(good, denied_page)
     denied_clean = check_sale_denials(
         good, [("site/eksempel.html",
                 "<html lang=\"en\"><head><title>Complete EU Compliance Bundle</title></head>"
@@ -4918,16 +5133,16 @@ def self_test() -> int:
                     "product": "clean-copy-pro", "source": "syntetisk",
                     "ctas": 2, "ctas_note": "søskenderepo, må ikke røres"}
         # Rød: den er bygget og sælger, men ingen af listerne kender den.
-        built_undocumented = check_built_offer_pages({**good, "built_offers": []}, fake)
+        built_undocumented = check_built_offer_pages({**historical, "built_offers": []}, fake)
         # Grøn: samme side, dokumenteret efter sin publicerede rute.
-        built_documented = check_built_offer_pages({**good, "built_offers": [built_ok]}, fake)
+        built_documented = check_built_offer_pages({**historical, "built_offers": [built_ok]}, fake)
         # Rød: en indgang uden `source` siger intet om hvor siden kommer fra.
         built_sourceless = check_built_offer_pages(
-            {**good, "built_offers": [{k: v for k, v in built_ok.items() if k != "source"}]}, fake)
+            {**historical, "built_offers": [{k: v for k, v in built_ok.items() if k != "source"}]}, fake)
         # Rød: `ctas` må ikke være en måde at slå reglen fra uden at svare på
         # hvorfor siden ikke kan have præcis én købsknap.
         built_ctas_loud = check_built_offer_pages(
-            {**good, "built_offers": [{k: v for k, v in built_ok.items() if k != "ctas_note"}]}, fake)
+            {**historical, "built_offers": [{k: v for k, v in built_ok.items() if k != "ctas_note"}]}, fake)
         # `alias_of` må ikke være en seddel man kan hænge på enhver side. Den
         # kræver, at den byggede sides canonical *er* den side den påstår at
         # være en dublet af — målt 27/9 på de to `index_from`-kopier af
@@ -4954,13 +5169,13 @@ def self_test() -> int:
         # Negativ kontrol først: samme tre sider, hvor løgneren er dokumenteret
         # *uden* `alias_of` — altså som sin egen side. Den skal være grøn,
         # ellers ville porten bare forbyde at udgive siden overhovedet.
-        alias_ok = check_built_offer_pages({**good, "built_offers": [
+        alias_ok = check_built_offer_pages({**historical, "built_offers": [
             built_ok, *alias_entries,
             {**alias_liar_entry, "alias_of": None}]}, fake)
         # Rød: `/da/clean-copy-tool` siger alias_of=/da/, men dens canonical er
         # sig selv — altså en side der *ligner* en dublet uden at være en.
         alias_liar = check_built_offer_pages(
-            {**good, "built_offers": [built_ok, *alias_entries, alias_liar_entry]}, fake)
+            {**historical, "built_offers": [built_ok, *alias_entries, alias_liar_entry]}, fake)
         # Rød: en dokumenteret købsside der ikke findes i det byggede site.
         # Målt 27/9 da de to dubletter blev fjernet fra publiceringen: porten
         # blev grøn med 16 dokumenterede købssider, hvor 14 sider findes — og
@@ -4972,14 +5187,66 @@ def self_test() -> int:
         # katalog, ellers ville armen være grøn på en *anden* fejl end den den
         # er skrevet til — præcis den løgneste, en arm der ikke kan fejle er.
         built_gone = check_built_offer_pages(
-            {**good, "built_offers": [built_ok, *alias_entries,
+            {**historical, "built_offers": [built_ok, *alias_entries,
                                       {**alias_liar_entry, "alias_of": None}, gone_entry]}, fake)
         # Negativ kontrol: samme indgang i et checkout uden bygget site må ikke
         # være rød, ellers kan porten ikke køres på et delvis build.
         built_gone_nodist = check_built_offer_pages(
-            {**good, "built_offers": [gone_entry]}, fake.parent / "dist-ikke-bygget")
+            {**historical, "built_offers": [gone_entry]}, fake.parent / "dist-ikke-bygget")
+
+    # check_closed_sales: et lukket produkt må ikke kunne købes nogen steder.
+    cc_link = good["products"]["clean-copy-pro"]["payment_link"]
+    cc_lifetime = good["products"]["clean-copy-pro"]["lifetime"]["payment_link"]
+    real_worker = WORKER.read_text(encoding="utf-8")
+    notice = good["closed_sales"]["notice_pages"][0]
+    real_pages = source_pages()
+    closed_real = check_closed_sales(good, real_pages)
+    closed_page = check_closed_sales(
+        good, [("site/eksempel.html", f'<html><body><a href="{cc_link}">Buy</a></body></html>')], [], real_worker)
+    with tempfile.TemporaryDirectory() as tmp:
+        client = Path(tmp) / "options.html"
+        client.write_text(f'<a href="{cc_lifetime}">Buy lifetime</a>', encoding="utf-8")
+        closed_client = check_closed_sales(good, [], [client], real_worker)
+    pending_path = good["closed_sales"]["release_pending"][0]["path"]
+    closed_pending = check_closed_sales(
+        good, [(pending_path, f'<a href="{cc_link}">Buy</a>')], [], real_worker)
+    closed_notice = check_closed_sales(
+        good, [(notice["path"], "<html><body><p>Clean Copy.</p></body></html>")], [], real_worker)
+    closed_worker_links = check_closed_sales(
+        good, [], [], real_worker.replace("const STRIPE_LINKS = {\n",
+                                          f"const STRIPE_LINKS = {{\n    cc: '{cc_link}',\n", 1))
+    closed_worker_open = check_closed_sales(
+        good, [], [], real_worker.replace("product: 'deskuptime-pro',\n    name: 'DeskUptime Pro',\n    free:",
+                                          "product: 'deskuptime-pro-x',\n    name: 'DeskUptime Pro',\n    free:", 1))
+    closed_back_in_offers = check_closed_sales(
+        {**good, "offers": good["offers"] + former[:1]}, [], [], real_worker)
+    closed_undeclared = check_closed_sales(
+        {**good, "closed_sales": {**good["closed_sales"],
+                                  "products": good["closed_sales"]["products"][1:]}}, [], [], real_worker)
+    if closed_real:
+        print(f"SELFTEST FEJLER (falsk alarm): check_closed_sales er rød på de rigtige filer: {closed_real[0]}")
+        return 1
+    if closed_pending:
+        print(f"SELFTEST FEJLER (falsk alarm): en fil i release_pending fejler alligevel: {closed_pending[0]}")
+        return 1
+    if closed_without_page:
+        print(f"SELFTEST FEJLER (falsk alarm): et lukket download-produkt uden købsside fejler: {closed_without_page[0]}")
+        return 1
+    if denied_closed:
+        print(f"SELFTEST FEJLER (falsk alarm): en sand nægtelse om et lukket produkt fejler: {denied_closed[0]}")
+        return 1
+    if real_worker.count("product: 'deskuptime-pro',\n    name: 'DeskUptime Pro',\n    free:") != 1:
+        print("SELFTEST FEJLER: mutationen af CHECKOUT_CLOSED passer ikke længere på site/_worker.js")
+        return 1
 
     scenarios: list[tuple[str, list[str] | Any]] = [
+        ("en side der linker til et lukket produkt", closed_page),
+        ("en shippet klient der linker til et lukket produkts lifetime", closed_client),
+        ("en forside der ikke siger at salget er lukket", closed_notice),
+        ("STRIPE_LINKS der sælger et lukket produkt igen", closed_worker_links),
+        ("/api/checkout der ikke lukker deskuptime-pro", closed_worker_open),
+        ("et lukket produkt tilbage i offers", closed_back_in_offers),
+        ("et inactive produkt uden for closed_sales", closed_undeclared),
         ("et link uden for allowlisten", check_links(rogue_link)),
         ("et kontraktprodukt mangler i allowlisten", check_catalog(missing_product)),
         ("ét link delt mellem to produkter", check_catalog(shared_link)),

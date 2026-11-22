@@ -43,16 +43,10 @@
   #agreement h2 { color: #12283a; font-size: 18px; }
   #agreement th, #agreement td { text-align: left; vertical-align: top;
                padding: 8px 10px; border-bottom: 1px solid #dde5ea; font-size: 13.5px; }
-  .pro-note { max-width: 720px; margin: 32px auto 0; padding: 18px 22px;
-              border: 1px solid var(--color-accent); border-radius: 10px;
-              background: var(--color-accent-soft); }
-  .pro-note h2 { font-size: 1.05rem; margin: 0 0 8px; }
-  .pro-note p { margin: 0; color: var(--color-text); font-size: 0.95rem; line-height: 1.7; }
-  .pro-note a { color: var(--color-accent); }
   .sr-only { position:absolute; width:1px; height:1px; overflow:hidden;
              clip:rect(0 0 0 0); white-space:nowrap; }
   @media print {
-    header.hero, .gen, .actions, footer.site-footer, .no-print, .pro-note { display: none !important; }
+    header.hero, .gen, .actions, footer.site-footer, .no-print { display: none !important; }
     #agreement { border: none; margin: 0; padding: 0; }
   }
 </style>
@@ -192,19 +186,6 @@ Hetzner Online GmbH — hosting"></textarea>
 
 <p style="text-align:center;margin:24px 0">Prefer to work in your own document? <a href="/ropa-template">Download the free RoPA template</a>.</p>
 
-<section class="pro-note" aria-labelledby="pro-heading">
-  <h2 id="pro-heading">The record says what you process. It cannot tell you whether the site agrees.</h2>
-  <p>This generator is free, and it writes the whole record: your role, one processing activity with
-  its purpose and lawful basis, the categories of data subjects and data, recipients and transfers,
-  retention and security. Nothing is held back for a licence.</p>
-  <p>What a record cannot do is find out whether the site still matches it — and section 3 is where
-  that goes wrong first, because recipients and transfers go stale. <a href="/compliance-report">EUComply
-  Pro</a> opens your live URL and reports what the page actually loads: whether a privacy link exists
-  in the footer at all, whether Google Analytics or a Meta pixel loads without a consent banner,
-  whether a form posts over plain HTTP, and whether the response carries HSTS and a CSP header. That
-  is 18 server-side checks, and the free scanner already runs the 15 accessibility checks —
-  33 checks in all — and the report comes as a PDF you can send to a client. $79/year per website.</p>
-</section>
 
 <footer class="site-footer">
   <div class="container">
@@ -336,18 +317,9 @@ Hetzner Online GmbH — hosting"></textarea>
   // registret mangler noget. `no-print`, så det ikke ender i det dokument
   // læseren udskriver eller kopierer: `renderText()` bygger fra
   // `renderHTML(current)` alene.
-  var UPSELL = '<div class="upsell-card no-print" style="margin:16px 0 0;padding:16px;border:1px solid var(--color-border);border-radius:10px;background:var(--color-surface-2)">';
-  UPSELL += '<h2 class="sub" style="margin:0 0 4px;font-size:16px">The record is written. The contract for the same processing is a file.</h2>';
-  UPSELL += '<p style="margin:0 0 8px;font-size:13px;color:var(--color-text-muted)">What you would otherwise write from scratch for each client:</p>';
-  UPSELL += '<ul style="margin:0;padding-left:18px;font-size:13px">';
-  UPSELL += '<li style="margin:4px 0"><strong>An Article 28 processor agreement.</strong> Subject matter, duration, nature and purpose, types of personal data, security measures and sub-processor rules &mdash; the contract, not only the record of it.</li>';
-  UPSELL += '<li style="margin:4px 0"><strong>The sub-processor rules.</strong> Who may process on your client\'s behalf, and on what approval. Section 3 above lists who they are; the contract says what they are allowed to do.</li>';
-  UPSELL += '<li style="margin:4px 0"><strong>A copy you control.</strong> The Markdown goes in your own repository next to the agreement it belongs to; the PDF goes to the counterparty.</li>';
-  UPSELL += '<li style="margin:4px 0"><strong>The next client too.</strong> It is a file, not a licence. Nothing stops you using it on the next DPA.</li>';
-  UPSELL += '</ul>';
-  UPSELL += '<p style="margin:12px 0 0"><a class="btn" style="display:inline-block;padding:12px 24px;text-decoration:none" href="https://buy.stripe.com/bJe7sK8aT4My7dk7czbMQ05" rel="nofollow noopener">Buy the GDPR DPA template &mdash; $59 once</a></p>';
-  UPSELL += '<p style="margin:8px 0 0;font-size:13px;color:var(--color-text-muted)">Two files, delivered right after payment. <a href="/paid-templates">See what the templates include</a>.</p>';
-  UPSELL += '</div>';
+  // Købsvejen til den betalte skabelon er fjernet: salget af EUComply-skabelonerne er lukket 22/11-2026
+  // (closed_sales i tools/stripe_catalog.json). Generatoren er stadig gratis.
+  var UPSELL = '';
 
   $('genForm').addEventListener('submit', function (e) {
     e.preventDefault();

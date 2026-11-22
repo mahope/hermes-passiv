@@ -131,6 +131,7 @@ STEPS: tuple[Step, ...] = (
         id="transient-tests",
         argv=("python3", "tools/test_transient.py"),
         inputs=(
+            "tools/closed_sales.py", "tools/fixtures/for-lukning-2026-11-22/**",
             "tools/test_transient.py",
             "tools/transient.py",
             "tools/check_live_sitemaps.py",
@@ -161,6 +162,7 @@ STEPS: tuple[Step, ...] = (
         id="book-reader",
         argv=("python3", "tools/book_reader.py", "--self-test"),
         inputs=(
+            "tools/closed_sales.py", "tools/fixtures/for-lukning-2026-11-22/**",
             "tools/book_reader.py",
             "build_sites.py",
             "ebook/**",
@@ -820,12 +822,16 @@ STEPS: tuple[Step, ...] = (
     Step(
         id="area-ordinals",
         argv=("python3", "tools/check_area_ordinals.py"),
-        inputs=("tools/check_area_ordinals.py", "site/**"),
+        inputs=(
+            "tools/closed_sales.py", "tools/fixtures/for-lukning-2026-11-22/**",
+            "tools/check_area_ordinals.py", "site/**"),
     ),
     Step(
         id="area-ordinals-selftest",
         argv=("python3", "tools/check_area_ordinals.py", "--self-test"),
-        inputs=("tools/check_area_ordinals.py", "site/**"),
+        inputs=(
+            "tools/closed_sales.py", "tools/fixtures/for-lukning-2026-11-22/**",
+            "tools/check_area_ordinals.py", "site/**"),
     ),
     # Priser i købscopy og konstanter i værktøjers kode (30/9). Målt i en kopi
     # af repoet før denne port fandtes: `Math.round(wordCount / 238)` → `/ 237`,
@@ -1060,13 +1066,17 @@ STEPS: tuple[Step, ...] = (
     Step(
         id="front-door",
         argv=("python3", "tools/check_front_door.py"),
-        inputs=("tools/check_front_door.py", "tools/check_article_paid_path.py",
+        inputs=(
+            "tools/closed_sales.py", "tools/fixtures/for-lukning-2026-11-22/**",
+            "tools/check_front_door.py", "tools/check_article_paid_path.py",
                 "build_sites.py", "site/**"),
     ),
     Step(
         id="front-door-selftest",
         argv=("python3", "tools/check_front_door.py", "--self-test"),
-        inputs=("tools/check_front_door.py", "tools/check_article_paid_path.py",
+        inputs=(
+            "tools/closed_sales.py", "tools/fixtures/for-lukning-2026-11-22/**",
+            "tools/check_front_door.py", "tools/check_article_paid_path.py",
                 "build_sites.py", "site/**"),
     ),
     # At en nav-rute kaldet «Tools»/«Værktøjer» faktisk fører til værktøjerne.
@@ -1103,13 +1113,17 @@ STEPS: tuple[Step, ...] = (
     Step(
         id="url-handoff",
         argv=("python3", "tools/check_url_handoff.py"),
-        inputs=("tools/check_url_handoff.py", "tools/check_article_paid_path.py",
+        inputs=(
+            "tools/closed_sales.py", "tools/fixtures/for-lukning-2026-11-22/**",
+            "tools/check_url_handoff.py", "tools/check_article_paid_path.py",
                 "build_sites.py", "site/**"),
     ),
     Step(
         id="url-handoff-selftest",
         argv=("python3", "tools/check_url_handoff.py", "--self-test"),
-        inputs=("tools/check_url_handoff.py", "tools/check_article_paid_path.py",
+        inputs=(
+            "tools/closed_sales.py", "tools/fixtures/for-lukning-2026-11-22/**",
+            "tools/check_url_handoff.py", "tools/check_article_paid_path.py",
                 "build_sites.py", "site/**"),
     ),
     # Købsknappen i hvert pro-kort, dømt mod `tools/stripe_catalog.json`.
@@ -1121,13 +1135,17 @@ STEPS: tuple[Step, ...] = (
     Step(
         id="pro-card",
         argv=("python3", "tools/pro_card.py"),
-        inputs=("tools/pro_card.py", "tools/pro_table.py",
+        inputs=(
+            "tools/closed_sales.py", "tools/fixtures/for-lukning-2026-11-22/**",
+            "tools/pro_card.py", "tools/pro_table.py",
                 "tools/stripe_catalog.json", "site/**"),
     ),
     Step(
         id="pro-card-selftest",
         argv=("python3", "tools/pro_card.py", "--self-test"),
-        inputs=("tools/pro_card.py", "tools/pro_table.py",
+        inputs=(
+            "tools/closed_sales.py", "tools/fixtures/for-lukning-2026-11-22/**",
+            "tools/pro_card.py", "tools/pro_table.py",
                 "tools/stripe_catalog.json", "site/**"),
     ),
     # Spring i overskriftsniveau (30/9). Målt først: 12 sider sprang fra `<h1>`
@@ -1226,13 +1244,17 @@ STEPS: tuple[Step, ...] = (
     Step(
         id="deskuptime-claims",
         argv=("python3", "tools/check_deskuptime_claims.py"),
-        inputs=("tools/check_deskuptime_claims.py", "site/**",
+        inputs=(
+            "tools/closed_sales.py", "tools/fixtures/for-lukning-2026-11-22/**",
+            "tools/check_deskuptime_claims.py", "site/**",
                 "tools/stripe_catalog.json"),
     ),
     Step(
         id="deskuptime-claims-selftest",
         argv=("python3", "tools/check_deskuptime_claims.py", "--self-test"),
-        inputs=("tools/check_deskuptime_claims.py",),
+        inputs=(
+            "tools/closed_sales.py", "tools/fixtures/for-lukning-2026-11-22/**",
+            "tools/check_deskuptime_claims.py",),
     ),
     # Sampleringen under teksten på et billede (30/9). Målt i Chromium mod den
     # live side: hvid tekst på et rent hvidt billede gav **1.47:1**, og tallet
@@ -1262,6 +1284,7 @@ STEPS: tuple[Step, ...] = (
         id="stripe-ctas",
         argv=("python3", "tools/check_stripe_ctas.py"),
         inputs=(
+            "tools/closed_sales.py", "tools/fixtures/for-lukning-2026-11-22/**",
             "tools/check_stripe_ctas.py",
             "tools/stripe_catalog.json",
             # Priserne og produktnøglerne står her; en ændring uden at
@@ -1273,7 +1296,9 @@ STEPS: tuple[Step, ...] = (
     Step(
         id="stripe-ctas-selftest",
         argv=("python3", "tools/check_stripe_ctas.py", "--self-test"),
-        inputs=("tools/check_stripe_ctas.py",),
+        inputs=(
+            "tools/closed_sales.py", "tools/fixtures/for-lukning-2026-11-22/**",
+            "tools/check_stripe_ctas.py",),
     ),
     # Hvilke betalte produkter der overhovedet *kan* sælges. `stripe-ctas`
     # dømmer et produkt kun når en side sælger det, så de syv dokumenter der
@@ -1285,6 +1310,7 @@ STEPS: tuple[Step, ...] = (
         id="buyable",
         argv=("python3", "tools/check_buyable.py"),
         inputs=(
+            "tools/closed_sales.py", "tools/fixtures/for-lukning-2026-11-22/**",
             "tools/check_buyable.py",
             "tools/stripe_catalog.json",
             "tools/paid_content.json",
@@ -1294,7 +1320,9 @@ STEPS: tuple[Step, ...] = (
     Step(
         id="buyable-selftest",
         argv=("python3", "tools/check_buyable.py", "--self-test"),
-        inputs=("tools/check_buyable.py",),
+        inputs=(
+            "tools/closed_sales.py", "tools/fixtures/for-lukning-2026-11-22/**",
+            "tools/check_buyable.py",),
     ),
     # Opgave 84: regeltallet i løfterne. Opgave 80, 83 og 84 rettede hver især
     # det samme tal, og alle tre var forkert, fordi ingen målte motoren. Nu er
@@ -1304,6 +1332,7 @@ STEPS: tuple[Step, ...] = (
         id="rule-claims",
         argv=("python3", "tools/check_rule_claims.py"),
         inputs=(
+            "tools/closed_sales.py", "tools/fixtures/for-lukning-2026-11-22/**",
             "tools/check_rule_claims.py",
             # Motorerne: de frie regler tælles i `site/scan.html` og
             # `site/scan-da.html`, de betalte i `reportProFindings()`.
@@ -1318,7 +1347,9 @@ STEPS: tuple[Step, ...] = (
     Step(
         id="rule-claims-selftest",
         argv=("python3", "tools/check_rule_claims.py", "--self-test"),
-        inputs=("tools/check_rule_claims.py",),
+        inputs=(
+            "tools/closed_sales.py", "tools/fixtures/for-lukning-2026-11-22/**",
+            "tools/check_rule_claims.py",),
     ),
     # Opgave 85: pluginsiden sagde 16, og det var **sandt** — fordi porten læste
     # det publicerede zip, som var seks regler bag kilden. En port der måler det
@@ -1328,6 +1359,7 @@ STEPS: tuple[Step, ...] = (
         id="plugin-engine-rules",
         argv=("python3", "tools/test_plugin_engine_rules.py"),
         inputs=(
+            "tools/closed_sales.py", "tools/fixtures/for-lukning-2026-11-22/**",
             "tools/test_plugin_engine_rules.py",
             "tools/build_plugin_zip.py",
             "tools/plugin_engine_probe.php",
@@ -1347,6 +1379,7 @@ STEPS: tuple[Step, ...] = (
         id="scanner-core-redirect",
         argv=("python3", "tools/test_scanner_core_redirect.py"),
         inputs=(
+            "tools/closed_sales.py", "tools/fixtures/for-lukning-2026-11-22/**",
             "tools/test_scanner_core_redirect.py",
             "tools/check_rule_claims.py",
             "tools/fixtures/eaa_engine_all_rules.html",
@@ -1410,7 +1443,9 @@ STEPS: tuple[Step, ...] = (
         # `tools/transient.py` er input, fordi `http_json` nu dømmer med den i stedet
         # for sin egen `_transient` (opgave 32), og en ændring af reglen skal køre
         # uge-rapportens egne tests.
-        inputs=("tools/test_weekly_report.py", "tools/weekly_report.py", "tools/transient.py"),
+        inputs=(
+            "tools/closed_sales.py", "tools/fixtures/for-lukning-2026-11-22/**",
+            "tools/test_weekly_report.py", "tools/weekly_report.py", "tools/transient.py"),
     ),
     # Opgave 35: `reports/weekly/*.json` er det eneste sted i repoet hvor et
     # dokumenteret tal ligger gemt uden at nogen port læser filen.
@@ -1425,6 +1460,7 @@ STEPS: tuple[Step, ...] = (
         id="weekly-history",
         argv=("python3", "tools/check_weekly_history.py"),
         inputs=(
+            "tools/closed_sales.py", "tools/fixtures/for-lukning-2026-11-22/**",
             "tools/check_weekly_history.py",
             "tools/weekly_report.py",
             "reports/weekly/*.json",
@@ -1438,6 +1474,7 @@ STEPS: tuple[Step, ...] = (
         id="weekly-history-selftest",
         argv=("python3", "tools/check_weekly_history.py", "--self-test"),
         inputs=(
+            "tools/closed_sales.py", "tools/fixtures/for-lukning-2026-11-22/**",
             "tools/check_weekly_history.py",
             "tools/weekly_report.py",
             "reports/weekly/*.json",
@@ -1455,6 +1492,7 @@ STEPS: tuple[Step, ...] = (
         id="weekly-code-errors",
         argv=("python3", "tools/check_weekly_code_errors.py"),
         inputs=(
+            "tools/closed_sales.py", "tools/fixtures/for-lukning-2026-11-22/**",
             "tools/check_weekly_code_errors.py",
             "tools/weekly_report.py",
             # `tools/transient.py` er input, fordi portens `known_kinds()` læser
@@ -1470,6 +1508,7 @@ STEPS: tuple[Step, ...] = (
         id="weekly-code-errors-selftest",
         argv=("python3", "tools/check_weekly_code_errors.py", "--self-test"),
         inputs=(
+            "tools/closed_sales.py", "tools/fixtures/for-lukning-2026-11-22/**",
             "tools/check_weekly_code_errors.py",
             "tools/weekly_report.py",
             "tools/transient.py",
@@ -1860,6 +1899,7 @@ STEPS: tuple[Step, ...] = (
         id="article-paid-path",
         argv=("python3", "tools/check_article_paid_path.py", "--quiet"),
         inputs=(
+            "tools/closed_sales.py", "tools/fixtures/for-lukning-2026-11-22/**",
             "tools/check_article_paid_path.py",
             # Porten arver selvklik-reglen (regel 5) fra arkivporten, så en
             # push der kun retter `unpublished_rows` skal kunne rødme *begge*.
@@ -1891,7 +1931,9 @@ STEPS: tuple[Step, ...] = (
         argv=("python3", "tools/check_article_paid_path.py", "--self-test"),
         # Selftestens faste testdata (2/11-26): trafikken kommer fra fixturen, ikke
         # fra `reports/weekly/`, så en ændring dér skal kunne rødme selftesten.
-        inputs=("tools/check_article_paid_path.py", "build_sites.py",
+        inputs=(
+            "tools/closed_sales.py", "tools/fixtures/for-lukning-2026-11-22/**",
+            "tools/check_article_paid_path.py", "build_sites.py",
                 "tools/check_weekly_history.py",
                 "tools/fixtures/article_paid_path/**"),
     ),
@@ -1910,6 +1952,7 @@ STEPS: tuple[Step, ...] = (
         id="tool-paid-path",
         argv=("python3", "tools/check_tool_paid_path.py", "--quiet"),
         inputs=(
+            "tools/closed_sales.py", "tools/fixtures/for-lukning-2026-11-22/**",
             "tools/check_tool_paid_path.py",
             # Ratcheten over de blinde værktøjssider. Uden den i filteret kunne
             # en push, der kun tilføjer eller fjerner en linje, springe gaten
@@ -1935,7 +1978,9 @@ STEPS: tuple[Step, ...] = (
     Step(
         id="tool-paid-path-selftest",
         argv=("python3", "tools/check_tool_paid_path.py", "--self-test"),
-        inputs=("tools/check_tool_paid_path.py", "build_sites.py",
+        inputs=(
+            "tools/closed_sales.py", "tools/fixtures/for-lukning-2026-11-22/**",
+            "tools/check_tool_paid_path.py", "build_sites.py",
                 "tools/check_article_paid_path.py",
                 "tools/check_weekly_history.py",
                 "tools/tool_paid_path_ratchet.json"),
@@ -1958,13 +2003,17 @@ STEPS: tuple[Step, ...] = (
     Step(
         id="competitor-prices",
         argv=("python3", "tools/check_competitor_prices.py"),
-        inputs=("tools/check_competitor_prices.py",
+        inputs=(
+            "tools/closed_sales.py", "tools/fixtures/for-lukning-2026-11-22/**",
+            "tools/check_competitor_prices.py",
                 "tools/competitor_prices.json", "site/**"),
     ),
     Step(
         id="competitor-prices-selftest",
         argv=("python3", "tools/check_competitor_prices.py", "--self-test"),
-        inputs=("tools/check_competitor_prices.py",
+        inputs=(
+            "tools/closed_sales.py", "tools/fixtures/for-lukning-2026-11-22/**",
+            "tools/check_competitor_prices.py",
                 "tools/competitor_prices.json", "site/**"),
     ),
     # Vores *egne* priser (1/10). Samme fejlform som konkurrentpriserne, både
@@ -1979,13 +2028,17 @@ STEPS: tuple[Step, ...] = (
     Step(
         id="own-prices",
         argv=("python3", "tools/check_own_prices.py"),
-        inputs=("tools/check_own_prices.py", "tools/stripe_catalog.json",
+        inputs=(
+            "tools/closed_sales.py", "tools/fixtures/for-lukning-2026-11-22/**",
+            "tools/check_own_prices.py", "tools/stripe_catalog.json",
                 "docs/stripe-kontrakt.md", "site/_worker.js", "site/**"),
     ),
     Step(
         id="own-prices-selftest",
         argv=("python3", "tools/check_own_prices.py", "--self-test"),
-        inputs=("tools/check_own_prices.py", "tools/stripe_catalog.json",
+        inputs=(
+            "tools/closed_sales.py", "tools/fixtures/for-lukning-2026-11-22/**",
+            "tools/check_own_prices.py", "tools/stripe_catalog.json",
                 "docs/stripe-kontrakt.md", "site/_worker.js", "site/**"),
     ),
     Step(
@@ -2004,13 +2057,17 @@ STEPS: tuple[Step, ...] = (
     Step(
         id="pro-table",
         argv=("python3", "tools/check_pro_table.py"),
-        inputs=("tools/check_pro_table.py", "tools/pro_table.py",
+        inputs=(
+            "tools/closed_sales.py", "tools/fixtures/for-lukning-2026-11-22/**",
+            "tools/check_pro_table.py", "tools/pro_table.py",
                 "tools/stripe_catalog.json", "site/**"),
     ),
     Step(
         id="pro-table-selftest",
         argv=("python3", "tools/check_pro_table.py", "--self-test"),
-        inputs=("tools/check_pro_table.py", "tools/pro_table.py",
+        inputs=(
+            "tools/closed_sales.py", "tools/fixtures/for-lukning-2026-11-22/**",
+            "tools/check_pro_table.py", "tools/pro_table.py",
                 "tools/stripe_catalog.json"),
     ),
     # Prislisten (2/10). De 12 salgbare produkter lå spredt på otte sider, og
@@ -2028,7 +2085,9 @@ STEPS: tuple[Step, ...] = (
         # uden dem springer porten over en commit der fjerner et `id` på
         # `/paid-templates`, retter `#buy` på compliance-siden eller gør en
         # dansk købsside engelsk.
-        inputs=("tools/check_pricing_page.py", "tools/pricing_page.py",
+        inputs=(
+            "tools/closed_sales.py", "tools/fixtures/for-lukning-2026-11-22/**",
+            "tools/check_pricing_page.py", "tools/pricing_page.py",
                 "tools/stripe_catalog.json", "site/pricing.html",
                 "site/da/pricing.html", "site/paid-templates.html",
                 "site/da/paid-templates.html", "site/clean-copy.html",
@@ -2045,7 +2104,9 @@ STEPS: tuple[Step, ...] = (
         # uden dem springer porten over en commit der fjerner et `id` på
         # `/paid-templates`, retter `#buy` på compliance-siden eller gør en
         # dansk købsside engelsk.
-        inputs=("tools/check_pricing_page.py", "tools/pricing_page.py",
+        inputs=(
+            "tools/closed_sales.py", "tools/fixtures/for-lukning-2026-11-22/**",
+            "tools/check_pricing_page.py", "tools/pricing_page.py",
                 "tools/stripe_catalog.json", "site/pricing.html",
                 "site/da/pricing.html", "site/paid-templates.html",
                 "site/da/paid-templates.html", "site/clean-copy.html",
@@ -2064,13 +2125,17 @@ STEPS: tuple[Step, ...] = (
     Step(
         id="catalog-where",
         argv=("python3", "tools/check_catalog_where.py"),
-        inputs=("tools/check_catalog_where.py", "tools/stripe_catalog.json",
+        inputs=(
+            "tools/closed_sales.py", "tools/fixtures/for-lukning-2026-11-22/**",
+            "tools/check_catalog_where.py", "tools/stripe_catalog.json",
                 "site/**", "extension-clean-copy/**", "page-profile/**"),
     ),
     Step(
         id="catalog-where-selftest",
         argv=("python3", "tools/check_catalog_where.py", "--self-test"),
-        inputs=("tools/check_catalog_where.py", "tools/stripe_catalog.json",
+        inputs=(
+            "tools/closed_sales.py", "tools/fixtures/for-lukning-2026-11-22/**",
+            "tools/check_catalog_where.py", "tools/stripe_catalog.json",
                 "site/**", "extension-clean-copy/**", "page-profile/**"),
     ),
     # Planen som arbejdskø (opgave 42, 1/10). Opgavens eget acceptkriterium
@@ -2099,14 +2164,18 @@ STEPS: tuple[Step, ...] = (
     Step(
         id="frontpage-pricing",
         argv=("python3", "tools/check_frontpage_pricing.py"),
-        inputs=("tools/check_frontpage_pricing.py", "site/index.html",
+        inputs=(
+            "tools/closed_sales.py", "tools/fixtures/for-lukning-2026-11-22/**",
+            "tools/check_frontpage_pricing.py", "site/index.html",
                 "site/da/index.html", "site/pricing.html", "site/da/pricing.html",
                 "tools/stripe_catalog.json"),
     ),
     Step(
         id="frontpage-pricing-selftest",
         argv=("python3", "tools/check_frontpage_pricing.py", "--self-test"),
-        inputs=("tools/check_frontpage_pricing.py", "site/index.html",
+        inputs=(
+            "tools/closed_sales.py", "tools/fixtures/for-lukning-2026-11-22/**",
+            "tools/check_frontpage_pricing.py", "site/index.html",
                 "site/da/index.html", "site/pricing.html", "site/da/pricing.html",
                 "tools/stripe_catalog.json"),
     ),
@@ -2217,14 +2286,18 @@ STEPS: tuple[Step, ...] = (
         # pro-kortene for `eucomply-pro` i katalogen, ikke i filerne. Uden den
         # ville et skift i katalogen springe porten over i cache.
         argv=("python3", "tools/check_scan_page_claims.py"),
-        inputs=("tools/check_scan_page_claims.py", "site/_worker.js",
+        inputs=(
+            "tools/closed_sales.py", "tools/fixtures/for-lukning-2026-11-22/**",
+            "tools/check_scan_page_claims.py", "site/_worker.js",
                 "site/scan.html", "site/scan-da.html",
                 "tools/stripe_catalog.json"),
     ),
     Step(
         id="scan-page-claims-selftest",
         argv=("python3", "tools/check_scan_page_claims.py", "--self-test"),
-        inputs=("tools/check_scan_page_claims.py", "site/_worker.js",
+        inputs=(
+            "tools/closed_sales.py", "tools/fixtures/for-lukning-2026-11-22/**",
+            "tools/check_scan_page_claims.py", "site/_worker.js",
                 "site/scan.html", "site/scan-da.html",
                 "tools/stripe_catalog.json"),
     ),
@@ -2245,13 +2318,17 @@ STEPS: tuple[Step, ...] = (
     Step(
         id="lifetime-counters",
         argv=("python3", "tools/check_lifetime_counters.py"),
-        inputs=("tools/check_lifetime_counters.py", "site/_worker.js",
+        inputs=(
+            "tools/closed_sales.py", "tools/fixtures/for-lukning-2026-11-22/**",
+            "tools/check_lifetime_counters.py", "site/_worker.js",
                 "tools/weekly_report.py"),
     ),
     Step(
         id="lifetime-counters-selftest",
         argv=("python3", "tools/check_lifetime_counters.py", "--self-test"),
-        inputs=("tools/check_lifetime_counters.py", "site/_worker.js",
+        inputs=(
+            "tools/closed_sales.py", "tools/fixtures/for-lukning-2026-11-22/**",
+            "tools/check_lifetime_counters.py", "site/_worker.js",
                 "tools/weekly_report.py"),
     ),
     # Opgave: AI-banneren lovede et svar, der ikke kunne Gives. Målt først:

@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en" data-product="deskuptime">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DeskUptime — uptime, SSL, content checks on your machine</title>
+<meta name="description" content="DeskUptime checks whether your websites are up, when their SSL certificates expire and whether their content changed — from the terminal or a small desktop app. Free CLI, MIT-licensed. Pro desktop licence 19 USD one-time.">
+<meta name="author" content="Mads Holst Jensen">
+<link rel="canonical" href="https://deskuptime.com/">
+<link rel="alternate" hreflang="en" href="https://deskuptime.com/">
+<link rel="alternate" hreflang="da" href="https://deskuptime.com/da/">
+<link rel="alternate" hreflang="x-default" href="https://deskuptime.com/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="DeskUptime">
+<meta property="og:title" content="DeskUptime — uptime, SSL and content checks from your own machine">
+<meta property="og:description" content="Free MIT CLI for uptime, SSL expiry and content-change checks. Desktop app for macOS and Windows with Pro, 19 USD once. No monthly fee.">
+<meta property="og:url" content="https://deskuptime.com/">
+<meta property="og:image" content="https://deskuptime.com/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<script defer src="/track.js"></script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"SoftwareApplication","name":"DeskUptime","applicationCategory":"DeveloperApplication","operatingSystem":"macOS, Windows, Linux","offers":[{"@type":"Offer","name":"CLI","price":"0","priceCurrency":"USD"},{"@type":"Offer","name":"Pro desktop licence","price":"19","priceCurrency":"USD"}],"url":"https://deskuptime.com/","author":{"@type":"Person","name":"Mads Holst Jensen","url":"https://mahoje.dk"}}
+</script>
+<style>
+  .downloads { list-style: none; padding: 0; margin: 1rem 0 0; display: grid; gap: 0.5rem; }
+  .downloads li { display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap; border-top: 1px solid var(--color-border); padding: 0.55rem 0; margin: 0; }
+  .downloads span { color: var(--color-text-muted); font-size: 0.9rem; }
+  table.compare td:nth-child(n+2), table.compare th:nth-child(n+2) { text-align: center; width: 6.5rem; }
+</style>
+</head>
+<body>
+<main id="main">
+
+<div class="hero" id="check">
+  <div class="container">
+    <h1>Is the site up, is the certificate still valid, did the page change?</h1>
+    <p>DeskUptime answers those three questions from your own computer. A free command-line tool for one-off checks and CI, and a small desktop app that keeps checking in the background. No hosted dashboard, no monthly fee. Your URL list and check results stay on your machine; the Pro licence activation checks in over HTTPS when you enter the key.</p>
+    <form class="oc-form" id="oc-check-form" method="get" action="/api/url-inspect">
+      <label for="oc-check-url">Website address</label>
+      <div class="oc-row-wrap">
+        <input id="oc-check-url" name="url" type="text" inputmode="url" autocomplete="url"
+               spellcheck="false" placeholder="https://your-site.com" aria-describedby="oc-check-hint" required>
+        <button type="submit" class="btn-primary">Check it now</button>
+      </div>
+      <p class="oc-hint" id="oc-check-hint">One URL, for example <code>example.com</code> — we add
+      <code>https://</code> if you leave it out. The request goes to our server, so it sees the
+      site the way the rest of the world does, not the way your browser does.</p>
+    </form>
+    <p class="oc-status" id="oc-check-status" role="status" aria-live="polite"></p>
+    <div id="oc-check-result" hidden></div>
+    <div class="hero-cta">
+      <a href="#install" class="btn-secondary">Install the CLI</a>
+      <a href="#pro" class="btn-secondary">See what Pro adds</a>
+    </div>
+    <span class="hero-note">The check needs nothing installed. To keep watching a site, that is the CLI and the desktop app. The CLI is free and MIT-licensed; the desktop app is part of Pro: 19 USD one-time, 3 machines. <a href="#pro">See what Pro adds, side by side</a>.</span>
+  </div>
+</div>
+
+<section>
+  <div class="container">
+    <h2>How it works</h2>
+    <p>One command, no install, no account:</p>
+<pre class="term"><span class="p">$</span> npx github:mahope/deskuptime check https://example.com https://cloudflare.com
+Checking 2 URL(s)...
+
+<span class="ok">ok</span>  https://example.com
+    Status:    200 OK
+    Response:  85 ms
+    SSL:       expires in 63 days
+    Content:   559 bytes, sha256 unchanged
+
+<span class="ok">ok</span>  https://cloudflare.com
+    Status:    200 OK
+    Response:  312 ms
+    SSL:       expires in 42 days
+    Content:   1,316,377 bytes</pre>
+    <p>Add <code>watch</code> to keep checking on an interval, and it prints a line each time something changes:</p>
+<pre><code>deskuptime watch https://example.com --interval 300</code></pre>
+    <dl class="feature-list">
+      <div><dt>Uptime and response time</dt><dd>HTTP status, redirect chain and how long the response took. A non-2xx status or a timeout is reported as down.</dd></div>
+      <div><dt>SSL certificate</dt><dd>Days until expiry, issuer, protocol version. The default warning threshold is 14 days.</dd></div>
+      <div><dt>Content changes</dt><dd>A SHA-256 hash of the response body is compared with the previous run. Useful for spotting a broken deploy, an injected script or a defaced page.</dd></div>
+      <div><dt>Exit codes and JSON for CI</dt><dd>Exit 0 when everything passes, 2 when a site is down. <code>--json</code> gives machine-readable output, <code>watch --once</code> runs a single pass for cron. Use it as a post-deploy smoke test or on a schedule in GitHub Actions.</dd></div>
+    </dl>
+  </div>
+</section>
+
+<section>
+  <div class="container">
+    <h2>Who it is for</h2>
+    <p>Freelancers and small agencies who look after a handful of client sites and do not want another subscription for it. Developers who want a smoke test after every deploy. Anyone who has found out from a customer that a certificate expired.</p>
+    <p>It is not a replacement for a distributed monitoring service with a status page and on-call rotation. Checks run from the machine you run them on; if that machine is asleep, nothing is checked. That is the trade-off for keeping it local and free of running costs.</p>
+  </div>
+</section>
+
+<section id="install">
+  <div class="container">
+    <h2>Install the CLI</h2>
+<pre><code>brew tap mahope/tap && brew install deskuptime   # macOS / Linux
+npx github:mahope/deskuptime check https://your-site.com   # no install, needs Node 18+</code></pre>
+    <p>Tagged tarballs are on <a href="https://github.com/mahope/deskuptime/releases">GitHub Releases</a>. In GitHub Actions, use the <code>mahope/deskuptime</code> action with a list of URLs; the job fails when a site is down and a status table lands in the job summary. There is a <a href="/blog/monitor-website-github-actions-free">walkthrough for the CI setup</a>.</p>
+  </div>
+</section>
+
+<section id="desktop">
+  <div class="container">
+    <h2>Desktop app</h2>
+    <p>A small Tauri app for macOS and Windows that lives in the system tray and runs the same checks on a schedule. Notifications when a site goes down, a certificate approaches expiry or the content hash changes. Current version 0.2.7.</p>
+    <p>The app is closed-source and part of DeskUptime Pro. You can download the installer here, and it asks for the licence key from your Stripe receipt the first time you start it. <a href="#pro">Pro is 19 USD once</a>.</p>
+    <ul class="downloads">
+      <li><a href="https://github.com/mahope/deskuptime/releases/download/desktop-v0.2.7/DeskUptime-macOS-aarch64-apple-darwin.zip">macOS, Apple Silicon</a><span>zip, aarch64</span></li>
+      <li><a href="https://github.com/mahope/deskuptime/releases/download/desktop-v0.2.7/DeskUptime-macOS-x86_64-apple-darwin.zip">macOS, Intel</a><span>zip, x86_64</span></li>
+      <li><a href="https://github.com/mahope/deskuptime/releases/download/desktop-v0.2.7/DeskUptime_0.2.7_x64-setup.exe">Windows 10 and later</a><span>NSIS installer</span></li>
+    </ul>
+    <p class="muted">If macOS or Windows warns about an unidentified developer on first launch, that is because the build is not code-signed through their paid programmes. Right-click and choose Open on macOS; choose "More info" then "Run anyway" on Windows.</p>
+  </div>
+</section>
+
+<section id="web-tools">
+  <div class="container">
+    <h2>Free web tools</h2>
+    <p>Two checkers you can use without installing anything. They run on this site, in
+    your browser, and you get the result on the spot.</p>
+    <ul>
+      <li><a href="/bulk-url-checker">Bulk URL checker</a> — paste up to 10 URLs and see
+      uptime, SSL and response time for all of them in one pass.</li>
+      <li><a href="/security-headers-checker">Security headers checker</a> — grade any
+      site's HTTP security headers and see what to fix.</li>
+    </ul>
+    <p class="muted">The <a href="#check">check at the top of this page</a> answers the same two
+    questions for a single URL. More in <a href="/tools/">all tools</a>.</p>
+  </div>
+</section>
+
+<section id="pro">
+  <div class="container">
+    <h2>Free and Pro</h2>
+<!-- pro-table:start -->
+<div class="table-wrap">
+<table class="compare pro-table" id="compare">
+  <caption class="sr-only">Free and DeskUptime Pro, side by side</caption>
+  <thead>
+    <tr><th scope="col"><span class="sr-only">Plan</span></th><th scope="col">Free</th><th scope="col">DeskUptime Pro</th></tr>
+  </thead>
+  <tbody>
+    <tr><th scope="row">What you get</th><td><ul><li>One-off checks</li><li>SSL and content checks</li><li>JSON output</li></ul></td><td><ul><li>Desktop app</li><li>Unlimited sites</li><li>Poll every 30 seconds</li><li>Webhook alerts</li><li>Client-ready report</li></ul></td></tr>
+    <tr><th scope="row">Price</th><td><span class="pro-price">$0</span><span class="pro-note">no licence key needed</span></td><td><span class="pro-price">$19 once</span></td></tr>
+  </tbody>
+</table>
+</div>
+<p class="pro-note">One licence covers 3 machines.</p>
+<p class="pro-note pro-limit">Alerts are desktop notifications and webhooks — no SMS, email or phone</p>
+<!-- pro-table:end -->
+    <div class="pricing">
+      <div>
+        <h3>CLI</h3>
+        <p class="price">Free</p>
+        <p>MIT-licensed. One-off checks have no limits; continuous watch mode covers up to three sites.</p>
+        <p>Free without a licence key: one-off checks, SSL and content checks, and JSON output for scripts and CI.</p>
+      </div>
+      <div>
+        <h3>Desktop Pro</h3>
+        <p class="price">19 USD <small>one-time, 3 machines, all 1.x updates</small></p>
+        <p>Gives you the desktop app for macOS and Windows, removes the three-site limit, lets the CLI poll every 30 seconds instead of every 60, adds webhook alerts and a client-ready report in Markdown and JSON. You get a licence key and pay only once. The desktop app asks for the key the first time you start it. In version 0.2.7 that check still goes to the app's previous licence provider, so the Pro features inside the app do not unlock yet.</p>
+        <p><a href="https://buy.stripe.com/7sY9AS9eX3Iu418fJ5bMQ01" class="btn-primary" rel="nofollow noopener">Buy DeskUptime Pro — 19 USD once</a></p>
+        <p class="notice">Secure checkout via Stripe. Your licence key arrives by email and on the thank-you page. The free version stays complete and MIT-licensed, and nothing in it expires.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="faq">
+  <div class="container">
+    <h2>Questions</h2>
+    <details>
+      <summary>Can I check a site without installing anything?</summary>
+      <p>Yes — the <a href="#check">check at the top of this page</a> fetches the URL from our
+      server and shows the status, the redirect count, the live certificate and the security
+      headers. That is one check at one moment. It cannot tell you whether the site was down
+      earlier, or will be later, and it cannot compare the page against the previous run, so
+      it is not a monitoring service. Watching is what the CLI and the desktop app do.</p>
+    </details>
+    <details>
+      <summary>What happens when my computer is off or asleep?</summary>
+      <p>Nothing is checked until it wakes up. DeskUptime runs where you run it. If you need checks that continue while your laptop is closed, run the CLI on a server or in a scheduled GitHub Actions workflow — both are free.</p>
+    </details>
+    <details>
+      <summary>Does it send my URLs anywhere?</summary>
+      <p>Your URL list and check results stay on your machine and are not uploaded to a central monitoring service. The Pro desktop app sends the licence key, a stable device ID and the product identifier deskuptime-pro to the app's previous licence provider over HTTPS when you enter the key, and receives the licence status. This site runs a separate anonymous page-view counter.</p>
+    </details>
+    <details>
+      <summary>How is this different from UptimeRobot or Pingdom?</summary>
+      <p>Those check from many locations around the clock and charge monthly for it. DeskUptime checks from one place — yours — and costs nothing to run. For a personal site or a few client sites that is usually enough. For a service with an SLA, it is not.</p>
+    </details>
+    <details>
+      <summary>Can I check many sites at once?</summary>
+      <p>Yes. Pass any number of URLs to <code>check</code>. Watch mode is limited to three sites without a Pro key. The <a href="/tools/">free web checkers</a> do a bulk URL check and a security-headers check without installing anything.</p>
+    </details>
+    <details>
+      <summary>Is there a Linux desktop build?</summary>
+      <p>Not yet. The CLI runs on Linux; the desktop app is currently built for macOS and Windows only. It is a Tauri app, so a Linux build is possible if there is demand — open an issue on GitHub.</p>
+    </details>
+  </div>
+</section>
+
+<section>
+  <div class="container">
+    <h2>Who makes this</h2>
+    <p>DeskUptime is built by Mads Holst Jensen, an independent developer in Odense, Denmark, working as <a href="https://mahoje.dk">mahoje.dk</a>. It came out of looking after client WordPress sites and wanting a check that did not need another account. The engine and the CLI are on <a href="https://github.com/mahope/deskuptime">GitHub</a> as MIT-licensed source. The desktop app is closed-source and ships with Pro.</p>
+    <p>Related reading: <a href="/blog/check-ssl-certificate-expiry">checking SSL certificate expiry</a>, <a href="/blog/desktop-website-monitor-cli">website monitoring from the terminal</a>, <a href="/blog/post-deploy-smoke-tests-static-sites">post-deploy smoke tests for static sites</a>.</p>
+  </div>
+</section>
+
+</main>
+<script>/* What this check cannot do, and where the visitor goes next, are the page's
+  own words — /one-off-check.js is shared by every site's front door, so it
+  hard-codes no product. */
+window.ONE_OFF_CHECK = {
+  // An answer without a question to answer it: the h1 asks three questions, and
+  // without this the answers waited for a keystroke nobody made — deskuptime.com
+  // sat at 0 s engagement and 100 % bounce over 28 days (Plausible). The form
+  // above still works for the visitor's own URL; this only shows what the answer
+  // looks like, and the card says so itself.
+  example: 'example.com',
+  then: 'That was one check, just now. It says nothing about whether the site was down five minutes ago or will be down tomorrow, and it cannot tell that the page content changed. The CLI and the desktop app can.',
+  next: [{label: 'Install the CLI', href: '#install'}, {label: 'See the desktop app', href: '#desktop'},
+    {label: 'Read: website monitoring from the terminal', href: '/blog/desktop-website-monitor-cli'}]
+};</script>
+
+<script>/* What DeskUptime Pro adds, shown in the check result: */
+window.ONE_OFF_CHECK_PRO = 'Pro: Continuous monitoring every 30 seconds (free: every 60), webhook alerts when site goes down or SSL changes, client-ready reports in Markdown and JSON, unlimited sites (free: 3 machines).';</script>
+<script>/* The donation line lives in the page, not in one-off-check.js: it has to reach
+  tools/check_donation_paths.py, which judges the page file, and it must not appear before
+  the visitor has an answer. Same shape as /scan and /url-inspector: a sentence, never a
+  button, and the href is the one in tools/stripe_catalog.json. */
+window.OC_DONATE = '<p class="oc-donate">This check is free and needs no account. If it saved you time, a small <a href="https://donate.stripe.com/7sYeVcbn50wieFM8gDbMQ0c" rel="nofollow noopener">donation</a> keeps it running.</p>';</script>
+<script defer src="/net.js"></script>
+<script defer src="/one-off-check.js"></script>
+</body>
+</html>

@@ -43,14 +43,8 @@
   #notice ul { padding-left: 20px; margin: 6px 0; }
   .sr-only { position:absolute; width:1px; height:1px; overflow:hidden;
              clip:rect(0 0 0 0); white-space:nowrap; }
-  .pro-note { max-width: 720px; margin: 32px auto 0; padding: 18px 22px;
-              border: 1px solid var(--color-accent); border-radius: 10px;
-              background: var(--color-accent-soft); }
-  .pro-note h2 { font-size: 1.05rem; margin: 0 0 8px; }
-  .pro-note p { margin: 0; color: var(--color-text); font-size: 0.95rem; line-height: 1.7; }
-  .pro-note a { color: var(--color-accent); }
   @media print {
-    header.hero, .gen, .actions, footer.site-footer, .no-print, .pro-note { display: none !important; }
+    header.hero, .gen, .actions, footer.site-footer, .no-print { display: none !important; }
     #notice { border: none; margin: 0; padding: 0; }
   }
 </style>
@@ -164,18 +158,6 @@ Hetzner Online GmbH — hosting"></textarea>
   </ul>
 </section>
 
-<section class="pro-note" aria-labelledby="pro-heading">
-  <h2 id="pro-heading">Politikken ligger i papiret. Den fortæller ikke, om nogen kan finde den.</h2>
-  <p>Generatoren er gratis, og den skriver hele dokumentet: hvem I er, hvilke data I behandler og på
-  hvilket grundlag, hvem I deler med, overførsler uden for EU, opbevaring, rettigheder og klagevej.
-  Intet er holdt tilbage til en licens.</p>
-  <p>Det et dokument ikke kan, er at fortælle jer, om det overhovedet er linket fra sitet.
-  <a href="/da/compliance-report">EUComply Pro</a> åbner jeres rigtige URL og svarer på det: to af de
-  18 server-side tjek er præcis dette — om der findes et privatlivs- eller cookielink, og om et
-  samtykkebanner mangler på en side, der faktisk indlæser en sporing. Den gratis scanner kører
-  allerede de 15 automatiske tjek, så med de 18 bliver det 33 tjek i alt — og rapporten kommer som
-  en pdf, du kan sende videre til kunden. $79/år pr. website.</p>
-</section>
 
 <footer class="site-footer">
   <div class="container">
@@ -294,18 +276,9 @@ Hetzner Online GmbH — hosting"></textarea>
   // dokumenter, du ellers skriver pr. kunde, og siger det i første linje.
   // `no-print`, så det ikke ender i det dokument læseren udskriver eller
   // kopierer: `renderText()` bygger fra `renderHTML(current)` alene.
-  var UPSELL = '<div class="upsell-card no-print" style="margin:16px 0 0;padding:16px;border:1px solid var(--color-border);border-radius:10px;background:var(--color-surface-2)">';
-  UPSELL += '<h2 class="sub" style="margin:0 0 4px;font-size:16px">Erklæringen er færdig. De fire andre dokumenter, en kunde spørger til, er ikke.</h2>';
-  UPSELL += '<p style="margin:0 0 8px;font-size:13px;color:var(--color-text-muted)">Der er ingen betalt udgave af denne erklæring, og der behøver ikke at være det. Den betalte del er det, du ellers skriver fra bunden pr. kunde:</p>';
-  UPSELL += '<ul style="margin:0;padding-left:18px;font-size:13px">';
-  UPSELL += '<li style="margin:4px 0"><strong>En behandleraftale med bilag.</strong> Sagsgenstand, varighed, formål, oplysningstyper, sikkerhed og regler for underbehandlere &mdash; kontrakten bag den erklæring, du lige har offentliggjort.</li>';
-  UPSELL += '<li style="margin:4px 0"><strong>NIS2 / DORA-leverandørklausuler.</strong> Frister for hændelsesmelding, revisionsret, godkendelse af underleverandører og exitbetingelser, klar til at sætte ind i en leverandørkontrakt.</li>';
-  UPSELL += '<li style="margin:4px 0"><strong>Et gensidigt NDA-sæt og en EAA-tilgængelighedserklæring.</strong> NDA\'et findes i gensidig, ensidig og projektspecifik udgave; erklæringen er struktureret efter EN 301 549 og WCAG 2.1 AA.</li>';
-  UPSELL += '<li style="margin:4px 0"><strong>Seks rapporteringsfiler.</strong> En månedsrapport, en kvartalsberetning og en specifikation af ændringsloggen &mdash; fjorten filer i alt, PDF og Markdown, intet at skrive om.</li>';
-  UPSELL += '</ul>';
-  UPSELL += '<p style="margin:12px 0 0"><a class="btn" style="display:inline-block;padding:12px 24px;text-decoration:none" href="https://buy.stripe.com/eVqaEW0Iren855c68vbMQ0a" rel="nofollow noopener">Køb det fulde skabelonsæt &mdash; $149 engang</a></p>';
-  UPSELL += '<p style="margin:8px 0 0;font-size:13px;color:var(--color-text-muted)">Leveres som 14 filer lige efter betalingen. <a href="/da/paid-templates">Se hvad skabelonerne indeholder</a>.</p>';
-  UPSELL += '</div>';
+  // Købsvejen til den betalte skabelon er fjernet: salget af EUComply-skabelonerne er lukket 22/11-2026
+  // (closed_sales i tools/stripe_catalog.json). Generatoren er stadig gratis.
+  var UPSELL = '';
 
   $('genForm').addEventListener('submit', function (e) {
     e.preventDefault();

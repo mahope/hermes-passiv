@@ -32,6 +32,13 @@ mangel, ikke en plan.
 
 Bevis: `--self-test` muterer *inventaret* (ikke en side), fordi det er
 inventaret der afgør om noget er købsklart. Se `self_test()`.
+
+**22/11-2026: salget af Clean Copy Pro, DeskUptime Pro, Transmute Desktop,
+EUComply Pro og EUComply-skabelonerne er lukket** (`status: inactive` i
+`tools/stripe_catalog.json`; Stripe har deaktiveret linkene). For et lukket
+produkt er dommen vendt: det må *ikke* have en købsknap (det fulde
+`buy.stripe.com`-link) på nogen side, og nul sider er grønt. Selvtesten
+beviser de oprindelige regler på en genåbnet kopi af kataloget.
 """
 
 from __future__ import annotations
@@ -142,6 +149,26 @@ def sold_on_built(key: str, product: dict, dist: Path, site: Path) -> list[str]:
     return hits
 
 
+def links_on(product: dict, site: Path, dist: Path | None = None) -> list[str]:
+    """Sider hvor produktets **fulde** købslink står.
+
+    `sold_on` matcher på id'et, og for Clean Copy Pro er id'et det samme som
+    Stripes kundeportal (`billing.stripe.com/p/login/<id>`), som eksisterende
+    kunder stadig skal kunne nå. Et lukket produkt dømmes derfor på hele
+    `buy.stripe.com`-linket, ikke på id'et.
+    """
+    link = (product.get("payment_link") or "").rstrip("/")
+    if not link:
+        return []
+    hits = []
+    roots = [site] + ([dist] if dist and dist.is_dir() else [])
+    for root in roots:
+        for path in sorted(root.rglob("*.html")):
+            if link in path.read_text(encoding="utf-8", errors="replace"):
+                hits.append(path.relative_to(root).as_posix())
+    return hits
+
+
 def evaluate(catalog: dict, paid: dict, site: Path,
              dist: Path | None = None) -> tuple[list[str], list[str]]:
     """Returnér (fejl, rapport). `fejl` er tom, når intet købsklart mangler."""
@@ -149,6 +176,16 @@ def evaluate(catalog: dict, paid: dict, site: Path,
     report: list[str] = []
     inv = inventory(paid)
     for key, product in catalog["products"].items():
+        if product.get("status") == "inactive":
+            hits = links_on(product, site, dist)
+            if hits:
+                errs.append(
+                    f"{key} ({product.get('name')}) er lukket for salg, men "
+                    f"købslinket står på {', '.join(hits)} — fjern knappen"
+                )
+            else:
+                report.append(f"  {key}: lukket for salg (ingen købsknap)")
+            continue
         pages = sold_on(key, product, site)
         built = sold_on_built(key, product, dist, site) if dist else []
         if key in OTHER_REPO:
@@ -196,7 +233,13 @@ def self_test() -> int:
     if not shutil.which("git"):
         print("selftest: SKIP (git mangler)")
         return 0
-    real_catalog = load(CATALOG)
+    live_catalog = load(CATALOG)
+    # Reglerne for produkter til salg bevises på en genåbnet kopi: uden
+    # `status: inactive` er de lukkede produkter igen købsklare, så M1-M6
+    # tester det samme som før lukningen 22/11-2026.
+    real_catalog = json.loads(json.dumps(live_catalog))
+    for p in real_catalog["products"].values():
+        p.pop("status", None)
     real_paid = load(PAID_CONTENT)
     failures = 0
 
@@ -232,10 +275,12 @@ def self_test() -> int:
         # faktisk sælges, skal være grønne. En tom site ville rødme dem, og det
         # ville have lignede en fejl i porten — så kontrolken må ikke lyve ved
         # at fjerne den overflade, porten skal dømme.
-        live_errs = evaluate(real_catalog, real_paid, SITE)[0]
+        live_errs = evaluate(live_catalog, real_paid, SITE)[0]
         sold_here = sum(
-            1 for k in real_catalog["products"]
-            if k not in OTHER_REPO and sold_on(k, real_catalog["products"][k], SITE)
+            1 for k in live_catalog["products"]
+            if k not in OTHER_REPO
+            and live_catalog["products"][k].get("status") != "inactive"
+            and sold_on(k, live_catalog["products"][k], SITE)
         )
         if live_errs:
             print(f"  FEJL: den rigtige kode er rød på det rigtige repo: {live_errs}")
@@ -339,7 +384,44 @@ def self_test() -> int:
         else:
             print(f"  ✓ mutation fanget: omtale uden link på genereret side er ikke et salg ({key})")
 
-    total = 6
+        # M7: et lukket produkt med købsknappen tilbage på en side skal rødme.
+        closed = next(
+            (k for k, v in live_catalog["products"].items()
+             if v.get("status") == "inactive" and v.get("payment_link")),
+            None,
+        )
+        if closed is None:
+            print("  FEJL M7: intet lukket produkt i kataloget at dømme")
+            failures += 1
+        else:
+            site7 = write(live_catalog, real_paid, "m7")
+            (site7 / "shop.html").write_text(
+                f'<a href="{live_catalog["products"][closed]["payment_link"]}">køb</a>',
+                encoding="utf-8",
+            )
+            m7 = evaluate(live_catalog, real_paid, site7)[0]
+            if not any(closed in e and "lukket" in e for e in m7):
+                print(f"  FEJL M7: købsknap til det lukkede {closed} gav ingen fejl")
+                failures += 1
+            else:
+                print(f"  ✓ mutation fanget: købsknap til lukket produkt ({closed})")
+
+            # M8: et lukket produkt på nul sider er grønt — og kundeportalen
+            # med samme id er ikke en købsknap.
+            site8 = write(live_catalog, real_paid, "m8")
+            pid = live_catalog["products"][closed]["payment_link"].rstrip("/").split("/")[-1]
+            (site8 / "support.html").write_text(
+                f'<a href="https://billing.stripe.com/p/login/{pid}">portal</a>',
+                encoding="utf-8",
+            )
+            m8 = evaluate(live_catalog, real_paid, site8)[0]
+            if any(closed in e for e in m8):
+                print(f"  FEJL M8: det lukkede {closed} blev dømt uden købsknap: {m8}")
+                failures += 1
+            else:
+                print(f"  ✓ positiv kontrol: lukket produkt uden købsknap er grønt ({closed})")
+
+    total = 8
     print(f"selftest: {total - failures}/{total} mutationer fanget")
     return 1 if failures else 0
 

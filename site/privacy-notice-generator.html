@@ -43,14 +43,8 @@
   #notice ul { padding-left: 20px; margin: 6px 0; }
   .sr-only { position:absolute; width:1px; height:1px; overflow:hidden;
              clip:rect(0 0 0 0); white-space:nowrap; }
-  .pro-note { max-width: 720px; margin: 32px auto 0; padding: 18px 22px;
-              border: 1px solid var(--color-accent); border-radius: 10px;
-              background: var(--color-accent-soft); }
-  .pro-note h2 { font-size: 1.05rem; margin: 0 0 8px; }
-  .pro-note p { margin: 0; color: var(--color-text); font-size: 0.95rem; line-height: 1.7; }
-  .pro-note a { color: var(--color-accent); }
   @media print {
-    header.hero, .gen, .actions, footer.site-footer, .no-print, .pro-note { display: none !important; }
+    header.hero, .gen, .actions, footer.site-footer, .no-print { display: none !important; }
     #notice { border: none; margin: 0; padding: 0; }
   }
 </style>
@@ -167,18 +161,6 @@ Hetzner Online GmbH — hosting"></textarea>
 
 <p style="text-align:center;margin:24px 0">Prefer to adapt a file yourself? <a href="/privacy-policy-template">Download the free privacy policy template</a> instead.</p>
 
-<section class="pro-note" aria-labelledby="pro-heading">
-  <h2 id="pro-heading">The notice says what you do with data. It cannot tell you whether anyone finds it.</h2>
-  <p>This generator is free, and it writes the whole document: who you are, what you collect and on
-  what basis, who you share it with, transfers outside the EU, retention, rights and complaints.
-  Nothing is held back for a licence.</p>
-  <p>What a document cannot do is tell you whether it is even linked from your site.
-  <a href="/compliance-report">EUComply Pro</a> opens your live URL and answers that: two of its 18
-  server-side checks are exactly this — whether a privacy or cookie link exists at all, and whether
-  a consent banner is missing on a page that really does load a tracker. The free scanner already
-  runs the 15 accessibility checks, so with those 18 it is 33 checks in all, and the report comes as
-  a PDF you can send to a client. $79/year per website.</p>
-</section>
 
 <footer class="site-footer">
   <div class="container">
@@ -297,18 +279,9 @@ Hetzner Online GmbH — hosting"></textarea>
   // dokumenter, du ellers skriver pr. kunde, og siger det i første linje.
   // `no-print`, så det ikke ender i det dokument læseren udskriver eller
   // kopierer: `renderText()` bygger fra `renderHTML(current)` alene.
-  var UPSELL = '<div class="upsell-card no-print" style="margin:16px 0 0;padding:16px;border:1px solid var(--color-border);border-radius:10px;background:var(--color-surface-2)">';
-  UPSELL += '<h2 class="sub" style="margin:0 0 4px;font-size:16px">The notice is done. The other four documents a client asks for are not.</h2>';
-  UPSELL += '<p style="margin:0 0 8px;font-size:13px;color:var(--color-text-muted)">There is no paid version of this notice, and there does not need to be. The paid set is the part you would write from scratch per client:</p>';
-  UPSELL += '<ul style="margin:0;padding-left:18px;font-size:13px">';
-  UPSELL += '<li style="margin:4px 0"><strong>A processor agreement with its annexes.</strong> Subject matter, duration, purpose, data types, security and sub-processor rules &mdash; the contract behind the notice you just published.</li>';
-  UPSELL += '<li style="margin:4px 0"><strong>NIS2 / DORA vendor clauses.</strong> Incident notification deadlines, audit rights, subcontractor approval and exit terms, ready to paste into a supplier contract.</li>';
-  UPSELL += '<li style="margin:4px 0"><strong>A mutual NDA set and an EAA accessibility statement.</strong> The NDA comes in mutual, one-way and project-specific variants; the statement is structured to EN 301 549 and WCAG 2.1 AA.</li>';
-  UPSELL += '<li style="margin:4px 0"><strong>Six reporting files.</strong> A monthly report, a quarterly narrative and a change-log specification &mdash; fourteen files in all, PDF and Markdown, nothing to retype.</li>';
-  UPSELL += '</ul>';
-  UPSELL += '<p style="margin:12px 0 0"><a class="btn" style="display:inline-block;padding:12px 24px;text-decoration:none" href="https://buy.stripe.com/eVqaEW0Iren855c68vbMQ0a" rel="nofollow noopener">Buy the complete template bundle &mdash; $149 once</a></p>';
-  UPSELL += '<p style="margin:8px 0 0;font-size:13px;color:var(--color-text-muted)">Delivered as 14 files right after payment. <a href="/paid-templates">See what the templates include</a>.</p>';
-  UPSELL += '</div>';
+  // Købsvejen til den betalte skabelon er fjernet: salget af EUComply-skabelonerne er lukket 22/11-2026
+  // (closed_sales i tools/stripe_catalog.json). Generatoren er stadig gratis.
+  var UPSELL = '';
 
   $('genForm').addEventListener('submit', function (e) {
     e.preventDefault();

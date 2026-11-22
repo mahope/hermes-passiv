@@ -27,7 +27,7 @@
     "url": "https://hermes-passiv.pages.dev/da/clean-copy-tool",
     "applicationCategory": "UtilitiesApplication",
     "operatingSystem": "Any",
-    "offers": [{ "@type": "Offer", "price": "0", "priceCurrency": "USD" }, { "@type": "Offer", "name": "Clean Copy Pro Lifetime (founding price, first 100 purchases)", "price": "39", "priceCurrency": "USD", "availability": "https://schema.org/InStock", "url": "https://buy.stripe.com/aFadR81Mv6UGgNU68vbMQ0d" }],
+    "offers": [{ "@type": "Offer", "price": "0", "priceCurrency": "USD" }],
     "description": "Indsæt rodet formateret tekst og få ren Markdown eller ren tekst tilbage. Din tekst forlader aldrig din browser."
   }
   </script>
@@ -140,8 +140,8 @@
       <div class="hero-cta">
         <a href="#input-box" class="btn-primary">Indsæt din tekst</a>
       </div>
-      <span class="hero-note">Gratis og komplet, ikke en prøveversion.
-      <a href="#free-vs-pro">Se hvad Clean Copy Pro — $19/år tilføjer, side om side</a>.</span>
+      <span class="hero-note">Gratis og komplet, ikke en prøveversion. Clean Copy Pro sælges ikke længere —
+      <a href="#free-vs-pro">eksisterende licensnøgler virker fortsat</a>.</span>
     </header>
 
     <div class="privacy-note" role="note">
@@ -260,37 +260,17 @@
       rå tags der starter med "&lt;" og konverterer dem direkte.</p>
     </details>
 
-    <h2 id="free-vs-pro">Gratis og Pro</h2>
-<!-- pro-table:start -->
-<div class="table-wrap">
-<table class="compare pro-table">
-  <caption class="sr-only">Gratis og Clean Copy Pro, side om side</caption>
-  <thead>
-    <tr><th scope="col"><span class="sr-only">Plan</span></th><th scope="col">Gratis</th><th scope="col">Clean Copy Pro</th></tr>
-  </thead>
-  <tbody>
-    <tr><th scope="row">Hvad du får</th><td><ul><li>De fire konverteringstilstande på denne side — Markdown, WikiLinks, CSV, ren tekst</li><li>Ingen grænse på hvor meget tekst du indsætter</li></ul></td><td><ul><li>Batch-konvertering — mange udsnip ad gangen, ét pr. linje</li><li>Egne rense regler du definerer én gang, i browserudvidelsen</li></ul></td></tr>
-    <tr><th scope="row">Pris</th><td><span class="pro-price">$0</span><span class="pro-note">ingen licensnøgle behøves</span></td><td><span class="pro-price">$19/år</span></td></tr>
-  </tbody>
-</table>
-</div>
-<p class="pro-note">$39 én gang — livstid, de første 100 køb · Én licens dækker 5 enheder.</p>
-<p class="pro-note pro-limit">Batch-konvertering findes kun i webværktøjet. Egne rense regler findes i browserudvidelsen og Obsidian-pluginet — CLIen og VS Code-pluginet har dem ikke</p>
-<!-- pro-table:end -->
+    <h2 id="free-vs-pro">Clean Copy Pro sælges ikke længere</h2>
+    <p class="tool-hint">Salget af Clean Copy Pro lukkede 22. november 2026. Værktøjet er fortsat
+    gratis og MIT-licenseret: alle konverteringsmoduler og ingen grænse for hvor meget tekst du
+    indsætter, med kildekoden <a href="https://github.com/mahope/clean-copy">på GitHub</a>. Har du
+    allerede en Pro-licensnøgle, så aktivér den nedenfor — batch-konvertering åbner her som før.
+    Eksisterende kunder får hjælp på <a href="mailto:support@mahope.tools">support@mahope.tools</a>.</p>
 
-    <p class="tool-hint">Gratis uden konto og uden nøgle: alle konverteringsmoduler i
-    udvidelsen og på webværktøjet, og ingen grænse for hvor meget tekst du indsætter.</p>
-    <p class="tool-hint">Den gratis udgave er det komplette værktøj, ikke en prøveversion:
-    ingen konto, ingen udløbsdato, ingen grænse. Kildemagengningen er
-    <a href="https://github.com/mahope/clean-copy">MIT-licenseret på GitHub</a>. Pro lægger
-    batch-konvertering og egne rense regler oveni, og én licens dækker 5 enheder.</p>
-
-    <h2>Clean Copy Pro — $19/år</h2>
+    <h2>Til dig med en Pro-licens</h2>
     <div class="pro-box" id="pro-box">
-      <p><strong>Pro</strong> tilføjer de funktioner der sparer mest tid, både i webværktøjet
-      og i browserudvidelsen: <em>batch-konvertering</em> af mange udsnip ad gangen,
-      <em>egne rense regler</em> du definerer én gang og genbruger overalt, og et år med
-      større opdateringer. Én licens dækker 5 enheder.</p>
+      <p>Din Pro-licensnøgle virker fortsat: <em>batch-konvertering</em> af mange udsnip ad
+      gangen her, og <em>egne rense regler</em> i browserudvidelsen. Én licens dækker 5 enheder.</p>
 
       <!-- Batch conversion (Pro) -->
       <details class="faq" id="batch-details" hidden>
@@ -314,15 +294,6 @@
           <span id="batch-status" role="status"></span>
         </div>
       </details>
-
-      <p id="pro-buy-row">
-        <a class="btn-primary pro-buy" id="pro-buy" style="text-decoration:none;display:inline-block;" href="https://buy.stripe.com/6oU4gy76PgvgdBIdAXbMQ00" rel="nofollow noopener">Køb Clean Copy Pro — $19/år</a>
-        <span class="tool-hint">Sikker betaling med Stripe. Din licensnøgle kommer pr. mail og på takkesiden.</span>
-      </p>
-      <p id="pro-lifetime-row">
-        <a class="btn-secondary" id="pro-buy-lifetime" style="text-decoration:none;display:inline-block;" href="https://buy.stripe.com/aFadR81Mv6UGgNU68vbMQ0d" rel="nofollow noopener">Køb Clean Copy Pro Lifetime — $39 én gang</a>
-        <span class="tool-hint">Eller betal én gang: samme Pro-licens, for altid, uden fornyelse. Stifterpris, kun for de første 100 køb.</span>
-      </p>
       <details class="faq" id="pro-activate-details">
         <summary>Har du allerede en licensnøgle? Aktivér den her</summary>
         <p style="font-size:0.85rem;color:var(--color-text-muted);margin:0.5rem 0 0 0;">
@@ -505,24 +476,14 @@
     }
 
     function proCard() {
-      var html = '<div class="pro-card">';
-      html += '<h3>Renser ét udsnip ad gangen?</h3>';
-      html += '<p class="pro-lead">Det her tilføjer Pro oven i værktøjet:</p>';
-      html += '<ul class="pro-list">';
-      html += '<li><strong>Batch-konvertering.</strong> Ét klik renser mange udsnip — ét pr. linje — i stedet for én indsættelse ad gangen.</li>';
-      html += '<li><strong>Egne rense regler.</strong> I browserudvidelsen: definer dine egne regler én gang og genbrug dem på alle sites.</li>';
-      html += '<li><strong>Her bliver intet taget fra dig.</strong> Alle konverteringstilstande på denne side, og den ubegrænsede tekstmængde, forbliver gratis.</li>';
-      html += '</ul>';
-      html += '<a class="btn-primary" style="display:inline-block;text-decoration:none" href="https://buy.stripe.com/6oU4gy76PgvgdBIdAXbMQ00" rel="nofollow noopener">Køb Clean Copy Pro — $19/år</a>';
-      html += '<p class="pro-card-note">Én licens dækker 5 enheder. <a href="#free-vs-pro">Se hvad Pro tilføjer, før du køber</a>.</p>';
-      html += '</div>';
-      return html;
+      // Salget af Clean Copy Pro er lukket 22/11-2026 (closed_sales i
+      // tools/stripe_catalog.json), så der er intet kort at vise.
+      return '';
     }
 
     function showProCard() {
-      if (proActive()) return;
-      if (!nudgeRendered) { nudge.innerHTML = proCard(); nudgeRendered = true; }
-      nudge.hidden = false;
+      // Intet salgskort efter 22/11-2026; nudge-feltet forbliver skjult.
+      nudge.hidden = true;
     }
 
     function hideProCard() { nudge.hidden = true; }
