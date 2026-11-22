@@ -26,7 +26,14 @@ Denne port dømmer hver side i `site/` der linker til en udleveret binær fil:
      grund til at tro at gratis og betalt er forskellige.
 
 Dom 1 og 3 er CEO-kø punkt 4 målt på den konkrete købsvej; dom 2 er CEO-kø
-punkt 2. Kun synlig tekst dommes — JSON-LD og scripts er ikke noget en
+punkt 2.
+
+**22/11-2026: salget af DeskUptime Pro er lukket** (`status: inactive` i
+`tools/stripe_catalog.json`). Binærfilerne ligger der stadig til dem, der
+allerede har en nøgle. Så længe produktet er lukket, er dom 1 vendt — siden må
+*ikke* have købslinket (Stripe har deaktiveret det), og den skal sige at Pro
+ikke sælges længere — og dom 3 gælder ikke, fordi der ikke er noget at sælge
+på forskellen. Dom 2 gælder uændret. Kun synlig tekst dommes — JSON-LD og scripts er ikke noget en
 besøgende læser.
 
 Brug:
@@ -38,6 +45,7 @@ Brug:
 from __future__ import annotations
 
 import argparse
+import json
 import re
 import sys
 from pathlib import Path
@@ -76,6 +84,15 @@ PRO_FEATURES: dict[str, re.Pattern[str]] = {
 }
 MIN_PRO_FEATURES = 2
 
+# Lukket for salg: siden skal sige det i synlig tekst.
+CLOSED_RE = re.compile(r"DeskUptime Pro (?:is no longer sold|sælges ikke længere)", re.IGNORECASE)
+
+
+def sales_closed(catalog_path: Path | None = None) -> bool:
+    path = catalog_path or ROOT / "tools/stripe_catalog.json"
+    product = json.loads(path.read_text(encoding="utf-8"))["products"]["deskuptime-pro"]
+    return product.get("status") == "inactive"
+
 SCRIPT_RE = re.compile(r"<script\b.*?</script>", re.DOTALL | re.IGNORECASE)
 STYLE_RE = re.compile(r"<style\b.*?</style>", re.DOTALL | re.IGNORECASE)
 COMMENT_RE = re.compile(r"<!--.*?-->", re.DOTALL)
@@ -99,22 +116,34 @@ def pages() -> list[Path]:
     return out
 
 
-def judge_page(path: Path, html: str) -> list[str]:
+def judge_page(path: Path, html: str, closed: bool | None = None) -> list[str]:
     rel = path.relative_to(ROOT)
     problems: list[str] = []
-    if not BUY_RE.search(html):
+    closed = sales_closed() if closed is None else closed
+    seen = visible_text(html)
+    if closed:
+        if BUY_RE.search(html):
+            problems.append(
+                f"{rel}: har købslinket til DeskUptime Pro, som er lukket for salg "
+                f"22/11-2026 — linket er deaktiveret i Stripe"
+            )
+        if not CLOSED_RE.search(seen):
+            problems.append(
+                f"{rel}: uddeler den betalte app uden at sige at DeskUptime Pro "
+                f"ikke sælges længere — læseren kan ikke få en nøgle"
+            )
+    elif not BUY_RE.search(html):
         problems.append(
             f"{rel}: uddeler den betalte app, men har ingen købsknap "
             f"(Payment Link 7sY9AS9eX3Iu418fJ5bMQ01)"
         )
-    seen = visible_text(html)
     for pattern, label in FALSE_CLAIMS:
         if re.search(pattern, seen, re.IGNORECASE):
             problems.append(
                 f"{rel}: {label} — men licensen aktiveres online"
             )
     named = [name for name, rx in PRO_FEATURES.items() if rx.search(seen)]
-    if len(named) < MIN_PRO_FEATURES:
+    if not closed and len(named) < MIN_PRO_FEATURES:
         problems.append(
             f"{rel}: nævner {len(named)} af de {len(PRO_FEATURES)} Pro-funktioner "
             f"({', '.join(named) or 'ingen'}), så læseren ikke kan se hvad "
@@ -156,12 +185,20 @@ def self_test() -> int:
     try:
         expect_green("uændret side", original)
 
-        # 1. Købsknappen forsvinder igen — dom 1.
+        # Salget er lukket 22/11-2026: dom 1 er vendt, dom 3 gælder ikke.
+        # 1a. Købsknappen kommer tilbage — rød.
         expect_red(
-            "købsknappen væk",
+            "købsknappen til det lukkede produkt tilbage",
             original.replace(
-                "https://buy.stripe.com/7sY9AS9eX3Iu418fJ5bMQ01", "#", 1
-            ),
+                "</body>",
+                '<a href="https://buy.stripe.com/7sY9AS9eX3Iu418fJ5bMQ01">Buy</a></body>', 1),
+        )
+        # 1b. Beskeden om at Pro ikke sælges længere forsvinder — rød.
+        if not CLOSED_RE.search(original):
+            fails.append("selftest: siden siger ikke at DeskUptime Pro ikke sælges længere")
+        expect_red(
+            "lukke-beskeden væk",
+            CLOSED_RE.sub("DeskUptime Pro", original),
         )
 
         # 2. Det absolutte løfte kommer tilbage — dom 2. Kun i den synlige
@@ -189,14 +226,13 @@ def self_test() -> int:
             ),
         )
 
-        # 3. Pro-funktionerne forsvinder — dom 3.
-        stripped = original
-        for pattern in (r"webhook", r"30[ .]*(?:seconds|second)",
-                        r"(?:unlimited|ubegrænsede) sites?", r"client[- ]ready report"):
-            stripped, n = re.subn(pattern, "x", stripped, flags=re.IGNORECASE)
-            if n == 0:
-                fails.append(f"selftest: mønsteret {pattern!r} fandt intet at fjerne")
-        expect_red("Pro-funktionerne nævnt kun som flueben", stripped)
+        # 3. Mens produktet blev solgt: uden købsknap og uden navngivne
+        # Pro-funktioner er siden rød. Dømt med closed=False, så reglen
+        # stadig er bevist, hvis salget åbner igen.
+        if judge_page(target, original, closed=False):
+            print("ok åben salgsperiode: siden uden købsknap giver fund")
+        else:
+            fails.append("åben salgsperiode: siden uden købsknap")
     finally:
         target.write_text(original, encoding="utf-8")
 
@@ -227,6 +263,11 @@ def main(argv: list[str] | None = None) -> int:
             print(f"  - {p}", file=sys.stderr)
         print(f"\n{len(problems)} fund på {judged} sider", file=sys.stderr)
         return 1
+    if sales_closed():
+        print(f"GRØN — {judged} sider der uddeler DeskUptime-binære filer, ingen "
+              f"købsknap til det lukkede Pro, alle siger at det ikke sælges længere, "
+              f"ingen absolutte løfter")
+        return 0
     print(f"GRØN — {judged} sider der uddeler DeskUptime-binære filer, "
           f"alle med købsvej, ingen absolutte løfter, alle med Pro forklaret")
     return 0
