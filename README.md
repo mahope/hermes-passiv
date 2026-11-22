@@ -1,8 +1,8 @@
 # Hermes
 
 Source for the [mahope.tools](https://mahope.tools) family of small web tools.
-Everything here is MIT licensed and free to use. The paid tiers are optional
-upgrades for teams that need more than one person needs.
+Everything here is MIT licensed and free to use. Page Profile Pro is the one
+paid tier left, an optional upgrade for teams that need more than one person needs.
 
 This repository builds the sites and the packages — it is not a single product.
 
@@ -29,16 +29,17 @@ This repository builds the sites and the packages — it is not a single product
 
 ## Paid tiers
 
-The same tools, licensed for a team. A license key activates against
-`mahope.tools/api/license` and works in the clients listed above.
+The same tool, licensed for a team. A license key activates against
+`mahope.tools/api/license` and works in the Page Profile clients.
 
 | Product | Price |
 |---|---|
-| [Clean Copy Pro](https://buy.stripe.com/6oU4gy76PgvgdBIdAXbMQ00) — custom cleanup rules with regex support | $19/year |
-| [DeskUptime Pro](https://buy.stripe.com/7sY9AS9eX3Iu418fJ5bMQ01) — 3 machines | $19 once |
-| [Transmute Desktop](https://buy.stripe.com/eVqbJ0dvdbaW55cgN9bMQ02) — 3 machines | $19 once |
 | [Page Profile Pro](https://buy.stripe.com/9B6eVcgHp7YK69ggN9bMQ04) | $19/year |
-| [EUComply Pro](https://buy.stripe.com/eVq00i4YH6UG69g0ObbMQ03) — per website | $79/year |
+
+Clean Copy Pro, DeskUptime Pro, Transmute Desktop and EUComply Pro (with its
+compliance templates) are closed for sale as of 22 November 2026. Existing
+licenses keep working, and the free tools stay free and MIT licensed. Questions
+from existing customers: support@mahope.tools.
 
 ## Privacy
 
