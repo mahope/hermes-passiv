@@ -434,7 +434,7 @@ function proCard(url){
   // Salget af EUComply Pro er lukket 22/11-2026 (closed_sales i tools/stripe_catalog.json).
   // Kortet sælger ikke længere; det viser kun vejen til PDF-rapporten for dem der
   // allerede har en nøgle, fordi licens-API'et stadig validerer den.
-  return '<p class="result-card licence-note" style="font-size:13px;color:var(--color-text-muted)">Har du allerede en EUComply Pro-licensnøgle? <a href="' + handoff + '">Åbn PDF-rapporten for denne side</a> — nøglen låser stadig downloaden op dér. EUComply Pro sælges ikke længere; alle tjek på denne side er fortsat gratis.</p>';
+  return '<p class="result-card licence-note" style="font-size:13px;color:var(--color-text-muted)">Har du allerede en EUComply Pro-licensnøgle? <a href="' + handoff + '" onclick="window.trackEvent&&window.trackEvent(\'pro-card-click\')">Åbn PDF-rapporten for denne side</a> — nøglen låser stadig downloaden op dér. EUComply Pro sælges ikke længere; alle tjek på denne side er fortsat gratis.</p>';
 }
 window.proCard=proCard;
 // Den ene adresse `#url=`-vejen kan bære. Ved flere sider står de som

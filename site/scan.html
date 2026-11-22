@@ -452,7 +452,7 @@ function proCard(url){
   // Salget af EUComply Pro er lukket 22/11-2026 (closed_sales i tools/stripe_catalog.json).
   // Kortet sælger ikke længere; det viser kun vejen til PDF-rapporten for dem der
   // allerede har en nøgle, fordi licens-API'et stadig validerer den.
-  return '<p class="result-card licence-note" style="font-size:13px;color:var(--color-text-muted)">Already have an EUComply Pro licence key? <a href="' + handoff + '">Open the PDF report for this page</a> — your key still unlocks the download there. EUComply Pro is no longer sold; every check on this page stays free.</p>';
+  return '<p class="result-card licence-note" style="font-size:13px;color:var(--color-text-muted)">Already have an EUComply Pro licence key? <a href="' + handoff + '" onclick="window.trackEvent&&window.trackEvent(\'pro-card-click\')">Open the PDF report for this page</a> — your key still unlocks the download there. EUComply Pro is no longer sold; every check on this page stays free.</p>';
 }
 window.proCard=proCard;
 // `#result` ligger under folden, fordi et resultat er langt og ikke skal fylde

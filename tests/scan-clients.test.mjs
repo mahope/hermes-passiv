@@ -19,6 +19,10 @@ import { fileURLToPath } from 'node:url';
 import vm from 'node:vm';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
+// Salget af EUComply Pro lukkede 22/11-2026 (`status: inactive` i katalogen).
+// Domme der krævede en købsknap, kræver nu at der ingen er.
+const EUCOMPLY_LUKKET = JSON.parse(readFileSync(join(root, 'tools/stripe_catalog.json'), 'utf8'))
+  .products['eucomply-pro'].status === 'inactive';
 
 let pass = 0, fail = 0;
 const ok = (navn, cond, info = '') => { if (cond) pass++; else { fail++; console.log('FEJL:', navn, info); } };
@@ -1239,7 +1243,23 @@ function mutated(path, from, to) {
     .replace(/<style[\s\S]*?<\/style>/g, ' ')
     .replace(/<script[\s\S]*?<\/script>/g, ' ');
 
+  // Salget af EUComply Pro er lukket 22/11-2026 (`status: inactive` i
+  // katalogen). Dommen er vendt for et lukket produkt: resultatet må hverken
+  // have betalingslinket eller prisen, men noten skal stadig sende dem, der
+  // allerede har en nøgle, videre til PDF-rapporten.
+  const lukketLinks = (p) => [p.payment_link, p.lifetime && p.lifetime.payment_link].filter(Boolean);
+  const dømLukket = (html, label, reportHref) => {
+    ok(`${label}: resultatet sælger ikke det lukkede ${pro.name} (intet betalingslink)`,
+      !lukketLinks(pro).some((l) => html.includes(l)), 'et deaktiveret Stripe-link er en død ende');
+    ok(`${label}: resultatet viser ingen pris for det lukkede produkt`,
+      !html.includes(`$${pro.price_usd}`));
+    if (reportHref) {
+      ok(`${label}: noten sender en eksisterende nøgle videre til PDF-rapporten`,
+        reportHref.test(html), `${reportHref}`);
+    }
+  };
   const døm = (html, label, reportHref) => {
+    if (pro.status === 'inactive') return dømLukket(html, label, reportHref);
     ok(`${label}: købsknappen i resultatet bruger katalogens betalingslink`,
       html.includes(pro.payment_link), `ledger ${pro.payment_link} i ${html.includes(pro.payment_link) ? '' : 'resultatet'}`);
     ok(`${label}: knappen viser prisen fra katalogen ($${pro.price_usd})`,
@@ -1524,6 +1544,22 @@ function mutated(path, from, to) {
     // skal heller ikke have fået en påstand om at have mistet en.
     const havdeDonation = readFileSync(join(root, t.path), 'utf8').includes('donate.stripe.com');
 
+    if (pro.status === 'inactive') {
+      // Lukket for salg 22/11-2026: ingen købsvej, og scannerens licens-note
+      // sender eksisterende nøgler videre til PDF-rapporten.
+      ok(`${t.label}: resultatet sælger ikke det lukkede ${pro.name}`,
+        ![pro.payment_link, pro.lifetime && pro.lifetime.payment_link].filter(Boolean)
+          .some((l) => markup.includes(l)), 'et deaktiveret Stripe-link er en død ende');
+      ok(`${t.label}: resultatet viser ingen pris for det lukkede produkt`,
+        !markup.includes(`$${priceOf(t.product)}`));
+      if (t.path === 'site/scan.html' || t.path === 'site/scan-da.html') {
+        ok(`${t.label}: licens-noten linker til PDF-rapporten`, t.report.test(markup), String(t.report));
+      }
+      if (havdeDonation) {
+        ok(`${t.label}: donationslinjen overlevede`, /donate\.stripe\.com/.test(donation));
+      }
+      continue;
+    }
     ok(`${t.label}: et gennemført tjek renderer resultat-markup`, markup.length > 0);
     ok(`${t.label}: købsknappen bruger katalogens betalingslink`,
       markup.includes(pro.payment_link), `forventet ${pro.payment_link}`);
@@ -1699,6 +1735,14 @@ function mutated(path, from, to) {
     const laeserFraServeren = lang === 'EN'
       ? /reads the page[\s\S]{0,60}from the server/i
       : /læser (?:den side|siden)[\s\S]{0,60}fra serveren/i;
+    if (EUCOMPLY_LUKKET) {
+      // EUComply Pro er lukket for salg 22/11-2026: kortet er en licens-note
+      // til PDF-rapporten. Den må hverken love en krybning eller sælge.
+      const note = html.slice(Math.max(0, html.indexOf('licence-note')));
+      ok(`${lang}: licens-noten overleverede flere sites`, html.includes('licence-note'), 'noten mangler');
+      ok(`${lang}: licens-noten lover ikke en krybning`, !kryb.test(note), note.slice(0, 300));
+      ok(`${lang}: resultatet sælger ikke det lukkede EUComply Pro`, !/buy\.stripe\.com/.test(html));
+    } else {
     ok(`${lang}: Pro-kortet ikke lover en krybning`,
       kortStart >= 0 && !kryb.test(kort),
       kortStart < 0 ? 'pro-card ikke fundet i #result' : kort.slice(0, 300));
@@ -1706,6 +1750,7 @@ function mutated(path, from, to) {
       laeserFraServeren.test(kort), kort.slice(0, 300));
     ok(`${lang}: købsknappen overleverede flere sites`,
       /buy\.stripe\.com/.test(html), 'knap mangler');
+    }
   }
 
   for (const [path, lang] of PAGES) {
@@ -1829,12 +1874,16 @@ function mutated(path, from, to) {
     await sandbox.scan();
     await sleep(30);
     const html = (nodes.get('results') || {}).innerHTML || '';
-    const pro = html.slice(html.indexOf('pro-card'));
+    const pro = html.slice(html.indexOf(EUCOMPLY_LUKKET ? 'licence-note' : 'pro-card'));
     ok(`${lang}: pro-kortet påstår ikke længere at kaldet kun læste én side`,
       pro.length > 0 && !/(checked one page|One page per site|tjekkede én side|Én side pr\. website)/.test(pro),
       pro.slice(0, 160) || 'pro-kortet blev ikke renderet');
+    // Forskellen mellem gratis og Pro skulle kunne måles, så længe Pro blev
+    // solgt. Efter lukningen 22/11-2026 er der intet at sælge på forskellen.
+    if (!EUCOMPLY_LUKKET) {
     ok(`${lang}: pro-kortet siger hvad der *blev* læst, så forskellen er målbar`,
       /legal pages|juridiske sider, den peger/i.test(pro), pro.slice(0, 220));
+    }
   }
 }
 
@@ -1914,8 +1963,19 @@ function mutated(path, from, to) {
     vm.runInContext(js.replace(/^var UPSELL/m, 'var UPSELL'), sandbox);
     return sandbox.UPSELL;
   };
+  const katalog14 = JSON.parse(readFileSync(join(root, 'tools/stripe_catalog.json'), 'utf8'));
   for (const u of UP) {
     const src = readFileSync(join(root, 'site', u.f), 'utf8');
+    const lukket = katalog14.products[u.key].status === 'inactive';
+    if (lukket) {
+      // Skabelonerne er lukket for salg 22/11-2026. Kortet er tømt, og intet
+      // betalingslink for skabelonen må stå på siden.
+      ok(`${u.f}: salgskortet for den lukkede ${u.key} er tomt`,
+        /var UPSELL = '';/.test(src), 'forventet `var UPSELL = \'\';`');
+      ok(`${u.f}: siden sælger ikke den lukkede ${u.key}`,
+        !src.includes(katalog14.products[u.key].payment_link));
+      continue;
+    }
     const start = src.indexOf('var UPSELL =');
     const end = src.indexOf("UPSELL += '</div>';", start);
     ok(`${u.f}: UPSELL-blokken findes og er afsluttet`, start > 0 && end > start,
@@ -1984,6 +2044,7 @@ function mutated(path, from, to) {
   // Og privacy notice har *ikke* en betalt udgave. Kortet skal sige det, ellers
   // er det en købsknap til noget siden siger er gratis.
   for (const f of ['privacy-notice-generator.html', 'privacy-notice-generator-da.html']) {
+    if (katalog14.products['eucomply-template-bundle'].status === 'inactive') continue;
     const src = readFileSync(join(root, 'site', f), 'utf8');
     const start = src.indexOf('var UPSELL =');
     const html = render(src.slice(start, src.indexOf("UPSELL += '</div>';", start) + 20));
@@ -2072,6 +2133,13 @@ function mutated(path, from, to) {
     // nok til at lyde som et kort der lå i sidens krop, og dommen ville være
     // grøn på den fejl den er skrevet imod.
     const krop = src.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '');
+    if (EUCOMPLY_LUKKET) {
+      // EUComply Pro er lukket for salg 22/11-2026: resultatet har intet
+      // pro-kort og intet købslink.
+      ok(`${a.sprog}: resultatet sælger ikke det lukkede EUComply Pro`,
+        !markup.includes('pro-card') && !/buy\.stripe\.com/.test(markup) && !/class="pro-card"/.test(krop),
+        markup.slice(0, 160));
+    } else {
     ok(`${a.sprog}: pro-kortet hænger på resultatet, ikke i markup'en`,
       markup.includes('pro-card') && !/class="pro-card"/.test(krop),
       'kortet skal først opstå når der er et resultat');
@@ -2079,6 +2147,7 @@ function mutated(path, from, to) {
     ok(`${a.sprog}: pro-kortet peger på artiklens egen købsvej, ikke på Stripe`,
       /href="#(report|rapport)"/.test(markup) && !/buy\.stripe\.com/.test(markup),
       'to købsknapper til samme produkt er to valg uden at vælge');
+    }
     ok(`${a.sprog}: donationslinjen er med, og er ikke en knap`,
       /donate\.stripe\.com/.test(markup) && !/<a[^>]*donate\.stripe\.com[^>]*class="btn/.test(markup),
       'donationen skal være en 13px-linje, ikke en knap');

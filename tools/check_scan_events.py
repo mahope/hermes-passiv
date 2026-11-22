@@ -28,12 +28,18 @@ begivenheder, som `handleTrack` i `site/_worker.js` tæller som
 | `scan-findings` | udfald med mindst ét fund | `render()` |
 | `scan-clean` | udfald med nul fund | `render()` |
 | `scan-failed` | scanningen kunne ikke gennemføres | `catch` i `scan()` |
-| `pro-card-click` | pro-kortets købsknap | købsankerne i `proCard()` |
+| `pro-card-click` | pro-kortets link | linket i `proCard()` |
 
 `pro-card-click` er **ikke** en erstatning for `buy-click`: den tælles
 stadig, fordi den er en rigtig bevægelse mod Stripe. Den er en ekstra
 målepunkt på præcis det sted, hvor den betalte værdi tilbydes, så en
 indgående link, en donation og en Pro-købsknap kan læses hver for sig.
+
+**22/11-2026: salget af EUComply Pro er lukket.** Pro-kortet har ingen
+købsknap længere — kun et link til PDF-rapporten for dem, der allerede har en
+nøgle (licens-API'et validerer den stadig). Dom 6 er derfor vendt: et
+`buy.stripe.com`-link i scanneren er rødt, og linket i licens-noten bærer
+`pro-card-click`, så tragten stadig kan læses.
 
 **Den delte rapport tæller ikke.** En læser der åbner
 `/scan#<hash>` kører ingen scanning — det er afsenderens resultat, der
@@ -136,17 +142,23 @@ def dom(kilde: str, filnavn: str = "") -> list[str]:
         fund.append(f"{sti}skal sende 'scan-failed' præcis 1 gang i fejlvejen, "
                     f"gør {len(fejlet)}")
 
-    # 6. Pro-kortets købsknap skal måle sig selv — på knappen, ikke et sted
-    #    på siden. Derfor lægges kravet på den linje der har betalingslinket.
-    køb = [i for i, l in enumerate(linjer, 1) if "buy.stripe.com" in l]
-    if not køb:
-        fund.append(f"{sti}pro-kortet har ingen købsknap (intet buy.stripe.com)")
-    for i in køb:
+    # 6. EUComply Pro er lukket for salg 22/11-2026, så scanneren må ikke have
+    #    en købsknap — linket er deaktiveret i Stripe. Pro-kortets eneste link
+    #    er licens-noten til PDF-rapporten, og den skal måle sig selv på
+    #    linjen, ikke et sted på siden.
+    for i, l in enumerate(linjer, 1):
+        if "buy.stripe.com" in l:
+            sig(i, "scanneren har en købsknap (buy.stripe.com), men EUComply Pro "
+                   "er lukket for salg 22/11-2026")
+    noter = [i for i, l in enumerate(linjer, 1) if "licence-note" in l and "<a " in l]
+    if not noter:
+        fund.append(f"{sti}pro-kortet har ingen licens-note med et link")
+    for i in noter:
         linje = linjer[i - 1]
         if "pro-card-click" not in linje:
-            sig(i, "købsknappen sender ikke 'pro-card-click'")
-        if "trackEvent" not in linje:
-            sig(i, "'pro-card-click' står på knappen uden et trackEvent-kald")
+            sig(i, "pro-kortets link sender ikke 'pro-card-click'")
+        elif "trackEvent" not in linje:
+            sig(i, "'pro-card-click' står på linket uden et trackEvent-kald")
 
     # 7. Polaritet: donationsknappen er ikke et pro-kort. Den deler den
     #    generiske `buy-click`, og den skal ikke få pro-kortets begivenhed.
@@ -235,7 +247,16 @@ def _selftest() -> int:
         tjek(f"{sti}: 'scan-failed' væk er rød",
              any("scan-failed" in f for f in fund), str(fund[:2]))
 
-    # 6. Mutation: pro-kortets knap taber sin måling.
+    # 6b. Mutation: en købsknap til det lukkede EUComply Pro tilbage i kortet.
+    for sti in SIDER:
+        rå = (ROD / sti).read_text(encoding="utf-8")
+        mut = rå.replace(PRO_KORT_KALD, PRO_KORT_KALD.replace(
+            "onclick", "data-buy=\"https://buy.stripe.com/eVq00i4YH6UG69g0ObbMQ03\" onclick"), 1)
+        fund = dom(mut, "mutation-lukket")
+        tjek(f"{sti}: en købsknap til det lukkede produkt er rød",
+             mut != rå and any("lukket for salg" in f for f in fund), str(fund[:2]))
+
+    # 6. Mutation: pro-kortets link taber sin måling.
     for sti in SIDER:
         rå = (ROD / sti).read_text(encoding="utf-8")
         mut = rå.replace(PRO_KORT_KALD, "")

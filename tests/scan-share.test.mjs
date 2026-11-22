@@ -393,7 +393,10 @@ async function proevSiden(side) {
   ok(`${side.fil}: fundene gengives med antal`, side.tal.every((t) => ud.includes(t)), side.tal.join(' | '));
   ok(`${side.fil}: rettelsesteksten er med`, ud.includes('alt='), ud.slice(0, 300));
   ok(`${side.fil}: platformens guide er med`, ud.includes('/guides/wordpress-accessibility-check'));
-  ok(`${side.fil}: pro-kortet er stadig med`, ud.includes('buy.stripe.com'));
+  // EUComply Pro er lukket for salg 22/11-2026: kortet er nu licens-noten til
+  // PDF-rapporten for eksisterende nøgler, og den må ikke sælge noget.
+  ok(`${side.fil}: pro-kortet er stadig med`, ud.includes('licence-note') && ud.includes('/compliance-report'));
+  ok(`${side.fil}: pro-kortet sælger ikke det lukkede EUComply Pro`, !ud.includes('buy.stripe.com'));
   ok(`${side.fil}: donationslinjen er stadig med`, ud.includes('donate.stripe.com'));
   ok(`${side.fil}: intet råt markup fra brugerens adresse`, !ud.includes('<script>alert'));
   // `<title>` overlever i DOM-kilden, men sluges som et tag hvis teksten ikke
