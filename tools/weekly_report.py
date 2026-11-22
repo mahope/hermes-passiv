@@ -566,7 +566,11 @@ def load_offer_inventory() -> dict | None:
     except (OSError, ValueError, KeyError, TypeError) as exc:
         note_error("købsinventar", exc)
         return None
-    if not offers or len(core) != 4:
+    # Før 22/11-2026 var der fire centrale produktsider. Salget af Clean Copy
+    # Pro og DeskUptime Pro er lukket, så i dag er der én (Page Profile Pro).
+    # Kravet er derfor at *hver* side katalogen erklærer er gyldig — ikke et
+    # fast antal — så en ødelagt linje stadig gør inventaret ukendt.
+    if not offers or not core or len(core) != len(catalog["core_pages"]):
         note_error("købsinventar", "katalogens offers/core_pages er ufuldstændige")
         return None
     routes: dict[tuple[str, str], dict] = {}

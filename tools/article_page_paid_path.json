@@ -26,6 +26,38 @@
     {
       "route": "/text-on-image-checker",
       "reason": "Ikke afklaret. Ugerapporterne 2026-42 til 2026-45 (genereret efter sidste grønne deploy 11/10-26) målte 7 besøg her, og siden har ingen købsknap. Opført 2/11-26 ved navneskiftet til Mahoje, så deploy-gaten ikke blev stående rød på trafiktal ingen havde nået at vurdere. Skal vurderes: sæt en knap på, eller skriv her hvorfor siden bevidst ikke har en."
+    },
+    {
+      "route": "/activate",
+      "reason": "cleancopy.tools' aktiveringsside for eksisterende Clean Copy Pro-licenser. Salget af Clean Copy Pro, DeskUptime Pro, Transmute Desktop, EUComply Pro og EUComply-skabelonerne er lukket 22/11-2026 (`status: inactive` i `tools/stripe_catalog.json`, linkene deaktiveret i Stripe; issue #9). Siden skal blive for dem, der allerede har en nøgle, og har ingen købsknap med vilje."
+    },
+    {
+      "route": "/clean-copy-tool",
+      "reason": "Clean Copys gratis webværktøj. Salget af Clean Copy Pro, DeskUptime Pro, Transmute Desktop, EUComply Pro og EUComply-skabelonerne er lukket 22/11-2026 (`status: inactive` i `tools/stripe_catalog.json`, linkene deaktiveret i Stripe; issue #9). Gratis-mod-Pro-tabellen og købsknapperne er fjernet; værktøjet er gratis (MIT)."
+    },
+    {
+      "route": "/books",
+      "reason": "Rød på main siden ugerapport 2026-47 (2 målte besøg). De seks e-bøger er gratis (CC BY-NC 4.0). Salget af Clean Copy Pro, DeskUptime Pro, Transmute Desktop, EUComply Pro og EUComply-skabelonerne er lukket 22/11-2026 (`status: inactive` i `tools/stripe_catalog.json`, linkene deaktiveret i Stripe; issue #9). Den betalte bundle og pro-noten er derfor fjernet."
+    },
+    {
+      "route": "/scan",
+      "reason": "Rød på main siden ugerapport 2026-47 (2 målte besøg). Den gratis scanner. Salget af Clean Copy Pro, DeskUptime Pro, Transmute Desktop, EUComply Pro og EUComply-skabelonerne er lukket 22/11-2026 (`status: inactive` i `tools/stripe_catalog.json`, linkene deaktiveret i Stripe; issue #9). Pro-kortet er nu en note til eksisterende licenser uden købsknap."
+    },
+    {
+      "route": "/color-blindness-simulator",
+      "reason": "Gratis farveværktøj. Salget af Clean Copy Pro, DeskUptime Pro, Transmute Desktop, EUComply Pro og EUComply-skabelonerne er lukket 22/11-2026 (`status: inactive` i `tools/stripe_catalog.json`, linkene deaktiveret i Stripe; issue #9). Siden solgte EUComply Pro i sin pro-note; noten er fjernet."
+    },
+    {
+      "route": "/color-blindness-simulator-da",
+      "reason": "Dansk udgave af det gratis farveværktøj. Salget af Clean Copy Pro, DeskUptime Pro, Transmute Desktop, EUComply Pro og EUComply-skabelonerne er lukket 22/11-2026 (`status: inactive` i `tools/stripe_catalog.json`, linkene deaktiveret i Stripe; issue #9). Pro-noten er fjernet."
+    },
+    {
+      "route": "/contrast-checker-da",
+      "reason": "Dansk gratis kontrasttjek. Salget af Clean Copy Pro, DeskUptime Pro, Transmute Desktop, EUComply Pro og EUComply-skabelonerne er lukket 22/11-2026 (`status: inactive` i `tools/stripe_catalog.json`, linkene deaktiveret i Stripe; issue #9). Pro-noten er fjernet."
+    },
+    {
+      "route": "/palette-generator",
+      "reason": "Gratis paletgenerator. Salget af Clean Copy Pro, DeskUptime Pro, Transmute Desktop, EUComply Pro og EUComply-skabelonerne er lukket 22/11-2026 (`status: inactive` i `tools/stripe_catalog.json`, linkene deaktiveret i Stripe; issue #9). Pro-noten er fjernet."
     }
   ]
 }

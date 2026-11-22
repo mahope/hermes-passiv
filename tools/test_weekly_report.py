@@ -9,7 +9,22 @@ import urllib.error
 from datetime import date, datetime, timedelta, timezone
 from unittest.mock import patch
 
+import closed_sales
 import weekly_report as report
+
+# Rangering og købsklik testes på kataloget fra før salget af Clean Copy Pro og
+# DeskUptime Pro lukkede 22/11-2026: det har sider på alle fire domæner, så
+# mekanikken (tærskler, normaliserede ruter, fallback) kan bevises. Det
+# nuværende katalog dømmes for sig i `LiveCatalogTests`.
+CATALOG_BEFORE_CLOSURE = closed_sales.SNAPSHOT / "tools/stripe_catalog.json"
+
+
+class _CatalogBeforeClosure:
+    def setUp(self) -> None:
+        super().setUp()
+        catalog = patch.object(report, "OFFER_CATALOG", CATALOG_BEFORE_CLOSURE)
+        catalog.start()
+        self.addCleanup(catalog.stop)
 
 
 class _FakeResponse:
@@ -426,7 +441,7 @@ class WeeklyReportTests(ReportFixture, unittest.TestCase):
         self.assertIn("Page Profile Pro", markdown)
 
 
-class CheckoutClickTests(ReportFixture, unittest.TestCase):
+class CheckoutClickTests(_CatalogBeforeClosure, ReportFixture, unittest.TestCase):
     """Købsklik skal kunne besvares som 0 — eller som ukendt, aldrig som ingenting.
 
     Målt 26/9: 1 af 13 købssider sendte et `buy-click`, og ingen rapport læste
@@ -617,7 +632,35 @@ class CheckoutClickTests(ReportFixture, unittest.TestCase):
         self.assertEqual("/side", report.tracked_route("/side?x=1#anker"))
 
 
-class RankingTests(ReportFixture, unittest.TestCase):
+class LiveCatalogTests(ReportFixture, unittest.TestCase):
+    """Det nuværende katalog: kun Page Profile Pro sælges (22/11-2026)."""
+
+    def test_live_inventory_has_only_products_for_sale(self) -> None:
+        inventory = report.load_offer_inventory()
+        self.assertIsNotNone(inventory, report.ERRORS)
+        self.assertEqual(["page-profile-pro"],
+                         [page["product"] for page in inventory["core_pages"]])
+        domains = {domain for domain, _route in inventory["routes"]}
+        self.assertNotIn("cleancopy.tools", domains)
+        self.assertNotIn("deskuptime.com", domains)
+        products = {p for entry in inventory["routes"].values() for p in entry["products"]}
+        self.assertIn("page-profile-pro", products)
+        self.assertFalse(products & closed_sales.inactive_keys(),
+                         "et lukket produkt står stadig som købsside")
+
+    def test_a_broken_core_page_still_makes_the_inventory_unknown(self) -> None:
+        import json
+        import tempfile
+        catalog = json.loads(report.OFFER_CATALOG.read_text(encoding="utf-8"))
+        catalog["core_pages"][0]["why"] = ""
+        with tempfile.TemporaryDirectory() as tmp:
+            path = __import__("pathlib").Path(tmp) / "catalog.json"
+            path.write_text(json.dumps(catalog), encoding="utf-8")
+            with patch.object(report, "OFFER_CATALOG", path):
+                self.assertIsNone(report.load_offer_inventory())
+
+
+class RankingTests(_CatalogBeforeClosure, ReportFixture, unittest.TestCase):
     """Rangeringen må aldrig påstå en mest-besøgt-liste uden datagrundlag."""
 
     def ranked_payload(self, *, per_domain: dict, days: tuple[str, ...] | None = None) -> dict:
