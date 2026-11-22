@@ -279,17 +279,9 @@
   }
 
   var current = null;
-  var UPSELL = '<div class="upsell-card no-print" style="margin:16px 0 0;padding:16px;border:1px solid var(--color-border);border-radius:10px;background:var(--color-surface-2)">';
-  UPSELL += '<h2 class="sub" style="margin:0 0 4px;font-size:16px">This generator writes the report. The clauses are what you sign.</h2>';
-  UPSELL += '<p style="margin:0 0 8px;font-size:13px;color:var(--color-text-muted)">What the free version cannot hand you:</p>';
-  UPSELL += '<ul style="margin:0;padding-left:18px;font-size:13px">';
-  UPSELL += '<li style="margin:4px 0"><strong>Breach-response clauses.</strong> What your supplier must do — and tell you — when it has a breach on its side of the contract.</li>';
-  UPSELL += '<li style="margin:4px 0"><strong>Subcontractor approval.</strong> What your supplier must ask you for before it passes work further down the chain.</li>';
-  UPSELL += '<li style="margin:4px 0"><strong>Exit terms.</strong> What happens to your data when the contract ends.</li>';
-  UPSELL += '</ul>';
-  UPSELL += '<p style="margin:12px 0 0"><a class="btn" style="display:inline-block;padding:12px 24px;text-decoration:none" href="https://buy.stripe.com/4gM4gydvd92OapwgN9bMQ06" rel="nofollow noopener">Buy the NIS2 / DORA Vendor Clause Set &mdash; $49 once</a></p>';
-  UPSELL += '<p style="margin:8px 0 0;font-size:13px;color:var(--color-text-muted)">The clause groups, delivered right after payment. <a href="/paid-templates">See what the templates include</a>.</p>';
-  UPSELL += '</div>';
+  // Købsvejen til den betalte skabelon er fjernet: salget af EUComply-skabelonerne er lukket 22/11-2026
+  // (closed_sales i tools/stripe_catalog.json). Generatoren er stadig gratis.
+  var UPSELL = '';
 
   var DONATION = '<p class="no-print" style="font-size:13px;color:var(--color-text-muted);margin:16px 0 0">This generator is free and needs no account. If it saved you time, a small <a href="https://donate.stripe.com/7sYeVcbn50wieFM8gDbMQ0c" rel="nofollow noopener">donation</a> keeps it running.</p>';
 

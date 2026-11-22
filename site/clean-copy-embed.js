@@ -153,13 +153,6 @@
     stats: function (c, w) { return c + ' tegn · ' + w + ' ord'; },
     modes: ['Markdown', 'WikiLinks', 'CSV', 'Ren tekst'],
     privacy: 'Konverteringen kører i JavaScript på denne side — din tekst forlader aldrig browseren. Har du aktiveret en Clean Copy Pro-nøgle, tjekkes kun den nøgle og et enheds-id mod vores licens-API på mahope.tools, så Pro-funktionerne forbliver slået til.',
-    nudgeTitle: 'Ét stykke ad gangen?',
-    nudgeLead: 'Det tilføjer Pro oven i denne konverter:',
-    nudgeBatch: 'Batch-konvertering. Ét tryk renser mange stykker — ét pr. linje — i stedet for én indsættelse ad gangen.',
-    nudgeRules: 'Egne rengøringsregler. I browserudvidelsen: skriv dine egne regler én gang og genbrug dem på alle sider.',
-    nudgeKeep: 'Intet bliver taget fra dig. Alle fire tilstande på denne side, og ingen grænse for hvor meget tekst du sætter ind, forbliver gratis.',
-    nudgeBuy: 'Køb Clean Copy Pro — 19 $/år',
-    nudgeNote: 'Én licens dækker 5 enheder. Aktivér den på webværktøjet, så åbnes batch-konverteringen også her.',
     toolLink: 'Åbn webværktøjet',
     batchTitle: 'Batch-konvertering (Pro) — mange stykker på én gang',
     batchHint: 'Sæt ét stykke pr. linje. Linjer der starter med < konverteres som HTML, resten som ren tekst. Resultaterne kommer én pr. linje, i samme rækkefølge.',
@@ -186,13 +179,6 @@
     stats: function (c, w) { return c + ' chars · ' + w + ' words'; },
     modes: ['Markdown', 'WikiLinks', 'CSV', 'Plain text'],
     privacy: 'The conversion runs in JavaScript on this page — your text never leaves the browser. If you have activated a Clean Copy Pro key, only that key and a device id are checked against our license API on mahope.tools, so Pro features stay switched on.',
-    nudgeTitle: 'Cleaning one snippet at a time?',
-    nudgeLead: 'What Pro adds on top of this converter:',
-    nudgeBatch: 'Batch conversion. One click cleans many snippets — one per line — instead of one paste at a time.',
-    nudgeRules: 'Custom cleanup rules. In the browser extension: write your own rules once and reuse them on every site.',
-    nudgeKeep: 'Nothing here is taken away. All four modes on this page, and no limit on how much text you paste, stay free.',
-    nudgeBuy: 'Buy Clean Copy Pro — $19/year',
-    nudgeNote: 'One licence covers 5 devices. Activate it on the web tool and batch conversion unlocks here too.',
     toolLink: 'Open the web tool',
     batchTitle: 'Batch conversion (Pro) — many snippets at once',
     batchHint: 'Paste one snippet per line. Lines starting with < are converted as HTML, the rest as plain text. Results come back one per line, in the same order.',
@@ -274,7 +260,6 @@
   clear.type = 'button'; clear.id = 'cc-clear';
   clear.addEventListener('click', function () {
     input.value = ''; output.value = ''; stats.textContent = ''; setStatus('');
-    nudge.hidden = true;
     input.focus();
   });
   bar.appendChild(modes);
@@ -291,26 +276,9 @@
   var copyBar = el('div', 'cc-bar');
   copyBar.appendChild(copyBtn); copyBar.appendChild(status);
 
-  var nudge = el('div', 'pro-card');
-  nudge.id = 'cc-nudge';
-  nudge.hidden = true;
-  (function buildNudge() {
-    nudge.appendChild(el('h3', null, T.nudgeTitle));
-    nudge.appendChild(el('p', 'pro-lead', T.nudgeLead));
-    var ul = el('ul', 'pro-list');
-    ul.appendChild(el('li', null, T.nudgeBatch));
-    ul.appendChild(el('li', null, T.nudgeRules));
-    ul.appendChild(el('li', null, T.nudgeKeep));
-    nudge.appendChild(ul);
-    var buy = anchor('https://buy.stripe.com/6oU4gy76PgvgdBIdAXbMQ00', 'btn-primary', T.nudgeBuy);
-    buy.rel = 'nofollow noopener';
-    var p = el('p'); p.appendChild(buy);
-    nudge.appendChild(p);
-    var note = el('p', 'pro-card-note');
-    note.appendChild(document.createTextNode(T.nudgeNote + ' '));
-    note.appendChild(anchor(toolHref, null, T.toolLink + ' →'));
-    nudge.appendChild(note);
-  })();
+  // Pro-kortet (`#cc-nudge`) er fjernet: salget af Clean Copy Pro er lukket
+  // 22/11-2026 (closed_sales i tools/stripe_catalog.json). Batch-konverteringen
+  // bag licensen nedenfor er uændret, så eksisterende nøgler virker fortsat.
 
   // ── batch conversion, behind the license ────────────────────────────
   var batch = el('details', 'cc-batch');
@@ -357,7 +325,6 @@
   host.appendChild(grid);
   host.appendChild(bar);
   host.appendChild(copyBar);
-  host.appendChild(nudge);
   host.appendChild(batch);
   host.appendChild(privacy);
 
@@ -380,7 +347,7 @@
   }
   function convert() {
     var raw = input.value || '';
-    if (!raw.trim()) { output.value = ''; stats.textContent = ''; setStatus(''); nudge.hidden = true; return; }
+    if (!raw.trim()) { output.value = ''; stats.textContent = ''; setStatus(''); return; }
     try {
       var result;
       if (looksLikeHtml(raw)) {
@@ -398,7 +365,6 @@
       var words = String(result).split(/\s+/).filter(Boolean).length;
       stats.textContent = T.stats(String(result).length, words);
       setStatus('');
-      nudge.hidden = false;
       trackUse();
     } catch (err) {
       output.value = '';
