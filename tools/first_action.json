@@ -51,5 +51,6 @@
   "site/clean-copy-tool.html": "#input-box",
   "site/url-inspector/index.html": "/api/url-inspect",
   "_8oktober_compliance_report": " `site/compliance-report.html` er den eneste side i familien med et checkout-klik på EUComply Pro-årsabonnementet (1 i uge 41, `reports/weekly/2026-41.json`), men heroen havde hverken en købsvej eller en vej til pro-tabellen — den primære handling lå 4.000 tegn nede i `#pricingSection`. Foldens primære er nu et anker til `#pricingSection`, hvor den ene dokumenterede købsknap og pro-tabellen står, så både `check_first_action` og `fejl_pris` er grønne. Købslinket kunne ikke flyttes op i heroen: `check_stripe_ctas` tillader præcis én synlig CTA pr. tilbud, og `check_tool_paid_path` måler kun brødteksten mellem `</header>` og `<footer>`, så den betalte vej skal blive i priskortet. Der findes ingen dansk udgave af selve værktøjet: `/da/compliance-report` er en købsside uden hero-CTA og er derfor ikke ratchet.",
-  "site/compliance-report.html": "#pricingSection"
+  "_22november_compliance_report": "Salget af EUComply Pro er lukket 22/11-2026 (`status: inactive` i `tools/stripe_catalog.json`), og pro-tabellen `#pricingSection` er fjernet fra `site/compliance-report.html`. Heroens primære handling er nu ankeret til den gratis scanning (`#scan-heading`), som *er* på siden; ratcheten følger handlingen.",
+  "site/compliance-report.html": "#scan-heading"
 }
