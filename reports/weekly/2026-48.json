@@ -1,0 +1,699 @@
+{
+  "schema_version": 2,
+  "iso_week": "2026-48",
+  "generated_at": "2026-11-23T06:01:30+00:00",
+  "health": {
+    "status": "partial",
+    "kv": true,
+    "traffic_status": "partial",
+    "visits_2d": 50,
+    "downloads_2d": 21,
+    "waitlist": 0,
+    "scans": 65
+  },
+  "traffic": {
+    "available": true,
+    "status": "partial",
+    "unique_status": "unknown",
+    "window_days": 7,
+    "visits": null,
+    "domains": {
+      "cleancopy.tools": {
+        "status": "ok",
+        "visits": 3,
+        "top_paths": [
+          {
+            "path": "/",
+            "visits": 2
+          },
+          {
+            "path": "/blog/html-to-markdown-vscode",
+            "visits": 1
+          }
+        ]
+      },
+      "deskuptime.com": {
+        "status": "ok",
+        "visits": 1,
+        "top_paths": [
+          {
+            "path": "/",
+            "visits": 1
+          }
+        ]
+      },
+      "bugbottle.dev": {
+        "status": "unknown",
+        "visits": null,
+        "top_paths": []
+      },
+      "mahope.tools": {
+        "status": "ok",
+        "visits": 101,
+        "top_paths": [
+          {
+            "path": "/blog/post-deploy-smoke-tests-static-sites",
+            "visits": 2
+          },
+          {
+            "path": "/color-blindness-simulator",
+            "visits": 2
+          },
+          {
+            "path": "/",
+            "visits": 1
+          },
+          {
+            "path": "/accessibility-statement-generator",
+            "visits": 1
+          },
+          {
+            "path": "/blog/accessibility-audit-cost",
+            "visits": 1
+          },
+          {
+            "path": "/blog/accessibility-scanner-cli",
+            "visits": 1
+          },
+          {
+            "path": "/blog/add-bug-report-form-to-any-website",
+            "visits": 1
+          },
+          {
+            "path": "/blog/broken-link-checker-free",
+            "visits": 1
+          }
+        ]
+      }
+    },
+    "downloads": null,
+    "download_domains": {
+      "cleancopy.tools": {
+        "status": "ok",
+        "visits": 16,
+        "top_downloads": [
+          {
+            "file": "clean-copy-v1.5.3.zip",
+            "visits": 8
+          },
+          {
+            "file": "clean-copy-firefox-v1.5.4.zip",
+            "visits": 7
+          },
+          {
+            "file": "clean-copy-obsidian-v1.0.11.zip",
+            "visits": 1
+          }
+        ]
+      },
+      "deskuptime.com": {
+        "status": "ok",
+        "visits": 0,
+        "top_downloads": []
+      },
+      "bugbottle.dev": {
+        "status": "unknown",
+        "visits": null,
+        "top_downloads": []
+      },
+      "mahope.tools": {
+        "status": "ok",
+        "visits": 54,
+        "top_downloads": [
+          {
+            "file": "eaa-shopify.epub",
+            "visits": 5
+          },
+          {
+            "file": "gdpr-for-agencies.epub",
+            "visits": 5
+          },
+          {
+            "file": "build-your-first-chrome-extension.epub",
+            "visits": 4
+          },
+          {
+            "file": "cookie-consent-guide.epub",
+            "visits": 4
+          },
+          {
+            "file": "nis2-for-agencies.epub",
+            "visits": 4
+          },
+          {
+            "file": "page-profile/page_profile.py",
+            "visits": 4
+          },
+          {
+            "file": "privacy-policy-template.md",
+            "visits": 4
+          },
+          {
+            "file": "eaa-checklist.epub",
+            "visits": 3
+          }
+        ]
+      }
+    },
+    "top_paths": [
+      {
+        "path": "/",
+        "visits": 4
+      },
+      {
+        "path": "/blog/post-deploy-smoke-tests-static-sites",
+        "visits": 2
+      },
+      {
+        "path": "/color-blindness-simulator",
+        "visits": 2
+      },
+      {
+        "path": "/accessibility-statement-generator",
+        "visits": 1
+      },
+      {
+        "path": "/blog/accessibility-audit-cost",
+        "visits": 1
+      },
+      {
+        "path": "/blog/accessibility-scanner-cli",
+        "visits": 1
+      },
+      {
+        "path": "/blog/add-bug-report-form-to-any-website",
+        "visits": 1
+      },
+      {
+        "path": "/blog/broken-link-checker-free",
+        "visits": 1
+      }
+    ],
+    "ranking_paths": {
+      "cleancopy.tools": {
+        "/blog/html-to-markdown-vscode": 1,
+        "/": 2
+      },
+      "deskuptime.com": {
+        "/": 1,
+        "/tools": 1
+      },
+      "mahope.tools": {
+        "/blog/broken-link-checker-free": 1,
+        "/blog/canonical-url-guide": 1,
+        "/blog/check-ssl-certificate-expiry": 1,
+        "/blog/cmp-comparison-2026": 1,
+        "/blog/cookie-consent-gdpr-compliance": 1,
+        "/blog/copy-table-from-pdf-to-excel": 1,
+        "/blog/copy-table-website-to-airtable": 1,
+        "/blog/copy-table-website-to-google-sheets": 1,
+        "/blog/developer-text-tools": 1,
+        "/blog/drupal-vs-typo3-accessibility": 1,
+        "/blog/drupal-wcag-accessibility": 1,
+        "/blog/eaa-deadline-2026": 1,
+        "/blog/eaa-enforcement-2026": 1,
+        "/blog/free-eaa-statement-generators": 1,
+        "/blog/gdpr-website-compliance-checklist": 1,
+        "/blog/hreflang-guide": 1,
+        "/blog/monitor-website-github-actions-free": 1,
+        "/blog/open-graph-checker": 1,
+        "/blog/prestashop-vs-shopify-accessibility": 1,
+        "/blog/release-integrity-explained": 1,
+        "/blog/technical-seo-check-website": 1,
+        "/blog/wcag-22-requirements-checklist": 1,
+        "/blog/wcag-contrast-checker": 1,
+        "/blog/webflow-accessibility-audit": 1,
+        "/blog/website-down-checker-free": 1,
+        "/blog/wix-eaa-accessibility": 1,
+        "/compliance-guide": 1,
+        "/compliance-report": 1,
+        "/gdpr-breach-report-generator-da": 1,
+        "/markdown-table-generator": 1,
+        "/privacy-notice-generator-da": 1,
+        "/privacy-policy-template-da": 1,
+        "/ropa-template": 1,
+        "/accessibility-statement-generator": 1,
+        "/blog/eaa-accessibility-checklist": 1,
+        "/blog/eaa-deadline-passed": 1,
+        "/case-converter": 1,
+        "/color-blindness-simulator-da": 1,
+        "/color-blindness-simulator": 2,
+        "/compliance-ai": 1,
+        "/compliance-site-check": 1,
+        "/contrast-checker": 1,
+        "/cookie-check": 1,
+        "/dpa-generator-da": 1,
+        "/dpa-generator": 1,
+        "/gdpr-breach-report-generator": 1,
+        "/paid-templates": 1,
+        "/privacy-notice-generator": 1,
+        "/ropa-generator": 1,
+        "/scan-da": 1,
+        "/security-headers-check": 1,
+        "/site-icons": 1,
+        "/text-diff": 1,
+        "/text-on-image-checker-da": 1,
+        "/tilgaengelighedserklaering-generator-da": 1,
+        "/uuid-generator": 1,
+        "/wordpress-plugin": 1,
+        "/blog/check-url-redirect-chain": 1,
+        "/blog/copy-clean-text-from-website": 1,
+        "/blog/how-to-write-accessibility-statement": 1,
+        "/blog/post-deploy-smoke-tests-static-sites": 1,
+        "/blog/prestashop-eaa-accessibility": 1,
+        "/blog/webflow-vs-squarespace-accessibility": 1,
+        "/blog/wordpress-vs-wix-accessibility": 1,
+        "/contrast-checker-da": 1,
+        "/cookie-check-da": 1,
+        "/free-downloads": 1,
+        "/hash-generator": 1,
+        "/json-formatter": 1,
+        "/license-lookup": 1,
+        "/page-profile": 1,
+        "/palette-generator-da": 1,
+        "/palette-generator": 1,
+        "/privacy-policy-template": 1,
+        "/url-encoder-decoder": 1,
+        "/url-inspector": 1,
+        "/books": 3,
+        "/da/blog/nis2-haendelsesrapport-skabelon": 1,
+        "/": 1,
+        "/blog/website-metadata-audit-checklist": 1,
+        "/da/blog/gdpr-vs-nis2-overlap-da": 1,
+        "/da/blog/sammenlign-to-sider-seo": 1,
+        "/pricing": 1,
+        "/terms": 1,
+        "/blog/website-seo-metadata-audit": 1,
+        "/books/nis2-for-agencies": 1,
+        "/scan": 1,
+        "/text-on-image-checker": 1
+      }
+    },
+    "top_downloads": [
+      {
+        "file": "clean-copy-v1.5.3.zip",
+        "hits": 8
+      },
+      {
+        "file": "clean-copy-firefox-v1.5.4.zip",
+        "hits": 7
+      },
+      {
+        "file": "eaa-shopify.epub",
+        "hits": 5
+      },
+      {
+        "file": "gdpr-for-agencies.epub",
+        "hits": 5
+      },
+      {
+        "file": "build-your-first-chrome-extension.epub",
+        "hits": 4
+      },
+      {
+        "file": "cookie-consent-guide.epub",
+        "hits": 4
+      },
+      {
+        "file": "nis2-for-agencies.epub",
+        "hits": 4
+      },
+      {
+        "file": "page-profile/page_profile.py",
+        "hits": 4
+      }
+    ],
+    "sales": {
+      "available": false,
+      "status": "unknown"
+    },
+    "waitlist": 0,
+    "licenses_issued": null,
+    "ai_asks": null,
+    "scans": 65,
+    "checkout": {
+      "status": "ok",
+      "reason": null,
+      "window_days": 7,
+      "tracked_since": "2026-09-27",
+      "clicks": 0,
+      "domains": {
+        "cleancopy.tools": {
+          "status": "ok",
+          "clicks": 0
+        },
+        "deskuptime.com": {
+          "status": "ok",
+          "clicks": 0
+        },
+        "bugbottle.dev": {
+          "status": "ok",
+          "clicks": 0
+        },
+        "mahope.tools": {
+          "status": "ok",
+          "clicks": 0
+        }
+      },
+      "pages": [],
+      "offer_clicks": 0,
+      "other_clicks": 0,
+      "tracked_days": 7,
+      "untracked_days": 0,
+      "last_click_day": null
+    },
+    "ranking": {
+      "basis": "unknown",
+      "basis_reason": "bugbottle.dev har ikke et verificeret datagrundlag i de seneste syv fulde dage, så ingen side kan kaldes mest besøgt",
+      "period": {
+        "days": 7,
+        "kind": "last_7_full_days",
+        "start": "2026-11-16",
+        "end": "2026-11-22"
+      },
+      "thresholds": {
+        "min_total_pageviews": 30,
+        "min_pageviews_per_domain": 5
+      },
+      "total_pageviews": 83,
+      "observed_pageviews": 96,
+      "constant_pageviews": 13,
+      "constant_paths": {
+        "deskuptime.com": [
+          "/"
+        ],
+        "mahope.tools": [
+          "/",
+          "/case-converter",
+          "/color-blindness-simulator",
+          "/compliance-guide",
+          "/compliance-site-check",
+          "/contrast-checker",
+          "/gdpr-breach-report-generator-da",
+          "/pricing",
+          "/ropa-generator",
+          "/terms",
+          "/text-on-image-checker"
+        ]
+      },
+      "ranked_domains": [],
+      "ranked_offer_pages": [],
+      "domains_below_threshold": [
+        {
+          "domain": "cleancopy.tools",
+          "visits": 3,
+          "reason": "under 5 verificerede pageviews"
+        },
+        {
+          "domain": "deskuptime.com",
+          "visits": 1,
+          "reason": "1 af 2 besøg var uændret fra forrige uge, altså automatisering der ikke kan tælles som publikum"
+        },
+        {
+          "domain": "bugbottle.dev",
+          "visits": null,
+          "reason": "ukendt datagrundlag i perioden"
+        }
+      ],
+      "fallback": {
+        "kind": "core_product_pages_and_visible_offers",
+        "is_traffic_ranking": false,
+        "reason": "bugbottle.dev har ikke et verificeret datagrundlag i de seneste syv fulde dage, så ingen side kan kaldes mest besøgt",
+        "core_pages": [
+          {
+            "product": "page-profile-pro",
+            "domain": "mahope.tools",
+            "route": "/page-profile",
+            "source": "site/page-profile.html",
+            "why": "Page Profiles eneste produktside med gratis/Pro-sammenligning"
+          }
+        ],
+        "offer_pages": [
+          {
+            "domain": "mahope.tools",
+            "route": "/blog/check-url-redirect-chain",
+            "products": [
+              "page-profile-pro"
+            ],
+            "price": "$19/år"
+          },
+          {
+            "domain": "mahope.tools",
+            "route": "/blog/open-graph-checker",
+            "products": [
+              "page-profile-pro"
+            ],
+            "price": "$19/år"
+          },
+          {
+            "domain": "mahope.tools",
+            "route": "/da/blog/open-graph-tjekker-guide",
+            "products": [
+              "page-profile-pro"
+            ],
+            "price": "$19/år"
+          },
+          {
+            "domain": "mahope.tools",
+            "route": "/da/blog/tjek-url-redirect-kaede",
+            "products": [
+              "page-profile-pro"
+            ],
+            "price": "$19/år"
+          },
+          {
+            "domain": "mahope.tools",
+            "route": "/da/page-profile",
+            "products": [
+              "page-profile-pro"
+            ],
+            "price": "$19/år"
+          },
+          {
+            "domain": "mahope.tools",
+            "route": "/da/support",
+            "products": [
+              "support-mahope-oss"
+            ],
+            "price": "fra 10 kr."
+          },
+          {
+            "domain": "mahope.tools",
+            "route": "/page-profile",
+            "products": [
+              "page-profile-pro"
+            ],
+            "price": "$19/år"
+          },
+          {
+            "domain": "mahope.tools",
+            "route": "/support",
+            "products": [
+              "support-mahope-oss"
+            ],
+            "price": "fra 10 kr."
+          }
+        ]
+      }
+    }
+  },
+  "npm": {
+    "@mahope/clean-copy": {
+      "downloads": 2,
+      "note": null
+    },
+    "@mahope/deskuptime": {
+      "downloads": 7,
+      "note": null
+    },
+    "@mahope/transmute": {
+      "downloads": 5,
+      "note": null
+    },
+    "@mahope/eucomply-scanner": {
+      "downloads": 10,
+      "note": null
+    },
+    "@mahope/passiv-mcp": {
+      "downloads": 12,
+      "note": null
+    },
+    "@mahope/cookie-consent-banner": {
+      "downloads": 7,
+      "note": null
+    },
+    "bugbottle": {
+      "downloads": 192,
+      "note": null
+    }
+  },
+  "github": {
+    "mahope/eucomply-scanner": {
+      "product": "EUComply",
+      "open_issues": 2,
+      "pushed_at": "2026-11-22T15:14:31Z",
+      "stars": 0,
+      "latest_release": "v1.0.1",
+      "latest_release_at": "2026-09-07T18:23:15Z",
+      "latest_release_downloads": 0,
+      "release_downloads_total": 0
+    },
+    "mahope/clean-copy": {
+      "product": "Clean Copy",
+      "open_issues": 1,
+      "pushed_at": "2026-09-25T06:34:16Z",
+      "stars": 0,
+      "latest_release": "v1.5.2",
+      "latest_release_at": "2026-08-24T21:31:36Z",
+      "latest_release_downloads": 0,
+      "release_downloads_total": 15
+    },
+    "mahope/clean-copy-cli": {
+      "product": "Clean Copy",
+      "open_issues": 2,
+      "pushed_at": "2026-09-07T18:19:13Z",
+      "stars": 1,
+      "latest_release": "v1.5.3",
+      "latest_release_at": "2026-09-07T18:24:30Z",
+      "latest_release_downloads": 0,
+      "release_downloads_total": 31
+    },
+    "mahope/clean-copy-firefox": {
+      "product": "Clean Copy",
+      "open_issues": 1,
+      "pushed_at": "2026-11-02T09:46:58Z",
+      "stars": 0,
+      "latest_release": "v1.5.2-fx",
+      "latest_release_at": "2026-08-24T21:31:42Z",
+      "latest_release_downloads": 0,
+      "release_downloads_total": 0
+    },
+    "mahope/clean-copy-vscode": {
+      "product": "Clean Copy",
+      "open_issues": 0,
+      "pushed_at": "2026-11-02T09:47:20Z",
+      "stars": 0,
+      "latest_release": "v1.0.0",
+      "latest_release_at": "2026-08-25T06:26:01Z",
+      "latest_release_downloads": 3,
+      "release_downloads_total": 3
+    },
+    "mahope/clean-copy-obsidian": {
+      "product": "Clean Copy",
+      "open_issues": 1,
+      "pushed_at": "2026-11-02T10:18:05Z",
+      "stars": 0,
+      "latest_release": "1.0.12",
+      "latest_release_at": "2026-11-02T10:18:19Z",
+      "latest_release_downloads": 2,
+      "release_downloads_total": 47
+    },
+    "mahope/deskuptime": {
+      "product": "DeskUptime",
+      "open_issues": 0,
+      "pushed_at": "2026-09-29T20:03:27Z",
+      "stars": 0,
+      "latest_release": "v0.2.8",
+      "latest_release_at": "2026-09-07T18:23:15Z",
+      "latest_release_downloads": 0,
+      "release_downloads_total": 155
+    },
+    "mahope/transmute": {
+      "product": "Transmute",
+      "open_issues": 0,
+      "pushed_at": "2026-11-22T16:02:33Z",
+      "stars": 0,
+      "latest_release": "v0.2.1",
+      "latest_release_at": "2026-09-07T18:23:15Z",
+      "latest_release_downloads": 3,
+      "release_downloads_total": 7
+    },
+    "mahope/bugbottle": {
+      "product": "BugBottle",
+      "open_issues": 60,
+      "pushed_at": "2026-11-22T15:14:35Z",
+      "stars": 2,
+      "latest_release": "v1.1.0",
+      "latest_release_at": "2026-10-25T18:54:24Z",
+      "latest_release_downloads": 0,
+      "release_downloads_total": 0
+    },
+    "mahope/bugbottle-wordpress": {
+      "product": "BugBottle",
+      "open_issues": 1,
+      "pushed_at": "2026-09-08T11:37:06Z",
+      "stars": 0,
+      "latest_release": "v1.0.0",
+      "latest_release_at": "2026-09-08T11:37:33Z",
+      "latest_release_downloads": 5,
+      "release_downloads_total": 15
+    },
+    "mahope/bugbottle-action": {
+      "product": "BugBottle",
+      "open_issues": 0,
+      "pushed_at": "2026-09-07T11:48:06Z",
+      "stars": 0,
+      "latest_release": "v1.0.2",
+      "latest_release_at": "2026-08-25T23:17:22Z",
+      "latest_release_downloads": 0,
+      "release_downloads_total": 0
+    },
+    "mahope/hermes-passiv": {
+      "product": "mahope.tools",
+      "open_issues": 5,
+      "pushed_at": "2026-11-22T16:31:46Z",
+      "stars": 0,
+      "latest_release": "eaa-scanner-desktop-v1.3.3",
+      "latest_release_at": "2026-08-25T17:11:43Z",
+      "latest_release_downloads": 25,
+      "release_downloads_total": 37
+    },
+    "mahope/passiv-mcp": {
+      "product": "mahope.tools",
+      "open_issues": 2,
+      "pushed_at": "2026-09-07T18:19:33Z",
+      "stars": 0,
+      "latest_release": "v1.2.1",
+      "latest_release_at": "2026-09-07T18:23:22Z",
+      "latest_release_downloads": 0,
+      "release_downloads_total": 0
+    },
+    "mahope/cookie-consent-banner": {
+      "product": "mahope.tools",
+      "open_issues": 2,
+      "pushed_at": "2026-09-07T18:19:37Z",
+      "stars": 0,
+      "latest_release": "v1.0.1",
+      "latest_release_at": "2026-09-07T18:23:24Z",
+      "latest_release_downloads": 0,
+      "release_downloads_total": 0
+    }
+  },
+  "bugreports": {
+    "available": true,
+    "last_week": 0,
+    "stored_total": 0,
+    "by_host": {},
+    "by_type": {}
+  },
+  "uptime": {
+    "conclusion": "success",
+    "created_at": "2026-11-23T03:25:38Z",
+    "url": "https://github.com/mahope/deskuptime/actions/runs/45105911622",
+    "runs_last_week": 10,
+    "failures_last_week": 0
+  },
+  "links": {
+    "available": true,
+    "broken_total": 0,
+    "by_domain": {
+      "cleancopy.tools": 0,
+      "deskuptime.com": 0,
+      "bugbottle.dev": 0,
+      "mahope.tools": 0
+    },
+    "html_total": 337
+  },
+  "errors": [],
+  "ranking_basis": "unknown"
+}
